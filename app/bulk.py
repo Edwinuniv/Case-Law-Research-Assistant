@@ -22,7 +22,8 @@ def read_rows(path):
     else:
         stream = open(path, encoding="utf-8", errors="replace", newline="")
     try:
-        yield csv.DictReader(stream, escapechar=config.CSV_ESCAPECHAR, doublequote=True)
+        yield csv.DictReader(stream, quotechar=config.CSV_QUOTECHAR,
+                             escapechar=config.CSV_ESCAPECHAR, doublequote=True)
     finally:
         stream.close()
 

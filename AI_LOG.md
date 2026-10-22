@@ -65,3 +65,12 @@ read the related line ourselves before relying on these entries.
    through the API and chose `openai/gpt-oss-120b`.
 5. **Our mistake: an API key was exposed in a screenshot.** We deleted that key on Groq and created a new one;
    keys now only go in `.env`, which is never committed.
+6. **AI mistake: wrong CSV quote character.** The AI's reader assumed values in double quotes. Our
+   `peek_bulk` check on the real 2024-12-31 files showed every value between backticks (`` `9474463` ``):
+   values kept their backticks and, in the opinions file, slid into the wrong columns (`cluster_id` came
+   out empty), so the filters would have kept nothing. Caught before any filtering by checking the columns
+   (step 1.3). Fix: `CSV_QUOTECHAR` = backtick in `app/config.py`, used by `app/bulk.py`; `filter_opinions`
+   now counts unreadable rows instead of skipping them silently.
+7. **An earlier complete download was reused.** We found the opinions file (exact size 44,759,737,019 bytes)
+   from an earlier attempt and moved it into `data/bulk`, saving about 18 hours of download. An incomplete
+   decompressed copy (48 GB, ending in zero bytes, checked with `od -c`) was found next to it and is not used.

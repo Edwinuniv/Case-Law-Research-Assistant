@@ -20,7 +20,10 @@ BULK_URL = "https://storage.courtlistener.com/bulk-data/"
 BULK_FILES = {name: f"{name}-{RELEASE}.csv.bz2" for name in
               ["courts", "dockets", "opinion-clusters", "opinions", "citations", "citation-map"]}
 LICENCE = "Public Domain Mark 1.0 (CourtListener bulk data, free of known copyright restrictions)"
-CSV_ESCAPECHAR = os.getenv("CSV_ESCAPECHAR", "\\") or None   # how the bulk CSV escapes quotes
+# CourtListener's CSV puts every value between BACKTICKS (`value`), not double quotes
+# (checked with peek_bulk on the real 2024-12-31 files). A backtick inside a value is doubled.
+CSV_QUOTECHAR = os.getenv("CSV_QUOTECHAR", "`")
+CSV_ESCAPECHAR = os.getenv("CSV_ESCAPECHAR", "") or None
 
 # ---- Database ----
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://verdicta:verdicta@localhost:5432/verdicta")

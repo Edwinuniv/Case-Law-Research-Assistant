@@ -19,7 +19,7 @@ TEXT_FIELDS = ["html_with_citations", "html", "xml_harvard", "html_lawbox", "htm
 
 source = sys.argv[1]
 clusters = {json.loads(l)["cluster_id"] for l in open(config.WORK / "clusters.jsonl")}
-n = kept = 0
+n = kept = bad = 0
 with read_rows(source) as rows, \
         open(config.WORK / "opinions.jsonl", "w") as out, \
         open(config.WORK / "opinion_cluster_pairs.csv", "w") as pairs:
@@ -28,6 +28,7 @@ with read_rows(source) as rows, \
         try:
             oid, cid = int(row["id"]), int(row["cluster_id"])
         except (TypeError, ValueError):
+            bad += 1                       # a row that could not be read: counted, never hidden
             continue
         pairs.write(f"{oid},{cid}\n")
         if cid in clusters:
@@ -38,8 +39,9 @@ with read_rows(source) as rows, \
                                   "per_curiam": row.get("per_curiam") in ("t", "True", "true", "1"),
                                   **({field: row[field]} if field else {})}) + "\n")
             kept += 1
-print(f"Done: {n:,} opinions read, {kept:,} kept for our {len(clusters):,} clusters.")
-save_filter_report("opinions", rows_read=n, kept=kept)
+print(f"Done: {n:,} opinions read, {kept:,} kept for our {len(clusters):,} clusters, "
+      f"{bad:,} unreadable rows skipped.")
+save_filter_report("opinions", rows_read=n, kept=kept, unreadable_rows=bad)
 if "--delete" in sys.argv and source != "-":
     Path(source).unlink()
     print(f"Deleted {source} (NFR12: we do not keep the full file).")
