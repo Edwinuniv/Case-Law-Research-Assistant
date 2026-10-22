@@ -19,7 +19,12 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
 - Source: CourtListener bulk data, release 2024-12-31 (C2, C4): courts, dockets,
   opinion-clusters, opinions, citations, citation-map. No API, no token.
 - The 44.8 GB opinions file is streamed (or downloaded with resume), filtered, and not kept (NFR12).
-- Bulk file sizes (measured at the week 1 gate): [to fill]
+- Bulk file sizes (measured 2026-10-22 with curl -I): courts 80,671 B; dockets 4,447,391,506 B;
+  opinion-clusters 2,326,606,563 B; opinions 44,759,737,019 B; citations 128,900,819 B;
+  citation-map 217,012,151 B (about 52 GB in total).
+- Download: our connection measured about 0.7 MB/s (also with 8 parallel connections, aria2),
+  so the files are downloaded once with resume (aria2c -c), about 21 hours in total, then filtered;
+  the opinions file is deleted after filtering (NFR12).
 - Counts (week 1 gate): clusters [ ] -> decisions [ ] -> opinions [ ] -> chunks [ ];
   citation table rows [ ]; citation-map rows kept [ ].
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
