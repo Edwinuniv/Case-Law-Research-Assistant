@@ -100,6 +100,7 @@ Edwin = citations, model, verification, evaluation, test questions.
 | Part | Branch / PR | Status |
 |---|---|---|
 | Week 0: SPEC, AI log, project setup | week0-setup | in review |
+| Week 1a: bulk-file reader and filters (steps 1.1-1.6) | yasser/week1-filters | in review: run on the real files, then fill section 2 |
 
 ## 11. Divergences log
 
