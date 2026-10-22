@@ -48,3 +48,20 @@ read the related line ourselves before relying on these entries.
 6. The side panel did not highlight quotes that crossed a line break.
 7. The opinions filter kept all seven text columns of each opinion instead of only the one used.
 8. `scripts/seed.py` imported files that only exist from weeks 2 and 5, so it crashed in week 1.
+
+---
+
+## 2026-10-22 — Problems found while setting up and downloading (Yasser)
+
+1. **Docker was not installed.** `docker compose up -d` failed with "command not found".
+   Fix: installed `docker.io` and `docker-compose-v2` in Ubuntu and added our user to the docker group.
+2. **AI mistake: wrong folder for the download log.** The AI's command wrote its log to `../../download.log`,
+   assuming we were inside `data/bulk`; we ran it from the project folder, so it tried to write to `/home`
+   ("Permission denied"). Fix: full paths (`aria2c -d ~/case-law-assistant/data/bulk`, log in the project folder).
+3. **Download speed.** Our connection gives about 0.7 MB/s. The AI suggested 8 parallel connections (aria2);
+   we measured the same speed, so the limit is our line, not the server. The 52 GB take about 21 hours.
+4. **AI mistake: the model name no longer existed.** The guide used `llama-3.3-70b-versatile`; Groq answered
+   404 `model_not_found`. Caught by our connection test; we listed the models available to our key
+   through the API and chose `openai/gpt-oss-120b`.
+5. **Our mistake: an API key was exposed in a screenshot.** We deleted that key on Groq and created a new one;
+   keys now only go in `.env`, which is never committed.
