@@ -1,6 +1,10 @@
 """Cleaning opinion text and cutting it into chunks (passages)."""
 import re
-from bs4 import BeautifulSoup
+import warnings
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+
+# some opinions are stored as XML (field xml_harvard); the HTML parser reads their <p> tags correctly
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 TEXT_FIELDS = ["html_with_citations", "html", "xml_harvard", "html_lawbox",
                "html_columbia", "html_anon_2020", "plain_text"]
