@@ -26,8 +26,11 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   so the files are downloaded once with resume (aria2c -c), about 21 hours in total, then filtered;
   the opinions file is deleted after filtering (NFR12).
 - Counts (week 1 gate, measured 2026-10-23): dockets 67,888,394 read -> 499,717 scotus;
-  clusters 9,833,660 read -> 188,045 scotus 2000-2024 -> real decisions [ ] -> decisions loaded [ ]
-  -> opinions [ ] -> chunks [ ]; citation table rows 17,859,437; citation-map rows kept [ ].
+  clusters 9,833,660 read -> 188,045 scotus 2000-2024 -> 2,935 kept (rule below) = 2,477 decisions
+  (1,581 in SCDB; 309 merged from copies; 82-126 per year); opinions 10,541,500 read -> 190,739 of
+  scotus clusters (0 unreadable) -> 5,598 of kept decisions; citation table rows 17,859,437;
+  citation-map 30,949,033 rows read -> 58,958 citations made by our opinions;
+  loaded: decisions [ ], opinions [ ], chunks [ ] (filled after step 1.8).
 - Real decisions only (step 1.4b): CourtListener stores many one-line orders ("certiorari denied")
   as clusters (up to 22,544 in one year, while the Court decides about 70-90 cases a year).
   Rule, the same for every year: a decision (its clusters with the same docket and date) is kept if
@@ -44,7 +47,8 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   Safety rules: a citation is used only if all kept clusters carrying it have the same date
   (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases),
   and two groups with different SCDB ids are never merged.
-  Measured before merging: 2,935 clusters kept = 2,849 decisions by docket, 285 possible copies.
+  Measured: 2,849 decisions by docket alone -> 2,477 after merging copies; 35 placeholder citations
+  ignored; 8 merges refused because the SCDB ids differ.
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
@@ -124,8 +128,8 @@ Edwin = citations, model, verification, evaluation, test questions.
 | Part | Owner | Branch / PR | Status |
 |---|---|---|---|
 | 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | in review (tag spec-v1 done) |
-| 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | code ready; waiting for the dockets download, then fill section 2 |
-| 1.4b real decisions only (scdb_id + calibrated length) | Yasser | step/1.4-cluster-scope | code ready; needs filter_clusters again and the opinions filter, then fill section 2 |
+| 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | merged (PR #2); run on the real files, counts in section 2 |
+| 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
 | 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | code ready; needs 1.7 merged and the filtered files |
 | 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
