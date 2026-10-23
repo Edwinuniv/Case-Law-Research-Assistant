@@ -96,4 +96,11 @@ read the related line ourselves before relying on these entries.
    citations.csv.gz): CourtListener gives new decisions the placeholder "538 U.S. 1" before the real page
    is known, so different cases share it. Fix: a citation is used only if all clusters carrying it have
    the same date, and two groups with different SCDB ids are never merged; tested on these exact cases.
+## 2026-10-23 — Loading into PostgreSQL (Yasser)
+
+1. **AI mistake: a query that never finished.** `refresh_decision_citations` (copies each decision's own
+   citations onto it) used a sub-query per decision with no index on `citations.cluster_id`, so it read
+   the 17.8 million citations once per decision (2,477 times). How we caught it: the seed was still
+   running after 75 minutes. Fix: one join through `cluster_alias` that reads the table once; measured
+   2.1 s on a test database with 17.8 million citations.
 

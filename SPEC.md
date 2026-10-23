@@ -30,7 +30,8 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   (1,581 in SCDB; 309 merged from copies; 82-126 per year); opinions 10,541,500 read -> 190,739 of
   scotus clusters (0 unreadable) -> 5,598 of kept decisions; citation table rows 17,859,437;
   citation-map 30,949,033 rows read -> 58,958 citations made by our opinions;
-  loaded: decisions [ ], opinions [ ], chunks [ ] (filled after step 1.8).
+  loaded (step 1.8, 2026-10-23): 2,477 decisions (0 without text), 4,765 opinions (795 copies of an
+  opinion skipped, 38 without text), 17,859,437 citations, 58,958 citation-map rows; chunks [ ] (week 2).
 - Real decisions only (step 1.4b): CourtListener stores many one-line orders ("certiorari denied")
   as clusters (up to 22,544 in one year, while the Court decides about 70-90 cases a year).
   Rule, the same for every year: a decision (its clusters with the same docket and date) is kept if
@@ -49,6 +50,15 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   and two groups with different SCDB ids are never merged.
   Measured: 2,849 decisions by docket alone -> 2,477 after merging copies; 35 placeholder citations
   ignored; 8 merges refused because the SCDB ids differ.
+- Known limit of the source: CourtListener has no official citation (U.S., S. Ct., L. Ed. 2d) for most
+  decisions from 2020 on (measured after loading: decisions without any citation 2020: 42 of 126,
+  2021: 123/124, 2022: 112/112, 2023: 35/94, 2024: 86/87; 2000-2019: 0-20 per year). Checked on
+  2026-10-23 that the newest citations release (2026-09-30) does not fill the gap either (no U.S.
+  citation in volumes 597, 602, 603; none for Dobbs or Loper Bright). Such decisions are shown and
+  cited by docket number and date, the usual form before a U.S. Reports page exists:
+  "Dobbs v. Jackson Women's Health Organization, No. 19-1392 (U.S. June 24, 2022)". A decision that
+  has an official citation is shown with it (U.S. first, then S. Ct., then L. Ed. 2d). Rendered from
+  our database (SR21); the citation check must accept this form for these decisions.
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
@@ -131,7 +141,7 @@ Edwin = citations, model, verification, evaluation, test questions.
 | 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | merged (PR #2); run on the real files, counts in section 2 |
 | 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
-| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | code ready; needs 1.7 merged and the filtered files |
+| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
 | 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
 | 1.10 tests for citations | Edwin | - | not started |
 
