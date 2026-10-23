@@ -74,3 +74,12 @@ read the related line ourselves before relying on these entries.
 7. **An earlier complete download was reused.** We found the opinions file (exact size 44,759,737,019 bytes)
    from an earlier attempt and moved it into `data/bulk`, saving about 18 hours of download. An incomplete
    decompressed copy (48 GB, ending in zero bytes, checked with `od -c`) was found next to it and is not used.
+
+## 2026-10-23 — Loading into PostgreSQL (Yasser)
+
+1. **AI mistake: a query that never finished.** `refresh_decision_citations` (copies each decision's own
+   citations onto it) used a sub-query per decision with no index on `citations.cluster_id`, so it read
+   the 17.8 million citations once per decision (2,477 times). How we caught it: the seed was still
+   running after 75 minutes. Fix: one join through `cluster_alias` that reads the table once; measured
+   2.1 s on a test database with 17.8 million citations.
+
