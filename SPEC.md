@@ -25,8 +25,14 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
 - Download: our connection measured about 0.7 MB/s (also with 8 parallel connections, aria2),
   so the files are downloaded once with resume (aria2c -c), about 21 hours in total, then filtered;
   the opinions file is deleted after filtering (NFR12).
-- Counts (week 1 gate): clusters [ ] -> decisions [ ] -> opinions [ ] -> chunks [ ];
-  citation table rows [ ]; citation-map rows kept [ ].
+- Counts (week 1 gate, measured 2026-10-23): dockets 67,888,394 read -> 499,717 scotus;
+  clusters 9,833,660 read -> 188,045 scotus 2000-2024 -> real decisions [ ] -> decisions loaded [ ]
+  -> opinions [ ] -> chunks [ ]; citation table rows 17,859,437; citation-map rows kept [ ].
+- Real decisions only (step 1.4b): CourtListener stores many one-line orders ("certiorari denied")
+  as clusters (up to 22,544 in one year, while the Court decides about 70-90 cases a year).
+  A cluster is kept if it has a Supreme Court Database id (scdb_id; CourtListener links SCDB only
+  for 2000-2019: 1,581 clusters), or, in years without SCDB links (2020-2024), if its longest opinion
+  has at least N words. N is chosen on 2000-2019, where SCDB gives the right answer: [N, recall, precision].
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
@@ -107,6 +113,7 @@ Edwin = citations, model, verification, evaluation, test questions.
 |---|---|---|---|
 | 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | in review (tag spec-v1 done) |
 | 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | code ready; waiting for the dockets download, then fill section 2 |
+| 1.4b real decisions only (scdb_id + calibrated length) | Yasser | step/1.4-cluster-scope | code ready; needs filter_clusters again and the opinions filter, then fill section 2 |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
 | 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | code ready; needs 1.7 merged and the filtered files |
 | 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
@@ -117,3 +124,6 @@ Edwin = citations, model, verification, evaluation, test questions.
 2026-10-22 - The repository was restarted from an empty history to follow the Requirements
 Document (Delivery 1). An earlier attempt (REST API, 2023-2024, SQLite) was discarded; a backup
 of its history is kept by the team.
+
+2026-10-23 - Corpus scope narrowed from "all scotus clusters 2000-2024" (188,045, mostly one-line
+orders) to real decisions (rule in section 2). The court and dates do not change.

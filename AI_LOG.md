@@ -74,3 +74,19 @@ read the related line ourselves before relying on these entries.
 7. **An earlier complete download was reused.** We found the opinions file (exact size 44,759,737,019 bytes)
    from an earlier attempt and moved it into `data/bulk`, saving about 18 hours of download. An incomplete
    decompressed copy (48 GB, ending in zero bytes, checked with `od -c`) was found next to it and is not used.
+
+## 2026-10-23 — Filtering the real files (Yasser)
+
+1. **AI mistake: wrong expected counts.** The AI expected "a few hundred dockets per year" and
+   "about 1,500-3,000 clusters" for scotus 2000-2024. The real files gave 499,717 dockets and 188,045
+   clusters. How we caught it: we compared the "Done:" lines with the expected numbers, then counted
+   clusters per year (10,000-22,000 in most years, but only 120-350 in 2007-2009 and 2021-2024).
+   Cause: CourtListener stores one-line orders ("certiorari denied") as clusters, and
+   `precedential_status` does not separate them (187,578 of 188,045 are "Published").
+   Fix: we measured the Supreme Court Database id per year (67-88 per year for 2000-2019, none after),
+   and added step 1.4b (`scripts/scope_decisions.py`): SCDB id, or an opinion-length threshold chosen
+   on the SCDB years. Recorded in SPEC section 2 and the divergences log.
+2. **Our mistake: a step started too early.** We started the opinions filter before the dockets and
+   clusters filters (and outside the virtual environment); it needs clusters.jsonl. Stopped and re-run
+   in order.
+
