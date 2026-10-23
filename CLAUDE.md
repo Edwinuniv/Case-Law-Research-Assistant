@@ -63,62 +63,83 @@ Supervisor: Georges Salloum. Repo: https://github.com/Edwinuniv/Case-Law-Researc
   Only merge after I confirm it is safe.
 - After merging, delete the feature branch and start a new one for the next feature.
 
+## README updates
+- Update README.md in the same branch whenever a change affects how someone installs, sets up or
+  runs the project: a new or changed command or script, a new `.env` variable, a new dependency in
+  requirements.txt, a change to docker-compose, or a new feature a user or admin can use.
+- Do NOT touch the README for internal code changes, tests or refactors.
+- Put the README change in its own small commit (e.g. "README: how to run check_citation.py").
+- Before each merge, check that the README still matches how the project actually runs.
+- Progress and status go in SPEC.md section 10 (status table) and the checklist below, not the README.
+
 ## Progress tracking (update this section after finishing each guide step)
 After each step is done, update the checklist below. Mark done steps with ✓ and add a one-line
 note on what was built. If a step is blocked (waiting on a teammate), mark it with ⏳ and say why.
 
-### Setup (Week 0) — Joe's section
-- [ ] 0.1 WSL tools installed (git, python3.12, docker, docker-compose)
-- [ ] 0.2 PostgreSQL + pgvector running in Docker
-- [ ] 0.3 Python virtual environment created
-- [ ] 0.4 .env file created (never committed)
-- [ ] 0.5 Repo cloned and docs/ in place
-- [ ] 0.6 SPEC.md + AI_LOG.md committed and tagged spec-v1 ← must happen before ANY code
+Step numbers and names below match the guide's headings exactly. Status as of 2026-10-23.
 
-### Week 1 — Data foundation (Yasser + Joe + Edwin)
-- [ ] 1.1 CourtListener bulk files downloaded (Yasser)
-- [ ] 1.2 courts.py — filter to scotus (Yasser)
-- [ ] 1.3 dockets.py (Yasser)
-- [ ] 1.4 clusters.py (Yasser)
-- [ ] 1.5 opinions.py (Yasser)
-- [ ] 1.6 citation_map.py (Yasser)
-- [ ] 1.7 db.py — database schema (Joe)
-- [ ] 1.8 ingest.py — load into PostgreSQL (Yasser)
-- [ ] 1.9 citations.py, check_citation.py, find_case.py (Edwin) ⏳ needs 1.6 + 1.7
-- [ ] 1.10 tests/conftest.py, tests/test_citations.py (Edwin) ⏳ needs 1.9
+### Week 0 — Setup (team; guide pages 7-10)
+- [x] 0.1-0.5 Repo skeleton, docker-compose (PostgreSQL + pgvector), requirements, .env.example (Yasser, commit 6c30a9f)
+- [x] Edwin's own PC: .venv (Python 3.12.3) + requirements, database container (pgvector 0.8.7), verdicta_test database, .env
+- [x] 0.6 SPEC.md + AI_LOG.md committed and tagged spec-v1 (commit 5747c13)
 
-### Week 2 — Search (Yasser)
-- [ ] 2.1 embed.py
-- [ ] 2.2 search.py (hybrid BM25 + pgvector)
-- [ ] 2.3 tests/test_search.py
+### Week 1 — Data foundation
+- [x] 1.1 Settings and the bulk-file reader (Yasser) — merged to main (PR #2)
+- [x] 1.2 Check the file names and sizes first (Yasser) — merged
+- [x] 1.3 Look inside before trusting the code (Yasser) — merged
+- [x] 1.4 Filter dockets and decisions, then count (Yasser) — merged
+- [x] 1.5 The opinions file (44.8 GB) (Yasser) — merged
+- [x] 1.6 The citation table and the citation map (Yasser) — merged
+- [ ] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — branch step/1.7-db, Joe to review
+- [ ] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — branch step/1.8-ingest, needs 1.7 merged
+- [ ] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — branch step/1.9-citations, reviewed by Edwin: matches guide pp. 27-29 ⏳ needs 1.7 merged, and 1.8 data loaded for the gate run
+- [ ] 1.10 First tests, and commit (Edwin) — branch step/1.10-citation-tests (pushed), 5 passed ⏳ needs 1.9 merged
 
-### Week 3 — Evaluation set (all three)
-- [ ] 3.1 eval/questions.jsonl — 80+ questions committed and tagged eval-v1
+### Week 2 — Chunks and embeddings (Yasser)
+- [ ] 2.1 Understand the chunking code (app/chunking.py, created in 1.8)
+- [ ] 2.2 Embeddings into pgvector
+- [ ] 2.3 Numbers for the justification
 
-### Week 4 — LLM + pipeline (Edwin)
-- [ ] 4.1 llm.py
-- [ ] 4.2 verify.py
-- [ ] 4.3 pipeline.py
-- [ ] 4.4 ask.py
-- [ ] 4.5 tests for 4.1-4.4
+### Week 3 — Test questions and search
+- [ ] 3.1 Write at least 80 test questions in eval/questions.jsonl (all three; tag eval-v1)
+- [ ] 3.2 Keyword search (BM25) (Yasser)
+- [ ] 3.3 Hybrid search and the reranker (Yasser)
+- [ ] 3.4 Measure the search: the baseline (Yasser)
+- [ ] 3.5 Compare chunk sizes, then commit (Yasser)
 
-### Week 5 — Evaluate (Edwin)
-- [ ] 5.1 evaluate.py + tests/test_evaluate.py
+### Week 4 — Model call and verifier (Edwin)
+- [ ] 4.1 The model call
+- [ ] 4.2 The verifier: the heart of the project
+- [ ] 4.3 The pipeline
+- [ ] 4.4 Try it
+- [ ] 4.5 Tests (with a fake model)
 
-### Week 6 — Website + API (Joe)
-- [ ] 6.x FastAPI routes, frontend, authentication
+### Week 5 — Evaluation module and website
+- [ ] 5.1 Evaluation module (Edwin; tests/test_evaluate.py agreed with Joe)
+- [ ] 5.2 The web application (Joe)
+- [ ] 5.3 Public templates (Joe)
+- [ ] 5.4 Admin templates (Joe)
+- [ ] 5.5 Run it, test it, commit (Joe)
+
+### Week 6 — Deployment (Joe)
+- [ ] 6.1 Deployment files
+- [ ] 6.2 Create the database and the website on Railway
+- [ ] 6.3 Fill the online database with the seed script
 
 ### Week 7 — Attack the verifier (Edwin)
-- [ ] 7.x Adversarial tests against verify.py
+- [ ] 7.1 Attack, test, fix, log
 
 ### Week 8 — Calibration (Edwin)
-- [ ] 8.x Set thresholds; write them to EVALUATION.md BEFORE measuring
+- [ ] 8.1 Write the rule before measuring
+- [ ] 8.2 Run the full evaluation
+- [ ] 8.3 False citations = 0
 
-### Week 10 — Reranker improvement
-- [ ] 10.x Add cross-encoder reranker (ms-marco-MiniLM-L-6-v2)
+### Week 9 — Usability test
+- [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
-### Deployment
-- [ ] Deploy to Railway (Joe)
+### Week 10 — Improvement (reranker)
+- [ ] 10.1 Hypothesis first, committed
+- [ ] 10.2 Measure before and after
 
 ## Style
 - Explain things in simple, plain English (I am a student).
