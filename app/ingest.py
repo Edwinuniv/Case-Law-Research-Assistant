@@ -22,10 +22,11 @@ def load_corpus():
     for op in map(json.loads, open(config.WORK / "opinions.jsonl")):
         opinions_by_cluster[op["cluster_id"]].append(op)
 
-    # Merge duplicate clusters (same docket, same date) into one decision.
+    # Merge copies of one decision into one row. scripts/scope_decisions.py sets decision_group
+    # (same date + same docket, name or official citation); otherwise: same docket and date.
     groups = defaultdict(list)
     for c in clusters.values():
-        groups[(c["docket_id"], c["date_filed"])].append(c)
+        groups[c.get("decision_group") or (c["docket_id"], c["date_filed"])].append(c)
 
     report = {"clusters": len(clusters), "decisions": 0, "duplicates_merged": 0,
               "decisions_without_text": 0, "opinions": 0, "opinions_without_text": 0,
