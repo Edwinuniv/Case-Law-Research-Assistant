@@ -6,3 +6,5 @@ data/*
 !data/.gitkeep
 *.bz2
 *:Zone.Identifier
+*Zone.Identifier
+.claude/

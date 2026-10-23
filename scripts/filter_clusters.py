@@ -20,6 +20,7 @@ with read_rows(config.BULK / config.BULK_FILES["opinion-clusters"]) as rows, \
             "cluster_id": int(row["id"]), "docket_id": int(row["docket_id"]),
             "docket_number": docket["docket_number"], "case_name": name, "date_filed": date,
             "precedential_status": row.get("precedential_status"),
+            "scdb_id": (row.get("scdb_id") or "").strip(),   # Supreme Court Database id (step 1.4b)
             "source_url": f"https://www.courtlistener.com/opinion/{row['id']}/{row.get('slug') or 'case'}/",
         }) + "\n")
         kept += 1

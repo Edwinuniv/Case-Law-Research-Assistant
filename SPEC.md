@@ -25,8 +25,40 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
 - Download: our connection measured about 0.7 MB/s (also with 8 parallel connections, aria2),
   so the files are downloaded once with resume (aria2c -c), about 21 hours in total, then filtered;
   the opinions file is deleted after filtering (NFR12).
-- Counts (week 1 gate): clusters [ ] -> decisions [ ] -> opinions [ ] -> chunks [ ];
-  citation table rows [ ]; citation-map rows kept [ ].
+- Counts (week 1 gate, measured 2026-10-23): dockets 67,888,394 read -> 499,717 scotus;
+  clusters 9,833,660 read -> 188,045 scotus 2000-2024 -> 2,935 kept (rule below) = 2,477 decisions
+  (1,581 in SCDB; 309 merged from copies; 82-126 per year); opinions 10,541,500 read -> 190,739 of
+  scotus clusters (0 unreadable) -> 5,598 of kept decisions; citation table rows 17,859,437;
+  citation-map 30,949,033 rows read -> 58,958 citations made by our opinions;
+  loaded (step 1.8, 2026-10-23): 2,477 decisions (0 without text), 4,765 opinions (795 copies of an
+  opinion skipped, 38 without text), 17,859,437 citations, 58,958 citation-map rows; chunks [ ] (week 2).
+- Real decisions only (step 1.4b): CourtListener stores many one-line orders ("certiorari denied")
+  as clusters (up to 22,544 in one year, while the Court decides about 70-90 cases a year).
+  Rule, the same for every year: a decision (its clusters with the same docket and date) is kept if
+  it has a Supreme Court Database id (scdb_id), or if its longest opinion has >= 300 words.
+  Why 300: CourtListener links SCDB only for 2000-2019 (1,581 decisions). On those years, >= 300 words
+  keeps 98% of the SCDB decisions; lowering it to 100 adds about 600 one-paragraph orders. The long
+  texts outside SCDB are real opinions we want: copies of SCDB cases under another docket
+  (e.g. Nevada v. Hibbs, 2003), dissents from a denial (e.g. Woodward v. Alabama, 2013) and
+  in-chambers opinions (e.g. Philip Morris v. Scott, 2010).
+- Copies merged (step 1.4c): one decision is sometimes stored as several clusters under different
+  dockets or names (e.g. Miller v. Alabama, 2012: 3 clusters; "EPA" / "E.P.A. v. EME Homer", 2014).
+  Clusters with the same date and the same docket, or the same case name (letters and digits), or the
+  same official citation (U.S., S. Ct., L. Ed. 2d) form one decision (field decision_group).
+  Safety rules: a citation is used only if all kept clusters carrying it have the same date
+  (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases),
+  and two groups with different SCDB ids are never merged.
+  Measured: 2,849 decisions by docket alone -> 2,477 after merging copies; 35 placeholder citations
+  ignored; 8 merges refused because the SCDB ids differ.
+- Known limit of the source: CourtListener has no official citation (U.S., S. Ct., L. Ed. 2d) for most
+  decisions from 2020 on (measured after loading: decisions without any citation 2020: 42 of 126,
+  2021: 123/124, 2022: 112/112, 2023: 35/94, 2024: 86/87; 2000-2019: 0-20 per year). Checked on
+  2026-10-23 that the newest citations release (2026-09-30) does not fill the gap either (no U.S.
+  citation in volumes 597, 602, 603; none for Dobbs or Loper Bright). Such decisions are shown and
+  cited by docket number and date, the usual form before a U.S. Reports page exists:
+  "Dobbs v. Jackson Women's Health Organization, No. 19-1392 (U.S. June 24, 2022)". A decision that
+  has an official citation is shown with it (U.S. first, then S. Ct., then L. Ed. 2d). Rendered from
+  our database (SR21); the citation check must accept this form for these decisions.
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
@@ -106,9 +138,10 @@ Edwin = citations, model, verification, evaluation, test questions.
 | Part | Owner | Branch / PR | Status |
 |---|---|---|---|
 | 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | in review (tag spec-v1 done) |
-| 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | code ready; waiting for the dockets download, then fill section 2 |
+| 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | merged (PR #2); run on the real files, counts in section 2 |
+| 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
-| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | code ready; needs 1.7 merged and the filtered files |
+| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
 | 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; reviewed by Edwin, matches guide p.27-29; needs 1.7 |
 | 1.10 tests for citations | Edwin | step/1.10-citation-tests | 5 tests pass (StaticCitationIndex, no database needed); needs 1.9 merged |
 
@@ -117,3 +150,6 @@ Edwin = citations, model, verification, evaluation, test questions.
 2026-10-22 - The repository was restarted from an empty history to follow the Requirements
 Document (Delivery 1). An earlier attempt (REST API, 2023-2024, SQLite) was discarded; a backup
 of its history is kept by the team.
+
+2026-10-23 - Corpus scope narrowed from "all scotus clusters 2000-2024" (188,045, mostly one-line
+orders) to real decisions (rule in section 2). The court and dates do not change.
