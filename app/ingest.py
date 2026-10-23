@@ -2,6 +2,7 @@
 import gzip
 import json
 import hashlib
+import re
 from collections import defaultdict
 from app import config, db
 from app.chunking import pick_text, OPINION_TYPES
@@ -13,6 +14,40 @@ def opinion_label(op):
         return f"{label} (per curiam)"
     author = (op.get("author_str") or "").strip()
     return f"{label} ({author})" if author else label
+
+
+def shingles(text, n=5):
+    """The set of 5-word sequences of a text: two copies of one opinion share almost all of them."""
+    words = re.sub(r"[^a-z0-9 ]", " ", text.lower()).split()
+    return {" ".join(words[i:i + n]) for i in range(max(len(words) - n + 1, 1))}
+
+
+def same_text(a, b, threshold=0.6):
+    """True if two opinion texts are copies (Jaccard similarity of their 5-word sequences)."""
+    return len(a & b) / max(len(a | b), 1) >= threshold
+
+
+def group_opinions(group, opinions_by_cluster):
+    """One decision = several clusters (copies, or one cluster per separate opinion).
+    Returns (main cluster, [(opinion, text, field)], copies skipped, opinions without text).
+    Opinions of ALL clusters are kept, except copies of an opinion already kept."""
+    def text_size(c):
+        return sum(len(pick_text(o)[0]) for o in opinions_by_cluster[c["cluster_id"]])
+    group = sorted(group, key=text_size, reverse=True)     # the main cluster has the most text
+    kept, kept_shingles, copies, empty = [], [], 0, 0
+    for c in group:
+        for o in opinions_by_cluster[c["cluster_id"]]:
+            text, field = pick_text(o)
+            if not text:
+                empty += 1
+                continue
+            sh = shingles(text)
+            if any(same_text(sh, k) for k in kept_shingles):
+                copies += 1
+                continue
+            kept.append((o, text, field))
+            kept_shingles.append(sh)
+    return group[0], kept, copies, empty
 
 
 def load_corpus():
@@ -30,18 +65,15 @@ def load_corpus():
 
     report = {"clusters": len(clusters), "decisions": 0, "duplicates_merged": 0,
               "decisions_without_text": 0, "opinions": 0, "opinions_without_text": 0,
+              "opinion_copies_skipped": 0,
               "rejected_without_licence": 0,
               "filters": {f.stem[7:]: json.load(open(f)) for f in sorted(config.WORK.glob("report_*.json"))}}
     with db.connect() as con:
         con.execute("TRUNCATE decisions, cluster_alias, opinions, chunks CASCADE")
         for group in groups.values():
-            # keep the cluster whose opinions have the most text
-            def text_size(c):
-                return sum(len(pick_text(o)[0]) for o in opinions_by_cluster[c["cluster_id"]])
-            group.sort(key=text_size, reverse=True)
-            main = group[0]
-            ops = [(o, *pick_text(o)) for o in opinions_by_cluster[main["cluster_id"]]]
-            ops = [(o, text, field) for o, text, field in ops if text]
+            main, ops, copies, empty = group_opinions(group, opinions_by_cluster)
+            report["opinion_copies_skipped"] += copies
+            report["opinions_without_text"] += empty
             if not ops:
                 report["decisions_without_text"] += 1
                 continue
@@ -66,7 +98,6 @@ def load_corpus():
                              opinion_label(o), o.get("author_str"), text, field,
                              hashlib.sha256(text.encode()).hexdigest(), licence))
                 report["opinions"] += 1
-            report["opinions_without_text"] += len(opinions_by_cluster[main["cluster_id"]]) - len(ops)
     refresh_decision_citations()
     db.save_report("corpus", report)
     return report
