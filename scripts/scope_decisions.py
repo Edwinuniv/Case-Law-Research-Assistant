@@ -4,10 +4,11 @@ Why: CourtListener stores many Supreme Court orders as their own clusters (188,0
 2000-2024, while the Court decides about 70-90 cases a year). The Supreme Court Database (SCDB)
 lists the real decisions, but CourtListener links it only up to 2019.
 
-Rule (SPEC section 2):
-  keep a cluster if it (or a duplicate cluster: same docket, same date) has an scdb_id,
-  or if it was filed in a year without SCDB links and its longest opinion has >= MIN_WORDS words.
-MIN_WORDS is chosen on 2000-2019, where SCDB tells us the right answer.
+Rule (SPEC section 2), the same for every year:
+  keep a decision (its clusters with the same docket and date) if one of them has an scdb_id,
+  or if its longest opinion has >= MIN_WORDS words.
+MIN_WORDS is chosen on 2000-2019, where SCDB tells us the right answer. The long texts outside SCDB
+are mostly real opinions too (dissents from a denial, in-chambers opinions, copies of SCDB cases).
 
 Run AFTER filter_clusters and filter_opinions, BEFORE filter_citation_map:
   python -m scripts.scope_decisions                  # only shows the calibration table
@@ -93,8 +94,7 @@ if "--min-words" not in sys.argv:
 
 min_words = int(sys.argv[sys.argv.index("--min-words") + 1])
 keep = {c["cluster_id"] for c in clusters
-        if in_scdb[c["cluster_id"]] or (c["date_filed"][:4] not in linked_years
-                            and longest[c["cluster_id"]] >= min_words)}
+        if in_scdb[c["cluster_id"]] or group_words[group(c)] >= min_words}
 
 for name in ("clusters", "opinions"):           # keep the full files once, as *_all.jsonl
     full = config.WORK / f"{name}_all.jsonl"
@@ -112,11 +112,20 @@ with open(config.WORK / "opinions.jsonl", "w") as out:
             out.write(line)
             n_ops += 1
 
+# possible duplicates: the same case name and date kept under two different dockets
+by_name = defaultdict(list)
+for g in {group(c) for c in clusters if c["cluster_id"] in keep}:
+    by_name[(re.sub(r"[^a-z]", "", names[g]["case_name"].lower())[:40], g[1])].append(g)
+dups = [gs for gs in by_name.values() if len(gs) > 1]
+print(f"\nPossible duplicates (same case name and date, different docket): {len(dups)}")
+for gs in dups[:5]:
+    print("  " + " | ".join(f"{names[g]['case_name'][:40]} ({g[1]}) cluster {names[g]['cluster_id']}" for g in gs[:3]))
+
 per_year = Counter(c["date_filed"][:4] for c in clusters if c["cluster_id"] in keep)
 print("\nKept per year:", ", ".join(f"{y}: {per_year[y]}" for y in sorted(per_year)))
 kept_groups = {group(c) for c in clusters if c["cluster_id"] in keep}
 print(f"Done: {len(clusters):,} clusters -> {len(keep):,} clusters kept = {len(kept_groups):,} decisions "
       f"({len(kept_groups & scdb_groups):,} by SCDB, "
-      f"the rest by >= {min_words} words), {n_ops:,} opinions kept.")
+      f"the others by >= {min_words} words), {n_ops:,} opinions kept.")
 save_filter_report("scope", clusters_read=len(clusters), kept=len(keep), decisions=len(kept_groups), opinions_kept=n_ops,
-                   min_words=min_words, scdb_years=f"{min(linked_years)}-{max(linked_years)}")
+                   min_words=min_words, possible_duplicates=len(dups), scdb_years=f"{min(linked_years)}-{max(linked_years)}")
