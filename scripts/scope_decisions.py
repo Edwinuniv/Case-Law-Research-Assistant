@@ -102,7 +102,12 @@ kept_clusters = [c for c in clusters if c["cluster_id"] in keep]
 # CourtListener sometimes stores one decision as several clusters, under different dockets or
 # with differently written names. Clusters are joined (union-find) when they share the same date and
 # the same docket, OR the same case name (letters and digits only), OR the same official citation.
+# Two safety rules: (1) a citation is used only if all kept clusters carrying it have the same date
+# (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases);
+# (2) two groups with different SCDB ids are never merged (SCDB says they are different cases).
 parent = {c["cluster_id"]: c["cluster_id"] for c in kept_clusters}
+scdb_of = {c["cluster_id"]: ({c["scdb_id"]} if c["scdb_id"] else set()) for c in kept_clusters}
+refused = []
 
 
 def root(x):
@@ -118,7 +123,13 @@ def join_by(key_of):
         for key in key_of(c):
             if key in first:
                 a, b = root(first[key]), root(c["cluster_id"])
+                if a == b:
+                    continue
+                if scdb_of[a] and scdb_of[b] and scdb_of[a] != scdb_of[b]:
+                    refused.append((key, first[key], c["cluster_id"]))
+                    continue
                 parent[max(a, b)] = min(a, b)
+                scdb_of[min(a, b)] = scdb_of[a] | scdb_of[b]
             else:
                 first[key] = c["cluster_id"]
 
@@ -137,16 +148,29 @@ if cit_file.exists():
 else:
     print("(citations.csv.gz not found: copies with the same citation are not merged)")
 
+cite_dates = defaultdict(set)
+for c in kept_clusters:
+    for cite in official[c["cluster_id"]]:
+        cite_dates[cite].add(c["date_filed"])
+ambiguous = sorted(cite for cite, dates in cite_dates.items() if len(dates) > 1)
+print(f"\nCitations ignored for merging (carried by clusters with different dates): {len(ambiguous)}"
+      + (f", e.g. {', '.join(ambiguous[:5])}" if ambiguous else ""))
+ambiguous = set(ambiguous)
+
 join_by(lambda c: [("docket", c["docket_id"], c["date_filed"])])
 join_by(lambda c: [("name", name_key(c), c["date_filed"])])
-join_by(lambda c: [("cite", cite, c["date_filed"]) for cite in official[c["cluster_id"]]])
+join_by(lambda c: [("cite", cite, c["date_filed"]) for cite in official[c["cluster_id"]]
+                   if cite not in ambiguous])
+print(f"Merges refused because the SCDB ids differ: {len(refused)}")
+for key, a, b in refused[:5]:
+    print(f"  {key[0]} {key[1]}: clusters {a} and {b}")
 
 members = defaultdict(list)
 for c in kept_clusters:
     c["decision_group"] = root(c["cluster_id"])  # the loader merges clusters with the same group
     members[c["decision_group"]].append(c)
 merged = [cs for cs in members.values() if len({group(c) for c in cs}) > 1]
-print(f"\nCopies merged (same date + same name or same citation, different docket): {len(merged)} decisions")
+print(f"Copies merged (same date + same name or same citation, different docket): {len(merged)} decisions")
 for cs in merged[:6]:
     print("  " + " | ".join(f"{c['case_name'][:38]} ({c['date_filed']}, cluster {c['cluster_id']})" for c in cs[:3]))
 
