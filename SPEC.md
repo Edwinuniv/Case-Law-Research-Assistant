@@ -30,9 +30,13 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   -> opinions [ ] -> chunks [ ]; citation table rows 17,859,437; citation-map rows kept [ ].
 - Real decisions only (step 1.4b): CourtListener stores many one-line orders ("certiorari denied")
   as clusters (up to 22,544 in one year, while the Court decides about 70-90 cases a year).
-  A cluster is kept if it has a Supreme Court Database id (scdb_id; CourtListener links SCDB only
-  for 2000-2019: 1,581 clusters), or, in years without SCDB links (2020-2024), if its longest opinion
-  has at least N words. N is chosen on 2000-2019, where SCDB gives the right answer: [N, recall, precision].
+  Rule, the same for every year: a decision (its clusters with the same docket and date) is kept if
+  it has a Supreme Court Database id (scdb_id), or if its longest opinion has >= 300 words.
+  Why 300: CourtListener links SCDB only for 2000-2019 (1,581 decisions). On those years, >= 300 words
+  keeps 98% of the SCDB decisions; lowering it to 100 adds about 600 one-paragraph orders. The long
+  texts outside SCDB are real opinions we want: copies of SCDB cases under another docket
+  (e.g. Nevada v. Hibbs, 2003), dissents from a denial (e.g. Woodward v. Alabama, 2013) and
+  in-chambers opinions (e.g. Philip Morris v. Scott, 2010). Measured: [decisions kept, duplicates].
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
