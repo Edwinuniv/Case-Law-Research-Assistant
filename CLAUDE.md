@@ -63,8 +63,6 @@ Supervisor: Georges Salloum. Repo: https://github.com/Edwinuniv/Case-Law-Researc
   Only merge after I confirm it is safe.
 - After merging, delete the feature branch and start a new one for the next feature.
 
-<<<<<<< Updated upstream
-=======
 ## README updates
 - Update README.md in the same branch whenever a change affects how someone installs, sets up or
   runs the project: a new or changed command or script, a new `.env` variable, a new dependency in
@@ -74,65 +72,10 @@ Supervisor: Georges Salloum. Repo: https://github.com/Edwinuniv/Case-Law-Researc
 - Before each merge, check that the README still matches how the project actually runs.
 - Progress and status go in SPEC.md section 10 (status table) and the checklist below, not the README.
 
->>>>>>> Stashed changes
 ## Progress tracking (update this section after finishing each guide step)
 After each step is done, update the checklist below. Mark done steps with ✓ and add a one-line
 note on what was built. If a step is blocked (waiting on a teammate), mark it with ⏳ and say why.
 
-<<<<<<< Updated upstream
-### Setup (Week 0) — Joe's section
-- [ ] 0.1 WSL tools installed (git, python3.12, docker, docker-compose)
-- [ ] 0.2 PostgreSQL + pgvector running in Docker
-- [ ] 0.3 Python virtual environment created
-- [ ] 0.4 .env file created (never committed)
-- [ ] 0.5 Repo cloned and docs/ in place
-- [ ] 0.6 SPEC.md + AI_LOG.md committed and tagged spec-v1 ← must happen before ANY code
-
-### Week 1 — Data foundation (Yasser + Joe + Edwin)
-- [ ] 1.1 CourtListener bulk files downloaded (Yasser)
-- [ ] 1.2 courts.py — filter to scotus (Yasser)
-- [ ] 1.3 dockets.py (Yasser)
-- [ ] 1.4 clusters.py (Yasser)
-- [ ] 1.5 opinions.py (Yasser)
-- [ ] 1.6 citation_map.py (Yasser)
-- [ ] 1.7 db.py — database schema (Joe)
-- [ ] 1.8 ingest.py — load into PostgreSQL (Yasser)
-- [ ] 1.9 citations.py, check_citation.py, find_case.py (Edwin) ⏳ needs 1.6 + 1.7
-- [ ] 1.10 tests/conftest.py, tests/test_citations.py (Edwin) ⏳ needs 1.9
-
-### Week 2 — Search (Yasser)
-- [ ] 2.1 embed.py
-- [ ] 2.2 search.py (hybrid BM25 + pgvector)
-- [ ] 2.3 tests/test_search.py
-
-### Week 3 — Evaluation set (all three)
-- [ ] 3.1 eval/questions.jsonl — 80+ questions committed and tagged eval-v1
-
-### Week 4 — LLM + pipeline (Edwin)
-- [ ] 4.1 llm.py
-- [ ] 4.2 verify.py
-- [ ] 4.3 pipeline.py
-- [ ] 4.4 ask.py
-- [ ] 4.5 tests for 4.1-4.4
-
-### Week 5 — Evaluate (Edwin)
-- [ ] 5.1 evaluate.py + tests/test_evaluate.py
-
-### Week 6 — Website + API (Joe)
-- [ ] 6.x FastAPI routes, frontend, authentication
-
-### Week 7 — Attack the verifier (Edwin)
-- [ ] 7.x Adversarial tests against verify.py
-
-### Week 8 — Calibration (Edwin)
-- [ ] 8.x Set thresholds; write them to EVALUATION.md BEFORE measuring
-
-### Week 10 — Reranker improvement
-- [ ] 10.x Add cross-encoder reranker (ms-marco-MiniLM-L-6-v2)
-
-### Deployment
-- [ ] Deploy to Railway (Joe)
-=======
 Step numbers and names below match the guide's headings exactly. Status as of 2026-10-23.
 
 ### Week 0 — Setup (team; guide pages 7-10)
@@ -197,7 +140,6 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 ### Week 10 — Improvement (reranker)
 - [ ] 10.1 Hypothesis first, committed
 - [ ] 10.2 Measure before and after
->>>>>>> Stashed changes
 
 ## Style
 - Explain things in simple, plain English (I am a student).
