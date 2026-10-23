@@ -41,6 +41,9 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   dockets or names (e.g. Miller v. Alabama, 2012: 3 clusters; "EPA" / "E.P.A. v. EME Homer", 2014).
   Clusters with the same date and the same docket, or the same case name (letters and digits), or the
   same official citation (U.S., S. Ct., L. Ed. 2d) form one decision (field decision_group).
+  Safety rules: a citation is used only if all kept clusters carrying it have the same date
+  (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases),
+  and two groups with different SCDB ids are never merged.
   Measured before merging: 2,935 clusters kept = 2,849 decisions by docket, 285 possible copies.
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).

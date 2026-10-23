@@ -89,4 +89,11 @@ read the related line ourselves before relying on these entries.
 2. **Our mistake: a step started too early.** We started the opinions filter before the dockets and
    clusters filters (and outside the virtual environment); it needs clusters.jsonl. Stopped and re-run
    in order.
+3. **AI mistake: placeholder citations merged different cases.** The AI's first rule for merging copies
+   of a decision joined clusters with the same official citation and date. It merged Kaupp v. Texas with
+   Illinois ex rel. Madigan, and three other 2003 cases together. How we caught it: we read the merge
+   examples the script prints, and the SCDB count fell from 1,581 to 1,571. Cause (checked in
+   citations.csv.gz): CourtListener gives new decisions the placeholder "538 U.S. 1" before the real page
+   is known, so different cases share it. Fix: a citation is used only if all clusters carrying it have
+   the same date, and two groups with different SCDB ids are never merged; tested on these exact cases.
 
