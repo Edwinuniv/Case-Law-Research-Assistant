@@ -95,17 +95,22 @@ test questions, abstentions, analytics, settings, corpus and citation lookup, re
 
 ## 9. Work process
 
-Every change is made on its own branch and merged through a pull request; each pull request
-also updates section 10 (and any section it changes). Owners: Yasser = data path (bulk files,
+Every guide step is made on its own branch (step/<number>-<name>, never directly on main) with
+small commits, and merged through a pull request after the team checks it does not conflict with
+main or break a teammate's files; each pull request also updates section 10 (and any section it changes). Owners: Yasser = data path (bulk files,
 ingestion, chunking, embeddings, search, reranker); Joe = database, website, deployment;
 Edwin = citations, model, verification, evaluation, test questions.
 
 ## 10. Implementation status
 
-| Part | Branch / PR | Status |
-|---|---|---|
-| Week 0: SPEC, AI log, project setup | week0-setup | in review |
-| Week 1a: bulk-file reader and filters (steps 1.1-1.6) | yasser/week1-filters | in review: run on the real files, then fill section 2 |
+| Part | Owner | Branch / PR | Status |
+|---|---|---|---|
+| 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | in review (tag spec-v1 done) |
+| 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | code ready; waiting for the dockets download, then fill section 2 |
+| 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
+| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | code ready; needs 1.7 merged and the filtered files |
+| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
+| 1.10 tests for citations | Edwin | - | not started |
 
 ## 11. Divergences log
 
