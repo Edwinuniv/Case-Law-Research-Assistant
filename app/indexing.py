@@ -10,7 +10,7 @@ def vector_literal(vec):
     return "[" + ",".join(f"{x:.6f}" for x in vec) + "]"
 
 
-def build_index(max_words=350, log=print):
+def build_index(max_words=350, log=lambda msg: print(msg, flush=True)):   # flush: progress shows in a log file
     with db.connect() as con:
         opinions = con.execute("""SELECT o.opinion_id, o.decision_id, o.label, o.text,
                                          d.case_name, d.date_filed
