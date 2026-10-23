@@ -108,7 +108,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 3.5 Compare chunk sizes, then commit (Yasser)
 
 ### Week 4 — Model call and verifier (Edwin)
-- [ ] 4.1 The model call — branch step/4.1-llm, app/llm.py done (checked with a fake model: retry, timeout, errors) ⏳ live check needs a Groq key in .env
+- [x] 4.1 The model call — branch step/4.1-llm: app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
 - [ ] 4.2 The verifier: the heart of the project
 - [ ] 4.3 The pipeline
 - [ ] 4.4 Try it
