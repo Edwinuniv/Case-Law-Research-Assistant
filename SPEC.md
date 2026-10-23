@@ -50,6 +50,15 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   and two groups with different SCDB ids are never merged.
   Measured: 2,849 decisions by docket alone -> 2,477 after merging copies; 35 placeholder citations
   ignored; 8 merges refused because the SCDB ids differ.
+- Known limit of the source: CourtListener has no official citation (U.S., S. Ct., L. Ed. 2d) for most
+  decisions from 2020 on (measured after loading: decisions without any citation 2020: 42 of 126,
+  2021: 123/124, 2022: 112/112, 2023: 35/94, 2024: 86/87; 2000-2019: 0-20 per year). Checked on
+  2026-10-23 that the newest citations release (2026-09-30) does not fill the gap either (no U.S.
+  citation in volumes 597, 602, 603; none for Dobbs or Loper Bright). Such decisions are shown and
+  cited by docket number and date, the usual form before a U.S. Reports page exists:
+  "Dobbs v. Jackson Women's Health Organization, No. 19-1392 (U.S. June 24, 2022)". A decision that
+  has an official citation is shown with it (U.S. first, then S. Ct., then L. Ed. 2d). Rendered from
+  our database (SR21); the citation check must accept this form for these decisions.
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
