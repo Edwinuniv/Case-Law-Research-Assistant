@@ -29,3 +29,26 @@ class ModelError(Exception):
 def format_passages(passages):
     return "\n\n".join(f"[{pid}] {c['case_name']} ({c['date_filed'][:4]}) - {c['opinion_label']} - "
                        f"{c['section']}\n{c['text']}" for pid, c in passages.items())
+
+
+def _client():
+    # max_retries=0: we do our own single retry, and the 30 s limit must really be 30 s (SR4)
+    return OpenAI(base_url=config.LLM_BASE_URL, api_key=config.LLM_API_KEY,
+                  timeout=config.LLM_TIMEOUT_SECONDS, max_retries=0)
+
+
+def _ask_json(system, user):
+    last_error = None
+    for attempt in range(1 + config.LLM_JSON_RETRIES):       # SR20: one retry for unreadable JSON
+        try:
+            r = _client().chat.completions.create(
+                model=config.LLM_MODEL, temperature=0, response_format={"type": "json_object"},
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user}])
+            return json.loads(r.choices[0].message.content)
+        except APITimeoutError as e:                         # SR4: cancelled after 30 s, no retry
+            raise ModelError("timeout after 30 seconds") from e
+        except json.JSONDecodeError as e:
+            last_error = e
+        except Exception as e:
+            raise ModelError(type(e).__name__) from e
+    raise ModelError(f"invalid JSON twice ({last_error})")
