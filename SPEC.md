@@ -30,7 +30,8 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   (1,581 in SCDB; 309 merged from copies; 82-126 per year); opinions 10,541,500 read -> 190,739 of
   scotus clusters (0 unreadable) -> 5,598 of kept decisions; citation table rows 17,859,437;
   citation-map 30,949,033 rows read -> 58,958 citations made by our opinions;
-  loaded: decisions [ ], opinions [ ], chunks [ ] (filled after step 1.8).
+  loaded (step 1.8, 2026-10-23): 2,477 decisions (0 without text), 4,765 opinions (795 copies of an
+  opinion skipped, 38 without text), 17,859,437 citations, 58,958 citation-map rows; chunks [ ] (week 2).
 - Real decisions only (step 1.4b): CourtListener stores many one-line orders ("certiorari denied")
   as clusters (up to 22,544 in one year, while the Court decides about 70-90 cases a year).
   Rule, the same for every year: a decision (its clusters with the same docket and date) is kept if
@@ -131,7 +132,7 @@ Edwin = citations, model, verification, evaluation, test questions.
 | 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | merged (PR #2); run on the real files, counts in section 2 |
 | 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
-| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | code ready; needs 1.7 merged and the filtered files |
+| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
 | 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
 | 1.10 tests for citations | Edwin | - | not started |
 
