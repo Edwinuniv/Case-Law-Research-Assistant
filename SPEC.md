@@ -139,11 +139,12 @@ Edwin = citations, model, verification, evaluation, test questions.
 |---|---|---|---|
 | 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | in review (tag spec-v1 done) |
 | 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | merged (PR #2); run on the real files, counts in section 2 |
-| 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
-| 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
-| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
-| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
-| 1.10 tests for citations | Edwin | - | not started |
+| 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | merged (PR #4) |
+| 1.7 database schema (db.py) | Joe | step/1.7-db | merged (PR #6, reviewed by Joe) |
+| 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | merged (PR #5); loaded on the real data (counts in section 2) |
+| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | in review |
+| 1.10 tests for citations | Edwin | step/1.10-citation-tests | in review |
+| 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | code ready; run on the real data, then fill section 4 |
 
 ## 11. Divergences log
 
