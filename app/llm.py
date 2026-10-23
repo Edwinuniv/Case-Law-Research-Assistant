@@ -52,3 +52,12 @@ def _ask_json(system, user):
         except Exception as e:
             raise ModelError(type(e).__name__) from e
     raise ModelError(f"invalid JSON twice ({last_error})")
+
+
+def ask_model(question, passages):
+    return _ask_json(SYSTEM_PROMPT, f"PASSAGES:\n\n{format_passages(passages)}\n\nQUESTION: {question}")
+
+
+def judge_support(statement, passage_text):
+    """Used only by the evaluation, for the groundedness score (FR15)."""
+    return _ask_json(JUDGE_PROMPT, f"PASSAGE:\n{passage_text}\n\nSTATEMENT:\n{statement}").get("verdict", "no")
