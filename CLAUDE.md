@@ -48,6 +48,78 @@ Supervisor: Georges Salloum. Repo: https://github.com/Edwinuniv/Case-Law-Researc
 - Threshold rule goes in EVALUATION.md BEFORE measuring (Week 8).
 - Every number in the report must come from a saved evaluation run.
 
+## Branch and commit rules (IMPORTANT — teacher checks commit history)
+- Every feature or guide step gets its own branch. Never work directly on main.
+- Branch naming: use the format `feature/<short-name>` or `step/<guide-step-number>`.
+  Examples: `feature/citation-checker`, `step/1.9-citations`, `step/4.1-llm`.
+- Inside each branch, make multiple small commits as you go — one commit per logical change
+  (create file, add function, add test, fix bug). Do NOT batch everything into one commit.
+- Space commits out naturally as you work; do not commit everything at the same second.
+- When a branch is ready to merge, tell me first. I will say "merge it".
+  Before merging, I will check:
+  1. Does the branch conflict with main or with a teammate's branch?
+  2. Will merging break any file owned by Yasser or Joe?
+  3. Are there any open issues to fix first?
+  Only merge after I confirm it is safe.
+- After merging, delete the feature branch and start a new one for the next feature.
+
+## Progress tracking (update this section after finishing each guide step)
+After each step is done, update the checklist below. Mark done steps with ✓ and add a one-line
+note on what was built. If a step is blocked (waiting on a teammate), mark it with ⏳ and say why.
+
+### Setup (Week 0) — Joe's section
+- [ ] 0.1 WSL tools installed (git, python3.12, docker, docker-compose)
+- [ ] 0.2 PostgreSQL + pgvector running in Docker
+- [ ] 0.3 Python virtual environment created
+- [ ] 0.4 .env file created (never committed)
+- [ ] 0.5 Repo cloned and docs/ in place
+- [ ] 0.6 SPEC.md + AI_LOG.md committed and tagged spec-v1 ← must happen before ANY code
+
+### Week 1 — Data foundation (Yasser + Joe + Edwin)
+- [ ] 1.1 CourtListener bulk files downloaded (Yasser)
+- [ ] 1.2 courts.py — filter to scotus (Yasser)
+- [ ] 1.3 dockets.py (Yasser)
+- [ ] 1.4 clusters.py (Yasser)
+- [ ] 1.5 opinions.py (Yasser)
+- [ ] 1.6 citation_map.py (Yasser)
+- [ ] 1.7 db.py — database schema (Joe)
+- [ ] 1.8 ingest.py — load into PostgreSQL (Yasser)
+- [ ] 1.9 citations.py, check_citation.py, find_case.py (Edwin) ⏳ needs 1.6 + 1.7
+- [ ] 1.10 tests/conftest.py, tests/test_citations.py (Edwin) ⏳ needs 1.9
+
+### Week 2 — Search (Yasser)
+- [ ] 2.1 embed.py
+- [ ] 2.2 search.py (hybrid BM25 + pgvector)
+- [ ] 2.3 tests/test_search.py
+
+### Week 3 — Evaluation set (all three)
+- [ ] 3.1 eval/questions.jsonl — 80+ questions committed and tagged eval-v1
+
+### Week 4 — LLM + pipeline (Edwin)
+- [ ] 4.1 llm.py
+- [ ] 4.2 verify.py
+- [ ] 4.3 pipeline.py
+- [ ] 4.4 ask.py
+- [ ] 4.5 tests for 4.1-4.4
+
+### Week 5 — Evaluate (Edwin)
+- [ ] 5.1 evaluate.py + tests/test_evaluate.py
+
+### Week 6 — Website + API (Joe)
+- [ ] 6.x FastAPI routes, frontend, authentication
+
+### Week 7 — Attack the verifier (Edwin)
+- [ ] 7.x Adversarial tests against verify.py
+
+### Week 8 — Calibration (Edwin)
+- [ ] 8.x Set thresholds; write them to EVALUATION.md BEFORE measuring
+
+### Week 10 — Reranker improvement
+- [ ] 10.x Add cross-encoder reranker (ms-marco-MiniLM-L-6-v2)
+
+### Deployment
+- [ ] Deploy to Railway (Joe)
+
 ## Style
 - Explain things in simple, plain English (I am a student).
 - Keep commits small and frequent; the commit history is graded.
