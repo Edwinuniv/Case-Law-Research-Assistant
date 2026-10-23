@@ -1,5 +1,31 @@
 # Verdicta — Case-law Research Assistant (ESIB P4)
 
-Team: Yasser Hajj Youssef, Edwin Mouawad, Joe Bou Karam · Supervisor: Georges Salloum
+Answers legal research questions from U.S. Supreme Court opinions (2000–2024, CourtListener bulk
+data), links every sentence to its passage, never shows an unverified citation, and answers
+"Not supported by the retrieved opinions" when the opinions do not answer.
 
-The project starts here. Follow Verdicta_Build_Guide.pdf from Step 0.5.
+Team: Yasser Hajj Youssef, Edwin Mouawad, Joe Bou Karam · Supervisor: Georges Salloum.
+Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Document_P4.docx.
+
+## Run locally
+    docker compose up -d                       # PostgreSQL + pgvector
+    python3 -m venv .venv && source .venv/bin/activate
+    pip install -r requirements.txt
+    cp .env.example .env                       # then fill in the keys
+    python -m pytest -q                        # uses the TEST database
+    uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin)
+
+## Build the data (week 1-2)
+    python -m scripts.filter_dockets
+    python -m scripts.filter_clusters
+    curl -sS https://storage.courtlistener.com/bulk-data/opinions-2024-12-31.csv.bz2 | lbzip2 -dc | python -m scripts.filter_opinions -
+    python -m scripts.filter_citations
+    python -m scripts.filter_citation_map
+    python -m scripts.seed --all               # loads everything into DATABASE_URL
+
+## Useful commands
+    python -m scripts.check_citation "603 U.S. 593"
+    python -m scripts.find_case "loper"
+    python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
+    python -m scripts.eval_retrieval "baseline"
+    python -m scripts.run_eval "note"

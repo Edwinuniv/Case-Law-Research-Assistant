@@ -1,0 +1,76 @@
+# AI log
+
+For each significant delegation: what we asked, what came back, what was wrong, how we caught it.
+
+## 2026-10-22 — Code written by Claude, tested by us
+
+**How we work:** Claude writes the code on a branch (one branch per step of the build guide) and
+updates SPEC.md; the owner of that part reviews the pull request, runs it on their machine, and merges.
+
+**Owners (they review, test and must be able to explain the code):**
+- Yasser: data path (bulk files, ingestion, chunking, embeddings, search, reranker)
+- Joe: database, website, deployment
+- Edwin: citations, model, verification, evaluation, test questions
+
+---
+
+## 2026-10-16 — Project setup assistance (ChatGPT)
+
+**Asked:** Help setting up Ubuntu, the Python virtual environment, Groq and the first files.
+**Problem encountered:** the virtual environment could not be created because `python3.12-venv` was missing.
+**Fix:** installed `python3.12-venv`, recreated the environment, installed the libraries.
+
+---
+
+## 2026-10-19 — First attempt contradicted our requirements document
+
+**What was wrong:** the first AI guide and code used the CourtListener REST API, the dates
+2023–2024, SQLite, and accounts for visitors. Our Requirements Document specifies the bulk files,
+2000–2024, PostgreSQL, a public page without login, and a reranker as the improvement.
+**How we caught it:** comparing the guide with our requirements document.
+**Fix:** we restarted the repository on 2026-10-22 and follow a guide aligned with the requirements.
+
+Our own fix from that attempt: the download script stopped on a temporary CourtListener error
+(HTTP 502); we added a retry with a growing wait for HTTP 500/502/503/504.
+
+---
+
+## Mistakes the AI reported while building the code (to re-check by us)
+
+Each one is described in Part 3 of the Verdicta build guide. We must re-run the related test or
+read the related line ourselves before relying on these entries.
+
+1. Citations were detected only with eyecite, which ignores invented reporters ("12 Fake Rep. 345").
+2. "In Trump v. United States" was read with "In" as the first party.
+3. A regular expression used a variable-width look-behind, which Python refuses.
+4. eyecite raises an error on empty text, which crashed the evaluation on refused answers.
+5. Secure cookies were switched on whenever a real secret was set, which breaks login on localhost.
+6. The side panel did not highlight quotes that crossed a line break.
+7. The opinions filter kept all seven text columns of each opinion instead of only the one used.
+8. `scripts/seed.py` imported files that only exist from weeks 2 and 5, so it crashed in week 1.
+
+---
+
+## 2026-10-22 — Problems found while setting up and downloading (Yasser)
+
+1. **Docker was not installed.** `docker compose up -d` failed with "command not found".
+   Fix: installed `docker.io` and `docker-compose-v2` in Ubuntu and added our user to the docker group.
+2. **AI mistake: wrong folder for the download log.** The AI's command wrote its log to `../../download.log`,
+   assuming we were inside `data/bulk`; we ran it from the project folder, so it tried to write to `/home`
+   ("Permission denied"). Fix: full paths (`aria2c -d ~/case-law-assistant/data/bulk`, log in the project folder).
+3. **Download speed.** Our connection gives about 0.7 MB/s. The AI suggested 8 parallel connections (aria2);
+   we measured the same speed, so the limit is our line, not the server. The 52 GB take about 21 hours.
+4. **AI mistake: the model name no longer existed.** The guide used `llama-3.3-70b-versatile`; Groq answered
+   404 `model_not_found`. Caught by our connection test; we listed the models available to our key
+   through the API and chose `openai/gpt-oss-120b`.
+5. **Our mistake: an API key was exposed in a screenshot.** We deleted that key on Groq and created a new one;
+   keys now only go in `.env`, which is never committed.
+6. **AI mistake: wrong CSV quote character.** The AI's reader assumed values in double quotes. Our
+   `peek_bulk` check on the real 2024-12-31 files showed every value between backticks (`` `9474463` ``):
+   values kept their backticks and, in the opinions file, slid into the wrong columns (`cluster_id` came
+   out empty), so the filters would have kept nothing. Caught before any filtering by checking the columns
+   (step 1.3). Fix: `CSV_QUOTECHAR` = backtick in `app/config.py`, used by `app/bulk.py`; `filter_opinions`
+   now counts unreadable rows instead of skipping them silently.
+7. **An earlier complete download was reused.** We found the opinions file (exact size 44,759,737,019 bytes)
+   from an earlier attempt and moved it into `data/bulk`, saving about 18 hours of download. An incomplete
+   decompressed copy (48 GB, ending in zero bytes, checked with `od -c`) was found next to it and is not used.
