@@ -36,7 +36,12 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   keeps 98% of the SCDB decisions; lowering it to 100 adds about 600 one-paragraph orders. The long
   texts outside SCDB are real opinions we want: copies of SCDB cases under another docket
   (e.g. Nevada v. Hibbs, 2003), dissents from a denial (e.g. Woodward v. Alabama, 2013) and
-  in-chambers opinions (e.g. Philip Morris v. Scott, 2010). Measured: [decisions kept, duplicates].
+  in-chambers opinions (e.g. Philip Morris v. Scott, 2010).
+- Copies merged (step 1.4c): one decision is sometimes stored as several clusters under different
+  dockets or names (e.g. Miller v. Alabama, 2012: 3 clusters; "EPA" / "E.P.A. v. EME Homer", 2014).
+  Clusters with the same date and the same docket, or the same case name (letters and digits), or the
+  same official citation (U.S., S. Ct., L. Ed. 2d) form one decision (field decision_group).
+  Measured before merging: 2,935 clusters kept = 2,849 decisions by docket, 285 possible copies.
 - Licence: Public Domain Mark 1.0, stored for every decision and opinion with its load date;
   rows without a licence are rejected (FR30, SR11).
 - A newer quarterly release is loaded by changing CL_RELEASE only (NFR13).
