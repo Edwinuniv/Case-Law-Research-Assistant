@@ -61,6 +61,8 @@ Supervisor: Georges Salloum. Repo: https://github.com/Edwinuniv/Case-Law-Researc
   2. Will merging break any file owned by Yasser or Joe?
   3. Are there any open issues to fix first?
   Only merge after I confirm it is safe.
+- Merge pull requests with a merge commit (`gh pr merge --merge`). Never squash or rebase: squashing
+  turns a branch's small commits into one, and the history is graded (PR #7 was squash-merged by mistake).
 - After merging, delete the feature branch and start a new one for the next feature.
 
 ## README updates
