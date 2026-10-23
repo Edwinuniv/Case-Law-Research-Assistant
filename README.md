@@ -4,6 +4,9 @@ Answers legal research questions from U.S. Supreme Court opinions (2000–2024, 
 data), links every sentence to its passage, never shows an unverified citation, and answers
 "Not supported by the retrieved opinions" when the opinions do not answer.
 
+Team: Yasser Hajj Youssef, Edwin Mouawad, Joe Bou Karam · Supervisor: Georges Salloum.
+Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Document_P4.docx.
+
 ## Run locally
     docker compose up -d                       # PostgreSQL + pgvector
     python3 -m venv .venv && source .venv/bin/activate
