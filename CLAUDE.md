@@ -80,7 +80,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 ### Week 0 — Setup (team; guide pages 7-10)
 - [x] 0.1-0.5 Repo skeleton, docker-compose (PostgreSQL + pgvector), requirements, .env.example (Yasser, commit 6c30a9f)
-- [ ] Edwin's own PC: tools, .venv, requirements installed, database container running ← in progress
+- [x] Edwin's own PC: .venv (Python 3.12.3) + requirements, database container (pgvector 0.8.7), verdicta_test database, .env
 - [x] 0.6 SPEC.md + AI_LOG.md committed and tagged spec-v1 (commit 5747c13)
 
 ### Week 1 — Data foundation
@@ -92,8 +92,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 1.6 The citation table and the citation map (Yasser) — merged
 - [ ] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — branch step/1.7-db, Joe to review
 - [ ] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — branch step/1.8-ingest, needs 1.7 merged
-- [ ] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — branch step/1.9-citations, Edwin to review against guide pp. 27-31 ⏳ needs 1.7 merged
-- [ ] 1.10 First tests, and commit (Edwin) — not started ⏳ needs 1.9
+- [ ] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — branch step/1.9-citations, reviewed by Edwin: matches guide pp. 27-29 ⏳ needs 1.7 merged, and 1.8 data loaded for the gate run
+- [ ] 1.10 First tests, and commit (Edwin) — branch step/1.10-citation-tests (pushed), 5 passed ⏳ needs 1.9 merged
 
 ### Week 2 — Chunks and embeddings (Yasser)
 - [ ] 2.1 Understand the chunking code (app/chunking.py, created in 1.8)
