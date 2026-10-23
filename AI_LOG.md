@@ -74,3 +74,33 @@ read the related line ourselves before relying on these entries.
 7. **An earlier complete download was reused.** We found the opinions file (exact size 44,759,737,019 bytes)
    from an earlier attempt and moved it into `data/bulk`, saving about 18 hours of download. An incomplete
    decompressed copy (48 GB, ending in zero bytes, checked with `od -c`) was found next to it and is not used.
+
+## 2026-10-23 — Filtering the real files (Yasser)
+
+1. **AI mistake: wrong expected counts.** The AI expected "a few hundred dockets per year" and
+   "about 1,500-3,000 clusters" for scotus 2000-2024. The real files gave 499,717 dockets and 188,045
+   clusters. How we caught it: we compared the "Done:" lines with the expected numbers, then counted
+   clusters per year (10,000-22,000 in most years, but only 120-350 in 2007-2009 and 2021-2024).
+   Cause: CourtListener stores one-line orders ("certiorari denied") as clusters, and
+   `precedential_status` does not separate them (187,578 of 188,045 are "Published").
+   Fix: we measured the Supreme Court Database id per year (67-88 per year for 2000-2019, none after),
+   and added step 1.4b (`scripts/scope_decisions.py`): SCDB id, or an opinion-length threshold chosen
+   on the SCDB years. Recorded in SPEC section 2 and the divergences log.
+2. **Our mistake: a step started too early.** We started the opinions filter before the dockets and
+   clusters filters (and outside the virtual environment); it needs clusters.jsonl. Stopped and re-run
+   in order.
+3. **AI mistake: placeholder citations merged different cases.** The AI's first rule for merging copies
+   of a decision joined clusters with the same official citation and date. It merged Kaupp v. Texas with
+   Illinois ex rel. Madigan, and three other 2003 cases together. How we caught it: we read the merge
+   examples the script prints, and the SCDB count fell from 1,581 to 1,571. Cause (checked in
+   citations.csv.gz): CourtListener gives new decisions the placeholder "538 U.S. 1" before the real page
+   is known, so different cases share it. Fix: a citation is used only if all clusters carrying it have
+   the same date, and two groups with different SCDB ids are never merged; tested on these exact cases.
+## 2026-10-23 — Loading into PostgreSQL (Yasser)
+
+1. **AI mistake: a query that never finished.** `refresh_decision_citations` (copies each decision's own
+   citations onto it) used a sub-query per decision with no index on `citations.cluster_id`, so it read
+   the 17.8 million citations once per decision (2,477 times). How we caught it: the seed was still
+   running after 75 minutes. Fix: one join through `cluster_alias` that reads the table once; measured
+   2.1 s on a test database with 17.8 million citations.
+

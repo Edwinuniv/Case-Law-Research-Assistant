@@ -19,6 +19,7 @@ Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Do
     python -m scripts.filter_dockets
     python -m scripts.filter_clusters
     curl -sS https://storage.courtlistener.com/bulk-data/opinions-2024-12-31.csv.bz2 | lbzip2 -dc | python -m scripts.filter_opinions -
+    python -m scripts.scope_decisions              # calibration table, then --min-words N
     python -m scripts.filter_citations
     python -m scripts.filter_citation_map
     python -m scripts.seed --all               # loads everything into DATABASE_URL
