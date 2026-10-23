@@ -127,8 +127,13 @@ def load_citations():
 
 
 def refresh_decision_citations():
-    """Copy each decision's own citations (e.g. '603 U.S. 593') from the citations table."""
+    """Copy each decision's own citations (e.g. '603 U.S. 593') from the citations table.
+    One join that reads the 17.8 million citations once (a sub-query per decision read them
+    once PER decision, which took hours)."""
     with db.connect() as con:
-        con.execute("""UPDATE decisions d SET citations = COALESCE((
-            SELECT array_agg(DISTINCT c.volume || ' ' || c.reporter || ' ' || c.page)
-            FROM citations c WHERE c.cluster_id = ANY(d.all_cluster_ids)), '{}')""")
+        con.execute("""UPDATE decisions d SET citations = x.cites
+            FROM (SELECT a.decision_id,
+                         array_agg(DISTINCT c.volume || ' ' || c.reporter || ' ' || c.page) AS cites
+                  FROM cluster_alias a JOIN citations c ON c.cluster_id = a.cluster_id
+                  GROUP BY a.decision_id) x
+            WHERE d.decision_id = x.decision_id""")
