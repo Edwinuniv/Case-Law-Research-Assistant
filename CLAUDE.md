@@ -94,8 +94,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 1.6 The citation table and the citation map (Yasser) — merged
 - [ ] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — branch step/1.7-db, Joe to review
 - [ ] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — branch step/1.8-ingest, needs 1.7 merged
-- [ ] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — branch step/1.9-citations, reviewed by Edwin: matches guide pp. 27-29 ⏳ needs 1.7 merged, and 1.8 data loaded for the gate run
-- [ ] 1.10 First tests, and commit (Edwin) — branch step/1.10-citation-tests (pushed), 5 passed ⏳ needs 1.9 merged
+- [x] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — reviewed by Edwin, merged (PR #10) ⏳ gate run needs the 1.8 data loaded
+- [x] 1.10 First tests, and commit (Edwin) — tests/conftest.py, tests/test_citations.py: 5 passed, merged (PR #11)
 
 ### Week 2 — Chunks and embeddings (Yasser)
 - [ ] 2.1 Understand the chunking code (app/chunking.py, created in 1.8)
@@ -110,9 +110,9 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 3.5 Compare chunk sizes, then commit (Yasser)
 
 ### Week 4 — Model call and verifier (Edwin)
-- [x] 4.1 The model call — branch step/4.1-llm: app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
-- [x] 4.2 The verifier: the heart of the project — branch step/4.2-verify (from 1.9): app/verify.py, five checks tried one by one; fix: ["P1"] markers removed before the checks (AI_LOG, SPEC §11) ⏳ PR after 1.9
-- [ ] 4.3 The pipeline
+- [x] 4.1 The model call — merged (PR #7, history restored in #8): app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
+- [x] 4.2 The verifier: the heart of the project — merged (PR #12): app/verify.py, five checks tried one by one; fix: ["P1"] markers removed before the checks (AI_LOG, SPEC §11)
+- [x] 4.3 The pipeline — branch step/4.3-pipeline: app/pipeline.py as in the guide, every path checked with a fake searcher + fake model ⏳ re-check with Yasser's real Searcher (3.3) when app/search.py lands
 - [ ] 4.4 Try it
 - [ ] 4.5 Tests (with a fake model)
 
