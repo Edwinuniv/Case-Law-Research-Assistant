@@ -75,3 +75,23 @@ def check_sentence(sentence, passages, index):
     for number in sorted(numbers_in(text_without_citations) - passage_numbers):
         problems.append(f"number or date not in the cited passage: {number}")
     return problems
+
+
+def verify(draft, passages, index):
+    """Returns (kept, removed). Each kept sentence gets its groundedness; removed ones their problems."""
+    kept, removed = [], []
+    for s in draft.get("sentences") or []:
+        if not isinstance(s, dict):
+            removed.append({"text": str(s), "sources": [], "problems": ["not a valid sentence"]})
+            continue
+        problems = check_sentence(s, passages, index)
+        if problems:
+            removed.append({**s, "problems": problems})
+        else:
+            cited_text = norm(" ".join(passages[p]["text"] for p in s["sources"]))
+            kept.append({**s, "groundedness": round(groundedness(s["text"], cited_text), 3), "problems": []})
+    return kept, removed
+
+
+def count_fabrications(removed):
+    return sum(1 for s in removed for p in s["problems"] if p.startswith("FABRICATED"))
