@@ -112,7 +112,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 ### Week 4 — Model call and verifier (Edwin)
 - [x] 4.1 The model call — merged (PR #7, history restored in #8): app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
 - [x] 4.2 The verifier: the heart of the project — merged (PR #12): app/verify.py, five checks tried one by one; fix: ["P1"] markers removed before the checks (AI_LOG, SPEC §11)
-- [ ] 4.3 The pipeline
+- [x] 4.3 The pipeline — branch step/4.3-pipeline: app/pipeline.py as in the guide, every path checked with a fake searcher + fake model ⏳ re-check with Yasser's real Searcher (3.3) when app/search.py lands
 - [ ] 4.4 Try it
 - [ ] 4.5 Tests (with a fake model)
 
