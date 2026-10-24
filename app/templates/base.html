@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Verdicta{% endblock %}</title>
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;color:#1d2530;background:#f6f7f9;line-height:1.5}
+ header{background:#1f3a5f;color:#fff;padding:10px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+ header a{color:#dbe6f5;text-decoration:none} header .brand{font-weight:700;margin-right:auto;color:#fff}
+ main{max-width:1200px;margin:20px auto;padding:0 16px}
+ footer{text-align:center;color:#66717f;font-size:13px;padding:24px 16px}
+ .card{background:#fff;border:1px solid #dde2e8;border-radius:6px;padding:14px 18px;margin-bottom:14px}
+ textarea,input,select{font:inherit;padding:6px;border:1px solid #c5cdd6;border-radius:4px}
+ textarea{width:100%;box-sizing:border-box}
+ button,.btn{font:inherit;background:#1f3a5f;color:#fff;border:0;border-radius:4px;padding:7px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+ button.light{background:#e8edf4;color:#1f3a5f}
+ table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
+ th,td{border:1px solid #dde2e8;padding:5px 8px;text-align:left;vertical-align:top}
+ th{background:#eef2f7}
+ .status{padding:10px 14px;border-radius:5px;margin-bottom:12px;border:2px solid}
+ .ANSWERED{background:#e7f5ea;border-color:#2f7d3b}.LOW_CONFIDENCE{background:#fff6dd;border-color:#c58b00}
+ .NOT_SUPPORTED{background:#eef0f3;border-color:#7a8594}.ERROR{background:#fde8e6;border-color:#b3342b}
+ .chip{display:inline-block;background:#eef2f7;border:1px solid #c9d3df;border-radius:12px;padding:0 8px;margin:2px;font-size:13px;text-decoration:none;color:#1f3a5f;cursor:pointer}
+ .muted{color:#66717f;font-size:13px} mark{background:#ffe58a} .hl{background:#e8f0fb}
+ .red{background:#fde8e6}.green{background:#e7f5ea}.warn{background:#fff6dd}
+ .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+ .stat{background:#fff;border:1px solid #dde2e8;border-radius:6px;padding:10px}.stat b{font-size:22px;display:block}
+ .two{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
+ @media(max-width:850px){.two{grid-template-columns:1fr}}
+ #panel{position:sticky;top:12px;max-height:90vh;overflow:auto}
+</style>{% block head %}{% endblock %}</head><body>
+<header><a class="brand" href="/">Verdicta</a>
+ <span class="muted" style="color:#c9d6e8">{{ config.COVERAGE }}</span>
+ {% if admin %}<a href="/admin">Admin</a><a href="/admin/logout">Log out</a>{% else %}<a href="/admin/login">Admin login</a>{% endif %}
+</header>
+<main>{% block content %}{% endblock %}</main>
+<footer>This is a research aid, not legal advice. · Data: CourtListener (Free Law Project), public domain.</footer>
+</body></html>
