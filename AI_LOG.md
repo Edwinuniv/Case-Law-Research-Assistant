@@ -118,3 +118,12 @@ read the related line ourselves before relying on these entries.
    Fix: `verify()` removes `["P1"]` / `[P1, P3]` markers from the text before the checks
    (commit c32021e). Checked: all marker styles are kept, a wrong year in a marked sentence is still
    removed, and ordinary brackets like `[18 U.S.C. 1001]` are left alone.
+
+2. **The guide's tests did not notice three bugs.** We asked Claude to add the step 4.5 tests from the
+   guide (`test_verify.py`, `test_pipeline.py`, `test_llm.py`); all 29 tests passed. To check that the
+   tests really protect the code, we broke the code on purpose six times in a temporary copy. Three
+   breaks were NOT noticed: (a) check 3 (fabricated citations) switched off - the guide's test sentence
+   also has an invented case name, so check 4 removed it anyway; (b) SR28 switched off (sentences shown
+   for NOT_SUPPORTED) - the only NOT_SUPPORTED test had no kept sentences to hide; (c) our `["P1"]` fix
+   removed - no test for it. How we caught it: the test run stayed green with the bug in place.
+   Fix: three tests that each fail on exactly one of these bugs and pass on the real code (32 passed).
