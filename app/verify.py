@@ -37,3 +37,41 @@ def groundedness(sentence_text, cited_text):
         return 0.0
     vocabulary = set(re.findall(r"[a-z]{3,}", cited_text))
     return sum(w in vocabulary for w in words) / len(words)
+
+
+def check_sentence(sentence, passages, index):
+    text, sources, quote = sentence.get("text") or "", sentence.get("sources") or [], sentence.get("quote") or ""
+    problems = []
+    cited = [passages[p] for p in sources if p in passages]
+    if not sources or len(cited) != len(sources):                                 # check 1
+        return ["cites a passage that was not sent to the model"]
+    cited_text = norm(" ".join(c["text"] for c in cited))
+    if len(quote.split()) < 5 or norm(quote) not in cited_text:                   # check 2
+        problems.append("quote not found in the cited passage")
+
+    retrieved_decisions = {p["decision_id"] for p in passages.values()}
+    passage_cites = set().union(*(find_citations(c["text"]) for c in cited))
+    for cite in find_citations(text):                                              # check 3
+        cluster = index.cluster_for(cite)
+        if cluster is None:
+            problems.append(f"FABRICATED citation (not in the citation table): {cite}")
+        elif index.decision_for_cluster(cluster) in retrieved_decisions:
+            continue
+        elif cite in passage_cites or norm(cite) in cited_text:
+            continue
+        else:
+            problems.append(f"real citation not supported by the retrieved opinions: {cite}")
+
+    cited_names = [name_words(c["case_name"])[:1] for c in cited]
+    for name in find_case_names(text):                                             # check 4
+        if name_words(name)[:1] in cited_names or norm(name) in cited_text:
+            continue
+        kind = "case name not supported by the cited passage" if index.known_case_name(name) \
+            else "FABRICATED case name"
+        problems.append(f"{kind}: {name}")
+
+    text_without_citations = CITATION_LIKE.sub(" ", text)                         # check 5
+    passage_numbers = numbers_in(cited_text)
+    for number in sorted(numbers_in(text_without_citations) - passage_numbers):
+        problems.append(f"number or date not in the cited passage: {number}")
+    return problems
