@@ -1,0 +1,4 @@
+<h3 style="margin-top:0">{{ c.case_name }}</h3>
+<p class="muted">{{ c.citations|join(", ") or ("No. " ~ c.docket_number) }} · filed {{ c.date_filed }} · {{ c.label }} · {{ c.section }}<br>
+<a href="{{ c.source_url }}" target="_blank">Open on CourtListener</a> · {{ c.licence }}</p>
+<div style="white-space:pre-wrap;font-size:14px"><span class="muted">…{{ before }}</span><span class="hl">{{ inside_before }}{% if marked %}<mark>{{ marked }}</mark>{% endif %}{{ inside_after }}</span><span class="muted">{{ after }}…</span></div>
