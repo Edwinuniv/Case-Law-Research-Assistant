@@ -16,6 +16,9 @@ STOPWORDS = set("""the a an of to in and or for on by with that this is was were
 it its which who whom whose not no but if than then so such court courts held holds said says
 there their they them he she his her we our you your may must shall would could should""".split())
 NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+# Passage markers the model writes inside the text, like ["P1"] or [P1, P3]. Not in the guide:
+# check 5 read the 1 in "P1" as a number and removed correct sentences (see AI_LOG.md).
+PASSAGE_MARK = re.compile(r"\s*\[\s*\"?P\d+\"?(?:\s*,\s*\"?P\d+\"?)*\s*\]")
 
 
 def norm(text):
@@ -84,6 +87,7 @@ def verify(draft, passages, index):
         if not isinstance(s, dict):
             removed.append({"text": str(s), "sources": [], "problems": ["not a valid sentence"]})
             continue
+        s = {**s, "text": PASSAGE_MARK.sub("", s.get("text") or "")}
         problems = check_sentence(s, passages, index)
         if problems:
             removed.append({**s, "problems": problems})
