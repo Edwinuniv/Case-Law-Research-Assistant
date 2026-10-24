@@ -51,3 +51,15 @@ def test_weak_support_is_low_confidence():
     score = pipeline.support_score(kept, [], {"P1": {"score": 0.6}}, S)
     assert pipeline.decide(score, 1, S) in ("LOW_CONFIDENCE", "NOT_SUPPORTED")
     assert pipeline.decide(0.9, 1, S) == "ANSWERED" and pipeline.decide(0.9, 0, S) == "NOT_SUPPORTED"
+
+
+# --- Not in the guide: tests for gaps found by breaking the code on purpose (see AI_LOG.md) ---
+
+def test_not_supported_hides_sentences_that_passed_verification(monkeypatch):     # SR28
+    def half_fabricated(q, p):
+        good = good_model(q, p)["sentences"][0]
+        return {"status": "SUPPORTED", "sentences": [good, {"text": "See Fake v. Case, 999 U.S. 9999.",
+                                                            "sources": ["P1"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", half_fabricated)
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)
+    assert r["status"] == "NOT_SUPPORTED" and len(r["sentences"]) == 1 and r["shown_sentences"] == []
