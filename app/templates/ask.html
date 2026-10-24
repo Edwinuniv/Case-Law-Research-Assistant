@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block content %}
+<div class="card">
+<form method="post" action="/ask">
+<p><b>Ask a legal research question</b><br><span class="muted">Answers come only from {{ config.COVERAGE }}. Every citation is checked before it is shown.</span></p>
+<textarea name="question" rows="3" maxlength="1000" required>{{ question }}</textarea>
+<p><button>Search and answer</button>
+<span class="muted">Examples:
+{% for ex in config.EXAMPLE_QUESTIONS %}<a href="#" onclick="document.querySelector('textarea').value=this.textContent;return false" class="chip">{{ ex }}</a>{% endfor %}</span></p>
+</form>
+{% if error %}<div class="status ERROR">{{ error }}</div>{% endif %}
+</div>
+{% if result %}{% set pmap = dict(result.passages) %}
+<div class="two"><div>
+<div class="card">
+ {% if result.status == 'NOT_SUPPORTED' %}
+  <div class="status NOT_SUPPORTED"><b>⊘ Not supported by the retrieved opinions.</b><br>
+  The opinions we searched do not answer this question, so we will not guess. <span class="muted">({{ result.reason }})</span></div>
+ {% elif result.status == 'ERROR' %}
+  <div class="status ERROR"><b>✕ The answer service is unavailable right now.</b> Please try again in a minute.</div>
+ {% else %}
+  {% if result.status == 'LOW_CONFIDENCE' %}
+  <div class="status LOW_CONFIDENCE"><b>⚠ Low confidence.</b> The support for this answer is partial{% if result.removed %}; {{ result.removed|length }} statement(s) were removed because they could not be verified{% endif %}. Check the passages before relying on it.</div>
+  {% else %}<div class="status ANSWERED"><b>✓ Verified answer.</b> Every statement below was checked against the passage it cites.</div>{% endif %}
+  {% for s in result.shown_sentences %}<p>{{ s.text }}
+   {% for pid in s.sources %}{% set p = pmap[pid] %}{% set d = info[p.decision_id] %}
+    <a class="chip" data-href="/passage/{{ p.chunk_id }}?panel=1&quote={{ s.quote|urlencode }}" onclick="openPanel(this)">{{ p.case_name }}, {% if d.citations %}{{ d.citations[0] }}{% else %}No. {{ d.docket_number }}{% endif %} ({{ p.date_filed[:4] }}) · {{ p.opinion_label }}</a>
+   {% endfor %}</p>{% endfor %}
+ {% endif %}
+ <p class="muted">Support score {{ '%.2f'|format(result.support_score) }} · best passage {{ '%.2f'|format(result.top_score) }} · {{ result.ms_total }} ms</p>
+</div>
+<div class="card"><h3>Retrieved passages</h3>
+{% for pid, p in result.passages %}
+ <details><summary><b>[{{ pid }}]</b> {{ p.case_name }} ({{ p.date_filed[:4] }}) — {{ p.opinion_label }} — {{ p.section }}{% if p.is_syllabus %} — <i>Syllabus (not part of the opinion)</i>{% endif %}
+<span class="muted">score {{ p.score }}</span></summary>
+ <p style="white-space:pre-wrap">{{ p.text }}</p><a href="#" data-href="/passage/{{ p.chunk_id }}?panel=1" onclick="openPanel(this);return false">Show in the opinion</a></details>
+{% endfor %}</div>
+</div>
+<div><div class="card" id="panel"><p class="muted">Click a citation to read the passage in its opinion here.</p></div></div>
+</div>
+<script>
+function openPanel(el){ fetch(el.dataset.href).then(r=>r.text()).then(h=>{
+  const p=document.getElementById('panel'); p.innerHTML=h; const m=p.querySelector('mark')||p.querySelector('.hl'); if(m) m.scrollIntoView({block:'center'}); }); }
+</script>
+{% endif %}
+{% endblock %}
