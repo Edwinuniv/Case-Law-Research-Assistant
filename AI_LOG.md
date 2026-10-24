@@ -104,3 +104,17 @@ read the related line ourselves before relying on these entries.
    running after 75 minutes. Fix: one join through `cluster_alias` that reads the table once; measured
    2.1 s on a test database with 17.8 million citations.
 
+## 2026-10-24 — The model call and the verifier (Edwin)
+
+1. **Guide code that removed correct sentences: passage markers read as numbers.** We asked Claude to
+   build `app/llm.py` (4.1) and `app/verify.py` (4.2) exactly as in the build guide. Rule 1 of the
+   guide's system prompt says every sentence must "end with the passage numbers", so in the live check
+   with Groq (2026-10-23) the model wrote `["P1"]` inside the sentence text as well as in `sources`.
+   The guide's check 5 (numbers and dates) then found the number `1` in "P1", which is not in the
+   passage, and removed a correct sentence ("number or date not in the cited passage: 1"). Any sentence
+   citing P1-P20 could be removed this way, and kept sentences would show `["P1"]` to the user.
+   How we caught it: we ran the guide's `numbers_in()` on the real model sentence (it returned `{'1'}`),
+   then reproduced the removal with the guide's `check_sentence()` before changing anything.
+   Fix: `verify()` removes `["P1"]` / `[P1, P3]` markers from the text before the checks
+   (commit c32021e). Checked: all marker styles are kept, a wrong year in a marked sentence is still
+   removed, and ordinary brackets like `[18 U.S.C. 1001]` are left alone.

@@ -153,3 +153,7 @@ of its history is kept by the team.
 
 2026-10-23 - Corpus scope narrowed from "all scotus clusters 2000-2024" (188,045, mostly one-line
 orders) to real decisions (rule in section 2). The court and dates do not change.
+
+2026-10-24 - Verifier (4.2): `verify()` removes `["P1"]` passage markers from the sentence text
+before the five checks. The guide's check 5 read the 1 in "P1" as a number and removed correct
+sentences. Details in AI_LOG.md.
