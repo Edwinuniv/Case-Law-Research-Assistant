@@ -49,3 +49,14 @@ def test_number_in_passage_is_allowed():
 
 def test_numbers_ignore_commas():
     assert numbers_in("It cost $1,000,000.") == {"1000000"}
+
+
+# --- Not in the guide: tests for gaps found by breaking the code on purpose (see AI_LOG.md) ---
+
+def test_fabricated_citation_without_a_case_name_is_caught():          # check 3 on its own, SR23
+    kept, removed = run("As held in 599 U.S. 412, the immunity is absolute.")
+    assert not kept and any(p.startswith("FABRICATED citation") for p in removed[0]["problems"])
+
+def test_passage_markers_are_not_numbers_and_are_not_shown():
+    kept, _ = run('The indictment was returned in 2023. ["P1"]')
+    assert kept and "P1" not in kept[0]["text"]
