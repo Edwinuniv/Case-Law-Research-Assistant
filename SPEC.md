@@ -142,7 +142,7 @@ Edwin = citations, model, verification, evaluation, test questions.
 | 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
 | 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
-| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
+| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; reviewed by Edwin, matches guide p.27-29; needs 1.7 |
 | 1.10 tests for citations | Edwin | - | not started |
 
 ## 11. Divergences log
