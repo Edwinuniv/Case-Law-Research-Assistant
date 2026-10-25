@@ -117,7 +117,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 4.5 Tests (with a fake model) — merged (PR #14): test_verify, test_pipeline, test_llm from the guide + 3 tests for gaps found by breaking the code on purpose; 32 passed
 
 ### Week 5 — Evaluation module and website
-- [ ] 5.1 Evaluation module (Edwin; tests/test_evaluate.py agreed with Joe)
+- [x] 5.1 Evaluation module (Edwin; tests/test_evaluate.py agreed with Joe) — branch step/5.1-evaluate: app/evaluate.py as in the guide, each part tried on the test database; tests from the guide + 7 for gaps found by breaking the code on purpose; 43 passed ⏳ real run needs the questions (3.1) and the data
 - [ ] 5.2 The web application (Joe)
 - [ ] 5.3 Public templates (Joe)
 - [ ] 5.4 Admin templates (Joe)
