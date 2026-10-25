@@ -104,6 +104,19 @@ read the related line ourselves before relying on these entries.
    running after 75 minutes. Fix: one join through `cluster_alias` that reads the table once; measured
    2.1 s on a test database with 17.8 million citations.
 
+## 2026-10-23 — Building the search index (Yasser)
+
+1. **AI mistake: time estimate 10-40 minutes; measured about 14 hours.** Our 4,765 opinions give
+   104,904 passages of up to 350 words. How we caught it: progress read from the running process with
+   py-spy (4,608 passages after about 37 minutes, 4 cores busy). Two problems in the AI's code: batches
+   were in random order, so each batch of 32 was padded to its longest passage; and the embeddings were
+   only saved at the very end, so any interruption lost everything. Fix: passages sorted by length and
+   saved every 2,048 (data/work/embedding_cache), so a stopped run resumes; progress printed at once.
+2. **AI mistake: progress hidden in the log.** Under nohup, Python wrote the progress lines only at the end
+   (output buffering). Fix: print with flush.
+
+---
+
 ## 2026-10-24 — The model call and the verifier (Edwin)
 
 1. **Guide code that removed correct sentences: passage markers read as numbers.** We asked Claude to
@@ -118,15 +131,3 @@ read the related line ourselves before relying on these entries.
    Fix: `verify()` removes `["P1"]` / `[P1, P3]` markers from the text before the checks
    (commit c32021e). Checked: all marker styles are kept, a wrong year in a marked sentence is still
    removed, and ordinary brackets like `[18 U.S.C. 1001]` are left alone.
-
-## 2026-10-23 — Building the search index (Yasser)
-
-1. **AI mistake: time estimate 10-40 minutes; measured about 14 hours.** Our 4,765 opinions give
-   104,904 passages of up to 350 words. How we caught it: progress read from the running process with
-   py-spy (4,608 passages after about 37 minutes, 4 cores busy). Two problems in the AI's code: batches
-   were in random order, so each batch of 32 was padded to its longest passage; and the embeddings were
-   only saved at the very end, so any interruption lost everything. Fix: passages sorted by length and
-   saved every 2,048 (data/work/embedding_cache), so a stopped run resumes; progress printed at once.
-2. **AI mistake: progress hidden in the log.** Under nohup, Python wrote the progress lines only at the end
-   (output buffering). Fix: print with flush.
-
