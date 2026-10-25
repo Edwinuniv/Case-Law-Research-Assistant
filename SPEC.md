@@ -142,8 +142,8 @@ Edwin = citations, model, verification, evaluation, test questions.
 | 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | merged (PR #4) |
 | 1.7 database schema (db.py) | Joe | step/1.7-db | merged (PR #6, reviewed by Joe) |
 | 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
-| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; Edwin to review; needs 1.7 |
-| 1.10 tests for citations | Edwin | - | not started |
+| 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; reviewed by Edwin, matches guide p.27-29; needs 1.7 |
+| 1.10 tests for citations | Edwin | step/1.10-citation-tests | 5 tests pass (StaticCitationIndex, no database needed); needs 1.9 merged |
 
 Week 2 and later (1.8 was merged in PR #5):
 
@@ -159,3 +159,7 @@ of its history is kept by the team.
 
 2026-10-23 - Corpus scope narrowed from "all scotus clusters 2000-2024" (188,045, mostly one-line
 orders) to real decisions (rule in section 2). The court and dates do not change.
+
+2026-10-24 - Verifier (4.2): `verify()` removes `["P1"]` passage markers from the sentence text
+before the five checks. The guide's check 5 read the 1 in "P1" as a number and removed correct
+sentences. Details in AI_LOG.md.
