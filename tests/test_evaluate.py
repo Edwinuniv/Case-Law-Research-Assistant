@@ -32,3 +32,41 @@ def test_recall_at_k():
     pairs = [(q("a", "answerable", gold=(5,)), res(0.9, ranked=(1, 2, 5)))]
     m = metrics(pairs, S)
     assert m["recall@1"] == 0 and m["recall@5"] == 1 and round(m["mrr@10"], 2) == 0.33
+
+
+# --- Not in the guide: tests for gaps found by breaking the code on purpose (see AI_LOG.md) ---
+from app.evaluate import check_shown_citations
+from app.citations import StaticCitationIndex
+
+CHECK_INDEX = StaticCitationIndex(citations={"603 U.S. 593": 9987186, "467 U.S. 837": 111, "500 U.S. 1": 222},
+                                  alias={9987186: 9987186}, case_names=[])
+TRUMP = {"decision_id": 9987186, "opinion_id": 1, "text": "..."}
+
+def add_decision(clean_db, decision_id, citation):
+    with clean_db.connect() as con:
+        con.execute("INSERT INTO decisions (decision_id, all_cluster_ids, case_name, date_filed, citations, licence) "
+                    "VALUES (%s, %s, 'X v. Y', '2024-07-01', %s, 'test')", (decision_id, [decision_id], [citation]))
+
+def checked(text, passage=TRUMP, must_not_appear=()):
+    r = {"passages": [("P1", passage)], "sentences": [{"text": text, "sources": ["P1"]}]}
+    problems, _ = check_shown_citations(r, {"must_not_appear": list(must_not_appear)}, CHECK_INDEX)
+    return problems[0]
+
+def test_checker_flags_a_rendered_citation_of_another_case(clean_db):      # SR38 (a)
+    add_decision(clean_db, 5555, "467 U.S. 837")        # decision 5555 stores Chevron's citation
+    assert any("rendered citation" in p for p in checked("Text.", passage={**TRUMP, "decision_id": 5555}))
+
+def test_checker_allows_a_citation_from_the_citation_map(clean_db):        # SR38 (b)
+    add_decision(clean_db, 9987186, "603 U.S. 593")
+    with clean_db.connect() as con:
+        con.execute("INSERT INTO citation_map (citing_opinion_id, cited_opinion_id, cited_cluster_id, depth) "
+                    "VALUES (1, 2, 111, 1)")
+    assert checked("The opinion relied on 467 U.S. 837.") == []
+
+def test_checker_flags_a_real_citation_from_nowhere(clean_db):             # SR38 (b)
+    add_decision(clean_db, 9987186, "603 U.S. 593")
+    assert any("not from a retrieved opinion" in p for p in checked("Compare 500 U.S. 1."))
+
+def test_checker_flags_forbidden_text(clean_db):                           # SR38 (c)
+    add_decision(clean_db, 9987186, "603 U.S. 593")
+    assert checked("Halvorsen held so.", must_not_appear=["halvorsen"]) == ["forbidden text shown: halvorsen"]
