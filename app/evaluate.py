@@ -178,3 +178,37 @@ def metrics(pairs, s, split=None):
     m["adversarial_abstention_rate"] = avg([1.0 if status[q["id"]] == NOT_SUPPORTED else 0.0 for q, _ in adversarial])
     m["mean_ms"] = avg([r["ms_total"] for _, r in pairs])
     return m
+
+
+def sweep(pairs, s, split="tune"):
+    """Abstention precision/recall for many tau_abstain values: used to choose the threshold (SR29)."""
+    out = []
+    for i in range(20, 91, 2):
+        t = dict(s, tau_abstain=i / 100, tau_confident=max(i / 100, s["tau_confident"]))
+        m = metrics(pairs, t, split)
+        out.append({"tau": i / 100, "precision": m["abstention_precision"], "recall": m["abstention_recall"],
+                    "wrong_abstentions": m["abstained_but_should_answer"],
+                    "wrong_answers": m["answered_but_should_abstain"]})
+    return out
+
+
+BETTER_HIGHER = {"recall@1", "recall@5", "recall@10", "mrr@10", "abstention_precision", "abstention_recall",
+                 "groundedness_judge", "groundedness_lexical", "adversarial_abstention_rate"}
+BETTER_LOWER = {"false_citations_shown", "false_citation_rate", "errors", "answered_but_should_abstain",
+                "abstained_but_should_answer", "mean_ms"}
+
+
+def compare(run_a, run_b, s, split=None):
+    """FR19 / SR40: metrics side by side, worse values flagged, and questions whose status changed."""
+    pa, pb = load_run(run_a), load_run(run_b)
+    ma, mb = metrics(pa, s, split), metrics(pb, s, split)
+    rows = []
+    for k in mb:
+        a, b = ma.get(k), mb.get(k)
+        worse = isinstance(a, (int, float)) and isinstance(b, (int, float)) and (
+            (k in BETTER_HIGHER and b < a) or (k in BETTER_LOWER and b > a))
+        rows.append({"metric": k, "a": a, "b": b, "worse": worse})
+    sa = {q["id"]: status_at(r, s) for q, r in pa}
+    flips = [{"id": q["id"], "question": q["question"], "tag": q["tag"], "a": sa.get(q["id"]), "b": status_at(r, s)}
+             for q, r in pb if sa.get(q["id"]) != status_at(r, s)]
+    return rows, flips
