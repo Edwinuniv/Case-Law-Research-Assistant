@@ -70,3 +70,26 @@ def test_checker_flags_a_real_citation_from_nowhere(clean_db):             # SR3
 def test_checker_flags_forbidden_text(clean_db):                           # SR38 (c)
     add_decision(clean_db, 9987186, "603 U.S. 593")
     assert checked("Halvorsen held so.", must_not_appear=["halvorsen"]) == ["forbidden text shown: halvorsen"]
+
+def test_split_keeps_only_that_split_plus_adversarial():                    # SR29
+    tune = {**q("t", "answerable"), "split": "tune"}
+    pairs = [(tune, res(0.9)), (q("s", "answerable"), res(0.9)), ({**q("x", "adversarial"), "split": "tune"}, res(0.1))]
+    m = metrics(pairs, S, split="test")
+    assert m["answerable"] == 1 and m["adversarial"] == 1
+
+def test_sweep_moves_with_the_threshold():                                  # SR29
+    from app.evaluate import sweep
+    pairs = [({**q("a", "answerable"), "split": "tune"}, res(0.6)), ({**q("u", "unanswerable"), "split": "tune"}, res(0.4))]
+    rows = {row["tau"]: row for row in sweep(pairs, S)}
+    assert rows[0.3]["wrong_answers"] == 1 and rows[0.3]["wrong_abstentions"] == 0   # both answered
+    assert rows[0.5]["wrong_answers"] == 0 and rows[0.5]["wrong_abstentions"] == 0   # the right split
+    assert rows[0.7]["wrong_abstentions"] == 1                                        # both abstain
+
+def test_compare_flags_worse_and_lists_flips(monkeypatch):                  # FR19, SR40
+    from app import evaluate
+    runs = {1: [(q("a", "answerable"), res(0.9))], 2: [(q("a", "answerable"), res(0.2))]}
+    monkeypatch.setattr(evaluate, "load_run", lambda run_id: runs[run_id])
+    rows, flips = evaluate.compare(1, 2, S)
+    worse = {r["metric"] for r in rows if r["worse"]}
+    assert "abstained_but_should_answer" in worse
+    assert flips == [{"id": "a", "question": "?", "tag": "answerable", "a": "ANSWERED", "b": "NOT_SUPPORTED"}]
