@@ -123,3 +123,58 @@ def load_run(run_id):
     return [(questions.get(r["question_id"], {"id": r["question_id"], "tag": r["tag"], "split": r["split"],
                                               "question": "(deleted question)", "gold_decision_ids": []}),
              r["result"]) for r in rows]
+
+
+# ---------------- metrics ----------------
+def status_at(res, s):
+    """What the status WOULD be with settings s (no need to call the model again)."""
+    if res["status_raw"] == ERROR:
+        return ERROR
+    if res["top_score"] < s["min_retrieval"] or res["model_said"] != "SUPPORTED":
+        return NOT_SUPPORTED
+    return decide(res["support_score"], res["n_kept"], s)
+
+
+def avg(values):
+    values = [v for v in values if v is not None]
+    return round(sum(values) / len(values), 4) if values else None
+
+
+def metrics(pairs, s, split=None):
+    if split:
+        pairs = [(q, r) for q, r in pairs if q["split"] == split or q["tag"] == "adversarial"]
+    golden = [(q, r) for q, r in pairs if q["tag"] in ("answerable", "unanswerable")]
+    answerable = [(q, r) for q, r in golden if q["tag"] == "answerable"]
+    adversarial = [(q, r) for q, r in pairs if q["tag"] == "adversarial"]
+    m = {"questions": len(pairs), "answerable": len(answerable),
+         "unanswerable": len(golden) - len(answerable), "adversarial": len(adversarial)}
+
+    ranks = []                                                            # retrieval (FR18)
+    for q, r in answerable:
+        gold = set(q["gold_decision_ids"] or [])
+        ranks.append(next((i + 1 for i, d in enumerate(r["ranked_decisions"][:20]) if d in gold), None))
+    for k in (1, 5, 10):
+        m[f"recall@{k}"] = avg([1.0 if rk and rk <= k else 0.0 for rk in ranks])
+    m["mrr@10"] = avg([1 / rk if rk and rk <= 10 else 0.0 for rk in ranks])
+
+    status = {q["id"]: status_at(r, s) for q, r in pairs}                # abstention (FR17)
+    tp = sum(1 for q, _ in golden if status[q["id"]] == NOT_SUPPORTED and q["tag"] == "unanswerable")
+    fp = sum(1 for q, _ in golden if status[q["id"]] == NOT_SUPPORTED and q["tag"] == "answerable")
+    fn = sum(1 for q, _ in golden if status[q["id"]] != NOT_SUPPORTED and q["tag"] == "unanswerable")
+    m["abstention_precision"] = round(tp / (tp + fp), 4) if tp + fp else None
+    m["abstention_recall"] = round(tp / (tp + fn), 4) if tp + fn else None
+    m["answered_but_should_abstain"], m["abstained_but_should_answer"] = fn, fp
+    m["low_confidence"] = sum(1 for v in status.values() if v == LOW_CONFIDENCE)
+    m["errors"] = sum(1 for v in status.values() if v == ERROR)
+
+    shown = [(q, r) for q, r in pairs if status[q["id"]] in (ANSWERED, LOW_CONFIDENCE)]   # FR16, SR38
+    false = sum(sum(len(x) for x in r["false_by_sentence"]) for _, r in shown)
+    cites = sum(r["citations_shown"] for _, r in shown)
+    m["citations_shown"], m["false_citations_shown"] = cites, false
+    m["false_citation_rate"] = round(false / cites, 4) if cites else 0.0
+    m["fabrications_caught_by_verifier"] = sum(r["fabrications_caught"] for _, r in pairs)
+    m["groundedness_judge"] = avg([1.0 if v == "yes" else 0.0 for _, r in shown for v in r["judgements"]])   # FR15
+    m["groundedness_lexical"] = avg([x["groundedness"] for _, r in shown for x in r["sentences"]])
+    m["adversarial_abstention_rate"] = avg([1.0 if status[q["id"]] == NOT_SUPPORTED else 0.0 for q, _ in adversarial])
+    m["mean_ms"] = avg([r["ms_total"] for _, r in pairs])
+    return m
