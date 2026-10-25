@@ -127,3 +127,16 @@ read the related line ourselves before relying on these entries.
    for NOT_SUPPORTED) - the only NOT_SUPPORTED test had no kept sentences to hide; (c) our `["P1"]` fix
    removed - no test for it. How we caught it: the test run stayed green with the bug in place.
    Fix: three tests that each fail on exactly one of these bugs and pass on the real code (32 passed).
+
+## 2026-10-25 — The evaluation module (Edwin)
+
+1. **The guide's evaluation tests missed 6 of 7 planted bugs.** We asked Claude to build
+   `app/evaluate.py` and `tests/test_evaluate.py` (step 5.1) exactly as in the guide; the 4 tests passed.
+   We then broke `evaluate.py` on purpose 7 times in a temporary copy. Only one break was noticed (false
+   citations counted for hidden answers). Not noticed: the three parts of the separate false-citation
+   checker (rendered citations, citation map, forbidden text) switched off one at a time, the tune/test
+   split ignored, the threshold sweep ignoring tau, and the run comparison never flagging worse values.
+   The checker matters most: it produces the "false citations = 0" number for Week 8.
+   How we caught it: the test run stayed green with each bug in place.
+   Fix: 7 tests (4 use the empty test database through `clean_db`); each fails on its bug and passes on
+   the real code. Whole suite: 43 passed.
