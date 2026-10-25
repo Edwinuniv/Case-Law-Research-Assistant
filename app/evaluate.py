@@ -39,3 +39,41 @@ def export_questions():
 
 def expected(q):
     return "answer" if q["tag"] == "answerable" else "abstain"
+
+
+# ---------------- the separate false-citation checker (SR38, FR16) ----------------
+def check_shown_citations(r, q, index):
+    """Independent of verify.py: for every kept sentence, re-check (a) the citations OUR CODE renders,
+    (b) any citation written in the text, using the citation table AND the citation map,
+    (c) the forbidden strings of adversarial questions. Returns per-sentence lists of problems."""
+    passages = dict(r["passages"])
+    retrieved = {p["decision_id"] for p in passages.values()}
+    per_sentence, citations_shown = [], 0
+    with db.connect() as con:
+        for s in r["sentences"]:
+            problems = []
+            cited = [passages[p] for p in s["sources"] if p in passages]
+            for p in cited:                                                      # (a) rendered citations
+                d = con.execute("SELECT citations FROM decisions WHERE decision_id = %s",
+                                (p["decision_id"],)).fetchone()
+                for c in (d["citations"] if d else [])[:1]:
+                    citations_shown += 1
+                    cluster = index.cluster_for(c)
+                    if cluster is None or index.decision_for_cluster(cluster) != p["decision_id"]:
+                        problems.append(f"rendered citation does not match: {c}")
+            opinions = [p["opinion_id"] for p in cited]
+            for c in find_citations(s["text"]):                                  # (b) citations in the text
+                citations_shown += 1
+                cluster = index.cluster_for(c)
+                if cluster is None:
+                    problems.append(f"citation does not exist: {c}")
+                    continue
+                in_map = con.execute("SELECT 1 FROM citation_map WHERE citing_opinion_id = ANY(%s) "
+                                     "AND cited_cluster_id = %s LIMIT 1", (opinions, cluster)).fetchone()
+                if index.decision_for_cluster(cluster) not in retrieved and not in_map:
+                    problems.append(f"citation not from a retrieved opinion or its citation map: {c}")
+            for bad in q.get("must_not_appear") or []:                           # (c) forbidden strings
+                if bad and bad.lower() in s["text"].lower():
+                    problems.append(f"forbidden text shown: {bad}")
+            per_sentence.append(problems)
+    return per_sentence, citations_shown
