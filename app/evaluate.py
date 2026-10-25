@@ -77,3 +77,49 @@ def check_shown_citations(r, q, index):
                     problems.append(f"forbidden text shown: {bad}")
             per_sentence.append(problems)
     return per_sentence, citations_shown
+
+
+# ---------------- running ----------------
+def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=print):
+    settings = db.get_settings()
+    with db.connect() as con:
+        run_id = con.execute("INSERT INTO eval_runs (trigger, status, settings, note) VALUES (%s, 'running', %s, %s) "
+                             "RETURNING id", (trigger, Jsonb(settings), note)).fetchone()["id"]
+    questions = load_questions()
+    for n, q in enumerate(questions, 1):
+        r = answer(q["question"], searcher, index, settings, skip_gate=True)
+        false_by_sentence, n_cites = check_shown_citations(r, q, index)
+        judgements = []
+        if judge and r["status"] != ERROR:
+            passages = dict(r["passages"])
+            for s in r["sentences"]:
+                try:
+                    judgements.append(llm.judge_support(s["text"], " ".join(passages[p]["text"] for p in s["sources"])))
+                except llm.ModelError:
+                    judgements.append("error")
+        chosen = [p["decision_id"] for _, p in r["passages"]]
+        row = {"top_score": r["top_score"], "support_score": r["support_score"], "status_raw": r["status"],
+               "model_said": r["model_said"], "reason": r["reason"],
+               "n_kept": len(r["sentences"]), "n_removed": len(r["removed"]),
+               "ranked_decisions": chosen + [d for d in r["retrieved_decisions"] if d not in chosen],
+               "sentences": [{"text": s["text"], "sources": s["sources"], "groundedness": s["groundedness"]}
+                             for s in r["sentences"]],
+               "removed": r["removed"], "fabrications_caught": r["fabrications_caught"],
+               "false_by_sentence": false_by_sentence, "citations_shown": n_cites,
+               "judgements": judgements, "ms_total": r["ms_total"]}
+        with db.connect() as con:
+            con.execute("INSERT INTO eval_results (run_id, question_id, tag, split, result) VALUES (%s,%s,%s,%s,%s)",
+                        (run_id, q["id"], q["tag"], q["split"], Jsonb(row)))
+        log(f"[{n}/{len(questions)}] {q['id']} ({q['tag']}) -> {r['status']} support={r['support_score']}")
+    with db.connect() as con:
+        con.execute("UPDATE eval_runs SET status = 'done' WHERE id = %s", (run_id,))
+    return run_id
+
+
+def load_run(run_id):
+    questions = {q["id"]: q for q in load_questions()}
+    with db.connect() as con:
+        rows = con.execute("SELECT * FROM eval_results WHERE run_id = %s ORDER BY question_id", (run_id,)).fetchall()
+    return [(questions.get(r["question_id"], {"id": r["question_id"], "tag": r["tag"], "split": r["split"],
+                                              "question": "(deleted question)", "gold_decision_ids": []}),
+             r["result"]) for r in rows]
