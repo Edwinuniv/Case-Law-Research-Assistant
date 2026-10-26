@@ -132,7 +132,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 7.1 Attack, test, fix, log
 
 ### Week 8 — Calibration (Edwin)
-- [ ] 8.1 Write the rule before measuring
+- [x] 8.1 Write the rule before measuring — branch step/8.1-threshold-rule: EVALUATION.md, committed 2026-10-26 before any evaluation run
 - [ ] 8.2 Run the full evaluation
 - [ ] 8.3 False citations = 0
 
