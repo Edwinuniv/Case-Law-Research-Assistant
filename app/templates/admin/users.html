@@ -1,0 +1,8 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Administrator accounts</h2>
+<table><tr><th>Email</th><th>Role</th><th>Active</th><th>Locked until</th><th>Created</th><th></th></tr>
+{% for u in users %}<tr><td>{{ u.email }}</td><td>{{ u.role }}</td><td>{{ 'yes' if u.active else 'no' }}</td><td>{{ u.locked_until.strftime('%H:%M') if u.locked_until else '' }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+<td>{% if u.id != admin.id %}<form method="post" action="/admin/users/{{ u.id }}/toggle"><button class="light">{{ 'Disable' if u.active else 'Enable' }}</button></form>{% endif %}</td></tr>{% endfor %}</table>
+<form class="card" method="post" action="/admin/users" style="margin-top:14px"><b>Create an account</b><br>
+Email <input name="email" type="email" required> Password (10+ characters) <input name="password" type="password" minlength="10" required> <button>Create</button></form>
+{% endblock %}
