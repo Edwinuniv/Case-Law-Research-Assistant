@@ -20,6 +20,7 @@ class Searcher:
         self.chunks = rows
         self.by_id = {r["chunk_id"]: r for r in rows}
         self.bm25 = self.keyword_index(rows)
+        embeddings.embed_query("warm-up")     # load (or download) the model now, not at the first question
 
     @staticmethod
     def keyword_index(rows):
