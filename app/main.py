@@ -190,3 +190,96 @@ def admin_settings_save(request: Request, tau_abstain: float = Form(...), tau_co
     db.set_setting("top_k", max(1, min(top_k, 10)))
     db.set_setting("use_reranker", use_reranker == "on")
     return RedirectResponse("/admin/settings", 303)
+
+
+# ======================= ADMIN: evaluation =======================
+@app.get("/admin/eval")
+def admin_eval(request: Request):
+    if (r := need_admin(request)):
+        return r
+    s = db.get_settings()
+    with db.connect() as con:
+        runs = con.execute("SELECT * FROM eval_runs ORDER BY id DESC").fetchall()
+    rows = [(run, evaluate.metrics(evaluate.load_run(run["id"]), s, "test") if run["status"] == "done" else {})
+            for run in runs]
+    return page(request, "admin/eval.html", rows=rows, s=s)
+
+
+@app.post("/admin/eval/run")
+def admin_eval_run(request: Request, note: str = Form("")):
+    if (r := need_admin(request)):
+        return r
+    run_in_background("evaluation", lambda: f"run {evaluate.run_evaluation(STATE['searcher'], STATE['index'], 'manual', note, log=lambda *a: None)}")
+    return RedirectResponse("/admin/eval", 303)
+
+
+@app.get("/admin/eval/compare")
+def admin_eval_compare(request: Request, a: int, b: int, split: str = "test"):
+    if (r := need_admin(request)):
+        return r
+    rows, flips = evaluate.compare(a, b, db.get_settings(), split or None)
+    return page(request, "admin/compare.html", a=a, b=b, rows=rows, flips=flips, split=split)
+
+
+@app.get("/admin/eval/{run_id}")
+def admin_eval_detail(request: Request, run_id: int, split: str = "test", tau: float = None):
+    if (r := need_admin(request)):
+        return r
+    s = db.get_settings()
+    if tau is not None:
+        s = dict(s, tau_abstain=tau, tau_confident=max(tau, s["tau_confident"]))
+    pairs = evaluate.load_run(run_id)
+    table = []
+    for q, res in pairs:
+        st = evaluate.status_at(res, s)
+        ok = (st == "NOT_SUPPORTED") == (q["tag"] != "answerable")
+        table.append({"q": q, "r": res, "status": st, "ok": ok,
+                      "false": sum(len(x) for x in res["false_by_sentence"]) if st in ("ANSWERED", "LOW_CONFIDENCE") else 0})
+    table.sort(key=lambda t: (t["ok"], t["q"]["id"]))
+    return page(request, "admin/eval_run.html", run_id=run_id, split=split, s=s, table=table,
+                m=evaluate.metrics(pairs, s, split or None), sweep=evaluate.sweep(pairs, s, "tune"))
+
+
+# ======================= ADMIN: test questions (FR13a-c) =======================
+@app.get("/admin/questions")
+def admin_questions(request: Request, tag: str = ""):
+    if (r := need_admin(request)):
+        return r
+    qs = [q for q in evaluate.load_questions() if not tag or q["tag"] == tag]
+    return page(request, "admin/questions.html", questions=qs, tag=tag)
+
+
+@app.get("/admin/questions/export")
+def admin_questions_export(request: Request):
+    if (r := need_admin(request)):
+        return r
+    return PlainTextResponse(evaluate.export_questions(), media_type="application/x-ndjson",
+                             headers={"Content-Disposition": "attachment; filename=questions.jsonl"})
+
+
+@app.get("/admin/questions/edit")
+def admin_question_form(request: Request, id: str = "", question: str = "", tag: str = "answerable"):
+    if (r := need_admin(request)):
+        return r
+    q = next((x for x in evaluate.load_questions() if x["id"] == id), None) if id else None
+    return page(request, "admin/question_form.html", q=q, prefill_question=question, prefill_tag=tag)
+
+
+@app.post("/admin/questions/save")
+def admin_question_save(request: Request, id: str = Form(...), tag: str = Form(...), split: str = Form(...),
+                        question: str = Form(...), expected_answer: str = Form(""), gold_decision_ids: str = Form(""),
+                        gold_quote: str = Form(""), must_not_appear: str = Form(""), why: str = Form(""),
+                        author: str = Form("")):
+    if (r := need_admin(request)):
+        return r
+    ids = [int(x) for x in gold_decision_ids.replace(",", " ").split() if x.isdigit()]
+    forbidden = [x.strip() for x in must_not_appear.split(";") if x.strip()]
+    with db.connect() as con:
+        con.execute("""INSERT INTO test_questions (id, tag, split, question, expected_answer, gold_decision_ids,
+            gold_quote, must_not_appear, why, author, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+            ON CONFLICT (id) DO UPDATE SET tag = EXCLUDED.tag, split = EXCLUDED.split, question = EXCLUDED.question,
+            expected_answer = EXCLUDED.expected_answer, gold_decision_ids = EXCLUDED.gold_decision_ids,
+            gold_quote = EXCLUDED.gold_quote, must_not_appear = EXCLUDED.must_not_appear, why = EXCLUDED.why,
+            author = EXCLUDED.author, updated_at = now()""",
+                    (id.strip(), tag, split, question, expected_answer, ids, gold_quote, forbidden, why, author))
+    return RedirectResponse("/admin/questions", 303)
