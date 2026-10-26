@@ -1,0 +1,9 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Run {{ a }} (before) vs run {{ b }} (after) — {{ split or 'all' }} split</h2>
+<table><tr><th>Metric</th><th>Run {{ a }}</th><th>Run {{ b }}</th></tr>
+{% for r in rows %}<tr class="{{ 'red' if r.worse else '' }}"><td>{{ r.metric|replace('_',' ') }}</td><td>{{ r.a }}</td><td>{{ r.b }}{% if r.worse %} <b>▼ worse</b>{% endif %}</td></tr>{% endfor %}
+</table>
+<div class="card"><h3>Questions whose result changed ({{ flips|length }})</h3>
+<table><tr><th>ID</th><th>Tag</th><th>Question</th><th>Run {{ a }}</th><th>Run {{ b }}</th></tr>
+{% for f in flips %}<tr><td>{{ f.id }}</td><td>{{ f.tag }}</td><td>{{ f.question }}</td><td>{{ f.a }}</td><td>{{ f.b }}</td></tr>{% else %}<tr><td colspan="5">None.</td></tr>{% endfor %}</table></div>
+{% endblock %}
