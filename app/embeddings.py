@@ -1,6 +1,6 @@
 """Turning text into vectors (lists of numbers) so we can compare meanings."""
 import numpy as np
-from app.config import EMBED_MODEL
+from app.config import DATA, EMBED_MODEL
 
 _model = None
 
