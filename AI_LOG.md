@@ -153,3 +153,15 @@ read the related line ourselves before relying on these entries.
    How we caught it: the test run stayed green with each bug in place.
    Fix: 7 tests (4 use the empty test database through `clean_db`); each fails on its bug and passes on
    the real code. Whole suite: 43 passed.
+
+## 2026-10-26 — Deployment files (Joe)
+
+1. **The guide's Dockerfile downloads the embedding model into the wrong folder.** We asked Claude to
+   create the step 6.1 files (`Dockerfile`, `.dockerignore`) from the guide. Before committing, we
+   compared them with the current code: since step 2.2, `app/embeddings.py` loads the model with
+   `cache_dir=data/models` (Yasser's change, because /tmp is emptied at every restart). The guide's
+   build step downloads it into fastembed's default folder, so the website would download the model
+   again on the first question after every deploy, which is the wait the build step is meant to avoid.
+   How we caught it: we searched the code for `cache_dir` before writing the build step.
+   Fix: the build step passes `cache_dir='data/models'`, the same folder as `app/embeddings.py`.
+   `data/` is in `.dockerignore`, so `COPY . .` does not overwrite it.
