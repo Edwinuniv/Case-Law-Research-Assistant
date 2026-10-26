@@ -20,3 +20,9 @@ def test_saved_index_of_another_search_index_is_not_used(tmp_path):
     BM25(["a b c"]).save(tmp_path / "bm25", key="index-1")
     assert BM25.load(tmp_path / "bm25", key="index-2") is None
     assert BM25.load(tmp_path / "missing", key="index-1") is None
+
+
+def test_word_forms_match():
+    b = BM25(["Chevron is overruled", "the agency interpretation stands"])
+    assert b.scores("Did the Court overrule Chevron?").argmax() == 0
+    assert b.scores("overruling")[0] > 0

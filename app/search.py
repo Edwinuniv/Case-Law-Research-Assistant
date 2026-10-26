@@ -2,7 +2,7 @@
 merged with Reciprocal Rank Fusion; optional reranker (SR18)."""
 import numpy as np
 from app import config, db, embeddings, rerank
-from app.bm25 import BM25
+from app.bm25 import BM25, TOKENIZER
 from app.indexing import vector_literal
 
 CHUNK_COLUMNS = """c.chunk_id, c.opinion_id, c.decision_id, c.section, c.is_syllabus,
@@ -26,7 +26,7 @@ class Searcher:
         """BM25 over all chunks. Building it takes about 20 s for our 104,904 chunks, so it is saved
         in data/work/bm25.* and reloaded (about 1 s) while the search index has not changed."""
         meta = db.get_settings().get("index_meta") or {}
-        key = f"{meta.get('built_at')}|{meta.get('max_words')}|{len(rows)}|{meta.get('words')}"
+        key = f"{meta.get('built_at')}|{meta.get('max_words')}|{len(rows)}|{meta.get('words')}|{TOKENIZER}"
         path = config.WORK / "bm25"
         bm25 = BM25.load(path, key)
         if bm25 is None:
