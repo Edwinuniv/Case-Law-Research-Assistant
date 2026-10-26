@@ -80,7 +80,30 @@ question -> input check, 3-1000 characters (SR3)
 
 ## 4. Chunking strategy (FR31, SR16)
 
-[filled in week 2, with the paragraph statistics and the 250 / 350 / 400 words comparison]
+Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
+238,580 paragraphs (median 88 words, 90th percentile 300, longest 24,116 words); paragraphs with at
+most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
+(median 292 words), 27,500,424 words in total.
+
+| Rule | Justification |
+|---|---|
+| Never mix two opinions | A chunk mixing majority and dissent could present a dissent as the Court's ruling. Each opinion is chunked on its own. |
+| Whole paragraphs, at most 350 words (SR16: 250-400) | 98.3% of our paragraphs have at most 350 words (median 88), so they stay whole and quotes stay intact; at 250 words only 84.3% would. |
+| Split long paragraphs between sentences | Only 1.7% of paragraphs are longer than 350 words; they are cut at sentence ends, never inside a sentence. |
+| New chunk at each Part heading (I, II, A...) and at the Syllabus | The section label is stored and shown to the reader; the Syllabus (written by Court staff, not part of the opinion) is flagged. |
+| Exact start/end positions | Needed to highlight the passage in its opinion (FR4, SR31); checked by tests/test_chunking.py. |
+| Header embedded with each chunk | "Case (year) - opinion type" is added to the embedded text, so a passage keeps its context. |
+| Measured choice | Week 3: recall@5 with 250 vs 350 vs 400 words on the tune questions (step 3.5). |
+
+Known exception: 9 chunks of 104,904 are longer than 350 words (longest 830). They are tables with
+no sentence ends (e.g. the appendix of Senate recess dates in NLRB v. Noel Canning, 2014); the model
+reads about the first 380 words of a chunk. Not fixed: no legal reasoning is lost.
+
+Embeddings: BAAI/bge-small-en-v1.5 (384 numbers, normalised), the same model for passages and
+questions. Passages are embedded sorted by length and saved every 2,048 (data/work/embedding_cache),
+so an interrupted build resumes. The laptop CPU needed about 14 hours for 104,904 passages, so the
+blocks can also be computed on a Colab GPU with the same model (scripts/export_for_colab.py; 46 blocks
+in 4.5 minutes on 2026-10-26).
 
 ## 5. Verification policy (FR6, FR7, SR22-SR25)
 
@@ -137,13 +160,19 @@ Edwin = citations, model, verification, evaluation, test questions.
 
 | Part | Owner | Branch / PR | Status |
 |---|---|---|---|
-| 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | in review (tag spec-v1 done) |
+| 0.1-0.6 SPEC, AI log, project setup | all | step/0-setup | merged (PR #1; tag spec-v1) |
 | 1.1-1.6 bulk-file reader and filters | Yasser | step/1.1-1.6-bulk-filters | merged (PR #2); run on the real files, counts in section 2 |
-| 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | run on the real files (2,477 decisions); section 2 filled; ready to merge |
-| 1.7 database schema (db.py) | Joe | step/1.7-db | code ready; Joe to review |
+| 1.4b-c real decisions only, copies merged | Yasser | step/1.4-cluster-scope | merged (PR #4) |
+| 1.7 database schema (db.py) | Joe | step/1.7-db | merged (PR #6, reviewed by Joe) |
 | 1.8 load into PostgreSQL (ingest, chunking, seed) | Yasser | step/1.8-ingest | loaded on the real data (counts in section 2); merge after 1.4 and 1.7 |
 | 1.9 citation lookup (citations, check_citation, find_case) | Edwin | step/1.9-citations | code ready; reviewed by Edwin, matches guide p.27-29; needs 1.7 |
 | 1.10 tests for citations | Edwin | step/1.10-citation-tests | 5 tests pass (StaticCitationIndex, no database needed); needs 1.9 merged |
+
+Week 2 and later (1.8 was merged in PR #5):
+
+| Part | Owner | Branch / PR | Status |
+|---|---|---|---|
+| 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | index built on the real data (104,904 chunks); section 4 filled; ready to merge |
 
 ## 11. Divergences log
 
