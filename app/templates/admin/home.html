@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Overview</h2>
+<div class="grid">{% for k, v in counts.items() %}<div class="stat">{{ k|replace('_',' ')|capitalize }}<b>{{ "{:,}".format(v) }}</b></div>{% endfor %}</div>
+{% if m %}<div class="card"><h3>Latest evaluation (run {{ last.id }}, test split, current settings)</h3><div class="grid">
+<div class="stat {{ 'red' if m.false_citations_shown else 'green' }}">False citations shown<b>{{ m.false_citations_shown }}</b></div>
+<div class="stat">Abstention precision<b>{{ m.abstention_precision }}</b></div>
+<div class="stat">Abstention recall<b>{{ m.abstention_recall }}</b></div>
+<div class="stat">Recall@5<b>{{ m['recall@5'] }}</b></div>
+<div class="stat">Groundedness (judge)<b>{{ m.groundedness_judge }}</b></div></div>
+<a href="/admin/eval/{{ last.id }}">Open this run</a></div>{% else %}<div class="card">No evaluation yet. <a href="/admin/eval">Run one</a>.</div>{% endif %}
+<div class="card"><h3>Re-index</h3>
+<form method="post" action="/admin/reindex">Chunk size (words) <input name="max_words" type="number" min="150" max="600" value="{{ s.chunk_max_words }}" style="width:80px">
+<button onclick="return confirm('Rebuild all chunks and embeddings, then run the full evaluation automatically?')">Re-index + regression run</button></form>
+<p class="muted">Rebuilds chunks and embeddings from the opinions in the database, then runs every test question. Compare the new run with the previous one on the Evaluation page: worse metrics are shown in red.</p></div>
+<div class="card"><h3>Background jobs</h3><table><tr><th>#</th><th>Started</th><th>Kind</th><th>Status</th><th>Message</th></tr>
+{% for j in jobs %}<tr class="{{ 'red' if j.status=='failed' else '' }}"><td>{{ j.id }}</td><td>{{ j.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ j.kind }}</td><td>{{ j.status }}</td><td>{{ j.message }}</td></tr>{% endfor %}</table>
+<p class="muted">Refresh the page to follow a running job.</p></div>
+{% endblock %}
