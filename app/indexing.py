@@ -68,7 +68,9 @@ def make_rows(max_words=350):
     rows = []
     for op in opinions:
         for n, ch in enumerate(chunk_opinion(op["text"], max_words)):
-            header = f"{op['case_name']} ({op['date_filed'].year}) - {op['label']}"
+            # the section names the opinion (e.g. "Kagan, J., dissenting"), so the meaning search
+            # also knows when a passage is not the Court's opinion
+            header = f"{op['case_name']} ({op['date_filed'].year}) - {op['label']} - {ch['section']}"
             rows.append({"chunk_id": f"{op['opinion_id']}-{n}", "opinion_id": op["opinion_id"],
                          "decision_id": op["decision_id"], "ord": n, **ch,
                          "embed_text": header + "\n" + ch["text"]})
