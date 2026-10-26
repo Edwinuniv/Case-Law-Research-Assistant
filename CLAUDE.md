@@ -92,8 +92,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 1.4 Filter dockets and decisions, then count (Yasser) — merged
 - [x] 1.5 The opinions file (44.8 GB) (Yasser) — merged
 - [x] 1.6 The citation table and the citation map (Yasser) — merged
-- [ ] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — branch step/1.7-db, Joe to review
-- [ ] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — branch step/1.8-ingest, needs 1.7 merged
+- [x] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — merged (PR #6)
+- [x] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — merged (PR #5)
 - [x] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — reviewed by Edwin, merged (PR #10) ⏳ gate run needs the 1.8 data loaded
 - [x] 1.10 First tests, and commit (Edwin) — tests/conftest.py, tests/test_citations.py: 5 passed, merged (PR #11)
 
@@ -117,7 +117,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 4.5 Tests (with a fake model) — merged (PR #14): test_verify, test_pipeline, test_llm from the guide + 3 tests for gaps found by breaking the code on purpose; 32 passed
 
 ### Week 5 — Evaluation module and website
-- [x] 5.1 Evaluation module (Edwin; tests/test_evaluate.py agreed with Joe) — branch step/5.1-evaluate: app/evaluate.py as in the guide, each part tried on the test database; tests from the guide + 7 for gaps found by breaking the code on purpose; 43 passed ⏳ real run needs the questions (3.1) and the data
+- [x] 5.1 Evaluation module (Edwin; tests/test_evaluate.py agreed with Joe) — merged (PR #15): app/evaluate.py as in the guide, each part tried on the test database; tests from the guide + 7 for gaps found by breaking the code on purpose; 43 passed ⏳ real run needs the questions (3.1) and the data
 - [ ] 5.2 The web application (Joe)
 - [ ] 5.3 Public templates (Joe)
 - [ ] 5.4 Admin templates (Joe)
