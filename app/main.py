@@ -95,3 +95,46 @@ def passage(request: Request, chunk_id: str, quote: str = "", panel: int = 0):
 @app.get("/health")
 def health():
     return {"ok": True, "index_loaded": STATE["searcher"] is not None}
+
+
+# ======================= ADMIN: login and role check =======================
+def need_admin(request):
+    """NFR8 / SR35: checked on EVERY admin request. Returns an error response, or None if allowed."""
+    admin = request.session.get("admin")
+    if not admin:
+        return page(request, "admin/login.html", status_code=401, error="Please log in as an administrator.")
+    if not db.user_is_active_admin(admin["id"]):
+        request.session.clear()
+        return HTMLResponse("403 - this account is disabled or not an administrator", status_code=403)
+    return None
+
+
+@app.get("/admin/login")
+def login_form(request: Request):
+    return page(request, "admin/login.html", error=None)
+
+
+@app.post("/admin/login")
+def login(request: Request, email: str = Form(...), password: str = Form(...)):
+    user, message = db.check_login(email, password)
+    if not user:
+        return page(request, "admin/login.html", status_code=401, error=message)
+    request.session["admin"] = user
+    return RedirectResponse("/admin", 303)
+
+
+@app.get("/admin/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse("/", 303)
+
+
+def run_in_background(kind, work):
+    job_id = db.start_job(kind)
+
+    def target():
+        try:
+            db.end_job(job_id, "done", str(work() or ""))
+        except Exception as e:
+            db.end_job(job_id, "failed", f"{type(e).__name__}: {e}")
+    threading.Thread(target=target, daemon=True).start()
