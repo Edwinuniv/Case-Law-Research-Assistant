@@ -21,6 +21,34 @@ OPINION_TYPES = {
 # lines that are page furniture, not content
 JUNK_LINE = re.compile(r"^\s*(Cite as: .*|\d{1,3}|Opinion of the Court|"
                        r"[A-Z ,.'’]+, (C\. )?J\., (dissenting|concurring).*)\s*$")
+# The start of each separate opinion inside one text. CourtListener often stores a recent decision
+# as ONE "combined" text: majority + concurrences + dissents (e.g. Loper Bright, 2024). Each part
+# starts a paragraph like "CHIEF JUSTICE ROBERTS delivered the opinion of the Court." or
+# "JUSTICE KAGAN, with whom JUSTICE SOTOMAYOR and JUSTICE JACKSON join,* dissenting."
+_WHO = r"(?P<chief>(?i:chief)\s+)?(?i:justice)\s+(?P<name>[A-Z][A-Za-z’'\-]+)"
+OPINION_ROLE = re.compile(_WHO + r"(?:,\s*with whom .{0,250}?\bjoins?\b\*?)?,\*?\s*"
+                          r"(?P<role>(?:concurring|dissenting)(?: in [^.,;]{1,80})?)\.")
+OPINION_MAIN = re.compile(_WHO + r"\s+(?P<what>delivered the opinion of the Court"
+                          r"|announced the judgment of the Court)")
+PER_CURIAM = re.compile(r"PER CURIAM\b")
+
+
+def opinion_start(para):
+    """If this paragraph starts a separate opinion, return its label, else None."""
+    head = para.lstrip()[:400]
+    for pattern in (OPINION_ROLE, OPINION_MAIN):
+        m = pattern.match(head)
+        if m:
+            who = m.group("name").title() + (", C. J." if m.group("chief") else ", J.")
+            if pattern is OPINION_ROLE:
+                return f"{who}, {' '.join(m.group('role').split())}"
+            kind = "Opinion of the Court" if m.group("what").startswith("delivered") else "Plurality opinion"
+            return f"{kind} ({who[:-4] if who.endswith(', J.') else who[:-7]})"
+    if PER_CURIAM.match(head):
+        return "Per curiam"
+    return None
+
+
 HEADING = re.compile(r"^\s*(?:[IVX]{1,6}|[A-H]|\d{1,2})\.?\s*$")
 
 
@@ -69,17 +97,30 @@ def sentences(text, start, end):
     yield pos, end
 
 
+def section_is_not_syllabus(units):
+    """True unless we are already in the Syllabus. In slip opinions "Syllabus" is also a running
+    header repeated on every page; repeating it must not cut the Syllabus into tiny chunks."""
+    for kind, label, _, _ in reversed(units):
+        if kind in ("HEADING", "OPINION"):
+            return label != "Syllabus"
+    return True
+
+
 def chunk_opinion(text, max_words=350):
     """Cut ONE opinion into chunks of whole paragraphs (about max_words words each).
     Returns a list of dicts with exact character positions (start, end) in `text`."""
-    units, section = [], "Opening"
+    units, section, opinion = [], "Opening", None
     for s, e in paragraphs(text):
         para = text[s:e].strip()
+        label = opinion_start(para)
+        if label:                                           # a new opinion starts here
+            units.append(("OPINION", label, s, e))
         if HEADING.match(para):
             units.append(("HEADING", para, s, e))
             continue
         if re.match(r"^\s*syllabus\s*$", para, re.I):
-            units.append(("HEADING", "Syllabus", s, e))
+            if not (units and units[-1][1] == "Syllabus") and section_is_not_syllabus(units):
+                units.append(("HEADING", "Syllabus", s, e))
             continue
         if len(para.split()) > max_words:                  # very long paragraph -> sentences
             for ss, se in sentences(text, s, e):
@@ -96,13 +137,22 @@ def chunk_opinion(text, max_words=350):
                            "is_syllabus": section == "Syllabus", "text": text[s:e]})
 
     for kind, label, s, e in units:
+        if kind == "OPINION":
+            flush(); current = []
+            opinion = section = label
+            continue
         if kind == "HEADING":
             flush(); current = []
-            section = label if label == "Syllabus" else f"Part {label}"
+            if label == "Syllabus":
+                section = "Syllabus"
+            else:
+                section = f"{opinion} - Part {label}" if opinion else f"Part {label}"
             continue
         if section == "Syllabus" and re.search(r"delivered the opinion of the Court", text[s:e]):
-            flush(); current = []
+            current.append((s, e))          # the Syllabus's last line ("X delivered the opinion...")
+            flush(); current = []           # belongs to the Syllabus; the opinion starts after it
             section = "Opening"
+            continue
         words_now = sum(len(text[a:b].split()) for a, b in current)
         if current and words_now + len(text[s:e].split()) > max_words:
             flush(); current = []
