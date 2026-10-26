@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Evaluation run {{ run_id }}</h2>
+<div class="card"><form>What-if abstention threshold <input name="tau" type="number" step="0.01" value="{{ s.tau_abstain }}" style="width:80px">
+Split <select name="split">{% for x in ['test','tune'] %}<option {% if x==split %}selected{% endif %}>{{ x }}</option>{% endfor %}</select> <button class="light">Recalculate</button>
+<span class="muted">This does not change the live system.</span></form></div>
+<div class="two"><div><table><tr><th>Metric ({{ split }} split)</th><th>Value</th></tr>
+{% for k, v in m.items() %}<tr class="{{ 'red' if k.startswith('false_citation') and v else '' }}">
+<td>{{ k|replace('_',' ') }}</td><td>{{ v }}</td></tr>{% endfor %}</table></div>
+<div><div class="card"><h3 style="margin-top:0">Threshold sweep (tune split)</h3>
+<table><tr><th>τ</th><th>Precision</th><th>Recall</th><th>Wrong abst.</th><th>Wrong ans.</th></tr>
+{% for x in sweep %}<tr class="{{ 'hl' if (x.tau - s.tau_abstain)|abs < 0.011 else '' }}"><td>{{ x.tau }}</td><td>{{ x.precision }}</td><td>{{ x.recall }}</td><td>{{ x.wrong_abstentions }}</td><td>{{ x.wrong_answers }}</td></tr>{% endfor %}</table></div></div></div>
+<div class="card"><h3>Questions (wrong outcomes first)</h3>
+<table><tr><th>ID</th><th>Tag / split</th><th>Question</th><th>Status</th><th>Support</th><th>Removed / fabrications caught</th><th>False shown</th><th>Judge</th></tr>
+{% for t in table %}<tr class="{{ '' if t.ok else 'red' }}"><td>{{ t.q.id }}</td><td>{{ t.q.tag }}<br><span class="muted">{{ t.q.split }}</span></td>
+<td>{{ t.q.question }}{% if t.r.removed %}<details><summary class="muted">removed sentences</summary>
+{% for x in t.r.removed %}<p>{{ x.text }}<br><b>{{ x.problems|join('; ') }}</b></p>{% endfor %}
+</details>{% endif %}</td>
+<td>{{ t.status }}</td><td>{{ t.r.support_score }}</td><td>{{ t.r.n_removed }} / {{ t.r.fabrications_caught }}</td><td class="{{ 'red' if t.false else '' }}">{{ t.false }}</td><td>{{ t.r.judgements|join(', ') }}</td></tr>{% endfor %}</table></div>
+{% endblock %}
