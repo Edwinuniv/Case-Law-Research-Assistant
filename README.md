@@ -15,6 +15,11 @@ Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Do
     python -m pytest -q                        # uses the TEST database
     uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin)
 
+## Deploy (week 6)
+The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
+building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
+(plus `HTTPS_ONLY=1`), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
+
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets
     python -m scripts.filter_clusters
