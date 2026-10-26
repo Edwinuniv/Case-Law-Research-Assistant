@@ -138,3 +138,55 @@ def run_in_background(kind, work):
         except Exception as e:
             db.end_job(job_id, "failed", f"{type(e).__name__}: {e}")
     threading.Thread(target=target, daemon=True).start()
+
+
+# ======================= ADMIN: overview and settings =======================
+@app.get("/admin")
+def admin_home(request: Request):
+    if (r := need_admin(request)):
+        return r
+    s = db.get_settings()
+    with db.connect() as con:
+        counts = con.execute("""SELECT (SELECT count(*) FROM decisions) AS decisions,
+            (SELECT count(*) FROM opinions) AS opinions, (SELECT count(*) FROM chunks) AS chunks,
+            (SELECT count(*) FROM citations) AS citations, (SELECT count(*) FROM citation_map) AS citation_map,
+            (SELECT count(*) FROM test_questions) AS questions,
+            (SELECT count(*) FROM query_log WHERE created_at::date = now()::date) AS queries_today""").fetchone()
+        last = con.execute("SELECT id FROM eval_runs WHERE status = 'done' ORDER BY id DESC LIMIT 1").fetchone()
+        jobs = con.execute("SELECT * FROM jobs ORDER BY id DESC LIMIT 6").fetchall()
+    m = evaluate.metrics(evaluate.load_run(last["id"]), s, "test") if last else None
+    return page(request, "admin/home.html", counts=counts, s=s, last=last, m=m, jobs=jobs)
+
+
+@app.get("/admin/settings")
+def admin_settings(request: Request, tau_abstain: float = None, tau_confident: float = None,
+                   min_retrieval: float = None):
+    """FR23: preview the effect of new thresholds on the latest evaluation run BEFORE saving."""
+    if (r := need_admin(request)):
+        return r
+    s = db.get_settings()
+    preview = None
+    with db.connect() as con:
+        last = con.execute("SELECT id FROM eval_runs WHERE status = 'done' ORDER BY id DESC LIMIT 1").fetchone()
+    if last and tau_abstain is not None:
+        new = dict(s, tau_abstain=tau_abstain, tau_confident=max(tau_confident or 0, tau_abstain),
+                   min_retrieval=min_retrieval if min_retrieval is not None else s["min_retrieval"])
+        pairs = evaluate.load_run(last["id"])
+        preview = {"run": last["id"], "new": new, "now": evaluate.metrics(pairs, s, "test"),
+                   "then": evaluate.metrics(pairs, new, "test")}
+    return page(request, "admin/settings.html", s=s, preview=preview)
+
+
+@app.post("/admin/settings")
+def admin_settings_save(request: Request, tau_abstain: float = Form(...), tau_confident: float = Form(...),
+                        min_retrieval: float = Form(...), top_k: int = Form(...), retrieve_k: int = Form(...),
+                        use_reranker: str = Form("off")):
+    if (r := need_admin(request)):
+        return r
+    db.set_setting("tau_abstain", tau_abstain)
+    db.set_setting("tau_confident", max(tau_confident, tau_abstain))
+    db.set_setting("min_retrieval", min_retrieval)
+    db.set_setting("retrieve_k", max(8, min(retrieve_k, 50)))
+    db.set_setting("top_k", max(1, min(top_k, 10)))
+    db.set_setting("use_reranker", use_reranker == "on")
+    return RedirectResponse("/admin/settings", 303)
