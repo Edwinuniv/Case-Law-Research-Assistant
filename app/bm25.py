@@ -4,11 +4,25 @@ import re
 from array import array
 from collections import Counter
 import numpy as np
+import snowballstemmer
 from scipy import sparse
+
+TOKENIZER = "words+snowball-english-1"     # part of the saved index's key: change it when tokens() changes
+_stemmer = snowballstemmer.stemmer("english")
+_stems = {}
+
+
+def stem(word):
+    """overrule / overruled / overruling -> 'overrul' (without it, 'overrule' in a question never
+    matched 'overruled' in Loper Bright). Cached: the same words come back millions of times."""
+    s = _stems.get(word)
+    if s is None:
+        s = _stems[word] = _stemmer.stemWord(word)
+    return s
 
 
 def tokens(text):
-    return re.findall(r"[a-z0-9§]+", (text or "").lower())
+    return [stem(w) for w in re.findall(r"[a-z0-9§]+", (text or "").lower())]
 
 
 class BM25:

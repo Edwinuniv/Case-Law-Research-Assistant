@@ -73,7 +73,8 @@ question -> input check, 3-1000 characters (SR3)
 -> top 8 passages (baseline: fused order; week-10 improvement: reranker, SR18)
    (dense search is exact, no HNSW index: 57 ms for 104,904 chunks measured on 2026-10-26; HNSW took
    3 ms but is approximate and, with its default ef_search=40, returned only 40 of 50 rows, none of
-   them the exact top 50. BM25 is a sparse matrix built once and saved in data/work/bm25.*)
+   them the exact top 50. BM25 is a sparse matrix built once and saved in data/work/bm25.*;
+   words are stemmed (Snowball English), so "overrule" in a question matches "overruled")
 -> cheap gate: best passage similarity < min_retrieval => NOT SUPPORTED, model not called
 -> model (30 s limit, one retry on invalid JSON) returns sentences with passage ids P1..P8
    and exact quotes, or NOT_SUPPORTED (SR4, SR19, SR20)
@@ -90,12 +91,12 @@ most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 word
 
 | Rule | Justification |
 |---|---|
-| Never mix two opinions | A chunk mixing majority and dissent could present a dissent as the Court's ruling. Each opinion is chunked on its own. |
+| Never mix two opinions | A chunk mixing majority and dissent could present a dissent as the Court's ruling. Each opinion is chunked on its own, and CourtListener's "combined" texts (majority + concurrences + dissents in one text, e.g. Loper Bright, 2024) are cut at each "JUSTICE X, concurring/dissenting." or "... delivered the opinion of the Court." line; the section names the opinion ("Kagan, J., dissenting") and is shown to the model and the reader. |
 | Whole paragraphs, at most 350 words (SR16: 250-400) | 98.3% of our paragraphs have at most 350 words (median 88), so they stay whole and quotes stay intact; at 250 words only 84.3% would. |
 | Split long paragraphs between sentences | Only 1.7% of paragraphs are longer than 350 words; they are cut at sentence ends, never inside a sentence. |
 | New chunk at each Part heading (I, II, A...) and at the Syllabus | The section label is stored and shown to the reader; the Syllabus (written by Court staff, not part of the opinion) is flagged. |
 | Exact start/end positions | Needed to highlight the passage in its opinion (FR4, SR31); checked by tests/test_chunking.py. |
-| Header embedded with each chunk | "Case (year) - opinion type" is added to the embedded text, so a passage keeps its context. |
+| Header embedded with each chunk | "Case (year) - opinion type - section" is added to the embedded text, so a passage keeps its context (including which Justice's opinion it is). |
 | Measured choice | Week 3: recall@5 with 250 vs 350 vs 400 words on the tune questions (step 3.5). |
 
 Known exception: 9 chunks of 104,904 are longer than 350 words (longest 830). They are tables with
@@ -176,7 +177,8 @@ Week 2 and later (1.8 was merged in PR #5):
 | Part | Owner | Branch / PR | Status |
 |---|---|---|---|
 | 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | merged (PR #16) |
-| 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | code ready; baseline needs eval/questions.jsonl (tag eval-v1) |
+| 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | merged (PR #20); baseline needs eval/questions.jsonl (tag eval-v1) |
+| 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | code ready; needs a re-index (Colab) and a check on the real data |
 
 ## 11. Divergences log
 

@@ -119,6 +119,19 @@ read the related line ourselves before relying on these entries.
    during the 2.5-minute download started its own download (no lock in `_get_model`). How we caught it:
    twelve "Fetching 5 files" lines in the uvicorn log. Fix: a lock, so the model is created once
    (tested with 12 parallel requests), and the Searcher loads it at start-up.
+4. **AI mistake: concurrences and dissents labelled as the Court's opinion; the holding was not found.**
+   First real question on the website: "Did the Supreme Court overrule Chevron deference?" gave NOT
+   SUPPORTED, although three Loper Bright passages were retrieved. How we caught it: we printed the 8
+   passages and searched the chunks for "Chevron is overruled": the two chunks with that sentence (the
+   Syllabus and the end of the majority) were not even in the top 50. Two causes in the AI's code:
+   (a) CourtListener stores Loper Bright as ONE combined text (majority + Thomas and Gorsuch
+   concurrences + Kagan dissent); the chunker only knew headings on their own line, so every chunk was
+   "Opening" and a concurrence passage (P1) looked like the Court's opinion - against our SPEC rule
+   "never mix two opinions"; (b) BM25 compared exact words, so "overrule" never matched "overruled".
+   Fix: a new section at each "JUSTICE X, concurring/dissenting." / "delivered the opinion of the
+   Court" paragraph, with the opinion named in the section and in the embedded header; repeated
+   "Syllabus" page headers no longer cut the Syllabus; BM25 words stemmed. Tests in
+   tests/test_opinion_sections.py and tests/test_bm25.py.
 
 ---
 
