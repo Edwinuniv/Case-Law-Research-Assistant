@@ -114,6 +114,11 @@ read the related line ourselves before relying on these entries.
    saved every 2,048 (data/work/embedding_cache), so a stopped run resumes; progress printed at once.
 2. **AI mistake: progress hidden in the log.** Under nohup, Python wrote the progress lines only at the end
    (output buffering). Fix: print with flush.
+3. **AI mistake: the model was downloaded 12 times at once.** On the first website run, the embedding
+   model was not on disk yet; it was loaded only at the first question, and each request that arrived
+   during the 2.5-minute download started its own download (no lock in `_get_model`). How we caught it:
+   twelve "Fetching 5 files" lines in the uvicorn log. Fix: a lock, so the model is created once
+   (tested with 12 parallel requests), and the Searcher loads it at start-up.
 
 ---
 
