@@ -9,7 +9,8 @@ def _get_model():
     global _model
     if _model is None:
         from fastembed import TextEmbedding
-        _model = TextEmbedding(EMBED_MODEL)     # downloaded automatically the first time
+        # downloaded once into data/models (the default, /tmp, is emptied at every restart)
+        _model = TextEmbedding(EMBED_MODEL, cache_dir=str(DATA / "models"))
     return _model
 
 
