@@ -71,6 +71,9 @@ citations, citation_map, test_questions, query_log, eval_runs, eval_results, use
 question -> input check, 3-1000 characters (SR3)
 -> hybrid search: pgvector cosine + BM25, Reciprocal Rank Fusion, top 20 (SR17)
 -> top 8 passages (baseline: fused order; week-10 improvement: reranker, SR18)
+   (dense search is exact, no HNSW index: 57 ms for 104,904 chunks measured on 2026-10-26; HNSW took
+   3 ms but is approximate and, with its default ef_search=40, returned only 40 of 50 rows, none of
+   them the exact top 50. BM25 is a sparse matrix built once and saved in data/work/bm25.*)
 -> cheap gate: best passage similarity < min_retrieval => NOT SUPPORTED, model not called
 -> model (30 s limit, one retry on invalid JSON) returns sentences with passage ids P1..P8
    and exact quotes, or NOT_SUPPORTED (SR4, SR19, SR20)
@@ -172,7 +175,8 @@ Week 2 and later (1.8 was merged in PR #5):
 
 | Part | Owner | Branch / PR | Status |
 |---|---|---|---|
-| 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | index built on the real data (104,904 chunks); section 4 filled; ready to merge |
+| 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | merged (PR #16) |
+| 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | code ready; baseline needs eval/questions.jsonl (tag eval-v1) |
 
 ## 11. Divergences log
 
