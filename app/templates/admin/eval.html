@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Evaluation runs</h2>
+<div class="card"><form method="post" action="/admin/eval/run">Note <input name="note" placeholder="e.g. baseline hybrid" style="width:260px"> <button>Run all test questions now</button></form>
+<p class="muted">Takes several minutes (about two model calls per question). Follow it under Background jobs on the Overview page.</p>
+<form method="get" action="/admin/eval/compare">Compare run <input name="a" type="number" style="width:70px" required> (before) with run <input name="b" type="number" style="width:70px" required> (after)
+ <select name="split"><option value="test">test split</option><option value="tune">tune split</option><option value="">all</option></select> <button class="light">Compare</button></form>
+</div>
+<table><tr><th>Run</th><th>Date</th><th>Trigger</th><th>Note</th><th>Status</th><th>Recall@5</th><th>MRR@10</th><th>Abst. P</th><th>Abst. R</th><th>False citations</th><th>Grounded</th></tr>
+{% for run, m in rows %}<tr><td><a href="/admin/eval/{{ run.id }}">{{ run.id }}</a></td><td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ run.trigger }}</td><td>{{ run.note or '' }}</td><td>{{ run.status }}</td>
+<td>{{ m['recall@5'] }}</td><td>{{ m['mrr@10'] }}</td><td>{{ m.abstention_precision }}</td><td>{{ m.abstention_recall }}</td><td class="{{ 'red' if m.false_citations_shown else '' }}">{{ m.false_citations_shown }}</td><td>{{ m.groundedness_judge }}</td></tr>{% endfor %}</table>
+<p class="muted">Test split, current settings.</p>
+{% endblock %}

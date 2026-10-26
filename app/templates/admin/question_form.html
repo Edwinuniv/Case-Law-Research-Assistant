@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>{{ 'Edit' if q else 'New' }} test question</h2>
+<form class="card" method="post" action="/admin/questions/save">
+<p>ID <input name="id" required value="{{ q.id if q else '' }}" {% if q %}readonly{% endif %} placeholder="e.g. G061">
+ Tag <select name="tag">{% for t in ['answerable','unanswerable','adversarial'] %}<option {% if (q.tag if q else prefill_tag)==t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
+ Split <select name="split">{% for t in ['tune','test'] %}<option {% if q and q.split==t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
+ Author <input name="author" value="{{ q.author if q and q.author else admin.email }}"></p>
+<p>Question<br><textarea name="question" rows="2" required>{{ q.question if q else prefill_question }}</textarea></p>
+<p>Expected answer (answerable only)<br><textarea name="expected_answer" rows="2">{{ q.expected_answer or '' if q else '' }}</textarea></p>
+<p>Expected decision IDs (space separated) <input name="gold_decision_ids" value="{{ q.gold_decision_ids|join(' ') if q else '' }}" style="width:300px"></p>
+<p>Gold quote (copied exactly from the opinion)<br><textarea name="gold_quote" rows="2">{{ q.gold_quote or '' if q else '' }}</textarea></p>
+<p>Must never appear (adversarial; separate with ;) <input name="must_not_appear" value="{{ q.must_not_appear|join('; ') if q else '' }}" style="width:400px"></p>
+<p>Why unanswerable / notes<br><textarea name="why" rows="2">{{ q.why or '' if q else '' }}</textarea></p>
+<button>Save</button> <span class="muted">Then export the questions and commit eval/questions.jsonl, so the change is in the git history.</span></form>
+{% endblock %}
