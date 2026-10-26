@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>{% endblock %}
+{% block admin %}
+<h2>Analytics</h2>
+<form class="card">From <input type="date" name="start" value="{{ start }}"> to <input type="date" name="end" value="{{ end }}"> <button class="light">Apply</button></form>
+<div class="two"><div class="card"><h3>Queries per day, by result</h3><canvas id="c1"></canvas></div>
+<div class="card"><h3>Response time (ms)</h3><canvas id="c2"></canvas></div></div>
+<div class="two"><div class="card"><h3>Failure rate (errors)</h3><canvas id="c3"></canvas></div>
+<div class="card"><h3>Questions it could not answer</h3><ul>{% for u in unanswered %}<li>{{ u.question }} <span class="muted">{{ u.created_at.strftime('%m-%d') }} · {{ u.reason }}</span></li>{% else %}<li>None in this period.</li>{% endfor %}</ul><a href="/admin/abstentions">Review them</a>
+</div></div>
+<script>
+const d = {{ days|tojson }};
+const L = d.map(x => x.day);
+new Chart(c1, {type:'bar', data:{labels:L, datasets:[
+ {label:'answered', data:d.map(x=>x.answered), backgroundColor:'#2f7d3b'},
+ {label:'low confidence', data:d.map(x=>x.low), backgroundColor:'#c58b00'},
+ {label:'not supported', data:d.map(x=>x.not_supported), backgroundColor:'#7a8594'},
+ {label:'error', data:d.map(x=>x.errors), backgroundColor:'#b3342b'}]}, options:{scales:{x:{stacked:true},y:{stacked:true}}}});
+new Chart(c2, {type:'line', data:{labels:L, datasets:[{label:'median (p50)', data:d.map(x=>x.p50), borderColor:'#1f3a5f'},
+ {label:'p95', data:d.map(x=>x.p95), borderColor:'#c58b00'}]}});
+new Chart(c3, {type:'line', data:{labels:L, datasets:[{label:'share of queries with an error', data:d.map(x=>x.failure_rate), borderColor:'#b3342b'}]}, options:{scales:{y:{min:0,max:1}}}});
+</script>
+{% endblock %}
