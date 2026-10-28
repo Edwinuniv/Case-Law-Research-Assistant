@@ -121,7 +121,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 5.2 The web application (Joe) — app/main.py as in the guide, merged (PR #19): home, /health, admin login and the 9 admin pages checked; 53 tests pass ⏳ real questions need the data loaded and a Groq key (5.5)
 - [x] 5.3 Public templates (Joe) — base, ask, passage_panel, passage as in the guide, merged (PR #9)
 - [x] 5.4 Admin templates (Joe) — 13 pages in app/templates/admin/ as in the guide, merged (PR #17)
-- [ ] 5.5 Run it, test it, commit (Joe)
+- [x] 5.5 Run it, test it, commit (Joe) — run with Yasser's dump: research page, citation panel, 9 admin pages OK; tests/test_admin.py from the guide (6 passed, whole suite 64 passed) ⏳ Chevron question gives Not supported (search not finding the majority passage, told Yasser)
 
 ### Week 6 — Deployment (Joe)
 - [x] 6.1 Deployment files — Dockerfile and .dockerignore; build step downloads the embedding model into data/models like app/embeddings.py (AI_LOG) ⏳ image built for real on Railway (6.2)
