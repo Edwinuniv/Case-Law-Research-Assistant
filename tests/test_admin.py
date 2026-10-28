@@ -42,3 +42,21 @@ def test_passwords_are_hashed(clean_db):                                        
     with clean_db.connect() as con:
         h = con.execute("SELECT password_hash FROM users").fetchone()["password_hash"]
     assert h.startswith("$2") and "a-long-password" not in h
+
+
+def test_other_admin_pages_refuse_visitors(clean_db):                                 # SR35
+    with client() as c:
+        for url in ["/admin/corpus", "/admin/analytics", "/admin/abstentions", "/admin/questions/edit",
+                    "/admin/questions/export", "/admin/eval/1", "/admin/eval/compare?a=1&b=2"]:
+            assert c.get(url).status_code == 401, url
+
+def test_admin_actions_refuse_visitors(clean_db):                                     # SR35
+    with client() as c:
+        no_redirect = {"follow_redirects": False}     # an unprotected action redirects to /admin, which is 401
+        assert c.post("/admin/users", data={"email": "x@example.com", "password": "a-long-password"},
+                      **no_redirect).status_code == 401
+        assert c.post("/admin/users/1/toggle", **no_redirect).status_code == 401
+        assert c.post("/admin/eval/run", **no_redirect).status_code == 401
+        assert c.post("/admin/reindex", **no_redirect).status_code == 401
+    with clean_db.connect() as con:
+        assert con.execute("SELECT count(*) AS n FROM users").fetchone()["n"] == 0
