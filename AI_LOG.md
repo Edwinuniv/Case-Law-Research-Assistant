@@ -183,3 +183,23 @@ read the related line ourselves before relying on these entries.
    How we caught it: we searched the code for `cache_dir` before writing the build step.
    Fix: the build step passes `cache_dir='data/models'`, the same folder as `app/embeddings.py`.
    `data/` is in `.dockerignore`, so `COPY . .` does not overwrite it.
+
+## 2026-10-28 — Running the website with real data (Joe)
+
+1. **The guide's admin test checked only 5 of the admin pages.** We asked Claude to add `tests/test_admin.py`
+   (step 5.5) exactly as in the guide; the 6 tests passed. To check that they protect the site, we broke
+   `app/main.py` on purpose in a temporary copy: lock-out off, disabled-account check off, `/admin/settings`
+   without the login check, `/admin/corpus` without the login check. The first three were caught; the last
+   was NOT, because the guide's test only visits `/admin`, eval, settings, users and questions.
+   How we caught it: the test run stayed green with the bug in place.
+   Fix: two tests that visit the other admin pages (corpus, analytics, abstentions, question form and export,
+   eval run and compare) and the admin actions (create or disable a user, run the evaluation, re-index) without
+   logging in; each fails on the matching bug and passes on the real code. Whole suite: 66 passed.
+   The first version of the actions test still missed an unprotected re-index: the action redirects to
+   `/admin`, the test client followed the redirect and got that page's 401. The actions are now posted
+   without following redirects, and all five breaks (corpus, create user, disable user, run evaluation,
+   re-index) make a test fail.
+2. **Calls to the model failed from WSL.** Every real question gave "Server disconnected" on Joe's PC, while
+   the same call worked from Windows: requests of more than a few KB never arrived. How we caught it: a
+   small call worked and a full question did not. Fix (on that PC only, not in the code): WSL network MTU
+   lowered from 1500 to 1350. It is lost when the PC restarts.
