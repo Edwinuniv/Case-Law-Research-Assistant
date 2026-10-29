@@ -65,7 +65,11 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
 
 ## 3. Architecture
 
-PostgreSQL 16 + pgvector. Tables: decisions, cluster_alias, opinions, chunks (vector(384)),
+PostgreSQL 16 + pgvector, run with Docker: locally the pgvector/pgvector:pg16 image
+(docker-compose.yml), online the website is built from the Dockerfile on Railway. The code only
+reads DATABASE_URL, so any PostgreSQL 16 with pgvector works. Asked on 2026-10-29, the instructor
+said both a direct install and Docker are acceptable and that he prefers Docker (portable, comes
+pre-installed); we keep Docker. Tables: decisions, cluster_alias, opinions, chunks (vector(384)),
 citations, citation_map, test_questions, query_log, eval_runs, eval_results, users, settings, jobs.
 
 question -> input check, 3-1000 characters (SR3)
