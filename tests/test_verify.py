@@ -117,3 +117,9 @@ def test_invented_in_re_and_ex_parte_names_are_removed():
     assert not kept and any("Zorblax" in p for p in removed[0]["problems"])
     kept, removed = run("As in Ex parte Quimby, the President enjoys absolute immunity.")
     assert not kept and any("Quimby" in p for p in removed[0]["problems"])
+
+def test_in_re_name_written_in_the_passage_is_kept():
+    passage = {**PASSAGE, "text": PASSAGE["text"] + " As In re Gault explained, the President enjoys absolute immunity."}
+    s = {"text": "In re Gault was discussed.", "sources": ["P1"], "quote": QUOTE}
+    kept, _ = verify({"sentences": [s]}, {"P1": passage}, INDEX)
+    assert kept
