@@ -247,3 +247,17 @@ read the related line ourselves before relying on these entries.
    remove, but relabel. Fix: "citation not in the citation table (written in the passage)", not counted
    by `count_fabrications`; a citation missing from the table AND absent from the passage is still
    FABRICATED (an existing test fails if the relabel is made too broad).
+
+## 2026-10-29 — Getting ready for Week 8: the model's rate limit (Edwin)
+
+1. **The guide's evaluation would have produced a run full of ERRORs.** `llm.py` and `evaluate.py` (built by
+   Claude from the guide) send every question straight after the previous one, and `llm.py` does not retry
+   (SR4). Groq's free tier for openai/gpt-oss-120b allows 8,000 tokens per minute (read from the reply
+   headers), and we measured 4,400-5,200 tokens for one real question (8 passages + answer) and about 750
+   for a judge call. How we caught it: Joe saw "service unavailable" after a few questions; we measured the
+   tokens and the third call in a row was refused (429, "tokens per minute (TPM): Limit 8000").
+   Fix: `llm.py` turns the refusal into ModelError("rate limit reached, retry after X s") using Groq's
+   retry-after header (the website still shows ERROR at once: SR4 unchanged); the evaluation only
+   (`answer_with_retry`, `judge_with_retry`) waits that time and tries again, up to 6 times; other errors
+   are not retried. Tests for each part. Live check: 4 real questions back to back, 5 waits of 4-35 s,
+   0 ERRORs, about 35 s per question (a full run of 80+ questions: about 50 minutes).
