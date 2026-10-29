@@ -52,3 +52,11 @@ decisions) 0.455 / 69.4 s (gains A035, loses A040). No variant is better: chosen
 baseline (no reranker). The cross-encoder (ms-marco MiniLM, trained on web search) does not tell the
 deciding legal passage from passages that discuss the same question, and is slow on long passages.
 
+### Chunk size, step 3.5 (2026-10-29, Yasser)
+Run `eval/runs/tune_chunks_2026-10-29T18-09-07.json`, TUNE split (11 answerable questions), rule above.
+250 words: 140,050 chunks, quote@8 0.364, recall@5 1.0, MRR@10 0.955; 350 words: 105,626 chunks,
+quote@8 0.455, recall@5 1.0, MRR@10 0.939; 400 words: 94,316 chunks, quote@8 0.364, recall@5 1.0,
+MRR@10 0.894. Chosen by the rule: 350 words (unchanged). Shorter chunks put less text in front of the
+model (8 x 250 words), longer ones dilute the deciding sentence. Note: 11 questions, so one question
+moves quote@8 by 0.09; to be measured again on the full question set (eval-v1).
+

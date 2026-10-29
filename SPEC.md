@@ -93,7 +93,8 @@ question -> input check, 3-1000 characters (SR3)
 Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
 238,580 paragraphs (median 88 words, 90th percentile 300, longest 24,116 words); paragraphs with at
 most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
-(median 292 words), 27,500,424 words in total.
+(median 292 words), 27,500,424 words in total. Since 2026-10-29 (one section per opinion, opinions on a
+denial of certiorari labelled): 105,626 chunks.
 
 | Rule | Justification |
 |---|---|
@@ -103,7 +104,7 @@ most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 word
 | New chunk at each Part heading (I, II, A...) and at the Syllabus | The section label is stored and shown to the reader; the Syllabus (written by Court staff, not part of the opinion) is flagged. |
 | Exact start/end positions | Needed to highlight the passage in its opinion (FR4, SR31); checked by tests/test_chunking.py. |
 | Header embedded with each chunk | "Case (year) - opinion type - section" is added to the embedded text, so a passage keeps its context (including which Justice's opinion it is). |
-| Measured choice | Week 3: recall@5 with 250 vs 350 vs 400 words on the tune questions (step 3.5). |
+| Measured choice | Step 3.5 (2026-10-29, tune split, run tune_chunks_2026-10-29T18-09-07.json): quote@8 0.364 / 0.455 / 0.364 and MRR@10 0.955 / 0.939 / 0.894 for 250 / 350 / 400 words; 350 kept by the rule in EVALUATION.md. |
 
 Known exception: 9 chunks of 104,904 are longer than 350 words (longest 830). They are tables with
 no sentence ends (e.g. the appendix of Senate recess dates in NLRB v. Noel Canning, 2014); the model

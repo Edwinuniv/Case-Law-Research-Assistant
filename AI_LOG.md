@@ -137,6 +137,11 @@ read the related line ourselves before relying on these entries.
    selection rule first (EVALUATION.md) and measured on the tune split: it made quote@8 worse
    (0.455 -> 0.273), because several questions ask what a dissent argued. Kept the baseline; the
    setting stays available (w_separate = 1.0).
+6. **AI hypotheses rejected by measurement: the reranker and shorter chunks.** The AI expected the
+   cross-encoder reranker (the guide's week-10 improvement) and 250-word chunks to bring the deciding
+   passage into the 8 given to the model. With the rules written first, on the tune split: the reranker
+   gave no gain (quote@8 0.455 at best, 5-69 s per question on our CPU); 250 and 400 words both gave
+   0.364 against 0.455 for 350. We kept the baseline and recorded the runs (EVALUATION.md).
 
 ---
 
