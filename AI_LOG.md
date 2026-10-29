@@ -203,3 +203,23 @@ read the related line ourselves before relying on these entries.
    the same call worked from Windows: requests of more than a few KB never arrived. How we caught it: a
    small call worked and a full question did not. Fix (on that PC only, not in the code): WSL network MTU
    lowered from 1500 to 1350. It is lost when the PC restarts.
+
+## 2026-10-29 — Week 7: attacking the verifier (Edwin)
+
+1. **A concurrence presented as the Court's decision got through the verifier.** The verifier we asked
+   Claude to build from the guide (4.2) has five checks; none looks at WHOSE opinion a passage is. In the
+   first live run on real data (`scripts/ask.py`, "What did the Court decide in Loper Bright about Chevron
+   deference?") the model wrote "The Court rejected Chevron deference, effectively ending the doctrine",
+   citing only Justice Gorsuch's concurrence ("Today, the Court places a tombstone on Chevron"). The quote
+   was real, so the sentence was kept and shown (status LOW_CONFIDENCE). Rule 5 of the prompt forbids this,
+   but nothing checked it. How we caught it: reading the passage labels in the `ask.py` output.
+   Fix: two failing tests (concurrence and dissent presented as the Court), then check 6 in `verify.py`:
+   a sentence that speaks for "the Court" / "the majority", does not name the separate opinion itself,
+   and cites only dissents or concurrences (label or section) is removed. Three more tests make sure
+   correct sentences are kept ("Justice Gorsuch, concurring, wrote...", majority passages, majority +
+   concurrence together); making the check too strict or too weak fails at least one test. On the real
+   data the classification misses none of the 17,342 dissent/concurrence passages. Two new live runs:
+   the model presented the concurrence as the Court both times and check 6 removed the sentence.
+2. **Not a bug, but checked:** in the same runs the quote check also removed sentences. The model had
+   changed one word of the quote ("this Court has refused" -> "the Court has refused"; 121 of 124
+   characters matched). Word-for-word is the rule, so the removal is correct; a test now locks it in.
