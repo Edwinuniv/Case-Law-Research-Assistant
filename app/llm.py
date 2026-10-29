@@ -1,6 +1,6 @@
 """Asking the language model: the rules it must follow, a 30-second limit, and one retry."""
 import json
-from openai import OpenAI, APITimeoutError
+from openai import OpenAI, APITimeoutError, RateLimitError
 from app import config
 
 SYSTEM_PROMPT = """You answer questions about U.S. Supreme Court decisions using ONLY the numbered passages provided.
@@ -47,6 +47,9 @@ def _ask_json(system, user):
             return json.loads(r.choices[0].message.content)
         except APITimeoutError as e:                         # SR4: cancelled after 30 s, no retry
             raise ModelError("timeout after 30 seconds") from e
+        except RateLimitError as e:                          # Groq free tier: 8,000 tokens per minute;
+            wait = e.response.headers.get("retry-after", "10")   # the evaluation waits and retries
+            raise ModelError(f"rate limit reached, retry after {wait} s") from e
         except json.JSONDecodeError as e:
             last_error = e
         except Exception as e:
