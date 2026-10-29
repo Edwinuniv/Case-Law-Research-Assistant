@@ -136,3 +136,13 @@ def test_right_number_as_words_and_the_pronoun_one_are_kept():
     assert kept
     kept, _ = run_on(VOTE, "No one disputes that the President enjoys absolute immunity.", QUOTE)
     assert kept
+
+def test_other_in_re_name_is_not_matched_by_an_in_re_case():
+    passage = {**PASSAGE, "case_name": "In re Grand Jury Subpoena"}
+    kept, removed = run_on(passage, "In re Zorblax, the President enjoys absolute immunity.", QUOTE)
+    assert not kept and any("Zorblax" in p for p in removed[0]["problems"])
+
+def test_number_words_in_the_passage_count_too():
+    passage = {**VOTE, "text": VOTE["text"].replace("6 to 3", "five to four")}
+    kept, _ = run_on(passage, "The Court affirmed by a vote of 5 to 4.", QUOTE)
+    assert kept
