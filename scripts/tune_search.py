@@ -20,6 +20,16 @@ def norm(text):
     return " ".join(text.lower().split())
 
 
+def canonical(ids):
+    """Gold decision ids as they are now: a copy merged into another decision counts as that one."""
+    ids = [int(i) for i in ids]
+    with db.connect() as con:
+        rows = con.execute("SELECT cluster_id, decision_id FROM cluster_alias WHERE cluster_id = ANY(%s)",
+                           (ids,)).fetchall()
+    alias = {r["cluster_id"]: r["decision_id"] for r in rows}
+    return {alias.get(i, i) for i in ids}
+
+
 def measure(searcher, questions, lists, settings, top_k):
     quote_hits, ranks = 0, []
     for q in questions:
@@ -29,7 +39,8 @@ def measure(searcher, questions, lists, settings, top_k):
         gold_quote = norm(q.get("gold_quote", ""))
         quote_hits += bool(gold_quote) and any(gold_quote in norm(searcher.by_id[c]["text"]) for c in chosen)
         order = [searcher.by_id[c]["decision_id"] for c in best]
-        ranks.append(next((i + 1 for i, d in enumerate(order) if d in set(q["gold_decision_ids"])), None))
+        gold = q.setdefault("_gold", canonical(q["gold_decision_ids"]))
+        ranks.append(next((i + 1 for i, d in enumerate(order) if d in gold), None))
     n = len(questions) or 1
     return {"quote@8": round(quote_hits / n, 3),
             "recall@5": round(sum(1 for r in ranks if r and r <= 5) / n, 3),
