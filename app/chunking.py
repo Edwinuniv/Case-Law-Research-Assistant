@@ -31,6 +31,18 @@ OPINION_ROLE = re.compile(_WHO + r"(?:,\s*with whom .{0,250}?\bjoins?\b\*?)?,\*?
 OPINION_MAIN = re.compile(_WHO + r"\s+(?P<what>delivered the opinion of the Court"
                           r"|announced the judgment of the Court)")
 PER_CURIAM = re.compile(r"PER CURIAM\b")
+# texts that came from a PDF have no paragraph breaks: the Syllabus starts with this standard note
+SYLLABUS_NOTE = re.compile(r"NOTE: Where it is feasible, a syllabus")
+# the same opinion starts, found INSIDE a paragraph (281 of 4,709 opinions, e.g. Kennedy v. Bremerton,
+# 2022, where "JUSTICE GORSUCH delivered the opinion of the Court." and Sotomayor's dissent sit in the
+# middle of one long paragraph)
+INLINE_START = re.compile(
+    r"(?:(?i:chief)\s+)?(?i:justice)\s+[A-Z][A-Za-z’'\-]+"
+    r"(?:\s+(?:delivered the opinion of the Court|announced the judgment of the Court)"
+    r"|(?:,\s*with whom .{0,250}?\bjoins?\b\*?)?,\*?\s*(?:concurring|dissenting|respecting)"
+    r"(?: (?:in|from) [^.,;]{1,80}| the denial[^.,;]{0,60})?\.)"
+    r"|Statement of (?i:justice)\s+[A-Z][A-Za-z’'\-]+\s+respecting"
+    r"|NOTE: Where it is feasible, a syllabus")
 STATEMENT = re.compile(r"Statement of " + _WHO + r"\s+(?P<role>respecting[^.]{0,80})\.")   # on a denial
 
 
@@ -50,6 +62,8 @@ def opinion_start(para):
         return f"Statement of {m.group('name').title()}, J., {' '.join(m.group('role').split())}"
     if PER_CURIAM.match(head):
         return "Per curiam"
+    if SYLLABUS_NOTE.match(head):
+        return "Syllabus"
     return None
 
 
@@ -92,6 +106,20 @@ def paragraphs(text):
             yield m.start(), m.end()
 
 
+def split_at_opinion_starts(text, spans):
+    """Cut paragraphs where an opinion starts in the middle of them (texts from PDFs)."""
+    for s, e in spans:
+        cuts = [s] + [m.start() for m in INLINE_START.finditer(text, s, e)
+                      if m.start() > s and text[m.start() - 1].isspace()] + [e]
+        for a, b in zip(cuts, cuts[1:]):
+            while a < b and text[a].isspace():
+                a += 1
+            while b > a and text[b - 1].isspace():
+                b -= 1
+            if a < b:
+                yield a, b
+
+
 def sentences(text, start, end):
     """Split one long paragraph into sentence spans."""
     pos = start
@@ -114,10 +142,13 @@ def chunk_opinion(text, max_words=350):
     """Cut ONE opinion into chunks of whole paragraphs (about max_words words each).
     Returns a list of dicts with exact character positions (start, end) in `text`."""
     units, section, opinion = [], "Opening", None
-    for s, e in paragraphs(text):
+    for s, e in split_at_opinion_starts(text, paragraphs(text)):
         para = text[s:e].strip()
         label = opinion_start(para)
-        if label:                                           # a new opinion starts here
+        if label == "Syllabus":                             # Syllabus note in a text from a PDF
+            if section_is_not_syllabus(units):
+                units.append(("HEADING", "Syllabus", s, s))
+        elif label:                                         # a new opinion starts here
             units.append(("OPINION", label, s, e))
         if HEADING.match(para):
             units.append(("HEADING", para, s, e))
