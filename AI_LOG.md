@@ -223,3 +223,18 @@ read the related line ourselves before relying on these entries.
 2. **Not a bug, but checked:** in the same runs the quote check also removed sentences. The model had
    changed one word of the quote ("this Court has refused" -> "the Court has refused"; 121 of 124
    characters matched). Word-for-word is the rule, so the removal is correct; a test now locks it in.
+3. **Invented "In re" / "Ex parte" case names got through.** Check 4 (guide code, built by Claude) only
+   finds names written "X v. Y". We ran the guide's Week 7 list of attacks against the verifier with the
+   real citation index: "In re Zorblax, the Court held..." and "As in Ex parte Quimby, ..." were kept.
+   How we caught it: the attack script printed KEPT where REMOVED was expected.
+   Fix: `find_case_names` also finds "In re X" / "Ex parte X", and names are compared on their first
+   word AFTER that prefix (otherwise any "In re" case would vouch for any other "In re" name). Tests:
+   invented names removed, a real "In re" name written in the passage kept, an "In re" case not vouching
+   for another one.
+4. **A wrong number written as words got through.** Check 5 only reads digits: with a passage saying
+   "a vote of 6 to 3", the sentence "The Court affirmed by a vote of five to four" was kept. Same attack
+   script. Fix: check 5 also reads number words from "two" to "ninety-nine", in the sentence and in the
+   passage ("six to three" still matches "6 to 3"). "one" is left out on purpose: it is usually a pronoun
+   ("no one can miss") and counting it would remove correct sentences. Tests for both directions.
+   For both fixes we also broke the new code on purpose: two breaks were first not caught, so two more
+   tests were added; now all five are caught.
