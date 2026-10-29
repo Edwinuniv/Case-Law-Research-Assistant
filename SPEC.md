@@ -205,3 +205,7 @@ Details in AI_LOG.md.
 2026-10-29 - Verifier (Week 7): a citation missing from the citation table but printed in the cited
 passage is still removed (rule 3), but labelled "not in the citation table (written in the passage)"
 instead of FABRICATED, so the fabrication count is not inflated by CourtListener's 2020+ gap.
+
+2026-10-29 - Evaluation: waits and retries when the model provider refuses a call for its rate limit
+(Groq free tier: 8,000 tokens per minute; one question costs about 5,000). Only the evaluation waits;
+a visitor's request still ends with ERROR at once (SR4). Details in AI_LOG.md.
