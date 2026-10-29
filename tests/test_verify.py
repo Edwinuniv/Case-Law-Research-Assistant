@@ -146,3 +146,12 @@ def test_number_words_in_the_passage_count_too():
     passage = {**VOTE, "text": VOTE["text"].replace("6 to 3", "five to four")}
     kept, _ = run_on(passage, "The Court affirmed by a vote of 5 to 4.", QUOTE)
     assert kept
+
+def test_real_citation_missing_from_the_table_is_removed_but_not_called_fabricated():
+    # CourtListener has no citation for most decisions from 2020 on (SPEC section 2), e.g. Dobbs, 597 U.S. 215
+    from app.verify import count_fabrications
+    passage = {**PASSAGE, "text": PASSAGE["text"] + " Dobbs v. Jackson Women's Health Organization, 597 U.S. 215, overruled Roe."}
+    kept, removed = run_on(passage, "The opinion relies on Dobbs, 597 U.S. 215.", QUOTE)
+    assert not kept                                                       # SPEC rule 3 still applies
+    assert removed[0]["problems"] == ["citation not in the citation table (written in the passage): 597 U.S. 215"]
+    assert count_fabrications(removed) == 0
