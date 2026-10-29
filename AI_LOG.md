@@ -132,6 +132,11 @@ read the related line ourselves before relying on these entries.
    Court" paragraph, with the opinion named in the section and in the embedded header; repeated
    "Syllabus" page headers no longer cut the Syllabus; BM25 words stemmed. Tests in
    tests/test_opinion_sections.py and tests/test_bm25.py.
+5. **AI hypothesis rejected by measurement: "prefer the Court's opinion".** For the Chevron question the
+   AI proposed lowering the weight of concurring and dissenting passages in the fusion. We wrote the
+   selection rule first (EVALUATION.md) and measured on the tune split: it made quote@8 worse
+   (0.455 -> 0.273), because several questions ask what a dissent argued. Kept the baseline; the
+   setting stays available (w_separate = 1.0).
 
 ---
 
