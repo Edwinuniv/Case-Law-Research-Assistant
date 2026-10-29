@@ -113,7 +113,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 4.1 The model call — merged (PR #7, history restored in #8): app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
 - [x] 4.2 The verifier: the heart of the project — merged (PR #12): app/verify.py, five checks tried one by one; fix: ["P1"] markers removed before the checks (AI_LOG, SPEC §11)
 - [x] 4.3 The pipeline — merged (PR #13): app/pipeline.py as in the guide, every path checked with a fake searcher + fake model ⏳ re-check with Yasser's real Searcher (3.3) when app/search.py lands
-- [ ] 4.4 Try it
+- [ ] 4.4 Try it — branch step/4.4-ask-run-eval: scripts/ask.py as in the guide (+ scripts/run_eval.py for 8.2) ⏳ live run needs the dump restored
 - [x] 4.5 Tests (with a fake model) — merged (PR #14): test_verify, test_pipeline, test_llm from the guide + 3 tests for gaps found by breaking the code on purpose; 32 passed
 
 ### Week 5 — Evaluation module and website
