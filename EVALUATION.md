@@ -13,6 +13,15 @@ quote@8 = share of answerable questions whose gold_quote is inside one of the 8 
 model (without it the model cannot answer). Tie-break: MRR@10 of the gold decision, then the setting
 closest to the baseline (1.0 / 1.0 / 50). The TEST split is not looked at while choosing.
 
+## Reranker selection rule (written 2026-10-29, before measuring)
+Variants, all choosing the 8 passages given to the model with the cross-encoder reranker:
+A = rerank the fused top 20 (the guide's week-10 plan), B = rerank the fused top 50,
+C = rerank all passages of the top 3 decisions of the fused list (two stages: decision, then passage).
+Measured with `python -m scripts.tune_rerank` on the TUNE split only (no model call). A variant
+replaces the baseline only if its quote@8 is higher. Among those, the best quote@8 wins, then the
+lower mean reranking time; a variant whose mean time per question is above 5 s is not chosen (SR2:
+answers within 15 s, the model call needs the rest). The TEST split is not looked at.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
