@@ -201,3 +201,7 @@ presented as "The Court rejected Chevron deference"). Details in AI_LOG.md.
 2026-10-29 - Verifier (Week 7): check 4 also recognises "In re X" / "Ex parte X" case names; check 5
 also reads numbers written as words ("two" to "ninety-nine"). Both were attacks that got through.
 Details in AI_LOG.md.
+
+2026-10-29 - Verifier (Week 7): a citation missing from the citation table but printed in the cited
+passage is still removed (rule 3), but labelled "not in the citation table (written in the passage)"
+instead of FABRICATED, so the fabrication count is not inflated by CourtListener's 2020+ gap.
