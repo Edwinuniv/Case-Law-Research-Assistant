@@ -103,7 +103,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 2.3 Numbers for the justification
 
 ### Week 3 — Test questions and search
-- [ ] 3.1 Write at least 80 test questions in eval/questions.jsonl (all three; tag eval-v1)
+- [ ] 3.1 Write at least 80 test questions in eval/questions.jsonl (all three; tag eval-v1) — Edwin's 28 on branch step/3.1-questions-edwin (14 answerable, 7 unanswerable, 7 adversarial; checked on the real data; gold quotes word for word) ⏳ Yasser's and Joe's questions, then tag eval-v1
 - [ ] 3.2 Keyword search (BM25) (Yasser)
 - [ ] 3.3 Hybrid search and the reranker (Yasser)
 - [ ] 3.4 Measure the search: the baseline (Yasser)
