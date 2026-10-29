@@ -22,6 +22,11 @@ replaces the baseline only if its quote@8 is higher. Among those, the best quote
 lower mean reranking time; a variant whose mean time per question is above 5 s is not chosen (SR2:
 answers within 15 s, the model call needs the rest). The TEST split is not looked at.
 
+## Chunk size selection rule (written 2026-10-29, before measuring; step 3.5, SR16)
+Sizes 250, 350 and 400 words (SR16 allows 250-400). For each size the index is rebuilt and measured
+with `python -m scripts.tune_chunks` on the TUNE split only, baseline search (no reranker). The best
+quote@8 wins; tie-break: MRR@10, then 350 (the current size). The TEST split is not looked at.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
@@ -38,3 +43,12 @@ Baseline (w_bm25 1.0, w_separate 1.0, fusion_pool 50): quote@8 0.455, MRR@10 0.9
 combination is better: w_separate 0.5 / 0.25 lowers quote@8 to 0.364-0.273 (questions about a dissent
 lose their passages), w_bm25 1.5-3 keeps quote@8 and lowers MRR@10 to 0.894, fusion_pool 100 changes
 nothing. Chosen by the rule: the baseline, so the defaults stay 1.0 / 1.0 / 50.
+
+### Reranker (2026-10-29, Yasser)
+Run `eval/runs/tune_rerank_2026-10-29T15-53-59.json`, TUNE split (11 answerable questions), rule above.
+quote@8 / mean reranking time per question on the laptop CPU: baseline 0.455 / 0 s; A (fused top 20)
+0.455 / 5.1 s (same questions); B (fused top 50) 0.364 / 12.1 s; C (all passages of the top 3
+decisions) 0.455 / 69.4 s (gains A035, loses A040). No variant is better: chosen by the rule, the
+baseline (no reranker). The cross-encoder (ms-marco MiniLM, trained on web search) does not tell the
+deciding legal passage from passages that discuss the same question, and is slow on long passages.
+
