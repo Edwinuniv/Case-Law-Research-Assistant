@@ -129,7 +129,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 6.3 Fill the online database with the seed script
 
 ### Week 7 — Attack the verifier (Edwin)
-- [ ] 7.1 Attack, test, fix, log — branch step/7.1-attack-verifier: attack 1 done (concurrence/dissent presented as the Court -> check 6, 5 tests, AI_LOG); one-word-changed quote locked in by a test. Next: the guide's list (In re / Ex parte, S. Ct. citations, Id./supra, curly quotes, paragraph breaks, numbers as words, citation years)
+- [ ] 7.1 Attack, test, fix, log — branch step/7.1-attack-verifier: 13 attacks from the guide's list run with the real citation index; 3 got through and are fixed with tests + AI_LOG: concurrence/dissent as the Court (check 6), "In re"/"Ex parte" names (check 4), numbers in words (check 5). Open: real post-2020 citations written in the passage are labelled FABRICATED (decision needed)
 
 ### Week 8 — Calibration (Edwin)
 - [x] 8.1 Write the rule before measuring — branch step/8.1-threshold-rule: EVALUATION.md, committed 2026-10-26 before any evaluation run
