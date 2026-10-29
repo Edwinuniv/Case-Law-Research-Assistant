@@ -93,3 +93,36 @@ def test_compare_flags_worse_and_lists_flips(monkeypatch):                  # FR
     worse = {r["metric"] for r in rows if r["worse"]}
     assert "abstained_but_should_answer" in worse
     assert flips == [{"id": "a", "question": "?", "tag": "answerable", "a": "ANSWERED", "b": "NOT_SUPPORTED"}]
+
+def test_evaluation_waits_and_retries_after_a_rate_limit(clean_db, monkeypatch):
+    from app import evaluate
+    with clean_db.connect() as con:
+        con.execute("INSERT INTO test_questions (id, tag, split, question) VALUES ('U1', 'unanswerable', 'test', 'q?')")
+    replies = [{"status": "ERROR", "reason": "language model failed: rate limit reached, retry after 3 s"},
+               {"status": "NOT_SUPPORTED", "reason": "the model said the passages do not answer this"}]
+    def fake_answer(question, searcher, index, settings, skip_gate=False):
+        reply = replies.pop(0)
+        return {"question": question, "status": reply["status"], "reason": reply["reason"], "sentences": [], "removed": [],
+                "passages": [], "top_score": 0.9, "support_score": 0.0, "fabrications_caught": 0,
+                "retrieved_decisions": [], "model_said": None, "ms_total": 1}
+    waits = []
+    monkeypatch.setattr(evaluate, "answer", fake_answer)
+    monkeypatch.setattr(evaluate.time, "sleep", waits.append)
+    run_id = evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None)
+    (_, result), = evaluate.load_run(run_id)
+    assert result["status_raw"] == "NOT_SUPPORTED" and waits and waits[0] >= 3
+
+def test_judge_waits_on_rate_limit_but_not_on_other_errors(monkeypatch):
+    from app import evaluate, llm
+    waits = []
+    monkeypatch.setattr(evaluate.time, "sleep", waits.append)
+    replies = [llm.ModelError("rate limit reached, retry after 2 s"), "yes"]
+    def judge(statement, text):
+        r = replies.pop(0)
+        if isinstance(r, Exception): raise r
+        return r
+    monkeypatch.setattr(llm, "judge_support", judge)
+    assert evaluate.judge_with_retry("s", "p", log=lambda m: None) == "yes" and waits == [3.0]
+    def timeout(statement, text): raise llm.ModelError("timeout after 30 seconds")
+    monkeypatch.setattr(llm, "judge_support", timeout)
+    assert evaluate.judge_with_retry("s", "p", log=lambda m: None) == "error" and waits == [3.0]
