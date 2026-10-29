@@ -60,3 +60,26 @@ def test_fabricated_citation_without_a_case_name_is_caught():          # check 3
 def test_passage_markers_are_not_numbers_and_are_not_shown():
     kept, _ = run('The indictment was returned in 2023. ["P1"]')
     assert kept and "P1" not in kept[0]["text"]
+
+
+# --- Week 7: attacks on the verifier (see AI_LOG.md) ---
+GORSUCH = {"chunk_id": "9-0", "decision_id": 9986254, "opinion_id": 9, "case_name": "Loper Bright Enterprises v. Raimondo",
+           "opinion_label": "Opinion", "section": "Gorsuch, J., concurring", "score": 0.83,
+           "text": "So much so that this Court has refused to apply Chevron deference since 2016. "
+                   "Today, the Court places a tombstone on Chevron no one can miss."}
+KAGAN = {**GORSUCH, "chunk_id": "9-1", "opinion_label": "Dissenting opinion (Kagan)", "section": "Opening",
+         "text": "Today, the Court flips the script: It is now the courts (rather than the agency) that will wield power."}
+TOMBSTONE = "Today, the Court places a tombstone on Chevron no one can miss."
+FLIPS = "Today, the Court flips the script: It is now the courts"
+
+def run_on(passage, text, quote):
+    return verify({"sentences": [{"text": text, "sources": ["P1"], "quote": quote}]}, {"P1": passage}, INDEX)
+
+def test_concurrence_presented_as_the_court_is_removed():
+    # Real model output (live run 2026-10-29): Gorsuch's concurrence presented as the Court's decision
+    kept, removed = run_on(GORSUCH, "The Court rejected Chevron deference, effectively ending the doctrine.", TOMBSTONE)
+    assert not kept and any("presented as the Court" in p for p in removed[0]["problems"])
+
+def test_dissent_presented_as_the_holding_is_removed():
+    kept, removed = run_on(KAGAN, "The Court held that the courts, not the agency, will wield power.", FLIPS)
+    assert not kept and any("presented as the Court" in p for p in removed[0]["problems"])
