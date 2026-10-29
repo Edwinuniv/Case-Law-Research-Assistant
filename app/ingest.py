@@ -50,6 +50,88 @@ def group_opinions(group, opinions_by_cluster):
     return group[0], kept, copies, empty
 
 
+def _name_key(name):
+    return re.sub(r"[^a-z0-9]", "", (name or "").lower())
+
+
+def find_duplicate_decisions(con, days=60, threshold=0.8):
+    """Copies of one decision that CourtListener stores twice, e.g. a slip opinion and a later
+    version filed some days apart (Bruen: 6480696 and 7686272). Two decisions are copies when they
+    have the same case name, dates at most `days` apart, and opinion texts at least `threshold`
+    identical (5-word sequences). Same-name decisions with different texts stay apart
+    (Bush v. Gore: the stay of Dec 9 and the decision of Dec 12, 2000).
+    Returns (groups, pairs): groups = [(kept id, [merged ids])], pairs = every comparison made."""
+    rows = con.execute("SELECT decision_id, case_name, date_filed FROM decisions").fetchall()
+    by_name = defaultdict(list)
+    for r in rows:
+        by_name[_name_key(r["case_name"])].append(r)
+    text_cache = {}
+
+    def text_of(decision_id):
+        if decision_id not in text_cache:
+            texts = [r["text"] for r in con.execute(
+                "SELECT text FROM opinions WHERE decision_id = %s ORDER BY opinion_id", (decision_id,))]
+            words = " ".join(texts).split()
+            text_cache[decision_id] = (len(words), shingles(" ".join(words[:6000])))
+        return text_cache[decision_id]
+
+    parent, pairs = {}, []
+
+    def root(x):
+        while parent.get(x, x) != x:
+            x = parent[x]
+        return x
+
+    for same in by_name.values():
+        for i, a in enumerate(same):
+            for b in same[i + 1:]:
+                if abs((a["date_filed"] - b["date_filed"]).days) > days:
+                    continue
+                sa, sb = text_of(a["decision_id"])[1], text_of(b["decision_id"])[1]
+                sim = len(sa & sb) / max(len(sa | sb), 1)
+                copy = sim >= threshold
+                pairs.append((a["decision_id"], b["decision_id"], a["case_name"], a["date_filed"],
+                               b["date_filed"], round(sim, 3), copy))
+                if copy:
+                    ra, rb = root(a["decision_id"]), root(b["decision_id"])
+                    if ra != rb:
+                        parent[max(ra, rb)] = min(ra, rb)
+    members = defaultdict(list)
+    for d in {x for p in pairs if p[6] for x in p[:2]}:
+        members[root(d)].append(d)
+    groups = []
+    for ids in members.values():
+        kept = max(ids, key=lambda d: (text_of(d)[0], -d))     # the copy with the most text
+        groups.append((kept, sorted(d for d in ids if d != kept)))
+    return groups, pairs
+
+
+def merge_duplicate_decisions(log=print):
+    """Keep one decision per group of copies; the others' cluster ids become aliases of it and
+    their opinions and chunks are deleted (no new embeddings needed)."""
+    with db.connect() as con:
+        groups, pairs = find_duplicate_decisions(con)
+        for kept, merged in groups:
+            for d in merged:
+                con.execute("UPDATE cluster_alias SET decision_id = %s WHERE decision_id = %s", (kept, d))
+                con.execute("""UPDATE decisions k SET
+                                 all_cluster_ids = (SELECT array_agg(DISTINCT x) FROM unnest(k.all_cluster_ids || m.all_cluster_ids) x),
+                                 citations = (SELECT coalesce(array_agg(DISTINCT x), '{}') FROM unnest(k.citations || m.citations) x)
+                               FROM decisions m WHERE k.decision_id = %s AND m.decision_id = %s""", (kept, d))
+                con.execute("DELETE FROM decisions WHERE decision_id = %s", (d,))   # cascades to opinions, chunks
+        n_chunks = con.execute("SELECT count(*) AS n FROM chunks").fetchone()["n"]
+    report = {"pairs_compared": len(pairs), "groups_merged": len(groups),
+              "decisions_removed": sum(len(m) for _, m in groups),
+              "merged": {str(k): m for k, m in groups}}
+    meta = db.get_settings().get("index_meta")
+    if meta:                                   # the index lost the copies' chunks
+        db.set_setting("index_meta", {**meta, "chunks": n_chunks, "duplicates_merged": report["decisions_removed"]})
+    db.save_report("duplicates", report)
+    log(f"{len(groups)} groups of copies merged, {report['decisions_removed']} decisions removed "
+        f"({len(pairs)} same-name pairs compared).")
+    return report
+
+
 def load_corpus():
     """clusters.jsonl + opinions.jsonl -> decisions, cluster_alias, opinions (SR10, SR11)."""
     clusters = {c["cluster_id"]: c for c in map(json.loads, open(config.WORK / "clusters.jsonl"))}
@@ -99,6 +181,7 @@ def load_corpus():
                              hashlib.sha256(text.encode()).hexdigest(), licence))
                 report["opinions"] += 1
     refresh_decision_citations()
+    report["duplicate_decisions_removed"] = merge_duplicate_decisions()["decisions_removed"]
     db.save_report("corpus", report)
     return report
 
