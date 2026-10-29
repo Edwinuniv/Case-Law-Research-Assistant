@@ -197,3 +197,7 @@ sentences. Details in AI_LOG.md.
 2026-10-29 - Verifier (Week 7): check 6 added. A sentence that speaks for the Court but cites only
 dissents or concurrences is removed (found in a live run: Gorsuch's concurrence in Loper Bright was
 presented as "The Court rejected Chevron deference"). Details in AI_LOG.md.
+
+2026-10-29 - Verifier (Week 7): check 4 also recognises "In re X" / "Ex parte X" case names; check 5
+also reads numbers written as words ("two" to "ninety-nine"). Both were attacks that got through.
+Details in AI_LOG.md.
