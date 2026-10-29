@@ -1,0 +1,33 @@
+{
+ "date": "2026-10-29T15:30:44",
+ "note": "baseline: hybrid RRF, 350 words",
+ "reranker": false,
+ "questions": 14,
+ "recall@1": 0.929,
+ "recall@5": 1.0,
+ "recall@10": 1.0,
+ "recall@20": 1.0,
+ "mrr@10": 0.952,
+ "quote@8": 0.5,
+ "search_settings": {
+  "w_bm25": 1.0,
+  "w_separate": 1.0,
+  "fusion_pool": 50
+ },
+ "ranks": {
+  "A029": 1,
+  "A030": 1,
+  "A031": 1,
+  "A032": 3,
+  "A033": 1,
+  "A034": 1,
+  "A035": 1,
+  "A036": 1,
+  "A037": 1,
+  "A038": 1,
+  "A039": 1,
+  "A040": 1,
+  "A041": 1,
+  "A042": 1
+ }
+}
