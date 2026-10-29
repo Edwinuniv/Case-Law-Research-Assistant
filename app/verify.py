@@ -11,7 +11,7 @@ A sentence is kept only if ALL of these are true:
 Otherwise the sentence is removed and we record why (FR7)."""
 import re
 import unicodedata
-from app.citations import find_citations, find_case_names, name_words, CITATION_LIKE
+from app.citations import find_citations, find_case_names, name_key, CITATION_LIKE
 
 STOPWORDS = set("""the a an of to in and or for on by with that this is was were be been are as at from
 it its which who whom whose not no but if than then so such court courts held holds said says
@@ -76,9 +76,9 @@ def check_sentence(sentence, passages, index):
         else:
             problems.append(f"real citation not supported by the retrieved opinions: {cite}")
 
-    cited_names = [name_words(c["case_name"])[:1] for c in cited]
+    cited_names = [name_key(c["case_name"]) for c in cited]
     for name in find_case_names(text):                                             # check 4
-        if name_words(name)[:1] in cited_names or norm(name) in cited_text:
+        if name_key(name) in cited_names or norm(name) in cited_text:
             continue
         kind = "case name not supported by the cited passage" if index.known_case_name(name) \
             else "FABRICATED case name"

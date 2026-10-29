@@ -11,6 +11,9 @@ CITATION_LIKE = re.compile(r"\b\d{1,3}\s+(?:[A-Z][A-Za-z0-9.]*\s?){1,4}\s*(?:\d{
 # Case names like "Smith v. Jones"
 CASE_NAME = re.compile(r"\b([A-Z][\w.'&-]*(?:\s+(?:of|the|and|[A-Z][\w.'&-]*)){0,5})\s+v\.\s+"
                        r"([A-Z][\w.'&-]*(?:\s+(?:of|the|and|[A-Z][\w.'&-]*)){0,5})")
+# Case names without "v.": "In re Gault", "Ex parte Young" (Week 7: invented ones got through)
+ONE_PARTY_NAME = re.compile(r"\b(?:In re|Ex parte)\s+[A-Z][\w.'&-]*(?:\s+(?:of|the|and|[A-Z][\w.'&-]*)){0,3}")
+ONE_PARTY_PREFIX = re.compile(r"^(?:in re|ex parte)\s+", re.I)
 LEADING_WORDS = re.compile(r"^(?:(?:In|See|Under|The|Cf\.?|As|But|And|Also|Like|Both|Unlike|"
                            r"Following|Citing|Per|After|Before|While|When)\s+)+")
 
@@ -44,7 +47,13 @@ def find_citations(text):
 
 
 def find_case_names(text):
-    return [LEADING_WORDS.sub("", m.group(0)) for m in CASE_NAME.finditer(text or "")]
+    return ([LEADING_WORDS.sub("", m.group(0)) for m in CASE_NAME.finditer(text or "")]
+            + [m.group(0) for m in ONE_PARTY_NAME.finditer(text or "")])
+
+
+def name_key(name):
+    """The word used to compare case names: the first word, after "In re" / "Ex parte"."""
+    return name_words(ONE_PARTY_PREFIX.sub("", name or ""))[:1]
 
 
 def name_words(name):
@@ -87,8 +96,8 @@ class CitationIndex:
         return {"status": "EXISTS OUTSIDE OUR CORPUS", "citation": key, "cluster_id": cluster}
 
     def known_case_name(self, name):
-        words = name_words(name)
-        return bool(words) and any(name_words(n)[:1] == words[:1] for n in self.case_names)
+        key = name_key(name)
+        return bool(key) and any(name_key(n) == key for n in self.case_names)
 
 
 class StaticCitationIndex(CitationIndex):
