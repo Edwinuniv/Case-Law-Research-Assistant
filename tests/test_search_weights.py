@@ -32,3 +32,11 @@ def test_higher_keyword_weight_follows_bm25():
 
 def test_pool_limits_the_candidates():
     assert searcher(SECTIONS).fuse(DENSE, KEYWORD, 3, {**BASE, "fusion_pool": 1}) == ["dissent", "majority"]
+
+
+def test_passages_of_top_decisions_takes_every_passage_of_the_first_decisions():
+    s = Searcher.__new__(Searcher)
+    s.chunks = [{"chunk_id": f"{d}-{i}", "decision_id": d} for d in (1, 2, 3) for i in range(3)]
+    found = [{"decision_id": 2}, {"decision_id": 2}, {"decision_id": 3}, {"decision_id": 1}]
+    got = s.passages_of_top_decisions(found, 2)
+    assert {c["decision_id"] for c in got} == {2, 3} and len(got) == 6

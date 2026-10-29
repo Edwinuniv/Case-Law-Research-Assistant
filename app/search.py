@@ -94,6 +94,11 @@ class Searcher:
             score.update(self.dense_scores_for(qvec, missing))
         return [{**self.by_id[c], "score": round(score[c], 4)} for c in best]
 
+    def passages_of_top_decisions(self, passages, n):
+        """Every passage of the first n distinct decisions in `passages` (for two-stage reranking)."""
+        top = list(dict.fromkeys(p["decision_id"] for p in passages))[:n]
+        return [c for c in self.chunks if c["decision_id"] in set(top)]
+
     def choose(self, question, passages, top_k, use_reranker):
         """Keep the best top_k passages: in fused order (baseline) or by the reranker (week 10)."""
         if not use_reranker or not passages:
