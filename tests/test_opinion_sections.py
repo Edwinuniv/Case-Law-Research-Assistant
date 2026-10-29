@@ -36,3 +36,10 @@ def test_sentences_that_only_mention_a_justice_are_not_boundaries():
     assert opinion_start("Justice Kagan's dissent argues that Chevron was right.") is None
     assert opinion_start("Justice Stevens, dissenting, contends that the statute is clear.") is None
     assert opinion_start("ROBERTS, C. J., delivered the opinion of the Court, in which") is None
+
+
+def test_opinions_on_a_denial_of_certiorari_are_labelled():
+    assert opinion_start("JUSTICE GORSUCH, dissenting from the denial of certiorari. This") == \
+        "Gorsuch, J., dissenting from the denial of certiorari"
+    assert opinion_start("Statement of JUSTICE ALITO respecting the denial of certiorari. I") == \
+        "Statement of Alito, J., respecting the denial of certiorari"

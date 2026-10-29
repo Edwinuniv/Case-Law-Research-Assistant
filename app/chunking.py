@@ -27,10 +27,11 @@ JUNK_LINE = re.compile(r"^\s*(Cite as: .*|\d{1,3}|Opinion of the Court|"
 # "JUSTICE KAGAN, with whom JUSTICE SOTOMAYOR and JUSTICE JACKSON join,* dissenting."
 _WHO = r"(?P<chief>(?i:chief)\s+)?(?i:justice)\s+(?P<name>[A-Z][A-Za-z’'\-]+)"
 OPINION_ROLE = re.compile(_WHO + r"(?:,\s*with whom .{0,250}?\bjoins?\b\*?)?,\*?\s*"
-                          r"(?P<role>(?:concurring|dissenting)(?: in [^.,;]{1,80})?)\.")
+                          r"(?P<role>(?:concurring|dissenting|respecting)(?: (?:in|from) [^.,;]{1,80}| the denial[^.,;]{0,60})?)\.")
 OPINION_MAIN = re.compile(_WHO + r"\s+(?P<what>delivered the opinion of the Court"
                           r"|announced the judgment of the Court)")
 PER_CURIAM = re.compile(r"PER CURIAM\b")
+STATEMENT = re.compile(r"Statement of " + _WHO + r"\s+(?P<role>respecting[^.]{0,80})\.")   # on a denial
 
 
 def opinion_start(para):
@@ -44,6 +45,9 @@ def opinion_start(para):
                 return f"{who}, {' '.join(m.group('role').split())}"
             kind = "Opinion of the Court" if m.group("what").startswith("delivered") else "Plurality opinion"
             return f"{kind} ({who[:-4] if who.endswith(', J.') else who[:-7]})"
+    m = STATEMENT.match(head)
+    if m:
+        return f"Statement of {m.group('name').title()}, J., {' '.join(m.group('role').split())}"
     if PER_CURIAM.match(head):
         return "Per curiam"
     return None

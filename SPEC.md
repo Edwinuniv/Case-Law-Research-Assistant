@@ -65,7 +65,11 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
 
 ## 3. Architecture
 
-PostgreSQL 16 + pgvector. Tables: decisions, cluster_alias, opinions, chunks (vector(384)),
+PostgreSQL 16 + pgvector, run with Docker: locally the pgvector/pgvector:pg16 image
+(docker-compose.yml), online the website is built from the Dockerfile on Railway. The code only
+reads DATABASE_URL, so any PostgreSQL 16 with pgvector works. Asked on 2026-10-29, the instructor
+said both a direct install and Docker are acceptable and that he prefers Docker (portable, comes
+pre-installed); we keep Docker. Tables: decisions, cluster_alias, opinions, chunks (vector(384)),
 citations, citation_map, test_questions, query_log, eval_runs, eval_results, users, settings, jobs.
 
 question -> input check, 3-1000 characters (SR3)
@@ -74,7 +78,9 @@ question -> input check, 3-1000 characters (SR3)
    (dense search is exact, no HNSW index: 57 ms for 104,904 chunks measured on 2026-10-26; HNSW took
    3 ms but is approximate and, with its default ef_search=40, returned only 40 of 50 rows, none of
    them the exact top 50. BM25 is a sparse matrix built once and saved in data/work/bm25.*;
-   words are stemmed (Snowball English), so "overrule" in a question matches "overruled")
+   words are stemmed (Snowball English), so "overrule" in a question matches "overruled";
+   the fusion has three settings, w_bm25, w_separate (weight of concurring/dissenting passages) and
+   fusion_pool, chosen on the tune split by the rule in EVALUATION.md; defaults = plain RRF)
 -> cheap gate: best passage similarity < min_retrieval => NOT SUPPORTED, model not called
 -> model (30 s limit, one retry on invalid JSON) returns sentences with passage ids P1..P8
    and exact quotes, or NOT_SUPPORTED (SR4, SR19, SR20)
@@ -87,7 +93,8 @@ question -> input check, 3-1000 characters (SR3)
 Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
 238,580 paragraphs (median 88 words, 90th percentile 300, longest 24,116 words); paragraphs with at
 most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
-(median 292 words), 27,500,424 words in total.
+(median 292 words), 27,500,424 words in total. Since 2026-10-29 (one section per opinion, opinions on a
+denial of certiorari labelled): 105,626 chunks.
 
 | Rule | Justification |
 |---|---|
@@ -97,7 +104,7 @@ most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 word
 | New chunk at each Part heading (I, II, A...) and at the Syllabus | The section label is stored and shown to the reader; the Syllabus (written by Court staff, not part of the opinion) is flagged. |
 | Exact start/end positions | Needed to highlight the passage in its opinion (FR4, SR31); checked by tests/test_chunking.py. |
 | Header embedded with each chunk | "Case (year) - opinion type - section" is added to the embedded text, so a passage keeps its context (including which Justice's opinion it is). |
-| Measured choice | Week 3: recall@5 with 250 vs 350 vs 400 words on the tune questions (step 3.5). |
+| Measured choice | Step 3.5 (2026-10-29, tune split, run tune_chunks_2026-10-29T18-09-07.json): quote@8 0.364 / 0.455 / 0.364 and MRR@10 0.955 / 0.939 / 0.894 for 250 / 350 / 400 words; 350 kept by the rule in EVALUATION.md. |
 
 Known exception: 9 chunks of 104,904 are longer than 350 words (longest 830). They are tables with
 no sentence ends (e.g. the appendix of Senate recess dates in NLRB v. Noel Canning, 2014); the model
@@ -179,7 +186,8 @@ Week 2 and later (1.8 was merged in PR #5):
 |---|---|---|---|
 | 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | merged (PR #16) |
 | 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | merged (PR #20); baseline needs eval/questions.jsonl (tag eval-v1) |
-| 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | code ready; needs a re-index (Colab) and a check on the real data |
+| 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | merged (PR #23) |
+| 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
 
@@ -205,3 +213,9 @@ Details in AI_LOG.md.
 2026-10-29 - Verifier (Week 7): a citation missing from the citation table but printed in the cited
 passage is still removed (rule 3), but labelled "not in the citation table (written in the passage)"
 instead of FABRICATED, so the fabrication count is not inflated by CourtListener's 2020+ gap.
+
+2026-10-29 - The planned week-10 improvement (reranker, SR18) gave no gain on the tune split
+(EVALUATION.md, run tune_rerank_2026-10-29T15-53-59.json) and costs 5-69 s per question on a laptop
+CPU. It stays available (use_reranker) but is off; the improvement to report will be chosen from
+measured candidates (chunk size, step 3.5, first).
+
