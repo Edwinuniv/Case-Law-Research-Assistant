@@ -148,6 +148,13 @@ read the related line ourselves before relying on these entries.
    30 days, mostly 2020-2022. A name-and-date rule alone would be wrong (Bush v. Gore has two
    different decisions three days apart), so the fix compares the opinion texts too (>= 80% identical),
    with a dry run to review before merging (scripts/merge_duplicates.py).
+8. **AI mistake: opinion starts inside a paragraph were missed.** The fix of entry 4 looked for
+   "JUSTICE X delivered the opinion of the Court." / "JUSTICE X, dissenting." only at the start of a
+   paragraph. While writing a question on Kennedy v. Bremerton (2022), find_quote labelled the whole
+   text "Opening", including the Syllabus and Sotomayor's dissent: the text came from a PDF, without
+   paragraph breaks. A count on the real data found 281 of 4,709 opinions with start lines the chunker
+   did not label. Fix: cut paragraphs at these lines wherever they appear, and recognise the Syllabus
+   note; tested on a PDF-style text (tests/test_opinion_sections.py).
 
 ---
 
