@@ -60,3 +60,98 @@ def test_fabricated_citation_without_a_case_name_is_caught():          # check 3
 def test_passage_markers_are_not_numbers_and_are_not_shown():
     kept, _ = run('The indictment was returned in 2023. ["P1"]')
     assert kept and "P1" not in kept[0]["text"]
+
+
+# --- Week 7: attacks on the verifier (see AI_LOG.md) ---
+GORSUCH = {"chunk_id": "9-0", "decision_id": 9986254, "opinion_id": 9, "case_name": "Loper Bright Enterprises v. Raimondo",
+           "opinion_label": "Opinion", "section": "Gorsuch, J., concurring", "score": 0.83,
+           "text": "So much so that this Court has refused to apply Chevron deference since 2016. "
+                   "Today, the Court places a tombstone on Chevron no one can miss."}
+KAGAN = {**GORSUCH, "chunk_id": "9-1", "opinion_label": "Dissenting opinion (Kagan)", "section": "Opening",
+         "text": "Today, the Court flips the script: It is now the courts (rather than the agency) that will wield power."}
+TOMBSTONE = "Today, the Court places a tombstone on Chevron no one can miss."
+FLIPS = "Today, the Court flips the script: It is now the courts"
+
+def run_on(passage, text, quote):
+    return verify({"sentences": [{"text": text, "sources": ["P1"], "quote": quote}]}, {"P1": passage}, INDEX)
+
+def test_concurrence_presented_as_the_court_is_removed():
+    # Real model output (live run 2026-10-29): Gorsuch's concurrence presented as the Court's decision
+    kept, removed = run_on(GORSUCH, "The Court rejected Chevron deference, effectively ending the doctrine.", TOMBSTONE)
+    assert not kept and any("presented as the Court" in p for p in removed[0]["problems"])
+
+def test_dissent_presented_as_the_holding_is_removed():
+    kept, removed = run_on(KAGAN, "The Court held that the courts, not the agency, will wield power.", FLIPS)
+    assert not kept and any("presented as the Court" in p for p in removed[0]["problems"])
+
+ROBERTS = {**GORSUCH, "chunk_id": "9-2", "section": "Opinion of the Court (Roberts)",
+           "text": "Chevron is overruled. Courts must exercise their independent judgment in deciding whether an agency "
+                   "has acted within its statutory authority."}
+OVERRULED = "Courts must exercise their independent judgment in deciding whether an agency"
+
+def test_separate_opinion_named_as_such_is_kept():
+    kept, _ = run_on(GORSUCH, "Justice Gorsuch, concurring, wrote that the Court places a tombstone on Chevron.", TOMBSTONE)
+    assert kept
+    kept, _ = run_on(KAGAN, "The dissent argued that the Court flips the script.", FLIPS)
+    assert kept
+
+def test_the_court_citing_the_majority_is_kept():
+    kept, _ = run_on(ROBERTS, "The Court held that courts must exercise their independent judgment.", OVERRULED)
+    assert kept
+
+def test_the_court_citing_majority_and_concurrence_together_is_kept():
+    s = {"text": "The Court held that courts must exercise their independent judgment.", "sources": ["P1", "P2"],
+         "quote": OVERRULED}
+    kept, _ = verify({"sentences": [s]}, {"P1": ROBERTS, "P2": GORSUCH}, INDEX)
+    assert kept
+
+def test_quote_with_one_word_changed_is_removed():
+    # Real model output (live run 2026-10-29): "this Court has refused" quoted as "the Court has refused"
+    passage = {**GORSUCH, "text": "So much so that this Court has refused to apply Chevron deference since 2016."}
+    kept, removed = run_on(passage, "Justice Gorsuch wrote that Chevron is no longer applied.",
+                           "the Court has refused to apply Chevron deference since 2016.")
+    assert not kept and "quote not found in the cited passage" in removed[0]["problems"]
+
+def test_invented_in_re_and_ex_parte_names_are_removed():
+    kept, removed = run("In re Zorblax, the President enjoys absolute immunity.")
+    assert not kept and any("Zorblax" in p for p in removed[0]["problems"])
+    kept, removed = run("As in Ex parte Quimby, the President enjoys absolute immunity.")
+    assert not kept and any("Quimby" in p for p in removed[0]["problems"])
+
+def test_in_re_name_written_in_the_passage_is_kept():
+    passage = {**PASSAGE, "text": PASSAGE["text"] + " As In re Gault explained, the President enjoys absolute immunity."}
+    s = {"text": "In re Gault was discussed.", "sources": ["P1"], "quote": QUOTE}
+    kept, _ = verify({"sentences": [s]}, {"P1": passage}, INDEX)
+    assert kept
+
+VOTE = {**PASSAGE, "text": "The judgment of the Court of Appeals is affirmed by a vote of 6 to 3. "
+                           "The President enjoys absolute immunity for actions within his conclusive authority."}
+
+def test_wrong_number_written_as_words_is_removed():          # SR25
+    kept, removed = run_on(VOTE, "The Court affirmed by a vote of five to four.", QUOTE)
+    assert not kept and any("number" in p for p in removed[0]["problems"])
+
+def test_right_number_as_words_and_the_pronoun_one_are_kept():
+    kept, _ = run_on(VOTE, "The Court affirmed by a vote of six to three.", QUOTE)
+    assert kept
+    kept, _ = run_on(VOTE, "No one disputes that the President enjoys absolute immunity.", QUOTE)
+    assert kept
+
+def test_other_in_re_name_is_not_matched_by_an_in_re_case():
+    passage = {**PASSAGE, "case_name": "In re Grand Jury Subpoena"}
+    kept, removed = run_on(passage, "In re Zorblax, the President enjoys absolute immunity.", QUOTE)
+    assert not kept and any("Zorblax" in p for p in removed[0]["problems"])
+
+def test_number_words_in_the_passage_count_too():
+    passage = {**VOTE, "text": VOTE["text"].replace("6 to 3", "five to four")}
+    kept, _ = run_on(passage, "The Court affirmed by a vote of 5 to 4.", QUOTE)
+    assert kept
+
+def test_real_citation_missing_from_the_table_is_removed_but_not_called_fabricated():
+    # CourtListener has no citation for most decisions from 2020 on (SPEC section 2), e.g. Dobbs, 597 U.S. 215
+    from app.verify import count_fabrications
+    passage = {**PASSAGE, "text": PASSAGE["text"] + " Dobbs v. Jackson Women's Health Organization, 597 U.S. 215, overruled Roe."}
+    kept, removed = run_on(passage, "The opinion relies on Dobbs, 597 U.S. 215.", QUOTE)
+    assert not kept                                                       # SPEC rule 3 still applies
+    assert removed[0]["problems"] == ["citation not in the citation table (written in the passage): 597 U.S. 215"]
+    assert count_fabrications(removed) == 0

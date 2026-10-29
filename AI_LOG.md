@@ -203,3 +203,47 @@ read the related line ourselves before relying on these entries.
    the same call worked from Windows: requests of more than a few KB never arrived. How we caught it: a
    small call worked and a full question did not. Fix (on that PC only, not in the code): WSL network MTU
    lowered from 1500 to 1350. It is lost when the PC restarts.
+
+## 2026-10-29 — Week 7: attacking the verifier (Edwin)
+
+1. **A concurrence presented as the Court's decision got through the verifier.** The verifier we asked
+   Claude to build from the guide (4.2) has five checks; none looks at WHOSE opinion a passage is. In the
+   first live run on real data (`scripts/ask.py`, "What did the Court decide in Loper Bright about Chevron
+   deference?") the model wrote "The Court rejected Chevron deference, effectively ending the doctrine",
+   citing only Justice Gorsuch's concurrence ("Today, the Court places a tombstone on Chevron"). The quote
+   was real, so the sentence was kept and shown (status LOW_CONFIDENCE). Rule 5 of the prompt forbids this,
+   but nothing checked it. How we caught it: reading the passage labels in the `ask.py` output.
+   Fix: two failing tests (concurrence and dissent presented as the Court), then check 6 in `verify.py`:
+   a sentence that speaks for "the Court" / "the majority", does not name the separate opinion itself,
+   and cites only dissents or concurrences (label or section) is removed. Three more tests make sure
+   correct sentences are kept ("Justice Gorsuch, concurring, wrote...", majority passages, majority +
+   concurrence together); making the check too strict or too weak fails at least one test. On the real
+   data the classification misses none of the 17,342 dissent/concurrence passages. Two new live runs:
+   the model presented the concurrence as the Court both times and check 6 removed the sentence.
+2. **Not a bug, but checked:** in the same runs the quote check also removed sentences. The model had
+   changed one word of the quote ("this Court has refused" -> "the Court has refused"; 121 of 124
+   characters matched). Word-for-word is the rule, so the removal is correct; a test now locks it in.
+3. **Invented "In re" / "Ex parte" case names got through.** Check 4 (guide code, built by Claude) only
+   finds names written "X v. Y". We ran the guide's Week 7 list of attacks against the verifier with the
+   real citation index: "In re Zorblax, the Court held..." and "As in Ex parte Quimby, ..." were kept.
+   How we caught it: the attack script printed KEPT where REMOVED was expected.
+   Fix: `find_case_names` also finds "In re X" / "Ex parte X", and names are compared on their first
+   word AFTER that prefix (otherwise any "In re" case would vouch for any other "In re" name). Tests:
+   invented names removed, a real "In re" name written in the passage kept, an "In re" case not vouching
+   for another one.
+4. **A wrong number written as words got through.** Check 5 only reads digits: with a passage saying
+   "a vote of 6 to 3", the sentence "The Court affirmed by a vote of five to four" was kept. Same attack
+   script. Fix: check 5 also reads number words from "two" to "ninety-nine", in the sentence and in the
+   passage ("six to three" still matches "6 to 3"). "one" is left out on purpose: it is usually a pronoun
+   ("no one can miss") and counting it would remove correct sentences. Tests for both directions.
+   For both fixes we also broke the new code on purpose: two breaks were first not caught, so two more
+   tests were added; now all five are caught.
+5. **Real citations counted as fabrications.** CourtListener has no citation for most decisions from
+   2020 on (SPEC section 2). When a retrieved passage itself prints such a citation ("Dobbs, 597 U.S.
+   215", "144 S. Ct. 2244") and the model repeats it, check 3 (guide code) labelled it "FABRICATED".
+   The sentence must still be removed (SPEC rule 3: every citation shown must be in the table), but the
+   label was wrong and would have inflated "fabrications caught by the verifier" in the Week 8 report.
+   How we caught it: an attack with a real 2022 citation printed in the passage. Decision (Edwin):
+   remove, but relabel. Fix: "citation not in the citation table (written in the passage)", not counted
+   by `count_fabrications`; a citation missing from the table AND absent from the passage is still
+   FABRICATED (an existing test fails if the relabel is made too broad).

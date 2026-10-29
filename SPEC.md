@@ -118,6 +118,7 @@ A sentence is shown only if:
    decision or written in the cited passage itself;
 4. every case name in it is the case of a cited passage or appears in one;
 5. every number and date in it appears in its cited passage.
+6. it does not present a dissent or concurrence as the Court's view (added in Week 7, see section 11).
 
 At runtime we guarantee existence, binding to retrieved opinions, and lexical support.
 Semantic support is measured by groundedness: lexically at runtime (inside the support score)
@@ -192,3 +193,15 @@ orders) to real decisions (rule in section 2). The court and dates do not change
 2026-10-24 - Verifier (4.2): `verify()` removes `["P1"]` passage markers from the sentence text
 before the five checks. The guide's check 5 read the 1 in "P1" as a number and removed correct
 sentences. Details in AI_LOG.md.
+
+2026-10-29 - Verifier (Week 7): check 6 added. A sentence that speaks for the Court but cites only
+dissents or concurrences is removed (found in a live run: Gorsuch's concurrence in Loper Bright was
+presented as "The Court rejected Chevron deference"). Details in AI_LOG.md.
+
+2026-10-29 - Verifier (Week 7): check 4 also recognises "In re X" / "Ex parte X" case names; check 5
+also reads numbers written as words ("two" to "ninety-nine"). Both were attacks that got through.
+Details in AI_LOG.md.
+
+2026-10-29 - Verifier (Week 7): a citation missing from the citation table but printed in the cited
+passage is still removed (rule 3), but labelled "not in the citation table (written in the passage)"
+instead of FABRICATED, so the fabrication count is not inflated by CourtListener's 2020+ gap.

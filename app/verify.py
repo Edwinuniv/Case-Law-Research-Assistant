@@ -7,18 +7,36 @@ A sentence is kept only if ALL of these are true:
      retrieved passage or written in its cited passage (SR23).
   4. Every case name in it ("X v. Y") is the case of a cited passage or appears in one.
   5. Every number and date in it appears in its cited passages (SR25).
+  6. It does not present a dissent or concurrence as the Court's view (added in Week 7).
 Otherwise the sentence is removed and we record why (FR7)."""
 import re
 import unicodedata
-from app.citations import find_citations, find_case_names, name_words, CITATION_LIKE
+from app.citations import find_citations, find_case_names, name_key, CITATION_LIKE
 
 STOPWORDS = set("""the a an of to in and or for on by with that this is was were be been are as at from
 it its which who whom whose not no but if than then so such court courts held holds said says
 there their they them he she his her we our you your may must shall would could should""".split())
 NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+# Numbers written as words, "two" to "ninety-nine" (Week 7: "five to four" got through check 5).
+# "one" is left out on purpose: it is usually a pronoun ("no one can miss").
+UNITS = dict(zip("two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+                 "seventeen eighteen nineteen".split(), range(2, 20)))
+TENS = dict(zip("twenty thirty forty fifty sixty seventy eighty ninety".split(), range(20, 100, 10)))
+DIGIT_WORDS = dict(UNITS, one=1)
+NUMBER_WORD = re.compile(rf"\b(?:({'|'.join(TENS)})(?:[- ]({'|'.join(DIGIT_WORDS)}))?|({'|'.join(UNITS)}))\b", re.I)
 # Passage markers the model writes inside the text, like ["P1"] or [P1, P3]. Not in the guide:
 # check 5 read the 1 in "P1" as a number and removed correct sentences (see AI_LOG.md).
 PASSAGE_MARK = re.compile(r"\s*\[\s*\"?P\d+\"?(?:\s*,\s*\"?P\d+\"?)*\s*\]")
+# Check 6 (Week 7): who is speaking. A passage is a separate opinion if its label or section says so
+# ("Dissenting opinion (Kagan)", "Gorsuch, J., concurring"); a sentence speaks for the Court unless it
+# names the separate opinion itself ("the dissent argued", "Justice Gorsuch, concurring").
+SEPARATE_OPINION = re.compile(r"dissent|concurr", re.I)
+COURT_VIEW = re.compile(r"\b(?:the (?:supreme )?court|the majority)\b", re.I)
+NAMES_SEPARATE_OPINION = re.compile(r"\b(?:dissent\w*|concurr\w*|justice \w+|\w+, j\.)", re.I)
+
+
+def separate_opinion(passage):
+    return bool(SEPARATE_OPINION.search(f"{passage.get('opinion_label') or ''} {passage.get('section') or ''}"))
 
 
 def norm(text):
@@ -31,6 +49,16 @@ def norm(text):
 
 def numbers_in(text):
     return {n.replace(",", "").rstrip(".") for n in NUMBER.findall(text or "")}
+
+
+def number_words_in(text):
+    """'six to three' -> {'6', '3'}; 'twenty-five' -> {'25'}."""
+    found = set()
+    for tens, unit, small in NUMBER_WORD.findall(text or ""):
+        value = TENS[tens.lower()] + DIGIT_WORDS[unit.lower()] if tens and unit else \
+            TENS[tens.lower()] if tens else UNITS[small.lower()]
+        found.add(str(value))
+    return found
 
 
 def groundedness(sentence_text, cited_text):
@@ -56,7 +84,11 @@ def check_sentence(sentence, passages, index):
     passage_cites = set().union(*(find_citations(c["text"]) for c in cited))
     for cite in find_citations(text):                                              # check 3
         cluster = index.cluster_for(cite)
-        if cluster is None:
+        if cluster is None and (cite in passage_cites or norm(cite) in cited_text):
+            # Real but missing from CourtListener (most decisions from 2020 on): still removed (rule 3),
+            # but the model copied it from the passage, so it is not counted as a fabrication (Week 7)
+            problems.append(f"citation not in the citation table (written in the passage): {cite}")
+        elif cluster is None:
             problems.append(f"FABRICATED citation (not in the citation table): {cite}")
         elif index.decision_for_cluster(cluster) in retrieved_decisions:
             continue
@@ -65,18 +97,23 @@ def check_sentence(sentence, passages, index):
         else:
             problems.append(f"real citation not supported by the retrieved opinions: {cite}")
 
-    cited_names = [name_words(c["case_name"])[:1] for c in cited]
+    cited_names = [name_key(c["case_name"]) for c in cited]
     for name in find_case_names(text):                                             # check 4
-        if name_words(name)[:1] in cited_names or norm(name) in cited_text:
+        if name_key(name) in cited_names or norm(name) in cited_text:
             continue
         kind = "case name not supported by the cited passage" if index.known_case_name(name) \
             else "FABRICATED case name"
         problems.append(f"{kind}: {name}")
 
     text_without_citations = CITATION_LIKE.sub(" ", text)                         # check 5
-    passage_numbers = numbers_in(cited_text)
-    for number in sorted(numbers_in(text_without_citations) - passage_numbers):
+    passage_numbers = numbers_in(cited_text) | number_words_in(cited_text)
+    sentence_numbers = numbers_in(text_without_citations) | number_words_in(text_without_citations)
+    for number in sorted(sentence_numbers - passage_numbers):
         problems.append(f"number or date not in the cited passage: {number}")
+
+    if COURT_VIEW.search(text) and not NAMES_SEPARATE_OPINION.search(text) \
+            and all(separate_opinion(c) for c in cited):                          # check 6
+        problems.append("dissent or concurrence presented as the Court's view")
     return problems
 
 
