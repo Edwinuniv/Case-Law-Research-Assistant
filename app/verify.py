@@ -17,6 +17,13 @@ STOPWORDS = set("""the a an of to in and or for on by with that this is was were
 it its which who whom whose not no but if than then so such court courts held holds said says
 there their they them he she his her we our you your may must shall would could should""".split())
 NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+# Numbers written as words, "two" to "ninety-nine" (Week 7: "five to four" got through check 5).
+# "one" is left out on purpose: it is usually a pronoun ("no one can miss").
+UNITS = dict(zip("two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+                 "seventeen eighteen nineteen".split(), range(2, 20)))
+TENS = dict(zip("twenty thirty forty fifty sixty seventy eighty ninety".split(), range(20, 100, 10)))
+DIGIT_WORDS = dict(UNITS, one=1)
+NUMBER_WORD = re.compile(rf"\b(?:({'|'.join(TENS)})(?:[- ]({'|'.join(DIGIT_WORDS)}))?|({'|'.join(UNITS)}))\b", re.I)
 # Passage markers the model writes inside the text, like ["P1"] or [P1, P3]. Not in the guide:
 # check 5 read the 1 in "P1" as a number and removed correct sentences (see AI_LOG.md).
 PASSAGE_MARK = re.compile(r"\s*\[\s*\"?P\d+\"?(?:\s*,\s*\"?P\d+\"?)*\s*\]")
@@ -42,6 +49,16 @@ def norm(text):
 
 def numbers_in(text):
     return {n.replace(",", "").rstrip(".") for n in NUMBER.findall(text or "")}
+
+
+def number_words_in(text):
+    """'six to three' -> {'6', '3'}; 'twenty-five' -> {'25'}."""
+    found = set()
+    for tens, unit, small in NUMBER_WORD.findall(text or ""):
+        value = TENS[tens.lower()] + DIGIT_WORDS[unit.lower()] if tens and unit else \
+            TENS[tens.lower()] if tens else UNITS[small.lower()]
+        found.add(str(value))
+    return found
 
 
 def groundedness(sentence_text, cited_text):
@@ -85,8 +102,9 @@ def check_sentence(sentence, passages, index):
         problems.append(f"{kind}: {name}")
 
     text_without_citations = CITATION_LIKE.sub(" ", text)                         # check 5
-    passage_numbers = numbers_in(cited_text)
-    for number in sorted(numbers_in(text_without_citations) - passage_numbers):
+    passage_numbers = numbers_in(cited_text) | number_words_in(cited_text)
+    sentence_numbers = numbers_in(text_without_citations) | number_words_in(text_without_citations)
+    for number in sorted(sentence_numbers - passage_numbers):
         problems.append(f"number or date not in the cited passage: {number}")
 
     if COURT_VIEW.search(text) and not NAMES_SEPARATE_OPINION.search(text) \
