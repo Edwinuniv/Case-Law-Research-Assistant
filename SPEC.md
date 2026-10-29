@@ -118,6 +118,7 @@ A sentence is shown only if:
    decision or written in the cited passage itself;
 4. every case name in it is the case of a cited passage or appears in one;
 5. every number and date in it appears in its cited passage.
+6. it does not present a dissent or concurrence as the Court's view (added in Week 7, see section 11).
 
 At runtime we guarantee existence, binding to retrieved opinions, and lexical support.
 Semantic support is measured by groundedness: lexically at runtime (inside the support score)
