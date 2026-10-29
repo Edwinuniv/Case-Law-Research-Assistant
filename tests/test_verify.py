@@ -130,3 +130,9 @@ VOTE = {**PASSAGE, "text": "The judgment of the Court of Appeals is affirmed by 
 def test_wrong_number_written_as_words_is_removed():          # SR25
     kept, removed = run_on(VOTE, "The Court affirmed by a vote of five to four.", QUOTE)
     assert not kept and any("number" in p for p in removed[0]["problems"])
+
+def test_right_number_as_words_and_the_pronoun_one_are_kept():
+    kept, _ = run_on(VOTE, "The Court affirmed by a vote of six to three.", QUOTE)
+    assert kept
+    kept, _ = run_on(VOTE, "No one disputes that the President enjoys absolute immunity.", QUOTE)
+    assert kept
