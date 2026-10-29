@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block content %}
+<div class="card" style="padding:8px 14px"><b>Admin</b> ·
+<a href="/admin">Overview</a> · <a href="/admin/eval">Evaluation</a> · <a href="/admin/questions">Test questions</a> ·
+<a href="/admin/abstentions">Abstentions</a> · <a href="/admin/analytics">Analytics</a> · <a href="/admin/settings">Settings</a> ·
+<a href="/admin/corpus">Corpus &amp; citations</a> · <a href="/admin/users">Accounts</a>
+<span class="muted" style="float:right">{{ admin.email }}</span></div>
+{% block admin %}{% endblock %}{% endblock %}

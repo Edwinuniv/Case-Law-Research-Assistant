@@ -114,6 +114,24 @@ read the related line ourselves before relying on these entries.
    saved every 2,048 (data/work/embedding_cache), so a stopped run resumes; progress printed at once.
 2. **AI mistake: progress hidden in the log.** Under nohup, Python wrote the progress lines only at the end
    (output buffering). Fix: print with flush.
+3. **AI mistake: the model was downloaded 12 times at once.** On the first website run, the embedding
+   model was not on disk yet; it was loaded only at the first question, and each request that arrived
+   during the 2.5-minute download started its own download (no lock in `_get_model`). How we caught it:
+   twelve "Fetching 5 files" lines in the uvicorn log. Fix: a lock, so the model is created once
+   (tested with 12 parallel requests), and the Searcher loads it at start-up.
+4. **AI mistake: concurrences and dissents labelled as the Court's opinion; the holding was not found.**
+   First real question on the website: "Did the Supreme Court overrule Chevron deference?" gave NOT
+   SUPPORTED, although three Loper Bright passages were retrieved. How we caught it: we printed the 8
+   passages and searched the chunks for "Chevron is overruled": the two chunks with that sentence (the
+   Syllabus and the end of the majority) were not even in the top 50. Two causes in the AI's code:
+   (a) CourtListener stores Loper Bright as ONE combined text (majority + Thomas and Gorsuch
+   concurrences + Kagan dissent); the chunker only knew headings on their own line, so every chunk was
+   "Opening" and a concurrence passage (P1) looked like the Court's opinion - against our SPEC rule
+   "never mix two opinions"; (b) BM25 compared exact words, so "overrule" never matched "overruled".
+   Fix: a new section at each "JUSTICE X, concurring/dissenting." / "delivered the opinion of the
+   Court" paragraph, with the opinion named in the section and in the embedded header; repeated
+   "Syllabus" page headers no longer cut the Syllabus; BM25 words stemmed. Tests in
+   tests/test_opinion_sections.py and tests/test_bm25.py.
 
 ---
 
@@ -153,3 +171,35 @@ read the related line ourselves before relying on these entries.
    How we caught it: the test run stayed green with each bug in place.
    Fix: 7 tests (4 use the empty test database through `clean_db`); each fails on its bug and passes on
    the real code. Whole suite: 43 passed.
+
+## 2026-10-26 — Deployment files (Joe)
+
+1. **The guide's Dockerfile downloads the embedding model into the wrong folder.** We asked Claude to
+   create the step 6.1 files (`Dockerfile`, `.dockerignore`) from the guide. Before committing, we
+   compared them with the current code: since step 2.2, `app/embeddings.py` loads the model with
+   `cache_dir=data/models` (Yasser's change, because /tmp is emptied at every restart). The guide's
+   build step downloads it into fastembed's default folder, so the website would download the model
+   again on the first question after every deploy, which is the wait the build step is meant to avoid.
+   How we caught it: we searched the code for `cache_dir` before writing the build step.
+   Fix: the build step passes `cache_dir='data/models'`, the same folder as `app/embeddings.py`.
+   `data/` is in `.dockerignore`, so `COPY . .` does not overwrite it.
+
+## 2026-10-28 — Running the website with real data (Joe)
+
+1. **The guide's admin test checked only 5 of the admin pages.** We asked Claude to add `tests/test_admin.py`
+   (step 5.5) exactly as in the guide; the 6 tests passed. To check that they protect the site, we broke
+   `app/main.py` on purpose in a temporary copy: lock-out off, disabled-account check off, `/admin/settings`
+   without the login check, `/admin/corpus` without the login check. The first three were caught; the last
+   was NOT, because the guide's test only visits `/admin`, eval, settings, users and questions.
+   How we caught it: the test run stayed green with the bug in place.
+   Fix: two tests that visit the other admin pages (corpus, analytics, abstentions, question form and export,
+   eval run and compare) and the admin actions (create or disable a user, run the evaluation, re-index) without
+   logging in; each fails on the matching bug and passes on the real code. Whole suite: 66 passed.
+   The first version of the actions test still missed an unprotected re-index: the action redirects to
+   `/admin`, the test client followed the redirect and got that page's 401. The actions are now posted
+   without following redirects, and all five breaks (corpus, create user, disable user, run evaluation,
+   re-index) make a test fail.
+2. **Calls to the model failed from WSL.** Every real question gave "Server disconnected" on Joe's PC, while
+   the same call worked from Windows: requests of more than a few KB never arrived. How we caught it: a
+   small call worked and a full question did not. Fix (on that PC only, not in the code): WSL network MTU
+   lowered from 1500 to 1350. It is lost when the PC restarts.

@@ -1,0 +1,8 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Test questions ({{ questions|length }})</h2>
+<div class="card"><a class="btn" href="/admin/questions/edit">Add a question</a>
+<a class="btn" href="/admin/questions/export" style="background:#e8edf4;color:#1f3a5f">Export questions.jsonl (to commit in git)</a>
+<span style="margin-left:12px">Show: {% for t in ['', 'answerable','unanswerable','adversarial'] %}<a href="?tag={{ t }}">{{ t or 'all' }}</a> {% endfor %}</span></div>
+<table><tr><th>ID</th><th>Tag</th><th>Split</th><th>Question</th><th>Expected decisions</th><th>Author</th><th></th></tr>
+{% for q in questions %}<tr><td>{{ q.id }}</td><td>{{ q.tag }}</td><td>{{ q.split }}</td><td>{{ q.question }}</td><td>{{ q.gold_decision_ids|join(', ') }}</td><td>{{ q.author or '' }}</td><td><a href="/admin/questions/edit?id={{ q.id|urlencode }}">Edit</a></td></tr>{% endfor %}</table>
+{% endblock %}

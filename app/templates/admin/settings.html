@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Settings</h2>
+<div class="card"><h3>1. Preview new thresholds on the latest evaluation run</h3>
+<form method="get">Abstain below <input name="tau_abstain" type="number" step="0.01" value="{{ preview.new.tau_abstain if preview else s.tau_abstain }}" style="width:80px">
+Low confidence below <input name="tau_confident" type="number" step="0.01" value="{{ preview.new.tau_confident if preview else s.tau_confident }}" style="width:80px">
+Minimum passage similarity <input name="min_retrieval" type="number" step="0.01" value="{{ preview.new.min_retrieval if preview else s.min_retrieval }}" style="width:80px">
+<button class="light">Preview</button></form>
+{% if preview %}<table style="margin-top:10px"><tr><th>Metric (run {{ preview.run }}, test split)</th><th>Current settings</th><th>New settings</th></tr>
+{% for k in ['abstention_precision','abstention_recall','answered_but_should_abstain','abstained_but_should_answer','low_confidence','false_citations_shown'] %}
+<tr><td>{{ k|replace('_',' ') }}</td><td>{{ preview.now[k] }}</td><td>{{ preview.then[k] }}</td></tr>
+{% endfor %}</table>{% endif %}</div>
+<div class="card"><h3>2. Save</h3>
+<form method="post">
+<p>Abstain below support score <input name="tau_abstain" type="number" step="0.01" value="{{ preview.new.tau_abstain if preview else s.tau_abstain }}" style="width:80px">
+ · Low confidence below <input name="tau_confident" type="number" step="0.01" value="{{ preview.new.tau_confident if preview else s.tau_confident }}" style="width:80px">
+ · Minimum passage similarity <input name="min_retrieval" type="number" step="0.01" value="{{ preview.new.min_retrieval if preview else s.min_retrieval }}" style="width:80px"></p>
+<p>Passages after search <input name="retrieve_k" type="number" value="{{ s.retrieve_k }}" style="width:60px">
+ · Passages given to the model <input name="top_k" type="number" value="{{ s.top_k }}" style="width:60px">
+ · <label><input type="checkbox" name="use_reranker" {% if s.use_reranker %}checked{% endif %}> Use the reranker (week-10 improvement)</label></p>
+<button onclick="return confirm('Change the live system?')">Save settings</button></form>
+<p class="muted">Choose thresholds with the sweep table of an evaluation run (tune split), then check the test split. Do not tune on the test split.</p></div>
+{% endblock %}

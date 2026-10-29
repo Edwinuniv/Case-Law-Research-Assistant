@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Corpus and citations</h2>
+<div class="card"><h3>Citation lookup</h3>
+<form>Citation <input name="cite" value="{{ cite }}" placeholder="603 U.S. 593">
+<button>Check</button></form>
+{% if lookup %}<div class="status {{ 'ANSWERED' if 'CORPUS' in lookup.status and 'OUTSIDE' not in lookup.status else ('LOW_CONFIDENCE' if 'OUTSIDE' in lookup.status else 'ERROR') }}" style="margin-top:8px"><b>{{ lookup.status }}</b> — {{ lookup.citation }}{% if lookup.cluster_id %} → CourtListener cluster {{ lookup.cluster_id }}{% endif %}{% if lookup.decision_id %} (our decision {{ lookup.decision_id }}){% endif %}</div>{% endif %}</div>
+<div class="card"><h3>Latest ingestion reports</h3><table><tr><th>When</th><th>Kind</th><th>Report</th></tr>
+{% for r in reports %}<tr><td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ r.kind }}</td>
+<td><code>{{ r.report|tojson }}</code></td></tr>{% endfor %}</table></div>
+<table><tr><th>ID</th><th>Case</th><th>Filed</th><th>Citations</th><th>Licence</th><th>Loaded</th></tr>
+{% for d in decisions %}<tr><td>{{ d.decision_id }}</td><td><a href="{{ d.source_url }}" target="_blank">{{ d.case_name }}</a></td><td>{{ d.date_filed }}</td><td>{{ d.citations|join(', ') }}</td><td class="muted">{{ d.licence }}</td><td class="muted">{{ d.loaded_at.strftime('%Y-%m-%d') }}</td></tr>{% endfor %}</table>
+<p>{% if offset %}<a href="?offset={{ offset - 100 }}">← previous 100</a>{% endif %} <a href="?offset={{ offset + 100 }}">next 100 →</a></p>
+{% endblock %}

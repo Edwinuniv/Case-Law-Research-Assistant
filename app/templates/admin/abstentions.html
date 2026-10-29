@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}{% block admin %}
+<h2>Questions the system did not answer confidently</h2>
+<div class="card">Show: {% for st in ['NOT_SUPPORTED','LOW_CONFIDENCE','ERROR'] %}<a href="?status={{ st }}">{{ st|replace('_',' ')|lower }}</a> · {% endfor %}
+<span class="muted">Use these to tune abstention: label each one, and add real mistakes to the test set.</span></div>
+{% for row in rows %}<div class="card"><b>{{ row.question }}</b><br>
+<span class="muted">{{ row.created_at.strftime('%Y-%m-%d %H:%M') }} · {{ row.status }} · support {{ row.support_score }} · best passage {{ row.top_score }} · {{ row.reason }}{% if row.label %} · label: <b>{{ row.label }}</b>{% endif %}</span>
+<details><summary>Passages and removed sentences</summary>
+<ol>{% for pid, cid, score in (row.details or {}).get('passages', []) %}{% set c = chunks.get(cid) %}
+<li>{{ score }} — {% if c %}<a href="/passage/{{ cid }}" target="_blank">{{ c.case_name }} — {{ c.label }}</a>{% else %}{{ cid }} (old index){% endif %}</li>{% endfor %}</ol>
+{% for x in (row.details or {}).get('removed', []) %}<p>Removed: {{ x.text }}<br><b>{{ x.problems|join('; ') }}</b></p>{% endfor %}</details>
+<form method="post" action="/admin/abstentions/{{ row.id }}/label" style="margin-top:6px">
+<button class="light" name="label" value="correct">Correct</button>
+<button class="light" name="label" value="should have answered">Should have answered</button>
+<button class="light" name="label" value="add as unanswerable test question">Add to test set (unanswerable)</button>
+<button class="light" name="label" value="add as answerable test question">Add to test set (answerable)</button></form></div>
+{% else %}<p>Nothing here yet.</p>{% endfor %}
+{% endblock %}
