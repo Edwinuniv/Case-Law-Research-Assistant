@@ -7,6 +7,7 @@ A sentence is kept only if ALL of these are true:
      retrieved passage or written in its cited passage (SR23).
   4. Every case name in it ("X v. Y") is the case of a cited passage or appears in one.
   5. Every number and date in it appears in its cited passages (SR25).
+  6. It does not present a dissent or concurrence as the Court's view (added in Week 7).
 Otherwise the sentence is removed and we record why (FR7)."""
 import re
 import unicodedata
@@ -19,6 +20,16 @@ NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 # Passage markers the model writes inside the text, like ["P1"] or [P1, P3]. Not in the guide:
 # check 5 read the 1 in "P1" as a number and removed correct sentences (see AI_LOG.md).
 PASSAGE_MARK = re.compile(r"\s*\[\s*\"?P\d+\"?(?:\s*,\s*\"?P\d+\"?)*\s*\]")
+# Check 6 (Week 7): who is speaking. A passage is a separate opinion if its label or section says so
+# ("Dissenting opinion (Kagan)", "Gorsuch, J., concurring"); a sentence speaks for the Court unless it
+# names the separate opinion itself ("the dissent argued", "Justice Gorsuch, concurring").
+SEPARATE_OPINION = re.compile(r"dissent|concurr", re.I)
+COURT_VIEW = re.compile(r"\b(?:the (?:supreme )?court|the majority)\b", re.I)
+NAMES_SEPARATE_OPINION = re.compile(r"\b(?:dissent\w*|concurr\w*|justice \w+|\w+, j\.)", re.I)
+
+
+def separate_opinion(passage):
+    return bool(SEPARATE_OPINION.search(f"{passage.get('opinion_label') or ''} {passage.get('section') or ''}"))
 
 
 def norm(text):
@@ -77,6 +88,10 @@ def check_sentence(sentence, passages, index):
     passage_numbers = numbers_in(cited_text)
     for number in sorted(numbers_in(text_without_citations) - passage_numbers):
         problems.append(f"number or date not in the cited passage: {number}")
+
+    if COURT_VIEW.search(text) and not NAMES_SEPARATE_OPINION.search(text) \
+            and all(separate_opinion(c) for c in cited):                          # check 6
+        problems.append("dissent or concurrence presented as the Court's view")
     return problems
 
 
