@@ -1,5 +1,6 @@
 """Hybrid search (SR17): meaning-based search in PostgreSQL (pgvector) + keyword search (BM25),
 merged with Reciprocal Rank Fusion; optional reranker (SR18)."""
+import re
 import numpy as np
 from app import config, db, embeddings, rerank
 from app.bm25 import BM25, TOKENIZER
@@ -8,6 +9,9 @@ from app.indexing import vector_literal
 CHUNK_COLUMNS = """c.chunk_id, c.opinion_id, c.decision_id, c.section, c.is_syllabus,
                    c.start_char, c.end_char, c.text, o.label AS opinion_label,
                    d.case_name, d.date_filed::text AS date_filed"""
+
+
+SEPARATE = re.compile(r"concurring|dissenting|respecting|concurrence|dissent", re.I)
 
 
 class Searcher:
@@ -57,15 +61,33 @@ class Searcher:
         order = np.argsort(-scores)[:k]
         return [(self.chunks[i]["chunk_id"], float(scores[i])) for i in order if scores[i] > 0]
 
-    def search(self, question, k=20):
-        """Top k passages. Each passage's 'score' is its meaning similarity (0..1)."""
+    def is_separate(self, chunk_id):
+        """A concurring or dissenting opinion (including opinions on a denial of certiorari)."""
+        c = self.by_id[chunk_id]
+        return bool(SEPARATE.search(f"{c['section']} {c['opinion_label']}"))
+
+    def candidates(self, question, pool):
+        """The two ranked lists: meaning (pgvector) and keywords (BM25), pool candidates each."""
         qvec = vector_literal(embeddings.embed_query(question))
-        dense = self.dense(qvec, 50)
+        return qvec, self.dense(qvec, pool), self.keyword(question, pool)
+
+    def fuse(self, dense, keyword, k, settings):
+        """Weighted Reciprocal Rank Fusion: each list gives weight / (60 + rank) to a passage.
+        w_bm25 weighs the keyword list; w_separate weighs concurring/dissenting passages."""
+        pool = int(settings.get("fusion_pool", 50))
+        w_bm25, w_sep = float(settings.get("w_bm25", 1.0)), float(settings.get("w_separate", 1.0))
         fused = {}
-        for ranking in (dense, self.keyword(question, 50)):        # Reciprocal Rank Fusion
+        for ranking, weight in ((dense[:pool], 1.0), (keyword[:pool], w_bm25)):
             for rank, (cid, _) in enumerate(ranking):
-                fused[cid] = fused.get(cid, 0) + 1 / (60 + rank + 1)
-        best = sorted(fused, key=fused.get, reverse=True)[:k]
+                w = weight * (w_sep if self.is_separate(cid) else 1.0)
+                fused[cid] = fused.get(cid, 0) + w / (60 + rank + 1)
+        return sorted(fused, key=fused.get, reverse=True)[:k]
+
+    def search(self, question, k=20, settings=None):
+        """Top k passages. Each passage's 'score' is its meaning similarity (0..1)."""
+        settings = settings or db.get_settings()
+        qvec, dense, keyword = self.candidates(question, int(settings.get("fusion_pool", 50)))
+        best = self.fuse(dense, keyword, k, settings)
         score = dict(dense)
         missing = [c for c in best if c not in score]
         if missing:

@@ -62,6 +62,9 @@ DEFAULT_SETTINGS = {
     "retrieve_k": 20,        # passages kept after hybrid search          (SR17)
     "top_k": 8,              # passages given to the model                 (SR18)
     "use_reranker": False,   # the week-10 improvement                     (SR18)
+    "w_bm25": 1.0,           # weight of the keyword list in the fusion (1 = same as meaning)
+    "w_separate": 1.0,       # weight of concurring/dissenting passages (1 = no preference)
+    "fusion_pool": 50,       # candidates taken from each list before fusing
     "w_retrieval": 0.5,      # support score weights                       (SR26)
     "w_grounded": 0.4,
     "w_passages": 0.1,
