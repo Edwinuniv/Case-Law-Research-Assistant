@@ -192,3 +192,7 @@ orders) to real decisions (rule in section 2). The court and dates do not change
 2026-10-24 - Verifier (4.2): `verify()` removes `["P1"]` passage markers from the sentence text
 before the five checks. The guide's check 5 read the 1 in "P1" as a number and removed correct
 sentences. Details in AI_LOG.md.
+
+2026-10-29 - Verifier (Week 7): check 6 added. A sentence that speaks for the Court but cites only
+dissents or concurrences is removed (found in a live run: Gorsuch's concurrence in Loper Bright was
+presented as "The Court rejected Chevron deference"). Details in AI_LOG.md.
