@@ -238,3 +238,12 @@ read the related line ourselves before relying on these entries.
    ("no one can miss") and counting it would remove correct sentences. Tests for both directions.
    For both fixes we also broke the new code on purpose: two breaks were first not caught, so two more
    tests were added; now all five are caught.
+5. **Real citations counted as fabrications.** CourtListener has no citation for most decisions from
+   2020 on (SPEC section 2). When a retrieved passage itself prints such a citation ("Dobbs, 597 U.S.
+   215", "144 S. Ct. 2244") and the model repeats it, check 3 (guide code) labelled it "FABRICATED".
+   The sentence must still be removed (SPEC rule 3: every citation shown must be in the table), but the
+   label was wrong and would have inflated "fabrications caught by the verifier" in the Week 8 report.
+   How we caught it: an attack with a real 2022 citation printed in the passage. Decision (Edwin):
+   remove, but relabel. Fix: "citation not in the citation table (written in the passage)", not counted
+   by `count_fabrications`; a citation missing from the table AND absent from the passage is still
+   FABRICATED (an existing test fails if the relabel is made too broad).
