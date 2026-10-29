@@ -104,3 +104,10 @@ def test_the_court_citing_majority_and_concurrence_together_is_kept():
          "quote": OVERRULED}
     kept, _ = verify({"sentences": [s]}, {"P1": ROBERTS, "P2": GORSUCH}, INDEX)
     assert kept
+
+def test_quote_with_one_word_changed_is_removed():
+    # Real model output (live run 2026-10-29): "this Court has refused" quoted as "the Court has refused"
+    passage = {**GORSUCH, "text": "So much so that this Court has refused to apply Chevron deference since 2016."}
+    kept, removed = run_on(passage, "Justice Gorsuch wrote that Chevron is no longer applied.",
+                           "the Court has refused to apply Chevron deference since 2016.")
+    assert not kept and "quote not found in the cited passage" in removed[0]["problems"]
