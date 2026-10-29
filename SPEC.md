@@ -212,3 +212,9 @@ Details in AI_LOG.md.
 2026-10-29 - Verifier (Week 7): a citation missing from the citation table but printed in the cited
 passage is still removed (rule 3), but labelled "not in the citation table (written in the passage)"
 instead of FABRICATED, so the fabrication count is not inflated by CourtListener's 2020+ gap.
+
+2026-10-29 - The planned week-10 improvement (reranker, SR18) gave no gain on the tune split
+(EVALUATION.md, run tune_rerank_2026-10-29T15-53-59.json) and costs 5-69 s per question on a laptop
+CPU. It stays available (use_reranker) but is off; the improvement to report will be chosen from
+measured candidates (chunk size, step 3.5, first).
+
