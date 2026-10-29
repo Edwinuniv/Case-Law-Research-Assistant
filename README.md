@@ -32,6 +32,7 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
 ## Useful commands
     python -m scripts.check_citation "603 U.S. 593"
     python -m scripts.find_case "loper"
+    python -m scripts.merge_duplicates         # copies of one decision (dry run; --apply merges)
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"

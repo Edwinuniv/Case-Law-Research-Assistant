@@ -45,6 +45,13 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   dockets or names (e.g. Miller v. Alabama, 2012: 3 clusters; "EPA" / "E.P.A. v. EME Homer", 2014).
   Clusters with the same date and the same docket, or the same case name (letters and digits), or the
   same official citation (U.S., S. Ct., L. Ed. 2d) form one decision (field decision_group).
+  Copies with different dates (step 1.8, 2026-10-29): CourtListener also stores some decisions twice a
+  few days or weeks apart (slip opinion and later version; e.g. Bruen 2022: 6480696 and 7686272, about
+  60 same-name pairs, mostly 2020-2022). After loading, decisions with the same case name, dates at
+  most 60 days apart and opinion texts at least 80% identical (5-word sequences) are merged into the
+  copy with the most text; the others' ids become aliases. Same-name decisions with different texts
+  stay apart (Bush v. Gore: stay of Dec 9 and decision of Dec 12, 2000; two Williams v. Taylor cases
+  of 2000-04-18). Measured: [groups merged, decisions removed].
   Safety rules: a citation is used only if all kept clusters carrying it have the same date
   (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases),
   and two groups with different SCDB ids are never merged.

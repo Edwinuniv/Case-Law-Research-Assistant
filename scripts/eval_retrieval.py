@@ -6,7 +6,7 @@ import json
 import datetime
 from app import config, db
 from app.search import Searcher
-from scripts.tune_search import norm
+from scripts.tune_search import canonical, norm
 
 use_rerank = "--rerank" in sys.argv
 note = " ".join(a for a in sys.argv[1:] if not a.startswith("--"))
@@ -21,7 +21,7 @@ for q in answerable:
     chosen = searcher.choose(q["question"], found, int(s["top_k"]), use_rerank)
     chosen_ids = {p["chunk_id"] for p in chosen}
     order = [p["decision_id"] for p in chosen] + [p["decision_id"] for p in found if p["chunk_id"] not in chosen_ids]
-    gold = set(q["gold_decision_ids"])
+    gold = canonical(q["gold_decision_ids"])
     quote_hits += bool(q.get("gold_quote")) and any(norm(q["gold_quote"]) in norm(p["text"]) for p in chosen)
     ranks[q["id"]] = next((i + 1 for i, d in enumerate(order) if d in gold), None)
     print(f"{q['id']}: {'rank ' + str(ranks[q['id']]) if ranks[q['id']] else 'NOT in top ' + str(len(order))}")

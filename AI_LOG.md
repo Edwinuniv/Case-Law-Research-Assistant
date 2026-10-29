@@ -142,6 +142,12 @@ read the related line ourselves before relying on these entries.
    passage into the 8 given to the model. With the rules written first, on the tune split: the reranker
    gave no gain (quote@8 0.455 at best, 5-69 s per question on our CPU); 250 and 400 words both gave
    0.364 against 0.455 for 350. We kept the baseline and recorded the runs (EVALUATION.md).
+7. **AI mistake: copies of one decision with different dates were not merged.** The AI's rule for
+   copies (step 1.4c) required the same date. While writing test questions, find_quote showed Bruen
+   twice (decisions 6480696 and 7686272, same text); a query found about 60 same-name pairs within
+   30 days, mostly 2020-2022. A name-and-date rule alone would be wrong (Bush v. Gore has two
+   different decisions three days apart), so the fix compares the opinion texts too (>= 80% identical),
+   with a dry run to review before merging (scripts/merge_duplicates.py).
 
 ---
 
