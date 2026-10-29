@@ -111,3 +111,9 @@ def test_quote_with_one_word_changed_is_removed():
     kept, removed = run_on(passage, "Justice Gorsuch wrote that Chevron is no longer applied.",
                            "the Court has refused to apply Chevron deference since 2016.")
     assert not kept and "quote not found in the cited passage" in removed[0]["problems"]
+
+def test_invented_in_re_and_ex_parte_names_are_removed():
+    kept, removed = run("In re Zorblax, the President enjoys absolute immunity.")
+    assert not kept and any("Zorblax" in p for p in removed[0]["problems"])
+    kept, removed = run("As in Ex parte Quimby, the President enjoys absolute immunity.")
+    assert not kept and any("Quimby" in p for p in removed[0]["problems"])
