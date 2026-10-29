@@ -84,7 +84,11 @@ def check_sentence(sentence, passages, index):
     passage_cites = set().union(*(find_citations(c["text"]) for c in cited))
     for cite in find_citations(text):                                              # check 3
         cluster = index.cluster_for(cite)
-        if cluster is None:
+        if cluster is None and (cite in passage_cites or norm(cite) in cited_text):
+            # Real but missing from CourtListener (most decisions from 2020 on): still removed (rule 3),
+            # but the model copied it from the passage, so it is not counted as a fabrication (Week 7)
+            problems.append(f"citation not in the citation table (written in the passage): {cite}")
+        elif cluster is None:
             problems.append(f"FABRICATED citation (not in the citation table): {cite}")
         elif index.decision_for_cluster(cluster) in retrieved_decisions:
             continue
