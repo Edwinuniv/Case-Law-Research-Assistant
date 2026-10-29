@@ -111,3 +111,18 @@ def test_evaluation_waits_and_retries_after_a_rate_limit(clean_db, monkeypatch):
     run_id = evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None)
     (_, result), = evaluate.load_run(run_id)
     assert result["status_raw"] == "NOT_SUPPORTED" and waits and waits[0] >= 3
+
+def test_judge_waits_on_rate_limit_but_not_on_other_errors(monkeypatch):
+    from app import evaluate, llm
+    waits = []
+    monkeypatch.setattr(evaluate.time, "sleep", waits.append)
+    replies = [llm.ModelError("rate limit reached, retry after 2 s"), "yes"]
+    def judge(statement, text):
+        r = replies.pop(0)
+        if isinstance(r, Exception): raise r
+        return r
+    monkeypatch.setattr(llm, "judge_support", judge)
+    assert evaluate.judge_with_retry("s", "p", log=lambda m: None) == "yes" and waits == [3.0]
+    def timeout(statement, text): raise llm.ModelError("timeout after 30 seconds")
+    monkeypatch.setattr(llm, "judge_support", timeout)
+    assert evaluate.judge_with_retry("s", "p", log=lambda m: None) == "error" and waits == [3.0]
