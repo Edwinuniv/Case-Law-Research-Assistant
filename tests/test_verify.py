@@ -123,3 +123,10 @@ def test_in_re_name_written_in_the_passage_is_kept():
     s = {"text": "In re Gault was discussed.", "sources": ["P1"], "quote": QUOTE}
     kept, _ = verify({"sentences": [s]}, {"P1": passage}, INDEX)
     assert kept
+
+VOTE = {**PASSAGE, "text": "The judgment of the Court of Appeals is affirmed by a vote of 6 to 3. "
+                           "The President enjoys absolute immunity for actions within his conclusive authority."}
+
+def test_wrong_number_written_as_words_is_removed():          # SR25
+    kept, removed = run_on(VOTE, "The Court affirmed by a vote of five to four.", QUOTE)
+    assert not kept and any("number" in p for p in removed[0]["problems"])
