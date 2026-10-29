@@ -94,7 +94,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 1.6 The citation table and the citation map (Yasser) — merged
 - [x] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — app/db.py as in the guide, merged (PR #6)
 - [x] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — merged (PR #5)
-- [x] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — reviewed by Edwin, merged (PR #10) ⏳ gate run needs the 1.8 data loaded
+- [x] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — reviewed by Edwin, merged (PR #10). Gate run 2026-10-29 on Yasser's dump: all four answers OK with Heller 554 U.S. 570 (the guide's 603 U.S. 593 has no citation in CourtListener: known source limit, SPEC §2)
 - [x] 1.10 First tests, and commit (Edwin) — tests/conftest.py, tests/test_citations.py: 5 passed, merged (PR #11)
 
 ### Week 2 — Chunks and embeddings (Yasser)
@@ -113,7 +113,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 4.1 The model call — merged (PR #7, history restored in #8): app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
 - [x] 4.2 The verifier: the heart of the project — merged (PR #12): app/verify.py, five checks tried one by one; fix: ["P1"] markers removed before the checks (AI_LOG, SPEC §11)
 - [x] 4.3 The pipeline — merged (PR #13): app/pipeline.py as in the guide, every path checked with a fake searcher + fake model ⏳ re-check with Yasser's real Searcher (3.3) when app/search.py lands
-- [ ] 4.4 Try it
+- [x] 4.4 Try it — branch step/4.4-ask-run-eval: scripts/ask.py run on real data. Chevron question: NOT_SUPPORTED (search gives dissent/concurrence, not the majority; Yasser's side). Loper Bright wording: LOW_CONFIDENCE, quotes verified. Week 7 lead: a concurrence quoted as "The Court rejected..." passes the verifier
 - [x] 4.5 Tests (with a fake model) — merged (PR #14): test_verify, test_pipeline, test_llm from the guide + 3 tests for gaps found by breaking the code on purpose; 32 passed
 
 ### Week 5 — Evaluation module and website

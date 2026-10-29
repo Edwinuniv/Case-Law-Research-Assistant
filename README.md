@@ -34,4 +34,5 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.find_case "loper"
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
     python -m scripts.eval_retrieval "baseline"
-    python -m scripts.run_eval "note"
+    python -m scripts.seed --questions         # after editing eval/questions.jsonl
+    python -m scripts.run_eval "note"          # all test questions; saved as a run, see /admin/eval
