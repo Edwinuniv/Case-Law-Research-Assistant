@@ -83,3 +83,24 @@ def test_concurrence_presented_as_the_court_is_removed():
 def test_dissent_presented_as_the_holding_is_removed():
     kept, removed = run_on(KAGAN, "The Court held that the courts, not the agency, will wield power.", FLIPS)
     assert not kept and any("presented as the Court" in p for p in removed[0]["problems"])
+
+ROBERTS = {**GORSUCH, "chunk_id": "9-2", "section": "Opinion of the Court (Roberts)",
+           "text": "Chevron is overruled. Courts must exercise their independent judgment in deciding whether an agency "
+                   "has acted within its statutory authority."}
+OVERRULED = "Courts must exercise their independent judgment in deciding whether an agency"
+
+def test_separate_opinion_named_as_such_is_kept():
+    kept, _ = run_on(GORSUCH, "Justice Gorsuch, concurring, wrote that the Court places a tombstone on Chevron.", TOMBSTONE)
+    assert kept
+    kept, _ = run_on(KAGAN, "The dissent argued that the Court flips the script.", FLIPS)
+    assert kept
+
+def test_the_court_citing_the_majority_is_kept():
+    kept, _ = run_on(ROBERTS, "The Court held that courts must exercise their independent judgment.", OVERRULED)
+    assert kept
+
+def test_the_court_citing_majority_and_concurrence_together_is_kept():
+    s = {"text": "The Court held that courts must exercise their independent judgment.", "sources": ["P1", "P2"],
+         "quote": OVERRULED}
+    kept, _ = verify({"sentences": [s]}, {"P1": ROBERTS, "P2": GORSUCH}, INDEX)
+    assert kept
