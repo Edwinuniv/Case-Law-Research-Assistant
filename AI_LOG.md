@@ -155,6 +155,13 @@ read the related line ourselves before relying on these entries.
    paragraph breaks. A count on the real data found 281 of 4,709 opinions with start lines the chunker
    did not label. Fix: cut paragraphs at these lines wherever they appear, and recognise the Syllabus
    note; tested on a PDF-style text (tests/test_opinion_sections.py).
+9. **AI mistake: a combined text and its separate opinions were both kept.** The loader's copy check
+   (entry 4 of 2026-10-23, 5-word overlap >= 60%) compared whole opinions, so a majority opinion stored
+   alone and the same majority inside a combined text (majority + dissents) did not look like copies.
+   How we caught it: writing questions on Citizens United and Heller, find_quote printed every sentence
+   twice in one decision; a count found 366 of 2,421 decisions affected. Fix: drop an opinion that is
+   at least 80% contained in another one of the same decision, keeping the separate opinions when they
+   cover the combined text (tests/test_ingest_groups.py).
 
 ---
 

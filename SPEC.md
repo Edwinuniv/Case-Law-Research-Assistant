@@ -52,6 +52,11 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   copy with the most text; the others' ids become aliases. Same-name decisions with different texts
   stay apart (Bush v. Gore: stay of Dec 9 and decision of Dec 12, 2000; two Williams v. Taylor cases
   of 2000-04-18). Measured: [groups merged, decisions removed].
+  Combined texts (2026-10-31): CourtListener also stores some decisions both as one combined text
+  (majority + concurrences + dissents) and as separate opinions (366 of 2,421 decisions, e.g. Heller,
+  Citizens United), so every passage appeared twice. An opinion whose text is at least 80% contained
+  in another of the same decision is dropped: the separate opinions are kept if together they cover
+  the combined text (their labels come from CourtListener), otherwise the combined text is kept.
   Safety rules: a citation is used only if all kept clusters carrying it have the same date
   (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases),
   and two groups with different SCDB ids are never merged.
