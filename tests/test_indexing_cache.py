@@ -38,3 +38,14 @@ def test_an_interrupted_run_only_computes_the_missing_blocks(tmp_path, monkeypat
     calls.clear()
     indexing.embed_all(texts, log=lambda m: None)
     assert calls == [2]
+
+
+def test_another_model_gets_other_cache_keys():
+    """Step 10.2: the cache holds two models side by side, so a block of bge-base vectors must never be
+    read as bge-small vectors (other size, other meaning); the default stays the configured model."""
+    texts = ["the Court holds", "we reverse", "dissenting"]
+    small = indexing.plan_blocks(texts)
+    assert small == indexing.plan_blocks(texts, indexing.config.EMBED_MODEL)
+    base = indexing.plan_blocks(texts, "BAAI/bge-base-en-v1.5")
+    assert [idx for _, idx in base] == [idx for _, idx in small]      # same blocks...
+    assert {k for k, _ in base}.isdisjoint(k for k, _ in small)        # ...under other keys
