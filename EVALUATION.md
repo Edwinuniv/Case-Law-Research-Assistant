@@ -72,3 +72,39 @@ a duplicate copy that is now dropped; the question must be re-copied, so it cann
 same except A040; A035 (not in the top 100 -> rank 63) and A042 (67 -> 38) moved up. Not a retrieval
 regression; to be measured again on the full eval-v1 set.
 
+
+### Retrieval on 28 answerable questions (2026-11-05, Yasser)
+Run `eval/runs/retrieval_2026-11-05T21-23-39.json`: the 28 answerable questions on main (Edwin's
+A029-A042 and Yasser's A001-A014; Joe's are not in yet, so eval-v1 is not tagged), same settings as
+above (fused order, no reranker). recall@1 0.893, recall@5 1.0, recall@10 1.0, recall@20 1.0,
+MRR@10 0.946, quote@8 0.393 (11 of 28). The gold decision is in the top 5 for every question, and first
+for 25 of 28 (A002, A014 and A032 at rank 2). quote@8 is still the weak point.
+
+### Why the gold quote misses the 8 passages (2026-11-05, Yasser)
+Run `eval/runs/diagnose_quotes_<date>.json` (`python -m scripts.diagnose_quotes`), TUNE split only
+(23 answerable questions; A005, A010, A030, A036, A041 are TEST and were not used to choose). 10 hits;
+A040 does not count (its gold_quote is no longer in any one chunk word for word, see above); 12 misses:
+
+| Question | fused rank | meaning rank | keyword rank | chosen from gold decision |
+|---|---|---|---|---|
+| A001 | 31 | 93 | 14 | 3/8 |
+| A003 | 30 | 34 | 35 | 8/8 |
+| A004 | 35 | 49 | 46 | 7/8 |
+| A006 | 100 | 72 | 473 | 8/8 |
+| A008 | 15 | 9 | 18 | 8/8 |
+| A013 | 15 | 44 | 16 | 6/8 |
+| A032 | 127 | 209 | 109 | 3/8 |
+| A033 | 36 | 51 | 36 | 8/8 |
+| A034 | 21 | 30 | 28 | 8/8 |
+| A035 | 43 | 87 | 39 | 7/8 |
+| A037 | 12 | 18 | 12 | 8/8 |
+| A042 | 43 | 22 | none | 6/8 |
+
+What it shows: (1) the decision is not the problem: in 6 of the 12 misses all 8 passages already come
+from the gold decision, but not the passage that states the holding; (2) the deciding passage is usually
+far down, not just outside the 8 (only 3 of 12 within the fused top 20, so choosing better among the top
+20 cannot fix most of them; this agrees with the reranker result above); (3) the meaning (embedding) list
+ranks the deciding passage worse than the keyword list in 8 of 12, so the embedding model is the weaker
+of the two signals for "which paragraph of this decision answers the question".
+Caution: quote@8 is strict. When 8 of 8 passages come from the right decision, the model may still answer
+correctly from another passage (for example the Syllabus); the week 8 answer evaluation will show this.
