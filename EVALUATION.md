@@ -27,6 +27,20 @@ Sizes 250, 350 and 400 words (SR16 allows 250-400). For each size the index is r
 with `python -m scripts.tune_chunks` on the TUNE split only, baseline search (no reranker). The best
 quote@8 wins; tie-break: MRR@10, then 350 (the current size). The TEST split is not looked at.
 
+## Embedding model selection rule (written 2026-11-05, before measuring; week 10, step 10.1)
+Hypothesis (from the diagnosis in Results, TUNE split only): the passage that states the holding is
+found by the keyword list but ranked low by the embedding model (bge-small-en-v1.5, 384 dimensions), so
+a stronger model of the same family, bge-base-en-v1.5 (768 dimensions), will rank it higher and raise
+quote@8. Expected cost: re-embedding the 72,593 chunks (Colab GPU, same cache as step 2.2), a 768-d
+embedding column, and a slower question embedding on the laptop CPU.
+How it is measured: same chunks (350 words), same search settings, no reranker; only the embedding model
+changes; TUNE split only, search only (no model call). bge-base replaces bge-small only if ALL hold:
+(1) quote@8 is higher by at least 2 questions (one question moves it by 0.04, which is noise);
+(2) recall@5 is not lower; (3) MRR@10 is not lower by more than 0.02; (4) the mean time to embed one
+question on the laptop CPU stays under 0.5 s (SR2: answers within 15 s). Otherwise bge-small stays and
+the result is recorded here. The TEST split is not looked at while choosing; it is reported once, with
+the final evaluation.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
@@ -72,3 +86,39 @@ a duplicate copy that is now dropped; the question must be re-copied, so it cann
 same except A040; A035 (not in the top 100 -> rank 63) and A042 (67 -> 38) moved up. Not a retrieval
 regression; to be measured again on the full eval-v1 set.
 
+
+### Retrieval on 28 answerable questions (2026-11-05, Yasser)
+Run `eval/runs/retrieval_2026-11-05T21-23-39.json`: the 28 answerable questions on main (Edwin's
+A029-A042 and Yasser's A001-A014; Joe's are not in yet, so eval-v1 is not tagged), same settings as
+above (fused order, no reranker). recall@1 0.893, recall@5 1.0, recall@10 1.0, recall@20 1.0,
+MRR@10 0.946, quote@8 0.393 (11 of 28). The gold decision is in the top 5 for every question, and first
+for 25 of 28 (A002, A014 and A032 at rank 2). quote@8 is still the weak point.
+
+### Why the gold quote misses the 8 passages (2026-11-05, Yasser)
+Run `eval/runs/diagnose_quotes_2026-11-05T21-28-18.json` (`python -m scripts.diagnose_quotes`), TUNE split only
+(23 answerable questions; A005, A010, A030, A036, A041 are TEST and were not used to choose). 10 hits;
+A040 does not count (its gold_quote is no longer in any one chunk word for word, see above); 12 misses:
+
+| Question | fused rank | meaning rank | keyword rank | chosen from gold decision |
+|---|---|---|---|---|
+| A001 | 31 | 93 | 14 | 3/8 |
+| A003 | 30 | 34 | 35 | 8/8 |
+| A004 | 35 | 49 | 46 | 7/8 |
+| A006 | 100 | 72 | 473 | 8/8 |
+| A008 | 15 | 9 | 18 | 8/8 |
+| A013 | 15 | 44 | 16 | 6/8 |
+| A032 | 127 | 209 | 109 | 3/8 |
+| A033 | 36 | 51 | 36 | 8/8 |
+| A034 | 21 | 30 | 28 | 8/8 |
+| A035 | 43 | 87 | 39 | 7/8 |
+| A037 | 12 | 18 | 12 | 8/8 |
+| A042 | 43 | 22 | none | 6/8 |
+
+What it shows: (1) the decision is not the problem: in 6 of the 12 misses all 8 passages already come
+from the gold decision, but not the passage that states the holding; (2) the deciding passage is usually
+far down, not just outside the 8 (only 3 of 12 within the fused top 20, so choosing better among the top
+20 cannot fix most of them; this agrees with the reranker result above); (3) the meaning (embedding) list
+ranks the deciding passage worse than the keyword list in 8 of 12, so the embedding model is the weaker
+of the two signals for "which paragraph of this decision answers the question".
+Caution: quote@8 is strict. When 8 of 8 passages come from the right decision, the model may still answer
+correctly from another passage (for example the Syllabus); the week 8 answer evaluation will show this.
