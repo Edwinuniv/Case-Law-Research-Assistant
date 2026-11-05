@@ -37,3 +37,25 @@ def test_opinion_without_text_is_counted():
                {"opinion_id": 11, "cluster_id": 1}]}
     main, kept, copies, empty = group_opinions(group, ops)
     assert len(kept) == 1 and empty == 1
+
+
+CONCURRENCE = " ".join(f"I write separately to stress the historical point number {i}." for i in range(60))
+
+
+def test_combined_text_is_dropped_when_the_separate_opinions_cover_it():
+    # e.g. Heller: one row with the whole decision, plus separate majority and dissent rows
+    group = [{"cluster_id": 1}]
+    ops = {1: [{"opinion_id": 10, "cluster_id": 1, "plain_text": MAJORITY + " " + DISSENT},
+               {"opinion_id": 11, "cluster_id": 1, "plain_text": MAJORITY},
+               {"opinion_id": 12, "cluster_id": 1, "plain_text": DISSENT}]}
+    main, kept, copies, empty = group_opinions(group, ops)
+    assert sorted(o["opinion_id"] for o, _, _ in kept) == [11, 12] and copies == 1
+
+
+def test_parts_are_dropped_when_the_combined_text_holds_more():
+    # e.g. Citizens United: the combined text also holds a concurrence that has no separate row
+    group = [{"cluster_id": 1}]
+    ops = {1: [{"opinion_id": 10, "cluster_id": 1, "plain_text": MAJORITY + " " + DISSENT + " " + CONCURRENCE},
+               {"opinion_id": 11, "cluster_id": 1, "plain_text": MAJORITY}]}
+    main, kept, copies, empty = group_opinions(group, ops)
+    assert [o["opinion_id"] for o, _, _ in kept] == [10] and copies == 1

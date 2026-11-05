@@ -60,3 +60,15 @@ MRR@10 0.894. Chosen by the rule: 350 words (unchanged). Shorter chunks put less
 model (8 x 250 words), longer ones dilute the deciding sentence. Note: 11 questions, so one question
 moves quote@8 by 0.09; to be measured again on the full question set (eval-v1).
 
+### Retrieval after removing duplicate opinions (2026-11-05, Yasser)
+Run `eval/runs/retrieval_2026-11-05T20-33-49.json`, same 14 answerable questions, same settings, after
+the corpus fixes of steps 1.8/2.1 (one section per opinion inside PDF-style texts; a combined text and
+its separate opinions no longer both kept; copies filed on different dates merged): 2,423 decisions,
+3,647 opinions, 72,593 chunks, 18.9 million words (27.5 million before: about a third was duplicated).
+recall@1 0.929 (=), recall@5 1.0 (=), MRR@10 0.964 (0.952 before), quote@8 0.357 (0.5 before).
+The quote@8 drop is two questions: A040's gold_quote no longer exists word for word (it was copied from
+a duplicate copy that is now dropped; the question must be re-copied, so it cannot count), and A041
+(test split) moved from inside the 8 to rank 9. On the tune split the questions inside the 8 are the
+same except A040; A035 (not in the top 100 -> rank 63) and A042 (67 -> 38) moved up. Not a retrieval
+regression; to be measured again on the full eval-v1 set.
+

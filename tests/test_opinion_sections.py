@@ -43,3 +43,27 @@ def test_opinions_on_a_denial_of_certiorari_are_labelled():
         "Gorsuch, J., dissenting from the denial of certiorari"
     assert opinion_start("Statement of JUSTICE ALITO respecting the denial of certiorari. I") == \
         "Statement of Alito, J., respecting the denial of certiorari"
+
+
+# Text from a PDF: no paragraph breaks, so the opinions start in the middle of one long paragraph
+# (Kennedy v. Bremerton, 2022; 281 of 4,709 opinions were labelled "Opening" everywhere).
+PDF_TEXT = clean(
+    "(Slip Opinion) OCTOBER TERM, 2021 Syllabus NOTE: Where it is feasible, a syllabus (headnote) will be "
+    "released. " + "Syllabus text here. " * 40 + "Held: The Free Exercise and Free Speech Clauses protect him. "
+    "GORSUCH, J., delivered the opinion of the Court, in which ROBERTS, C. J., joined. "
+    "Opinion of the Court JUSTICE GORSUCH delivered the opinion of the Court. " + "Majority text. " * 120 +
+    "It is so ordered. JUSTICE SOTOMAYOR, with whom JUSTICE BREYER and JUSTICE KAGAN join, dissenting. "
+    + "Dissent text. " * 120)
+
+
+def test_opinions_starting_inside_a_paragraph_are_cut_and_labelled():
+    chunks = chunk_opinion(PDF_TEXT)
+    for c in chunks:
+        assert PDF_TEXT[c["start"]:c["end"]] == c["text"]
+        kinds = {k for k in ("Syllabus text", "Majority text", "Dissent text") if k in c["text"]}
+        assert len(kinds) <= 1, (c["section"], c["text"][:80])
+    by_kind = {k: {c["section"] for c in chunks if k in c["text"]} for k in ("Syllabus text", "Majority text", "Dissent text")}
+    assert by_kind["Syllabus text"] == {"Syllabus"}
+    assert by_kind["Majority text"] == {"Opinion of the Court (Gorsuch)"}
+    assert by_kind["Dissent text"] == {"Sotomayor, J., dissenting"}
+    assert all(c["is_syllabus"] == (c["section"] == "Syllabus") for c in chunks)

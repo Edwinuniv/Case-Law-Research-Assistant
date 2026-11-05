@@ -47,7 +47,37 @@ def group_opinions(group, opinions_by_cluster):
                 continue
             kept.append((o, text, field))
             kept_shingles.append(sh)
-    return group[0], kept, copies, empty
+    kept, dropped = drop_contained(kept, kept_shingles)
+    return group[0], kept, copies + dropped, empty
+
+
+def contained(part, whole, threshold=0.8):
+    """True if at least 80% of `part`'s 5-word sequences are also in `whole`."""
+    return bool(part) and len(part & whole) / len(part) >= threshold
+
+
+def drop_contained(kept, kept_shingles):
+    """CourtListener sometimes stores a decision both as ONE combined text (majority + concurrences +
+    dissents) and as separate opinions (366 of 2,421 decisions, e.g. Heller, Citizens United), so
+    every passage appeared twice. For each combined text, from the largest down: if the separate
+    opinions it contains cover it, keep them (their labels come from CourtListener: majority,
+    dissent, author) and drop the combined text; otherwise keep it and drop the parts it contains.
+    Returns (opinions kept, number dropped)."""
+    order = sorted(range(len(kept)), key=lambda i: len(kept_shingles[i]), reverse=True)
+    gone = set()
+    for i in order:
+        if i in gone:
+            continue
+        parts = [j for j in order if j != i and j not in gone and len(kept_shingles[j]) < len(kept_shingles[i])
+                 and contained(kept_shingles[j], kept_shingles[i])]
+        if not parts:
+            continue
+        covered = set().union(*(kept_shingles[j] for j in parts))
+        if contained(kept_shingles[i], covered):
+            gone.add(i)                      # the separate opinions cover the combined text
+        else:
+            gone.update(parts)               # keep the combined text, drop the parts it contains
+    return [k for i, k in enumerate(kept) if i not in gone], len(gone)
 
 
 def _name_key(name):
