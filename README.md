@@ -42,5 +42,7 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.export_for_colab --sizes 250 350 400   # embeddings for step 3.5, on a Colab GPU
     python -m scripts.tune_chunks              # step 3.5: chunk size 250 / 350 / 400 on the TUNE split
     python -m scripts.diagnose_quotes          # why gold quotes miss the 8 passages (TUNE split; --all)
+    python -m scripts.export_for_colab --model BAAI/bge-base-en-v1.5   # another model's embeddings (Colab)
+    python -m scripts.tune_embeddings          # step 10.2: bge-small vs bge-base on the TUNE split
     python -m scripts.seed --questions         # after editing eval/questions.jsonl
     python -m scripts.run_eval "note"          # all test questions; saved as a run, see /admin/eval
