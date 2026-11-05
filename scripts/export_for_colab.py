@@ -2,6 +2,7 @@
 
   1. python -m scripts.export_for_colab                    (the current chunk size)
      python -m scripts.export_for_colab --sizes 250 350 400   (several sizes in one file, step 3.5)
+     python -m scripts.export_for_colab --model BAAI/bge-base-en-v1.5   (another model, step 10.2)
      -> data/work/colab_blocks.jsonl.gz, only the blocks not already in data/work/embedding_cache
   2. In Google Colab (Runtime > Change runtime type > T4 GPU): upload that file and run the code of
      scripts/colab_embed.py   -> embedding_blocks.zip
@@ -14,15 +15,20 @@ import json
 import sys
 from app import config, db, indexing
 
-if "--sizes" in sys.argv:
-    sizes = [int(a) for a in sys.argv[sys.argv.index("--sizes") + 1:]]
+model = config.EMBED_MODEL                         # --model NAME: the word after --model
+if "--model" in sys.argv:
+    model = sys.argv[sys.argv.index("--model") + 1]
+    if model not in config.EMBED_DIMS:
+        sys.exit(f"Unknown model {model}; known: {', '.join(config.EMBED_DIMS)}")
+if "--sizes" in sys.argv:                           # --sizes 250 350 400: the numbers after --sizes
+    sizes = [int(a) for a in sys.argv[sys.argv.index("--sizes") + 1:] if a.isdigit()]
 else:
     sizes = [int(db.get_settings().get("chunk_max_words", 350))]
 todo, seen = [], set()
 for max_words in sizes:
     n_opinions, rows = indexing.make_rows(max_words)
     texts = [r["embed_text"] for r in rows]
-    blocks = indexing.plan_blocks(texts)
+    blocks = indexing.plan_blocks(texts, model)
     missing = [(key, [texts[k] for k in idx]) for key, idx in blocks
                if key not in seen and not (indexing.CACHE / f"{key}.npy").exists()]
     seen.update(key for key, _ in blocks)
@@ -30,10 +36,11 @@ for max_words in sizes:
     print(f"{max_words} words: {n_opinions:,} opinions -> {len(rows):,} passages in {len(blocks)} blocks; "
           f"{len(missing)} to compute", flush=True)
 if not todo:
-    sys.exit("Every block is already in the cache: run python -m scripts.seed --index")
+    sys.exit("Every block is already in the cache" + ("" if model != config.EMBED_MODEL else
+             ": run python -m scripts.seed --index"))
 out = config.WORK / "colab_blocks.jsonl.gz"
 with gzip.open(out, "wt", encoding="utf-8") as f:
-    f.write(json.dumps({"model": config.EMBED_MODEL, "dim": config.EMBED_DIM}) + "\n")
+    f.write(json.dumps({"model": model, "dim": config.EMBED_DIMS[model]}) + "\n")
     for key, block in todo:
         f.write(json.dumps({"key": key, "texts": block}) + "\n")
 print(f"{len(todo)} blocks exported. Upload to Colab: {out} ({out.stat().st_size / 1e6:.0f} MB)")
