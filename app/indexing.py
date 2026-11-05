@@ -16,15 +16,18 @@ def vector_literal(vec):
     return "[" + ",".join(f"{x:.6f}" for x in vec) + "]"
 
 
-def plan_blocks(texts):
+def plan_blocks(texts, model=None):
     """Split the texts (sorted by length) into blocks of BLOCK; each block gets a key = hash of its
-    texts and the model name. Returns [(key, [positions in texts])]. Same texts -> same keys."""
+    texts and the model name. Returns [(key, [positions in texts])]. Same texts -> same keys.
+    model: the embedding model (default: config.EMBED_MODEL); another model -> other keys, so the
+    cache can hold the vectors of two models side by side (step 10.2 compares them)."""
+    model = model or config.EMBED_MODEL
     order = sorted(range(len(texts)), key=lambda k: len(texts[k]))
     blocks = []
     for b in range(0, len(order), BLOCK):
         idx = order[b:b + BLOCK]
         joined = "\x00".join(texts[k] for k in idx)
-        key = hashlib.sha256((config.EMBED_MODEL + "\x00" + joined).encode()).hexdigest()[:24]
+        key = hashlib.sha256((model + "\x00" + joined).encode()).hexdigest()[:24]
         blocks.append((key, idx))
     return blocks
 
