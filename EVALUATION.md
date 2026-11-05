@@ -27,6 +27,20 @@ Sizes 250, 350 and 400 words (SR16 allows 250-400). For each size the index is r
 with `python -m scripts.tune_chunks` on the TUNE split only, baseline search (no reranker). The best
 quote@8 wins; tie-break: MRR@10, then 350 (the current size). The TEST split is not looked at.
 
+## Embedding model selection rule (written 2026-11-05, before measuring; week 10, step 10.1)
+Hypothesis (from the diagnosis in Results, TUNE split only): the passage that states the holding is
+found by the keyword list but ranked low by the embedding model (bge-small-en-v1.5, 384 dimensions), so
+a stronger model of the same family, bge-base-en-v1.5 (768 dimensions), will rank it higher and raise
+quote@8. Expected cost: re-embedding the 72,593 chunks (Colab GPU, same cache as step 2.2), a 768-d
+embedding column, and a slower question embedding on the laptop CPU.
+How it is measured: same chunks (350 words), same search settings, no reranker; only the embedding model
+changes; TUNE split only, search only (no model call). bge-base replaces bge-small only if ALL hold:
+(1) quote@8 is higher by at least 2 questions (one question moves it by 0.04, which is noise);
+(2) recall@5 is not lower; (3) MRR@10 is not lower by more than 0.02; (4) the mean time to embed one
+question on the laptop CPU stays under 0.5 s (SR2: answers within 15 s). Otherwise bge-small stays and
+the result is recorded here. The TEST split is not looked at while choosing; it is reported once, with
+the final evaluation.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
