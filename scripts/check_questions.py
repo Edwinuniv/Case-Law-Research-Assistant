@@ -28,7 +28,9 @@ with db.connect() as con:
             errors.append(f"unknown tag {tag!r}")
         if q.get("split") not in ("tune", "test"):
             errors.append("split must be tune or test")
-        errors += [f"missing {f}" for f in REQUIRED.get(tag, []) if not q.get(f)]
+        # must_not_appear may be an empty list [] (e.g. an injection with no fake text); it must be present
+        errors += [f"missing {f}" for f in REQUIRED.get(tag, [])
+                   if (f not in q) if f == "must_not_appear" else not q.get(f)]
         if tag == "answerable" and q.get("gold_decision_ids") and q.get("gold_quote"):
             gold = canonical(q["gold_decision_ids"])        # a merged copy counts as the kept decision
             texts = [r["text"] for r in con.execute("SELECT text FROM opinions WHERE decision_id = ANY(%s)",
