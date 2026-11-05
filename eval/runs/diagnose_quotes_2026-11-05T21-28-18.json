@@ -1,0 +1,187 @@
+{
+ "date": "2026-11-05T21:28:18",
+ "split": "tune",
+ "questions": 23,
+ "hits": 10,
+ "misses": 12,
+ "quote_not_found": 1,
+ "misses_fused_rank_9_20": 3,
+ "misses_with_8_of_8_from_gold": 6,
+ "misses_keyword_ahead_of_meaning": 8,
+ "rows": [
+  {
+   "id": "A029",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "hit"
+  },
+  {
+   "id": "A031",
+   "split": "tune",
+   "chosen_from_gold": 6,
+   "result": "hit"
+  },
+  {
+   "id": "A032",
+   "split": "tune",
+   "chosen_from_gold": 3,
+   "result": "miss",
+   "fused_rank": 127,
+   "meaning_rank": 209,
+   "keyword_rank": 109
+  },
+  {
+   "id": "A033",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "miss",
+   "fused_rank": 36,
+   "meaning_rank": 51,
+   "keyword_rank": 36
+  },
+  {
+   "id": "A034",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "miss",
+   "fused_rank": 21,
+   "meaning_rank": 30,
+   "keyword_rank": 28
+  },
+  {
+   "id": "A035",
+   "split": "tune",
+   "chosen_from_gold": 7,
+   "result": "miss",
+   "fused_rank": 43,
+   "meaning_rank": 87,
+   "keyword_rank": 39
+  },
+  {
+   "id": "A037",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "miss",
+   "fused_rank": 12,
+   "meaning_rank": 18,
+   "keyword_rank": 12
+  },
+  {
+   "id": "A038",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "hit"
+  },
+  {
+   "id": "A039",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "hit"
+  },
+  {
+   "id": "A040",
+   "split": "tune",
+   "chosen_from_gold": 6,
+   "result": "quote not found word for word in one chunk"
+  },
+  {
+   "id": "A042",
+   "split": "tune",
+   "chosen_from_gold": 6,
+   "result": "miss",
+   "fused_rank": 43,
+   "meaning_rank": 22,
+   "keyword_rank": null
+  },
+  {
+   "id": "A001",
+   "split": "tune",
+   "chosen_from_gold": 3,
+   "result": "miss",
+   "fused_rank": 31,
+   "meaning_rank": 93,
+   "keyword_rank": 14
+  },
+  {
+   "id": "A002",
+   "split": "tune",
+   "chosen_from_gold": 7,
+   "result": "hit"
+  },
+  {
+   "id": "A003",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "miss",
+   "fused_rank": 30,
+   "meaning_rank": 34,
+   "keyword_rank": 35
+  },
+  {
+   "id": "A004",
+   "split": "tune",
+   "chosen_from_gold": 7,
+   "result": "miss",
+   "fused_rank": 35,
+   "meaning_rank": 49,
+   "keyword_rank": 46
+  },
+  {
+   "id": "A006",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "miss",
+   "fused_rank": 100,
+   "meaning_rank": 72,
+   "keyword_rank": 473
+  },
+  {
+   "id": "A007",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "hit"
+  },
+  {
+   "id": "A008",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "miss",
+   "fused_rank": 15,
+   "meaning_rank": 9,
+   "keyword_rank": 18
+  },
+  {
+   "id": "A009",
+   "split": "tune",
+   "chosen_from_gold": 7,
+   "result": "hit"
+  },
+  {
+   "id": "A011",
+   "split": "tune",
+   "chosen_from_gold": 8,
+   "result": "hit"
+  },
+  {
+   "id": "A012",
+   "split": "tune",
+   "chosen_from_gold": 7,
+   "result": "hit"
+  },
+  {
+   "id": "A013",
+   "split": "tune",
+   "chosen_from_gold": 6,
+   "result": "miss",
+   "fused_rank": 15,
+   "meaning_rank": 44,
+   "keyword_rank": 16
+  },
+  {
+   "id": "A014",
+   "split": "tune",
+   "chosen_from_gold": 7,
+   "result": "hit"
+  }
+ ]
+}

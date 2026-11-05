@@ -95,7 +95,7 @@ MRR@10 0.946, quote@8 0.393 (11 of 28). The gold decision is in the top 5 for ev
 for 25 of 28 (A002, A014 and A032 at rank 2). quote@8 is still the weak point.
 
 ### Why the gold quote misses the 8 passages (2026-11-05, Yasser)
-Run `eval/runs/diagnose_quotes_<date>.json` (`python -m scripts.diagnose_quotes`), TUNE split only
+Run `eval/runs/diagnose_quotes_2026-11-05T21-28-18.json` (`python -m scripts.diagnose_quotes`), TUNE split only
 (23 answerable questions; A005, A010, A030, A036, A041 are TEST and were not used to choose). 10 hits;
 A040 does not count (its gold_quote is no longer in any one chunk word for word, see above); 12 misses:
 
