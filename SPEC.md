@@ -51,10 +51,12 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   most 60 days apart and opinion texts at least 80% identical (5-word sequences) are merged into the
   copy with the most text; the others' ids become aliases. Same-name decisions with different texts
   stay apart (Bush v. Gore: stay of Dec 9 and decision of Dec 12, 2000; two Williams v. Taylor cases
-  of 2000-04-18). Measured: [groups merged, decisions removed].
+  of 2000-04-18). Measured on 2026-11-05: 54 copies removed.
   Combined texts (2026-10-31): CourtListener also stores some decisions both as one combined text
   (majority + concurrences + dissents) and as separate opinions (366 of 2,421 decisions, e.g. Heller,
-  Citizens United), so every passage appeared twice. An opinion whose text is at least 80% contained
+  Citizens United), so every passage appeared twice (measured on 2026-11-05: 1,859 opinion copies
+  skipped at loading, 3,647 opinions and 18.9 million words kept, against 27.5 million before). An
+  opinion whose text is at least 80% contained
   in another of the same decision is dropped: the separate opinions are kept if together they cover
   the combined text (their labels come from CourtListener), otherwise the combined text is kept.
   Safety rules: a citation is used only if all kept clusters carrying it have the same date
@@ -106,7 +108,8 @@ Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,76
 238,580 paragraphs (median 88 words, 90th percentile 300, longest 24,116 words); paragraphs with at
 most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
 (median 292 words), 27,500,424 words in total. Since 2026-10-29 (one section per opinion, opinions on a
-denial of certiorari labelled): 105,626 chunks.
+denial of certiorari labelled): 105,626 chunks. Since 2026-11-05 (no duplicate opinions, opinion starts
+found inside PDF-style paragraphs): 2,423 decisions, 3,647 opinions, 72,593 chunks, 18,852,079 words.
 
 | Rule | Justification |
 |---|---|
