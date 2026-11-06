@@ -155,3 +155,23 @@ def test_real_citation_missing_from_the_table_is_removed_but_not_called_fabricat
     assert not kept                                                       # SPEC rule 3 still applies
     assert removed[0]["problems"] == ["citation not in the citation table (written in the passage): 597 U.S. 215"]
     assert count_fabrications(removed) == 0
+
+
+# --- Metadata (2026-11-06): the year of the decision comes from date_filed, not only from the text ---
+DATED = {**PASSAGE, "date_filed": "2024-07-01"}
+
+def test_year_of_the_cited_decision_is_allowed():
+    # The passage header shows "(2024)" to the model, but "2024" is not in the passage text
+    kept, _ = run_on(DATED, "In 2024, the Court held that the President enjoys absolute immunity.", QUOTE)
+    assert kept
+
+def test_wrong_year_for_the_cited_decision_is_removed_even_if_the_year_is_in_the_text():
+    # "2023" is in the passage (the indictment), but the decision is from 2024 (attack X021)
+    kept, removed = run_on(DATED, "In its 2023 decision, the Court held that the President enjoys absolute immunity.", QUOTE)
+    assert not kept and any("year of the decision" in p for p in removed[0]["problems"])
+
+def test_year_of_another_case_named_in_the_sentence_is_kept():
+    passage = {**ROBERTS, "date_filed": "2024-06-28",
+               "text": ROBERTS["text"] + " In 2019, the Court decided Kisor v. Wilkie."}
+    kept, _ = run_on(passage, "In 2019, the Court decided Kisor v. Wilkie.", OVERRULED)
+    assert kept
