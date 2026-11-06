@@ -1,6 +1,5 @@
 """The website. Public part: research page (no login, SR33). Admin part: /admin/* (login + role)."""
 import datetime
-import re
 import threading
 from urllib.parse import quote
 from contextlib import asynccontextmanager
@@ -15,7 +14,7 @@ from app.pipeline import answer, check_input
 from app.search import Searcher
 
 templates = Jinja2Templates(directory=str(config.ROOT / "app" / "templates"))
-STATE = {"searcher": None, "index": None}
+STATE = api.STATE                      # shared with the /api routes (app/api.py)
 
 
 def load_index():
@@ -78,23 +77,10 @@ def ask(request: Request, question: str = Form("")):
 
 @app.get("/passage/{chunk_id}")
 def passage(request: Request, chunk_id: str, quote: str = "", panel: int = 0):
-    with db.connect() as con:
-        c = con.execute("""SELECT c.*, o.text AS opinion_text, o.label, d.case_name, d.date_filed,
-                           d.citations, d.docket_number, d.source_url, d.licence
-                           FROM chunks c JOIN opinions o USING (opinion_id)
-                           JOIN decisions d ON d.decision_id = c.decision_id
-                           WHERE c.chunk_id = %s""", (chunk_id,)).fetchone()
-    if not c:
+    v = api.passage_view(chunk_id, quote)                      # the same code as /api/passage
+    if v is None:
         return HTMLResponse("Passage not found", status_code=404)
-    text = c["opinion_text"]
-    inside = text[c["start_char"]:c["end_char"]]
-    # find the quote even if spaces, line breaks or capitals differ
-    pattern = r"\s+".join(re.escape(w) for w in quote.split())
-    m = re.search(pattern, inside, re.IGNORECASE) if pattern else None
-    return page(request, "passage_panel.html" if panel else "passage.html", c=c,
-                before=text[max(0, c["start_char"] - 2500):c["start_char"]],
-                inside_before=inside[:m.start()] if m else inside, marked=inside[m.start():m.end()] if m else "",
-                inside_after=inside[m.end():] if m else "", after=text[c["end_char"]:c["end_char"] + 2500])
+    return page(request, "passage_panel.html" if panel else "passage.html", **v)
 
 
 @app.get("/health")

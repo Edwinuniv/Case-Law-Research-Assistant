@@ -215,6 +215,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | merged (PR #20); baseline needs eval/questions.jsonl (tag eval-v1) |
 | 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | merged (PR #23) |
 | 5.6 login and security for the API (roles user/admin, CSRF, login limit per IP, one login message) | Joe | step/5.6-login-security | code and tests ready (21 new tests); React pages in 5.8-5.10 |
+| 5.7 research API for the chat (/api/ask, /api/passage, /api/history; query_log.user_id) | Joe | step/5.7-api-research | code and tests ready (15 new tests) |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
@@ -266,3 +267,8 @@ costs one bcrypt check so the reply time does not give it away either. Added on 
 10 failed logins per IP address in 15 minutes. Known limit: on Railway the address comes from the
 X-Forwarded-For header (uvicorn --proxy-headers), which a client can add to; the per-account lock
 (SR36) does not depend on it.
+
+2026-11-06 - Chat history (step 5.7): query_log (FR28, SR41) also saves who asked (user_id) and the
+answer exactly as it was shown, so a user can open an earlier answer again without calling the model.
+No new table. A user only sees their own questions (someone else's gives 404); the admin pages show
+the questions but not who asked them.
