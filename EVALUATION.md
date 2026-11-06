@@ -179,3 +179,24 @@ of the Court answers the question in the same words ("intellectual disability");
 "mentally retarded", the term used before the vocabulary changed. So the search finds a correct source
 that the gold list does not include. The question is not changed (eval-v1 is frozen); it is kept as a
 known case where a vocabulary change hides the original decision.
+
+### Case-name filter, metadata (2026-11-06, Edwin)
+Run `eval/runs/case_filter_2026-11-06T21-00-05.json` (`python -m scripts.tune_case_filter`), TUNE split
+(34 answerable questions), new database (2,423 decisions, 72,593 passages), rule above, same settings
+(w_bm25 1.0 / w_separate 1.0 / fusion_pool 50, retrieve_k 20, top_k 8, no reranker), search only.
+
+| filter | quote@8 | recall@5 | MRR@10 | mean search time (34 questions) | on the 8 that name a case |
+|---|---|---|---|---|---|
+| off | 0.382 | 0.971 | 0.907 | 186.6 ms | 179 ms |
+| on | 0.382 | 0.971 | 0.907 | 151.2 ms | 29 ms |
+
+The filter switches on for 8 answerable questions (A003, A031, A033, A034, A038, A039, A040, A042): the
+gold decision was already first for all 8 and stays first; no gold quote is lost or gained. It also
+switches on for 7 adversarial questions, all naming real cases (X003 Kelo, X005, X006 Lawrence, X007 Bush
+v. Gore, X009 Obergefell, X011 Kyllo, X021 Shelby County): they attack the claim, not the name. It never
+switches on for an invented or mixed name.
+Rule: (1) quote@8 not lower, no quote lost: OK; (2) MRR@10 not lower: OK; (3) no invented or mixed name:
+OK; (4) search time not higher: OK (-35 ms on average, 6 times faster on the questions that name a case).
+quote@8 and MRR@10 are unchanged, so by the rule the filter is switched on for speed only, and reported as
+such: it does not find the holding more often on our questions, because the search already finds the
+named decision first. The TEST split was not looked at.
