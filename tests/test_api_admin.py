@@ -87,3 +87,25 @@ def test_settings_are_saved_within_limits(c):
     assert s["tau_confident"] == 0.6                 # never below the abstention threshold
     assert s["top_k"] == 10 and s["retrieve_k"] == 8 and s["use_reranker"] is True
     assert c.get("/api/admin/settings").json()["tau_abstain"] == 0.6
+
+
+Q = {"id": "J001", "tag": "unanswerable", "split": "tune", "question": "Can I sue my neighbour?",
+     "why": "personal legal advice", "author": "Joe"}
+
+
+def test_add_change_and_export_a_test_question(c):                           # FR13a-c
+    log_in(c, "boss@example.com")
+    assert c.post("/api/admin/questions", json=Q, headers=csrf(c)).json()["question"] == Q["question"]
+    c.post("/api/admin/questions", json={**Q, "split": "test"}, headers=csrf(c))      # change it
+    [q] = c.get("/api/admin/questions", params={"tag": "unanswerable"}).json()
+    assert q["id"] == "J001" and q["split"] == "test"
+    assert '"id": "J001"' in c.get("/api/admin/questions/export").text
+    assert c.get("/api/admin/questions", params={"tag": "answerable"}).json() == []
+
+
+def test_bad_test_question_is_refused(c, clean_db):
+    log_in(c, "boss@example.com")
+    for bad in [{**Q, "tag": "maybe"}, {**Q, "split": "train"}, {**Q, "id": " "}]:
+        assert c.post("/api/admin/questions", json=bad, headers=csrf(c)).status_code == 400
+    with clean_db.connect() as con:
+        assert con.execute("SELECT count(*) AS n FROM test_questions").fetchone()["n"] == 0
