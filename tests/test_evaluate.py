@@ -126,3 +126,14 @@ def test_judge_waits_on_rate_limit_but_not_on_other_errors(monkeypatch):
     def timeout(statement, text): raise llm.ModelError("timeout after 30 seconds")
     monkeypatch.setattr(llm, "judge_support", timeout)
     assert evaluate.judge_with_retry("s", "p", log=lambda m: None) == "error" and waits == [3.0]
+
+
+# --- Week 8: the TEST split is reported once, after tau is chosen on TUNE (EVALUATION.md, SR29) ---
+def test_run_report_shows_only_the_tune_split(capsys):
+    from scripts.run_eval import report
+    pairs = [({**q("a", "answerable"), "split": "tune"}, res(0.9)), (q("b", "answerable"), res(0.2))]
+    report(pairs, S, "tune")
+    out = capsys.readouterr().out
+    assert "== tune split ==" in out and "test" not in out.lower()
+    assert "answerable                       1" in out          # only the tune question is counted
+    assert "tau" in out                                          # the sweep, to choose tau_abstain
