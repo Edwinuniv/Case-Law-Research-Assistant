@@ -122,3 +122,23 @@ ranks the deciding passage worse than the keyword list in 8 of 12, so the embedd
 of the two signals for "which paragraph of this decision answers the question".
 Caution: quote@8 is strict. When 8 of 8 passages come from the right decision, the model may still answer
 correctly from another passage (for example the Syllabus); the week 8 answer evaluation will show this.
+
+### Embedding model, step 10.2 (2026-11-06, Yasser)
+Run `eval/runs/tune_embeddings_2026-11-06T19-04-10.json` (`python -m scripts.tune_embeddings`), TUNE split (35 answerable questions,
+eval set of 84 with Joe's questions), rule above, same chunks (350 words), same search settings, no
+reranker; only the embedding model changes. Passage vectors of both models from the embedding cache
+(bge-base computed on a Colab T4 GPU), meaning search done in memory, keyword list and fusion as in
+app/search.py.
+
+| model | dim | quote@8 | recall@5 | MRR@10 | s per question (laptop CPU) |
+|---|---|---|---|---|---|
+| bge-small-en-v1.5 (current) | 384 | 0.429 (15/35) | 1.0 | 0.929 | 0.010 |
+| bge-base-en-v1.5 | 768 | 0.286 (10/35) | 0.971 | 0.905 | 0.033 |
+
+bge-base gains 2 questions (A003, A013) and loses 7 (A002, A011, A015, A022, A024, A029, A039).
+Rule: (1) quote@8 +2 questions: FAIL (-5); (2) recall@5 not lower: FAIL; (3) MRR@10 not lower by more
+than 0.02: FAIL (-0.024); (4) under 0.5 s: OK. Chosen by the rule: bge-small (unchanged).
+The hypothesis is rejected. The diagnosis (step 10.1) showed that the meaning list is the weaker of the
+two signals for finding the holding paragraph; it did not show that a larger general-purpose model of
+the same family would read legal holdings better, and the measurement says it does not: a better score
+on general benchmarks did not carry over to our questions. The TEST split was not looked at.

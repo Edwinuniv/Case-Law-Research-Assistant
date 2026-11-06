@@ -230,6 +230,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
+| 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 
 ## 11. Divergences log
 
@@ -308,3 +309,9 @@ the CSRF token, SR3 and the query log); /api/history is removed (a visitor has n
 questions" lives only in the open page); the accounts page creates administrators only; a migration
 removes the 'user' accounts made during steps 5.6-5.10 (their questions stay in the log without the
 account) and the database allows the role 'admin' only. All the login security of step 5.6 stays.
+
+2026-11-06 - Week 10 improvement (step 10.2): the hypothesis written first in EVALUATION.md (a larger
+embedding model, bge-base-en-v1.5, finds the holding paragraph more often) was measured on the TUNE
+split and rejected by its rule: quote@8 0.286 instead of 0.429, recall@5 0.971 instead of 1.0
+(run tune_embeddings_2026-11-06T19-04-10.json). The embedding model stays bge-small-en-v1.5 (section 3);
+the before/after numbers are reported as a measured regression (brief section 8).

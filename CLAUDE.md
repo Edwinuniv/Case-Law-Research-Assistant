@@ -147,8 +147,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
 ### Week 10 — Improvement (reranker)
-- [ ] 10.1 Hypothesis first, committed
-- [ ] 10.2 Measure before and after
+- [x] 10.1 Hypothesis first, committed (Yasser) — merged (PR #35): diagnose_quotes (why gold quotes miss the 8 passages) and the embedding-model rule in EVALUATION.md before measuring
+- [x] 10.2 Measure before and after (Yasser) — branch step/10.2-embedding-model: tune_embeddings on 35 TUNE questions; bge-base worse (quote@8 0.286 vs 0.429), bge-small kept, reported as a measured regression
 
 ## Style
 - Explain things in simple, plain English (I am a student).

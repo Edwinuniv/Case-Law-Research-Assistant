@@ -348,3 +348,38 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    tests now check the requirement (a visitor asks without an account; no 'user' account can be created).
    All the login security of step 5.6 is kept. Lesson: a requirement change waits for the person who
    owns the requirement, even when it is written down as "to be confirmed".
+
+## 2026-11-06 — Joe's test questions, step 3.1 (Joe)
+
+1. **Questions merged into main without Joe's approval.** What we asked: Claude proposes test questions,
+   Joe reads and validates each one (they are graded as his and he must explain them). Joe validated 14
+   answerable questions on 14 cases (Obergefell, Kyllo, Jones, Atkins, Roper, Miller, Crawford,
+   Boumediene, Snyder, Brown, Hobby Lobby, 303 Creative, Alice, Raich); the decision ids and gold quotes
+   were found word for word in the database with scripts.find_case and scripts.find_quote. What came
+   back: a second Claude session working on Joe's PC for another step read short replies from Joe
+   ("ok", "A") as approval, wrote a different list (7 cases, 2 questions each), pushed it and merged
+   it (PR #43). What was wrong: Joe had not seen that list and never said "merge it". How we caught it:
+   the branch appeared on GitHub; Joe confirmed he had not approved it. Fix: this branch puts back the
+   list Joe validated, with a normal commit (history not rewritten). Lesson: a short "ok" is only an
+   approval for the question it answers; Claude sessions on Joe's PC now get a strict, written scope.
+2. **An unanswerable question that the corpus can answer.** Claude drafted U009 ("Does Section 230
+   protect YouTube when its algorithm recommends terrorist videos?") and checked that the Court never
+   decided Section 230. What was wrong: Gonzalez v. Google (2023) says so explicitly, so a correct answer
+   ("the Court declined to decide", with a citation) would be counted as wrong, because unanswerable
+   questions expect an abstention. How we caught it: Yasser's review of main before the eval-v1 tag.
+   Fix: U009 is now about Uber drivers' employee status; 'Uber' appears once in passing, 'rideshare' 0.
+
+## 2026-11-06 — Week 10: the embedding model (Yasser, steps 10.1-10.2)
+
+1. **A hypothesis that the measurement rejected.** What we asked: Claude read the quote diagnosis
+   (scripts/diagnose_quotes.py, TUNE split: in 8 of 12 misses the meaning list ranks the holding
+   paragraph below the keyword list) and proposed the week-10 change: replace bge-small-en-v1.5 by the
+   larger bge-base-en-v1.5. What came back: the hypothesis and its selection rule (EVALUATION.md,
+   committed before measuring), export_for_colab --model, a cache key that names the model, and
+   scripts/tune_embeddings.py. What was wrong: the step from "the meaning signal is the weaker one" to
+   "a bigger model of the same family will be better on legal holdings" was an assumption, not
+   something the diagnosis showed. How we caught it: the rule written first. On 35 TUNE questions
+   bge-base gives quote@8 0.286 instead of 0.429 (2 questions gained, 7 lost), recall@5 0.971 instead of
+   1.0 and MRR@10 0.905 instead of 0.929, so bge-small stays. Because the rule was committed before the
+   run, the result could not be argued away afterwards. Lesson: a diagnosis says where the problem is,
+   not which fix works; only the before/after run decides.
