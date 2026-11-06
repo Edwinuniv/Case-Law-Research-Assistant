@@ -1,4 +1,4 @@
-// Evaluation runs: start a run, compare two runs, the list with the main metrics (test split).
+// Evaluation runs: start a run, compare two runs, the list with the main metrics (tune split).
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
@@ -7,7 +7,7 @@ import { day, num, useLoad, Waiting } from "./useLoad.jsx";
 export default function Eval() {
   const [runs, error, reload] = useLoad("/admin/eval");
   const [note, setNote] = useState("");
-  const [cmp, setCmp] = useState({ a: "", b: "", split: "test" });
+  const [cmp, setCmp] = useState({ a: "", b: "", split: "tune" });
   const [msg, setMsg] = useState("");
   const navigate = useNavigate();
   if (!runs) return <Waiting data={runs} error={error} />;
@@ -33,7 +33,7 @@ export default function Eval() {
           <input type="number" required style={{ width: 70 }} value={cmp.b}
                  onChange={(e) => setCmp({ ...cmp, b: e.target.value })} /> (after){" "}
           <select value={cmp.split} onChange={(e) => setCmp({ ...cmp, split: e.target.value })}>
-            <option value="test">test split</option><option value="tune">tune split</option><option value="">all</option>
+            <option value="tune">tune split</option><option value="test">test split</option><option value="">all</option>
           </select> <button className="light">Compare</button>
         </form>
       </div>
@@ -50,7 +50,7 @@ export default function Eval() {
           </tr>
         ))}</tbody>
       </table>
-      <p className="muted">Test split, current settings.</p>
+      <p className="muted">Tune split, current settings. The test split is reported once, at the end: open a run and choose test.</p>
     </>
   );
 }
