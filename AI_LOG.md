@@ -295,3 +295,11 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    from anyone would block every visitor. Caught while preparing the Dockerfile for it. Fix: uvicorn
    `--proxy-headers`. Remaining limit (SPEC section 11): a client can add to X-Forwarded-For, so the
    per-IP limit can be dodged; the per-account lock (SR36) cannot.
+
+## 2026-11-06 — React chat page (Joe, step 5.8)
+
+1. **The retrieved passages were hidden.** Claude's first Answer component put the list of retrieved
+   passages inside a closed `<details>` menu, so the user saw only "Retrieved passages (1)". The brief
+   (section 5) and FR5 ask for the passages shown alongside the answer, as the Jinja page did. How we
+   caught it: the screenshot of the browser check, compared with the brief. Fix: the list is always
+   shown; only each passage's full text folds, as on the Jinja page.
