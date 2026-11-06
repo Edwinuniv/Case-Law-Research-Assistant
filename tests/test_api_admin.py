@@ -139,3 +139,51 @@ def test_label_and_add_to_the_test_set(c, clean_db):                         # S
                   headers=csrf(c)).status_code == 400
     assert c.post("/api/admin/abstentions/99999/label", json={"label": "add as answerable test question"},
                   headers=csrf(c)).status_code == 404               # the Jinja route crashed here (500)
+
+
+def test_admin_creates_a_user_who_can_then_log_in(c):                        # FR12
+    log_in(c, "boss@example.com")
+    accounts = c.post("/api/admin/users", json={"email": "new@example.com", "password": PW, "role": "user"},
+                      headers=csrf(c)).json()
+    assert {"email": "new@example.com", "role": "user"}.items() <= next(
+        a for a in accounts if a["email"] == "new@example.com").items()
+    assert all("password_hash" not in a for a in accounts)
+    c.post("/api/logout", headers=csrf(c))
+    log_in(c, "new@example.com")
+    assert c.get("/api/me").json()["user"]["role"] == "user"
+
+
+def test_bad_new_accounts_are_refused(c, clean_db):
+    log_in(c, "boss@example.com")
+    for bad in [{"email": "x@example.com", "password": "short"},
+                {"email": "not-an-email", "password": PW},
+                {"email": "x@example.com", "password": PW, "role": "superuser"}]:
+        assert c.post("/api/admin/users", json=bad, headers=csrf(c)).status_code == 400
+    with clean_db.connect() as con:
+        assert con.execute("SELECT count(*) AS n FROM users").fetchone()["n"] == 2
+
+
+def test_disable_an_account_but_not_yourself(c, clean_db):
+    with clean_db.connect() as con:
+        ids = {r["email"]: r["id"] for r in con.execute("SELECT id, email FROM users").fetchall()}
+    log_in(c, "boss@example.com")
+    assert c.post(f"/api/admin/users/{ids['boss@example.com']}/toggle", headers=csrf(c)).status_code == 400
+    assert c.post(f"/api/admin/users/{ids['reader@example.com']}/toggle", headers=csrf(c)).status_code == 200
+    assert c.post("/api/admin/users/99999/toggle", headers=csrf(c)).status_code == 404
+    c.post("/api/logout", headers=csrf(c))
+    r = c.post("/api/login", json={"email": "reader@example.com", "password": PW}, headers=csrf(c))
+    assert r.status_code == 401                                         # the disabled account cannot log in
+
+
+def test_react_admin_pages_are_refused_by_the_server(c, monkeypatch, tmp_path):   # SR35
+    from app import main
+    (tmp_path / "index.html").write_text("<div id=root></div>")
+    monkeypatch.setattr(main, "FRONTEND", tmp_path)
+    for url in ["/app/admin", "/app/admin/users", "/app/ADMIN", "/app//admin/eval"]:
+        assert c.get(url).status_code == 401, url
+    log_in(c, "reader@example.com")
+    assert c.get("/app/admin").status_code == 403 and c.get("/app/Admin/settings").status_code == 403
+    assert c.get("/app").status_code == 200                             # the chat page is for users
+    c.post("/api/logout", headers=csrf(c))
+    log_in(c, "boss@example.com")
+    assert c.get("/app/admin/users").status_code == 200
