@@ -124,6 +124,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 5.5 Run it, test it, commit (Joe) — run with Yasser's dump: research page, citation panel, 9 admin pages OK; tests/test_admin.py from the guide + 2 tests for a gap found by breaking the code (AI_LOG) (8 passed, whole suite 66 passed) ⏳ Chevron question gives Not supported (search not finding the majority passage, told Yasser)
 
 - [x] 5.6 Login security for the API (Joe) — branch step/5.6-login-security: roles user/admin (db.py + migration), one login message, app/api.py (login, logout, /api/me, CSRF, limit per IP, role checks); 21 new tests; instructor's React/chat request in SPEC §11 ⏳ 5.7-5.10 (API research, React chat, React admin, switch)
+- [x] 5.7 Research API for the chat (Joe) — branch step/5.7-api-research: /api/ask, /api/passage, /api/history (own questions only), query_log.user_id + answer as shown; 15 new tests ⏳ 5.8 React chat page
 
 ### Week 6 — Deployment (Joe)
 - [x] 6.1 Deployment files — Dockerfile and .dockerignore; build step downloads the embedding model into data/models like app/embeddings.py (AI_LOG) ⏳ image built for real on Railway (6.2)
