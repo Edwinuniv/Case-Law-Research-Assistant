@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin')),
+    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'user')),
     active BOOLEAN NOT NULL DEFAULT TRUE,
     failed_logins INT NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
@@ -98,6 +98,14 @@ CREATE INDEX IF NOT EXISTS chunks_decision ON chunks (decision_id);
 CREATE INDEX IF NOT EXISTS query_log_time ON query_log (created_at);
 """
 
+# Changes to tables that already exist (CREATE TABLE IF NOT EXISTS does not change them).
+# Safe to run at every start.
+MIGRATIONS = """
+-- 2026-11-06 (step 5.6): a second role, 'user' (SR33, new wording, SPEC section 11)
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'));
+"""
+
 
 def connect():
     """Use as: with db.connect() as con: ...  (commits automatically at the end)."""
@@ -108,6 +116,7 @@ def init_db():
     with connect() as con:
         con.execute(SCHEMA)
         con.execute(INDEXES)
+        con.execute(MIGRATIONS)
         for key, value in config.DEFAULT_SETTINGS.items():
             con.execute("INSERT INTO settings (key, value) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                         (key, Jsonb(value)))
