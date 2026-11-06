@@ -383,3 +383,16 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    1.0 and MRR@10 0.905 instead of 0.929, so bge-small stays. Because the rule was committed before the
    run, the result could not be argued away afterwards. Lesson: a diagnosis says where the problem is,
    not which fix works; only the before/after run decides.
+
+## 2026-11-06 — Limit of questions per IP address (Joe, step 5.12)
+
+1. **Tests that shared a counter.** What we asked: a limit of 10 questions per minute per IP address on
+   /api/ask (Yasser's request), with tests written from the expected behaviour before the code. What
+   came back: tests/test_ask_rate_limit.py (written first; 3 of 4 failed until the code existed) and the
+   limit in app/api.py. What was wrong: the counter of questions lives in memory for the whole test run,
+   and the fixture of the research tests did not empty it. All tests passed, but the 11 research tests
+   and the 4 new ones all ask from the same test address, so a test could pass or fail depending on how
+   many questions the tests before it had asked. How we caught it: reading the fixture after the first
+   green run, next to the login limit, which the fixture already empties. Fix: the fixture empties
+   ASKED_BY_IP too. We also broke the code on purpose: without the limit 3 tests fail; checking the
+   limit before SR3 makes the "too short questions do not count" test fail.
