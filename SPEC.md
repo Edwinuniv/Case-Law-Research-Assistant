@@ -151,8 +151,9 @@ A sentence is shown only if:
 2. its quote (5+ words) appears word for word in a cited passage;
 3. every citation in it exists in the CourtListener citation table AND is either a retrieved
    decision or written in the cited passage itself;
-4. every case name in it is the case of a cited passage or appears in one;
-5. every number and date in it appears in its cited passage.
+4. every case name in it is the case of a cited passage (both parties compared) or appears in one;
+5. every number and date in it appears in its cited passage, or is the year of a cited decision
+   (date_filed); a sentence that dates the decision must give that year.
 6. it does not present a dissent or concurrence as the Court's view (added in Week 7, see section 11).
 
 At runtime we guarantee existence, binding to retrieved opinions, and lexical support.
@@ -234,6 +235,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
+| 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 
 ## 11. Divergences log
@@ -334,3 +336,9 @@ embedding model, bge-base-en-v1.5, finds the holding paragraph more often) was m
 split and rejected by its rule: quote@8 0.286 instead of 0.429, recall@5 0.971 instead of 1.0
 (run tune_embeddings_2026-11-06T19-04-10.json). The embedding model stays bge-small-en-v1.5 (section 3);
 the before/after numbers are reported as a measured regression (brief section 8).
+
+2026-11-06 - Verifier, metadata (Edwin): check 5 also accepts the year of a cited decision (date_filed,
+which the model sees in the passage header but which is often not in the text), and a sentence that
+dates the decision ("its 2023 decision") must give that year. Check 4 compares both parties of a case
+name instead of the first word (the guide and Week 7 compared the first word: "Trump v. Anything"
+passed). Details and measurements in AI_LOG.md.
