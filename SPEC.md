@@ -115,6 +115,11 @@ Railway still runs one service. Pages: chat (research, no login), administrator 
 CSRF token, so no admin route can be added without them). React only displays: it never decides who
 may see what; /admin pages are refused by the server (401 / 403) like every admin route (SR35).
 
+Search filter (step 4.6, for Edwin's case filter): `Searcher.search(question, k, settings, decision_ids)`;
+with decision_ids, the pgvector list and the BM25 list only contain passages of those decisions (same
+format, score still the cosine similarity); without it the whole corpus is searched as before. The setting
+case_filter (off) decides whether the pipeline uses it.
+
 ## 4. Chunking strategy (FR31, SR16)
 
 Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
@@ -224,7 +229,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | Part | Owner | Branch / PR | Status |
 |---|---|---|---|
 | 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | merged (PR #16) |
-| 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | merged (PR #20); baseline needs eval/questions.jsonl (tag eval-v1) |
+| 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search, step/3.4-eval-v1-baseline | merged (PR #20); eval-v1 baseline: TEST recall@5 1.0, MRR@10 0.938, quote@8 0.25 (EVALUATION.md) |
 | 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | merged (PR #23) |
 | 5.6 login and security for the API (roles user/admin, CSRF, login limit per IP, one login message) | Joe | step/5.6-login-security | code and tests ready (21 new tests); React pages in 5.8-5.10 |
 | 5.7 research API for the chat (/api/ask, /api/passage, /api/history; query_log.user_id) | Joe | step/5.7-api-research | code and tests ready (15 new tests) |
@@ -233,6 +238,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
+| Admin pages open on the TUNE split (overview, runs, a run, compare, threshold preview); TEST only when asked | Joe | feature/admin-tune-default | checked in a browser (test database, fake model); 5 new tests |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 | 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
@@ -352,6 +358,13 @@ nothing and use the normal search. Measured search time today: about 0.27 s per 
 passage, not answer time (SR2 is already met). Off (setting case_filter) until measured on the TUNE split
 with the rule written first in EVALUATION.md. Needs a decision_ids parameter in Searcher.search
 (Yasser's file), requested in writing.
+
+2026-11-06 - Admin pages show the TUNE split by default (asked by Edwin for Week 8). The guide's admin
+code (pp. 56-62, kept in the React pages of step 5.9) showed the TEST split on the overview, the list of
+runs, a run, the compare page and the threshold preview. EVALUATION.md and SR29 say the thresholds are
+chosen on TUNE and TEST is reported once, at the end, so an admin who opened those pages after a run saw
+TEST numbers while choosing. They now show TUNE (one setting, DEFAULT_SPLIT in app/api_admin.py); TEST
+is still one click away on the run page (split selector, ?split=test) for the final report.
 
 2026-11-06 - Week 8 (Edwin): scripts/run_eval.py prints only the TUNE split and the tau sweep after a run;
 the TEST split is printed with `--test RUN_ID`, once, after tau_abstain is chosen (EVALUATION.md, SR29).

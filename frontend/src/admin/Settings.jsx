@@ -42,7 +42,7 @@ export default function Settings() {
         <button className="light">Preview</button>
         {preview && (
           <table style={{ marginTop: 10 }}>
-            <thead><tr><th>Metric (run {preview.run}, test split)</th><th>Current settings</th><th>New settings</th></tr></thead>
+            <thead><tr><th>Metric (run {preview.run}, {preview.split} split)</th><th>Current settings</th><th>New settings</th></tr></thead>
             <tbody>{preview.rows.map((r) => (
               <tr key={r.metric}><td>{r.metric.replaceAll("_", " ")}</td><td>{num(r.now)}</td><td>{num(r.then)}</td></tr>
             ))}</tbody>
@@ -56,8 +56,8 @@ export default function Settings() {
           <label><input type="checkbox" checked={!!form.use_reranker} onChange={(e) => set("use_reranker", e.target.checked)} />
             {" "}Use the reranker (week-10 improvement)</label></p>
         <button>Save settings</button> {msg && <span className="muted">{msg}</span>}
-        <p className="muted">Choose thresholds with the sweep table of an evaluation run (tune split), then check the
-          test split. Do not tune on the test split.</p>
+        <p className="muted">Choose thresholds on the tune split (the sweep table of an evaluation run and this preview).
+          Report the test split once, at the end, without changing them (EVALUATION.md).</p>
       </form>
     </>
   );

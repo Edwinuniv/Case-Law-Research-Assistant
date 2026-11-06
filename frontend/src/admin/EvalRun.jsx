@@ -7,7 +7,7 @@ import { num, useLoad, Waiting } from "./useLoad.jsx";
 export default function EvalRun() {
   const { runId } = useParams();
   const [params, setParams] = useSearchParams();
-  const split = params.get("split") || "test";
+  const split = params.get("split") || "tune";
   const tau = params.get("tau");
   const [d, error] = useLoad(`/admin/eval/${runId}?split=${split}${tau ? `&tau=${tau}` : ""}`);
   const [form, setForm] = useState({ tau: tau || "", split });
@@ -20,7 +20,7 @@ export default function EvalRun() {
         What-if abstention threshold <input type="number" step="0.01" style={{ width: 80 }} placeholder={d.tau_abstain}
                                             value={form.tau} onChange={(e) => setForm({ ...form, tau: e.target.value })} />{" "}
         Split <select value={form.split} onChange={(e) => setForm({ ...form, split: e.target.value })}>
-          <option>test</option><option>tune</option></select>{" "}
+          <option>tune</option><option>test</option></select>{" "}
         <button className="light">Recalculate</button> <span className="muted">This does not change the live system.</span>
       </form>
       <div className="two">
