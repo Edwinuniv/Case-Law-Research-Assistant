@@ -10,19 +10,19 @@ from app import db, ligatures
 apply = "--apply" in sys.argv
 with db.connect() as con:
     opinions = con.execute("SELECT opinion_id, decision_id, text FROM opinions ORDER BY opinion_id").fetchall()
-first = ligatures.repairs(ligatures.vocabulary(o["text"] for o in opinions))
-clean = [o["text"] for o in opinions if ligatures.fix_opinion(o["text"], first)[1] == 0]
-mapping = ligatures.final_repairs(first, clean)          # without the forms that can be real words
-print(f"{len(first) - len(mapping)} forms left alone because they can be real words: "
-      f"{', '.join(sorted(set(first) - set(mapping))[:15])}")
+mapping = ligatures.repairs(ligatures.vocabulary(o["text"] for o in opinions))
+real = ligatures.real_words(mapping, [o["text"] for o in opinions])
+print(f"{len(real)} forms are also real words (repaired only where a broken PDF explains them): "
+      f"{', '.join(sorted(real)[:20])}")
 
 changed, used, decisions = [], Counter(), set()
 for o in opinions:
-    fixed, hits = ligatures.fix_opinion(o["text"], mapping)
+    fixed, hits = ligatures.fix_opinion(o["text"], mapping, real)
     if hits:
         changed.append((o["opinion_id"], fixed))
         decisions.add(o["decision_id"])
-        used.update(w.lower() for w in ligatures.WORD.findall(o["text"]) if w.lower() in mapping)
+        used.update(a.lower() for a, b in zip(ligatures.WORD.findall(o["text"]), ligatures.WORD.findall(fixed))
+                    if a != b)                               # the words really changed in this opinion
 
 print(f"{len(mapping):,} broken word forms known; {len(changed):,} opinions in {len(decisions):,} decisions "
       f"to repair ({sum(used.values()):,} words)")
