@@ -28,10 +28,15 @@ header .coverage{color:#aab6ca;font-size:13px;margin-right:auto}
 main{max-width:1320px;margin:24px auto;padding:0 20px}
 footer{text-align:center;color:var(--muted);font-size:13px;padding:28px 16px;border-top:1px solid var(--line);
   margin-top:24px}
-.card{background:#fff;border:1px solid #dde2e8;border-radius:6px;padding:14px 18px;margin-bottom:14px}
-textarea,input{font:inherit;padding:6px;border:1px solid #c5cdd6;border-radius:4px}
-textarea{width:100%;box-sizing:border-box}
-button{font:inherit;background:#1f3a5f;color:#fff;border:0;border-radius:4px;padding:7px 14px;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px 20px;margin-bottom:16px;
+  box-shadow:0 1px 2px rgba(20,33,61,.04)}
+textarea,input,select{font:inherit;padding:8px 10px;border:1px solid #cfc8b8;border-radius:3px;background:#fff;color:var(--ink)}
+textarea{width:100%;box-sizing:border-box;resize:vertical}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--gold);outline-offset:0;border-color:var(--gold)}
+button{font:inherit;background:var(--navy);color:#fff;border:0;border-radius:3px;padding:8px 18px;cursor:pointer;
+  letter-spacing:.02em}
+button:hover{background:var(--navy-soft)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}   /* keyboard users see where they are */
 button:disabled{opacity:.6;cursor:wait}
 .status{padding:10px 14px;border-radius:5px;margin-bottom:12px;border:2px solid}
 .ANSWERED{background:#e7f5ea;border-color:#2f7d3b}.LOW_CONFIDENCE{background:#fff6dd;border-color:#c58b00}
@@ -51,7 +56,6 @@ button:disabled{opacity:.6;cursor:wait}
 table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
 th,td{border:1px solid #dde2e8;padding:5px 8px;text-align:left;vertical-align:top}
 th{background:#eef2f7}
-select{font:inherit;padding:6px;border:1px solid #c5cdd6;border-radius:4px}
 button.light{background:#e8edf4;color:#1f3a5f}
 .red{background:#fde8e6}.green{background:#e7f5ea}.warn{background:#fff6dd}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
