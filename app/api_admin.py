@@ -3,6 +3,7 @@ EVERY route here is protected by the router itself: CSRF on POST and the admin r
 database at each request (SR35, NFR8). A route cannot be added here without that protection."""
 import threading
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from app import api, db, evaluate
 
@@ -141,3 +142,59 @@ def eval_detail(run_id: int, split: str = "test", tau: float | None = None):
     table.sort(key=lambda t: (t["ok"], t["id"]))
     return {"run_id": run_id, "split": split, "tau_abstain": s["tau_abstain"], "table": table,
             "metrics": evaluate.metrics(pairs, s, split or None), "sweep": evaluate.sweep(pairs, s, "tune")}
+
+
+# ---------------- test questions (FR13a-c) ----------------
+TAGS, SPLITS = ("answerable", "unanswerable", "adversarial"), ("tune", "test")
+
+
+@router.get("/questions")
+def questions(tag: str = ""):
+    return [q for q in evaluate.load_questions() if not tag or q["tag"] == tag]
+
+
+@router.get("/questions/export")      # before /questions/{qid}
+def questions_export():
+    """The questions as eval/questions.jsonl, to commit in git (the evaluation set is versioned)."""
+    return PlainTextResponse(evaluate.export_questions(), media_type="application/x-ndjson",
+                             headers={"Content-Disposition": "attachment; filename=questions.jsonl"})
+
+
+@router.get("/questions/{qid}")
+def question(qid: str):
+    q = next((x for x in evaluate.load_questions() if x["id"] == qid), None)
+    if q is None:
+        raise HTTPException(404, "No such question.")
+    return q
+
+
+class TestQuestion(BaseModel):
+    id: str
+    tag: str
+    split: str
+    question: str
+    expected_answer: str = ""
+    gold_decision_ids: list[int] = []
+    gold_quote: str = ""
+    must_not_appear: list[str] = []
+    why: str = ""
+    author: str = ""
+
+
+@router.post("/questions")
+def question_save(q: TestQuestion):
+    """Adds a question or changes one (same SQL as the Jinja page)."""
+    if not q.id.strip() or not q.question.strip():
+        raise HTTPException(400, "The ID and the question are required.")
+    if q.tag not in TAGS or q.split not in SPLITS:
+        raise HTTPException(400, f"Tag must be one of {', '.join(TAGS)}; split must be tune or test.")
+    with db.connect() as con:
+        con.execute("""INSERT INTO test_questions (id, tag, split, question, expected_answer, gold_decision_ids,
+            gold_quote, must_not_appear, why, author, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+            ON CONFLICT (id) DO UPDATE SET tag = EXCLUDED.tag, split = EXCLUDED.split, question = EXCLUDED.question,
+            expected_answer = EXCLUDED.expected_answer, gold_decision_ids = EXCLUDED.gold_decision_ids,
+            gold_quote = EXCLUDED.gold_quote, must_not_appear = EXCLUDED.must_not_appear, why = EXCLUDED.why,
+            author = EXCLUDED.author, updated_at = now()""",
+                    (q.id.strip(), q.tag, q.split, q.question, q.expected_answer, q.gold_decision_ids, q.gold_quote,
+                     [x.strip() for x in q.must_not_appear if x.strip()], q.why, q.author))
+    return question(q.id.strip())
