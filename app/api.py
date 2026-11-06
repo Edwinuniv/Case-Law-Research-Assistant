@@ -178,12 +178,17 @@ def public_answer(r):
 
 
 @router.post("/ask")
-def ask(body: Question):
+def ask(request: Request, body: Question):
     """Open to visitors, without an account (SR33, FR1). The CSRF check of the router still applies:
     the visitor's browser gets its token from GET /api/me with its own session."""
     error = check_input(body.question)                                         # SR3
     if error:
         raise HTTPException(400, error)
+    wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
+    if wait:                                    # refused BEFORE the model is called, and not saved
+        raise HTTPException(429, f"Too many questions from your address: at most {ASK_LIMIT_PER_IP} questions "
+                                 f"per minute. Please wait {wait} seconds and try again.",
+                            headers={"Retry-After": str(wait)})
     if STATE["searcher"] is None:
         raise HTTPException(503, "The search index is not ready yet.")
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
