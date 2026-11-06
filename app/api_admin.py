@@ -269,3 +269,38 @@ def analytics(start: datetime.date | None = None, end: datetime.date | None = No
               ORDER BY id DESC LIMIT 50""", (start, end)).fetchall()
     days = [{k: (str(v) if k == "day" else float(v or 0)) for k, v in d.items()} for d in days]
     return {"start": str(start), "end": str(end), "days": days, "unanswered": unanswered}
+
+
+# ---------------- corpus, citation lookup, re-index (FR21, FR20/SR40) ----------------
+@router.get("/corpus")
+def corpus(cite: str = "", offset: int = 0):
+    """100 decisions at a time, the latest ingestion reports, and a citation lookup (the week-1 gate)."""
+    lookup = api.STATE["index"].lookup(cite) if cite and api.STATE["index"] else None
+    with db.connect() as con:
+        decisions = con.execute("""SELECT decision_id, case_name, date_filed, citations, source_url, licence, loaded_at
+                                   FROM decisions ORDER BY date_filed DESC LIMIT 100 OFFSET %s""",
+                                (max(0, offset),)).fetchall()
+        reports = con.execute("SELECT * FROM ingestion_reports ORDER BY id DESC LIMIT 5").fetchall()
+    return {"lookup": lookup, "decisions": decisions, "reports": reports, "offset": max(0, offset)}
+
+
+class Reindex(BaseModel):
+    max_words: int = 350
+
+
+@router.post("/reindex")
+def reindex(body: Reindex):
+    """Rebuilds chunks and embeddings, reloads the index, then runs the evaluation by itself (SR40)."""
+    from app.indexing import build_index
+    from app.main import load_index          # imported here: app.main imports this file
+    if not 150 <= body.max_words <= 600:
+        raise HTTPException(400, "Chunk size must be between 150 and 600 words.")
+    db.set_setting("chunk_max_words", body.max_words)
+
+    def work():
+        meta = build_index(max_words=body.max_words, log=lambda *a: None)
+        load_index()
+        run_id = evaluate.run_evaluation(api.STATE["searcher"], api.STATE["index"], "re-index",
+                                         f"after re-index ({body.max_words} words)", log=lambda *a: None)
+        return f"{meta['chunks']} chunks; regression run {run_id}"
+    return {"job": run_in_background("re-index", work)}
