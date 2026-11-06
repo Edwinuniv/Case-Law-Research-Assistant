@@ -38,11 +38,15 @@ button{font:inherit;background:var(--navy);color:#fff;border:0;border-radius:3px
 button:hover{background:var(--navy-soft)}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}   /* keyboard users see where they are */
 button:disabled{opacity:.6;cursor:wait}
-.status{padding:10px 14px;border-radius:5px;margin-bottom:12px;border:2px solid}
-.ANSWERED{background:#e7f5ea;border-color:#2f7d3b}.LOW_CONFIDENCE{background:#fff6dd;border-color:#c58b00}
-.NOT_SUPPORTED{background:#eef0f3;border-color:#7a8594}.ERROR{background:#fde8e6;border-color:#b3342b}
-.chip{display:inline-block;background:#eef2f7;border:1px solid #c9d3df;border-radius:12px;padding:0 8px;margin:2px;font-size:13px;color:#1f3a5f;cursor:pointer}
-.muted{color:#66717f;font-size:13px} mark{background:#ffe58a} .hl{background:#e8f0fb}
+/* The three results: a coloured bar on the left, but always with the icon AND the words too (SR32),
+   so a colour-blind reader or a black-and-white print still tells them apart. */
+.status{padding:10px 14px;border-radius:3px;margin-bottom:14px;border:1px solid;border-left-width:5px}
+.ANSWERED{background:#eef6ef;border-color:#2f6b3a}.LOW_CONFIDENCE{background:#fdf6e3;border-color:#9a6b00}
+.NOT_SUPPORTED{background:#f1f2f4;border-color:#5b6472}.ERROR{background:#fbeceb;border-color:#a33a2f}
+.chip{display:inline-block;background:#f4efe3;border:1px solid #e0d3b0;border-radius:3px;padding:1px 8px;margin:2px;
+  font-size:13px;color:var(--navy);cursor:pointer;font-family:var(--serif)}
+.chip:hover{background:#ecdfbe;color:var(--navy)}
+.muted{color:var(--muted);font-size:13px} mark{background:#f6e2a0;padding:0 1px} .hl{background:#eef1f7}
 .layout{display:grid;grid-template-columns:220px minmax(0,3fr) minmax(0,2fr);gap:16px}
 @media(max-width:1000px){.layout{grid-template-columns:1fr}}
 .panel{position:sticky;top:12px;max-height:90vh;overflow:auto}
