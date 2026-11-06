@@ -110,3 +110,34 @@ def eval_run(body: RunNote):
         raise HTTPException(503, "The search index is not ready yet.")
     job = run_in_background("evaluation", lambda: f"run {evaluate.run_evaluation(api.STATE['searcher'], api.STATE['index'], 'manual', body.note, log=lambda *a: None)}")
     return {"job": job}
+
+
+@router.get("/eval/compare")          # before /eval/{run_id}, or "compare" would be read as a run id
+def eval_compare(a: int, b: int, split: str = "test"):
+    """Before / after on the same questions (the week-10 improvement); worse metrics are flagged (SR40)."""
+    rows, flips = evaluate.compare(a, b, db.get_settings(), split or None)
+    return {"a": a, "b": b, "split": split, "rows": rows, "flips": flips}
+
+
+@router.get("/eval/{run_id}")
+def eval_detail(run_id: int, split: str = "test", tau: float | None = None):
+    """One run: metrics, threshold sweep (tune split) and every question, wrong outcomes first.
+    tau = a what-if abstention threshold; it does not change the live system."""
+    s = db.get_settings()
+    if tau is not None:
+        s = dict(s, tau_abstain=tau, tau_confident=max(tau, s["tau_confident"]))
+    pairs = evaluate.load_run(run_id)
+    if not pairs:
+        raise HTTPException(404, "No such evaluation run.")
+    table = []
+    for q, res in pairs:
+        st = evaluate.status_at(res, s)
+        ok = (st == "NOT_SUPPORTED") == (q["tag"] != "answerable")
+        false = sum(len(x) for x in res["false_by_sentence"]) if st in ("ANSWERED", "LOW_CONFIDENCE") else 0
+        table.append({"id": q["id"], "tag": q["tag"], "split": q["split"], "question": q["question"],
+                      "status": st, "ok": ok, "false": false, "support_score": res["support_score"],
+                      "n_removed": res["n_removed"], "fabrications_caught": res["fabrications_caught"],
+                      "removed": res.get("removed", []), "judgements": res.get("judgements", [])})
+    table.sort(key=lambda t: (t["ok"], t["id"]))
+    return {"run_id": run_id, "split": split, "tau_abstain": s["tau_abstain"], "table": table,
+            "metrics": evaluate.metrics(pairs, s, split or None), "sweep": evaluate.sweep(pairs, s, "tune")}
