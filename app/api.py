@@ -156,7 +156,9 @@ def public_answer(r):
 
 
 @router.post("/ask")
-def ask(body: Question, user=Depends(require_user)):
+def ask(body: Question):
+    """Open to visitors, without an account (SR33, FR1). The CSRF check of the router still applies:
+    the visitor's browser gets its token from GET /api/me with its own session."""
     error = check_input(body.question)                                         # SR3
     if error:
         raise HTTPException(400, error)
@@ -164,7 +166,7 @@ def ask(body: Question, user=Depends(require_user)):
         raise HTTPException(503, "The search index is not ready yet.")
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
     shown = public_answer(r)
-    shown["id"] = db.log_query(r, user_id=user["id"], shown=shown)              # FR28, SR41
+    shown["id"] = db.log_query(r, shown=shown)                  # FR28, SR41 (no account: user_id stays empty)
     return shown
 
 
