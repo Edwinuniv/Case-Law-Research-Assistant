@@ -304,3 +304,38 @@ def reindex(body: Reindex):
                                          f"after re-index ({body.max_words} words)", log=lambda *a: None)
         return f"{meta['chunks']} chunks; regression run {run_id}"
     return {"job": run_in_background("re-index", work)}
+
+
+# ---------------- accounts (FR12): only an administrator creates accounts ----------------
+@router.get("/users")
+def users():
+    """Never the password hashes."""
+    with db.connect() as con:
+        return con.execute("SELECT id, email, role, active, locked_until, created_at FROM users ORDER BY id").fetchall()
+
+
+class NewUser(BaseModel):
+    email: str
+    password: str
+    role: str = "user"
+
+
+@router.post("/users")
+def user_create(body: NewUser):
+    if "@" not in body.email or len(body.password) < 10:
+        raise HTTPException(400, "Give an email address and a password of at least 10 characters.")
+    if body.role not in db.ROLES:
+        raise HTTPException(400, "The role must be user or admin.")
+    db.create_user(body.email, body.password, role=body.role)
+    return users()
+
+
+@router.post("/users/{user_id}/toggle")
+def user_toggle(user_id: int, me=Depends(api.require_admin)):
+    """Disable or enable an account. You cannot disable yourself (the site would have no admin left)."""
+    if user_id == me["id"]:
+        raise HTTPException(400, "You cannot disable your own account.")
+    with db.connect() as con:
+        if not con.execute("UPDATE users SET active = NOT active WHERE id = %s RETURNING id", (user_id,)).fetchone():
+            raise HTTPException(404, "No such account.")
+    return users()
