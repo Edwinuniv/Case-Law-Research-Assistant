@@ -103,12 +103,14 @@ question -> input check, 3-1000 characters (SR3)
 -> case names and citations shown to the user are rendered from OUR database (SR21).
 
 Website (since step 5.6, 2026-11-06): FastAPI serves the pages and a JSON API under /api (app/api.py)
-for the React front end, which replaced the Jinja pages of the guide in step 5.10 (section 11). Every /api route
+for the React front end, which replaced the Jinja pages of the guide in step 5.10 (section 11).
+The research routes (/api/ask, /api/passage) are open to visitors (SR33); every /api/admin route
 checks the login and the role on the server, reading the account from the database at each request;
-every POST needs the session's CSRF token (X-CSRF-Token header).
+every POST needs the session's CSRF token (X-CSRF-Token header). Each question is sent alone to
+pipeline.answer (FR1); the page's "My questions" list lives only in the browser page.
 Front end (step 5.8): React + Vite in frontend/ (react, react-router-dom; no UI library), built into
 frontend/dist and served by FastAPI at / (every address that is not /api or /health gets the same page); the Dockerfile builds it in a first Node stage, so
-Railway still runs one service. Pages: login, chat (research) and the 9 admin pages under /admin
+Railway still runs one service. Pages: chat (research, no login), administrator login and the 9 admin pages under /admin
 (step 5.9; admin JSON API in app/api_admin.py, where the router itself requires the admin role and the
 CSRF token, so no admin route can be added without them). React only displays: it never decides who
 may see what; /admin pages are refused by the server (401 / 403) like every admin route (SR35).
@@ -225,6 +227,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.8 React login and chat pages under /app; Dockerfile Node stage | Joe | step/5.8-react-chat | built and checked in a browser (test database, fake model); 3 new tests |
 | 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
 | 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
+| 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
