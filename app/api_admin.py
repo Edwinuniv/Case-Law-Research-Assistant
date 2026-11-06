@@ -306,7 +306,7 @@ def reindex(body: Reindex):
     return {"job": run_in_background("re-index", work)}
 
 
-# ---------------- accounts (FR12): only an administrator creates accounts ----------------
+# ---------------- accounts (FR12): an administrator creates the other administrators ----------------
 @router.get("/users")
 def users():
     """Never the password hashes."""
@@ -317,7 +317,7 @@ def users():
 class NewUser(BaseModel):
     email: str
     password: str
-    role: str = "user"
+    role: str = "admin"              # the only role (SR33): visitors use the research page without an account
 
 
 @router.post("/users")
@@ -325,7 +325,7 @@ def user_create(body: NewUser):
     if "@" not in body.email or len(body.password) < 10:
         raise HTTPException(400, "Give an email address and a password of at least 10 characters.")
     if body.role not in db.ROLES:
-        raise HTTPException(400, "The role must be user or admin.")
+        raise HTTPException(400, "Only administrator accounts exist: visitors do not need one.")
     db.create_user(body.email, body.password, role=body.role)
     return users()
 
