@@ -30,6 +30,7 @@ def c(clean_db, monkeypatch):
     from app import api, main
     monkeypatch.setattr(main, "load_index", lambda: None)          # no real index in the tests
     api.FAILED_BY_IP.clear()
+    api.ASKED_BY_IP.clear()                                         # each test starts with no questions counted
     with clean_db.connect() as con:                                 # one decision, opinion and passage
         con.execute("""INSERT INTO decisions (decision_id, all_cluster_ids, docket_number, case_name, date_filed,
                        citations, source_url, licence) VALUES (9987186, '{9987186}', '23-939',
