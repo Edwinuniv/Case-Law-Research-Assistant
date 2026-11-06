@@ -376,3 +376,10 @@ The guide's version (p. 77) printed both splits after every run.
 is refused if the settings changed). The full run takes about 3 days; while it runs, the website shares
 the same daily budget.
 
+2026-11-07 - Week 8 (Edwin): evaluation run 1 (eval-v1, case_filter on) paused at Groq's daily limit
+after 39 questions and is NOT resumed. Yasser's step/2.2-text-fixes rewrites passage texts (missing
+"fi"/"fl" letters) and opinion labels (65 dissent passages labelled as majority), so finishing run 1
+would mix old and new data. Decision: a fresh run 2 on the fixed data, same settings; run 1 is kept as
+the "before the fix" run (eval/runs/eval_run1_before_text_fixes_2026-11-06.json), and its 39 questions
+are compared with the same questions in run 2.
+
