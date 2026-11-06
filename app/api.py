@@ -1,5 +1,6 @@
 """JSON API for the React front end (step 5.6: login, logout, roles, CSRF).
-Every route checks the role ON THE SERVER; the front end is never trusted (SR35, NFR8)."""
+The research routes are open to visitors (SR33); only the administrator logs in.
+The role is checked ON THE SERVER; the front end is never trusted (SR35, NFR8)."""
 import re
 import secrets
 import time
@@ -39,7 +40,8 @@ router = APIRouter(prefix="/api", dependencies=[Depends(check_csrf)])   # applie
 
 # ---------------- who is logged in, and with which role ----------------
 def require_user(request: Request):
-    """Any logged-in account ('user' or 'admin'). 401 = not logged in, 403 = account disabled."""
+    """A logged-in, active account (since step 5.11 only administrators have one).
+    401 = not logged in, 403 = account disabled."""
     user_id = request.session.get("user_id")
     if not user_id:
         raise HTTPException(401, "Please log in.")
