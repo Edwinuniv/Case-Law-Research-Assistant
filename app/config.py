@@ -38,6 +38,8 @@ LLM_JSON_RETRIES = 1          # SR20: retry once if the reply is not valid JSON
 # ---- Local models (downloaded automatically the first time) ----
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 EMBED_DIM = 384
+EMBED_DIMS = {"BAAI/bge-small-en-v1.5": 384,     # the models we can embed with (step 10.2 compares)
+              "BAAI/bge-base-en-v1.5": 768}
 RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2"
 
 # ---- Website and security ----

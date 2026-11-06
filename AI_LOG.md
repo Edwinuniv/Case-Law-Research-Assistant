@@ -368,3 +368,18 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    ("the Court declined to decide", with a citation) would be counted as wrong, because unanswerable
    questions expect an abstention. How we caught it: Yasser's review of main before the eval-v1 tag.
    Fix: U009 is now about Uber drivers' employee status; 'Uber' appears once in passing, 'rideshare' 0.
+
+## 2026-11-06 — Week 10: the embedding model (Yasser, steps 10.1-10.2)
+
+1. **A hypothesis that the measurement rejected.** What we asked: Claude read the quote diagnosis
+   (scripts/diagnose_quotes.py, TUNE split: in 8 of 12 misses the meaning list ranks the holding
+   paragraph below the keyword list) and proposed the week-10 change: replace bge-small-en-v1.5 by the
+   larger bge-base-en-v1.5. What came back: the hypothesis and its selection rule (EVALUATION.md,
+   committed before measuring), export_for_colab --model, a cache key that names the model, and
+   scripts/tune_embeddings.py. What was wrong: the step from "the meaning signal is the weaker one" to
+   "a bigger model of the same family will be better on legal holdings" was an assumption, not
+   something the diagnosis showed. How we caught it: the rule written first. On 35 TUNE questions
+   bge-base gives quote@8 0.286 instead of 0.429 (2 questions gained, 7 lost), recall@5 0.971 instead of
+   1.0 and MRR@10 0.905 instead of 0.929, so bge-small stays. Because the rule was committed before the
+   run, the result could not be argued away afterwards. Lesson: a diagnosis says where the problem is,
+   not which fix works; only the before/after run decides.
