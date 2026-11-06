@@ -14,6 +14,8 @@ CASE_NAME = re.compile(r"\b([A-Z][\w.'&-]*(?:\s+(?:of|the|and|[A-Z][\w.'&-]*)){0
 # Case names without "v.": "In re Gault", "Ex parte Young" (Week 7: invented ones got through)
 ONE_PARTY_NAME = re.compile(r"\b(?:In re|Ex parte)\s+[A-Z][\w.'&-]*(?:\s+(?:of|the|and|[A-Z][\w.'&-]*)){0,3}")
 ONE_PARTY_PREFIX = re.compile(r"^(?:in re|ex parte)\s+", re.I)
+GENERIC_NAME_WORDS = set("of the and united states state county city district school board department commission "
+                         "company products inc co corp llc ltd ex rel et al".split())
 LEADING_WORDS = re.compile(r"^(?:(?:In|See|Under|The|Cf\.?|As|But|And|Also|Like|Both|Unlike|"
                            r"Following|Citing|Per|After|Before|While|When)\s+)+")
 
@@ -51,9 +53,28 @@ def find_case_names(text):
             + [m.group(0) for m in ONE_PARTY_NAME.finditer(text or "")])
 
 
-def name_key(name):
-    """The word used to compare case names: the first word, after "In re" / "Ex parte"."""
-    return name_words(ONE_PARTY_PREFIX.sub("", name or ""))[:1]
+def parties(name):
+    """'Loper Bright Enterprises v. Raimondo' -> [{'loper', 'bright', 'enterprises'}, {'raimondo'}];
+    'In re Gault' -> [{'gault'}]."""
+    return [set(name_words(p)) for p in re.split(r"\s+v\.\s+", ONE_PARTY_PREFIX.sub("", (name or "").strip()))]
+
+
+def same_case(name, case_name):
+    """True if `name` (from a sentence) can be `case_name` (from our data): the same number of parties,
+    and each party shares a word with the same party of case_name. Generic words ("County", "United
+    States") only count for a party that has nothing else, so "Fulton County" is not "Shelby County";
+    such a party must then be part of the other one.
+    Comparing only the first word let "Trump v. Anything" through (metadata, 2026-11-06)."""
+    a, b = parties(name), parties(case_name)
+    if len(a) != len(b):
+        return False
+    for x, y in zip(a, b):
+        if x - GENERIC_NAME_WORDS and y - GENERIC_NAME_WORDS:
+            if not (x & y) - GENERIC_NAME_WORDS:
+                return False
+        elif not x <= y:                 # "Inc." from "Spokeo, Inc. v. Robins": the name regex stops at commas
+            return False
+    return True
 
 
 def name_words(name):
@@ -96,8 +117,7 @@ class CitationIndex:
         return {"status": "EXISTS OUTSIDE OUR CORPUS", "citation": key, "cluster_id": cluster}
 
     def known_case_name(self, name):
-        key = name_key(name)
-        return bool(key) and any(name_key(n) == key for n in self.case_names)
+        return any(same_case(name, n) for n in self.case_names)
 
 
 class StaticCitationIndex(CitationIndex):
