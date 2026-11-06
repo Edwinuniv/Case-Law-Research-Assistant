@@ -1,4 +1,4 @@
-// Overview: corpus counts, the latest evaluation (test split), re-index, background jobs.
+// Overview: corpus counts, the latest evaluation (tune split), re-index, background jobs.
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
@@ -30,7 +30,7 @@ export default function Home() {
       </div>
       {m ? (
         <div className="card">
-          <h3>Latest evaluation (run {d.last_run}, test split, current settings)</h3>
+          <h3>Latest evaluation (run {d.last_run}, tune split, current settings)</h3>
           <div className="grid">
             <div className={"stat " + (m.false_citations_shown ? "red" : "green")}>False citations shown<b>{m.false_citations_shown}</b></div>
             <div className="stat">Abstention precision<b>{num(m.abstention_precision)}</b></div>
