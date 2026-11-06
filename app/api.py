@@ -201,24 +201,3 @@ def passage(chunk_id: str, quote: str = ""):
     return {"case_name": c["case_name"], "date_filed": str(c["date_filed"]), "opinion_label": c["label"],
             "section": c["section"], "citation": ", ".join(c["citations"] or []) or f"No. {c['docket_number']}",
             "source_url": c["source_url"], "licence": c["licence"], **v}
-
-
-@router.get("/history")
-def history(user=Depends(require_user)):
-    """The user's own last 50 questions (never someone else's)."""
-    with db.connect() as con:
-        rows = con.execute("""SELECT id, created_at, question, status FROM query_log
-                              WHERE user_id = %s ORDER BY id DESC LIMIT 50""", (user["id"],)).fetchall()
-    return [{**r, "created_at": r["created_at"].isoformat()} for r in rows]
-
-
-@router.get("/history/{log_id}")
-def history_item(log_id: int, user=Depends(require_user)):
-    """One earlier answer, exactly as it was shown (the model is not called again).
-    Someone else's question gives 404, the same as a question that does not exist."""
-    with db.connect() as con:
-        row = con.execute("SELECT details FROM query_log WHERE id = %s AND user_id = %s",
-                          (log_id, user["id"])).fetchone()
-    if not row or "shown" not in (row["details"] or {}):
-        raise HTTPException(404, "Not found.")
-    return {**row["details"]["shown"], "id": log_id}
