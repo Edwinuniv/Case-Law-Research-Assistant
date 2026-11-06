@@ -45,45 +45,6 @@ app.include_router(api.router)                                       # JSON API 
 app.include_router(api_admin.router)                                 # admin JSON API (/api/admin/...)
 
 
-def page(request, name, status_code=200, **context):
-    return templates.TemplateResponse(request, name, {"admin": request.session.get("admin"),
-                                                      "config": config, **context},
-                                      status_code=status_code)
-
-
-def decision_info(decision_ids):
-    with db.connect() as con:
-        rows = con.execute("SELECT decision_id, citations, docket_number, source_url FROM decisions "
-                           "WHERE decision_id = ANY(%s)", (list(decision_ids),)).fetchall()
-    return {r["decision_id"]: r for r in rows}
-
-
-# ======================= PUBLIC PART =======================
-@app.get("/")
-def home(request: Request):
-    return page(request, "ask.html", result=None, question="", error=None)
-
-
-@app.post("/ask")
-def ask(request: Request, question: str = Form("")):
-    error = check_input(question)                                    # SR3
-    if error or STATE["searcher"] is None:
-        return page(request, "ask.html", result=None, question=question,
-                    error=error or "The search index is not ready yet.")
-    result = answer(question, STATE["searcher"], STATE["index"], db.get_settings())
-    db.log_query(result)                                             # FR28, SR41
-    info = decision_info({p["decision_id"] for _, p in result["passages"]})
-    return page(request, "ask.html", result=result, question=question, error=None, info=info)
-
-
-@app.get("/passage/{chunk_id}")
-def passage(request: Request, chunk_id: str, quote: str = "", panel: int = 0):
-    v = api.passage_view(chunk_id, quote)                      # the same code as /api/passage
-    if v is None:
-        return HTMLResponse("Passage not found", status_code=404)
-    return page(request, "passage_panel.html" if panel else "passage.html", **v)
-
-
 # ======================= REACT FRONT END (step 5.8), under /app until step 5.10 =======================
 # `npm run build` (in frontend/) writes the app into frontend/dist; the Dockerfile does it on Railway.
 FRONTEND = config.ROOT / "frontend" / "dist"
