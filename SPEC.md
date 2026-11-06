@@ -236,6 +236,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 | 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
+| 4.6 metadata search: a case named in the question limits the search to its decision (setting case_filter, off) | Edwin | step/4.6-case-filter | code and tests ready; measurement (scripts/tune_case_filter.py, rule in EVALUATION.md) waits for Searcher.search(decision_ids) from Yasser |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 
 ## 11. Divergences log
@@ -342,3 +343,12 @@ which the model sees in the passage header but which is often not in the text), 
 dates the decision ("its 2023 decision") must give that year. Check 4 compares both parties of a case
 name instead of the first word (the guide and Week 7 compared the first word: "Trump v. Anything"
 passed). Details and measurements in AI_LOG.md.
+
+2026-11-06 - Metadata search (Edwin, the instructor: "use metadata for faster search"): no requirement asks
+for it; added on top. When a question names a case of our corpus ("X v. Y", matched to decisions.case_name
+with same_case), the search can look only at that decision's passages; invented or mixed names match
+nothing and use the normal search. Measured search time today: about 0.27 s per question (pgvector about
+0.23 s over all passages), against 1-4 s for the model, so the expected gain is mainly finding the right
+passage, not answer time (SR2 is already met). Off (setting case_filter) until measured on the TUNE split
+with the rule written first in EVALUATION.md. Needs a decision_ids parameter in Searcher.search
+(Yasser's file), requested in writing.
