@@ -87,9 +87,14 @@ def check_shown_citations(r, q, index):
 RATE_LIMIT_RETRIES = 6
 
 
+class DailyLimit(Exception):
+    """The provider's daily limit is used up (Groq free tier: 200,000 tokens per day, a full run needs
+    about 500,000). The run is paused and continued later with --resume, as the same run."""
+
+
 def rate_limit_wait(message):
     """Seconds to wait if the message is a rate-limit refusal, else None."""
-    m = re.search(r"rate limit reached, retry after ([\d.]+)", message or "")
+    m = re.search(r"rate limit reached(?: per day)?, retry after ([\d.]+)", message or "")
     return float(m.group(1)) + 1 if m else None
 
 
@@ -97,6 +102,8 @@ def answer_with_retry(question, searcher, index, settings, log):
     for attempt in range(RATE_LIMIT_RETRIES + 1):
         r = answer(question, searcher, index, settings, skip_gate=True)
         wait = rate_limit_wait(r["reason"]) if r["status"] == ERROR else None
+        if wait is not None and "per day" in r["reason"]:
+            raise DailyLimit(r["reason"])
         if wait is None or attempt == RATE_LIMIT_RETRIES:
             return r
         log(f"   rate limit: waiting {wait:.0f} s")
@@ -109,26 +116,62 @@ def judge_with_retry(statement, passage_text, log):
             return llm.judge_support(statement, passage_text)
         except llm.ModelError as e:
             wait = rate_limit_wait(str(e))
+            if wait is not None and "per day" in str(e):
+                raise DailyLimit(str(e)) from e
             if wait is None or attempt == RATE_LIMIT_RETRIES:
                 return "error"
             log(f"   rate limit (judge): waiting {wait:.0f} s")
             time.sleep(wait)
 
 
-def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=print):
-    settings = db.get_settings()
+def run_status(run_id):
     with db.connect() as con:
-        run_id = con.execute("INSERT INTO eval_runs (trigger, status, settings, note) VALUES (%s, 'running', %s, %s) "
-                             "RETURNING id", (trigger, Jsonb(settings), note)).fetchone()["id"]
-    questions = load_questions()
+        row = con.execute("SELECT status FROM eval_runs WHERE id = %s", (run_id,)).fetchone()
+    return row["status"] if row else None
+
+
+def resume_run(run_id):
+    """A paused run continues with the settings it started with; the search reads the current settings,
+    so they must not have changed in between. Returns (settings, ids of the questions already done)."""
+    with db.connect() as con:
+        run = con.execute("SELECT * FROM eval_runs WHERE id = %s", (run_id,)).fetchone()
+        done = {r["question_id"] for r in con.execute("SELECT question_id FROM eval_results WHERE run_id = %s",
+                                                      (run_id,))}
+    if run is None or run["status"] == "done":
+        raise ValueError(f"run {run_id} does not exist or is already done")
+    now = db.get_settings()
+    changed = sorted(k for k in set(now) | set(run["settings"]) if now.get(k) != run["settings"].get(k))
+    if changed:
+        raise ValueError(f"settings changed since run {run_id} started: {', '.join(changed)}")
+    with db.connect() as con:
+        con.execute("UPDATE eval_runs SET status = 'running' WHERE id = %s", (run_id,))
+    return run["settings"], done
+
+
+def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=print, resume=None):
+    if resume:
+        run_id = resume
+        settings, done = resume_run(run_id)
+    else:
+        settings, done = db.get_settings(), set()
+        with db.connect() as con:
+            run_id = con.execute("INSERT INTO eval_runs (trigger, status, settings, note) VALUES (%s, 'running', %s, %s) "
+                                 "RETURNING id", (trigger, Jsonb(settings), note)).fetchone()["id"]
+    questions = [q for q in load_questions() if q["id"] not in done]
     for n, q in enumerate(questions, 1):
-        r = answer_with_retry(q["question"], searcher, index, settings, log)
+        try:
+            r = answer_with_retry(q["question"], searcher, index, settings, log)
+            judgements = []
+            if judge and r["status"] != ERROR:
+                passages = dict(r["passages"])
+                for s in r["sentences"]:
+                    judgements.append(judge_with_retry(s["text"], " ".join(passages[p]["text"] for p in s["sources"]), log))
+        except DailyLimit as e:                          # nothing saved for this question: it is asked again
+            with db.connect() as con:
+                con.execute("UPDATE eval_runs SET status = 'paused' WHERE id = %s", (run_id,))
+            log(f"Paused at {q['id']} ({len(done) + n - 1} questions done): {e}")
+            return run_id
         false_by_sentence, n_cites = check_shown_citations(r, q, index)
-        judgements = []
-        if judge and r["status"] != ERROR:
-            passages = dict(r["passages"])
-            for s in r["sentences"]:
-                judgements.append(judge_with_retry(s["text"], " ".join(passages[p]["text"] for p in s["sources"]), log))
         chosen = [p["decision_id"] for _, p in r["passages"]]
         row = {"top_score": r["top_score"], "support_score": r["support_score"], "status_raw": r["status"],
                "model_said": r["model_said"], "reason": r["reason"],
