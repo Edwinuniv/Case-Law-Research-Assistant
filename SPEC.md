@@ -102,6 +102,11 @@ question -> input check, 3-1000 characters (SR3)
 -> support score (SR26) -> status (SR27)
 -> case names and citations shown to the user are rendered from OUR database (SR21).
 
+Website (since step 5.6, 2026-11-06): FastAPI serves the pages and a JSON API under /api (app/api.py)
+for the React front end that replaces the Jinja pages step by step (section 11). Every /api route
+checks the login and the role on the server, reading the account from the database at each request;
+every POST needs the session's CSRF token (X-CSRF-Token header).
+
 ## 4. Chunking strategy (FR31, SR16)
 
 Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
@@ -171,9 +176,16 @@ Deliberate improvement (week 10): reranker, measured before and after on the sam
 
 ## 8. Roles (SR33-SR36)
 
-Visitor: no login, public research page only.
-Administrator: login (bcrypt hashes, locked 15 minutes after 5 failures); evaluation,
-test questions, abstentions, analytics, settings, corpus and citation lookup, re-index, accounts.
+Since 2026-11-06 (instructor's request, section 11): everyone logs in. Accounts are created and
+disabled by an administrator (FR12); there is no self-registration.
+User: login; research (chat) page only.
+Administrator: login; the research page and the admin pages: evaluation, test questions,
+abstentions, analytics, settings, corpus and citation lookup, re-index, accounts.
+Both: bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the same error message for
+every failed login; at most 10 failed logins per IP address in 15 minutes (HTTP 429); a new session
+at each login; logout clears the session; session cookie HttpOnly, SameSite=Lax, Secure online
+(HTTPS_ONLY=1); CSRF token on every POST; role checked on the server at every request (SR35, NFR8).
+(Until step 5.10 the old Jinja research page stays public, so the demo keeps working.)
 
 ## 9. Work process
 
@@ -202,6 +214,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | merged (PR #16) |
 | 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | merged (PR #20); baseline needs eval/questions.jsonl (tag eval-v1) |
 | 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | merged (PR #23) |
+| 5.6 login and security for the API (roles user/admin, CSRF, login limit per IP, one login message) | Joe | step/5.6-login-security | code and tests ready (21 new tests); React pages in 5.8-5.10 |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
@@ -234,3 +247,22 @@ instead of FABRICATED, so the fabrication count is not inflated by CourtListener
 CPU. It stays available (use_reranker) but is off; the improvement to report will be chosen from
 measured candidates (chunk size, step 3.5, first).
 
+2026-11-06 - Website: the instructor asked for (1) a React front end instead of the server-rendered
+Jinja pages of the guide (pp. 56-70), (2) login screens with proper security, (3) a chat page for the
+research questions. Decision (Joe, 2026-11-06, to be confirmed with the instructor): everyone logs in,
+roles "user" and "administrator", accounts created by an administrator. This changes SR33 ("visitor,
+no login"), FR1, FR4, FR10, FR12, O7 and sections 1.2, 4 and 6 of the Requirements Document, which
+will be updated once the instructor confirms (new SR33: "There shall be two roles, user and
+administrator. Both log in. A user can use the research page only; an administrator can also use
+the admin pages. Accounts are created and disabled by an administrator; there is no
+self-registration."). The chat answers each question on its own: pipeline.answer does not use earlier
+questions, and the page says so. The Jinja pages stay until the React pages do the same (step 5.10).
+Plan: steps 5.6 (login security) to 5.10 (switch), one branch each.
+
+2026-11-06 - Login (step 5.6): the guide's check_login said "This account is locked" only for emails
+that exist, which tells an attacker which accounts exist. Every failed login now gives "Wrong email or
+password." (unknown email, wrong password, locked or disabled account), and an unknown email still
+costs one bcrypt check so the reply time does not give it away either. Added on top of SR36: at most
+10 failed logins per IP address in 15 minutes. Known limit: on Railway the address comes from the
+X-Forwarded-For header (uvicorn --proxy-headers), which a client can add to; the per-account lock
+(SR36) does not depend on it.
