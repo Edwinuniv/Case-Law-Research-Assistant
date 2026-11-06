@@ -29,7 +29,7 @@ async function request(method, path, body) {
   });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401 && path !== "/login") {
-    window.location.assign("/app/login");
+    window.location.assign("/login");
   }
   if (!res.ok) {
     // FastAPI puts the message in "detail" (a text, or a list for a badly formed request)
