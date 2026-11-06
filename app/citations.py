@@ -88,7 +88,9 @@ class CitationIndex:
         with db.connect() as con:
             self.alias = {r["cluster_id"]: r["decision_id"]
                           for r in con.execute("SELECT cluster_id, decision_id FROM cluster_alias")}
-            self.case_names = [r["case_name"] for r in con.execute("SELECT case_name FROM decisions")]
+            self.decisions = {r["decision_id"]: r["case_name"]
+                              for r in con.execute("SELECT decision_id, case_name FROM decisions")}
+        self.case_names = list(self.decisions.values())
 
     @lru_cache(maxsize=20_000)
     def cluster_for(self, citation_text):
@@ -119,12 +121,18 @@ class CitationIndex:
     def known_case_name(self, name):
         return any(same_case(name, n) for n in self.case_names)
 
+    def decisions_named(self, name):
+        """Our decisions that `name` can be: "Loper Bright v. Raimondo" -> [its decision_id].
+        Used to search only the named case (metadata, 2026-11-06); an invented or mixed name gives []."""
+        return [d for d, n in self.decisions.items() if same_case(name, n)]
+
 
 class StaticCitationIndex(CitationIndex):
     """The same interface without a database: used by the tests."""
 
-    def __init__(self, citations, alias, case_names):
-        self.table, self.alias, self.case_names = citations, alias, case_names
+    def __init__(self, citations, alias, decisions):
+        self.table, self.alias, self.decisions = citations, alias, decisions
+        self.case_names = list(decisions.values())
 
     def cluster_for(self, citation_text):
         return self.table.get(normalise(citation_text))
