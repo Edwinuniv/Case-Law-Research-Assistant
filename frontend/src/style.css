@@ -1,5 +1,22 @@
-/* The same look as the Jinja pages (app/templates/base.html). */
-body{font-family:system-ui,sans-serif;margin:0;color:#1d2530;background:#f6f7f9;line-height:1.5}
+/* Verdicta's look: sober and professional, like a legal publication.
+   The colours are written once here (CSS variables) and used everywhere below with var(--name). */
+:root{
+  --navy:#14213d;        /* header, buttons, headings */
+  --navy-soft:#24365c;
+  --gold:#b08d3c;        /* the one accent colour: brand, active menu, focus */
+  --ink:#1b2433;         /* body text */
+  --muted:#6b7280;       /* secondary text */
+  --paper:#f7f5f0;       /* page background, warm off-white */
+  --card:#ffffff;
+  --line:#e3ded3;        /* borders */
+  --serif:Georgia,"Times New Roman",serif;    /* headings: fonts already on every computer, nothing to download */
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+body{font-family:var(--sans);margin:0;color:var(--ink);background:var(--paper);line-height:1.55}
+h1,h2,h3{font-family:var(--serif);color:var(--navy);font-weight:600;letter-spacing:.01em}
+h2{font-size:24px;margin:4px 0 14px}
+h3{font-size:18px}
+a{color:var(--navy-soft)}
 header{background:#1f3a5f;color:#fff;padding:10px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 header a,header button.link{color:#dbe6f5;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
 header .brand{font-weight:700;margin-right:auto;color:#fff}
