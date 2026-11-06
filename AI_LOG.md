@@ -362,3 +362,9 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    the branch appeared on GitHub; Joe confirmed he had not approved it. Fix: this branch puts back the
    list Joe validated, with a normal commit (history not rewritten). Lesson: a short "ok" is only an
    approval for the question it answers; Claude sessions on Joe's PC now get a strict, written scope.
+2. **An unanswerable question that the corpus can answer.** Claude drafted U009 ("Does Section 230
+   protect YouTube when its algorithm recommends terrorist videos?") and checked that the Court never
+   decided Section 230. What was wrong: Gonzalez v. Google (2023) says so explicitly, so a correct answer
+   ("the Court declined to decide", with a citation) would be counted as wrong, because unanswerable
+   questions expect an abstention. How we caught it: Yasser's review of main before the eval-v1 tag.
+   Fix: U009 is now about Uber drivers' employee status; 'Uber' appears once in passing, 'rideshare' 0.
