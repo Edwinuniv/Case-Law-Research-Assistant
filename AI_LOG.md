@@ -132,6 +132,36 @@ read the related line ourselves before relying on these entries.
    Court" paragraph, with the opinion named in the section and in the embedded header; repeated
    "Syllabus" page headers no longer cut the Syllabus; BM25 words stemmed. Tests in
    tests/test_opinion_sections.py and tests/test_bm25.py.
+5. **AI hypothesis rejected by measurement: "prefer the Court's opinion".** For the Chevron question the
+   AI proposed lowering the weight of concurring and dissenting passages in the fusion. We wrote the
+   selection rule first (EVALUATION.md) and measured on the tune split: it made quote@8 worse
+   (0.455 -> 0.273), because several questions ask what a dissent argued. Kept the baseline; the
+   setting stays available (w_separate = 1.0).
+6. **AI hypotheses rejected by measurement: the reranker and shorter chunks.** The AI expected the
+   cross-encoder reranker (the guide's week-10 improvement) and 250-word chunks to bring the deciding
+   passage into the 8 given to the model. With the rules written first, on the tune split: the reranker
+   gave no gain (quote@8 0.455 at best, 5-69 s per question on our CPU); 250 and 400 words both gave
+   0.364 against 0.455 for 350. We kept the baseline and recorded the runs (EVALUATION.md).
+7. **AI mistake: copies of one decision with different dates were not merged.** The AI's rule for
+   copies (step 1.4c) required the same date. While writing test questions, find_quote showed Bruen
+   twice (decisions 6480696 and 7686272, same text); a query found about 60 same-name pairs within
+   30 days, mostly 2020-2022. A name-and-date rule alone would be wrong (Bush v. Gore has two
+   different decisions three days apart), so the fix compares the opinion texts too (>= 80% identical),
+   with a dry run to review before merging (scripts/merge_duplicates.py).
+8. **AI mistake: opinion starts inside a paragraph were missed.** The fix of entry 4 looked for
+   "JUSTICE X delivered the opinion of the Court." / "JUSTICE X, dissenting." only at the start of a
+   paragraph. While writing a question on Kennedy v. Bremerton (2022), find_quote labelled the whole
+   text "Opening", including the Syllabus and Sotomayor's dissent: the text came from a PDF, without
+   paragraph breaks. A count on the real data found 281 of 4,709 opinions with start lines the chunker
+   did not label. Fix: cut paragraphs at these lines wherever they appear, and recognise the Syllabus
+   note; tested on a PDF-style text (tests/test_opinion_sections.py).
+9. **AI mistake: a combined text and its separate opinions were both kept.** The loader's copy check
+   (entry 4 of 2026-10-23, 5-word overlap >= 60%) compared whole opinions, so a majority opinion stored
+   alone and the same majority inside a combined text (majority + dissents) did not look like copies.
+   How we caught it: writing questions on Citizens United and Heller, find_quote printed every sentence
+   twice in one decision; a count found 366 of 2,421 decisions affected. Fix: drop an opinion that is
+   at least 80% contained in another one of the same decision, keeping the separate opinions when they
+   cover the combined text (tests/test_ingest_groups.py).
 
 ---
 
@@ -261,3 +291,122 @@ read the related line ourselves before relying on these entries.
    (`answer_with_retry`, `judge_with_retry`) waits that time and tries again, up to 6 times; other errors
    are not retried. Tests for each part. Live check: 4 real questions back to back, 5 waits of 4-35 s,
    0 ERRORs, about 35 s per question (a full run of 80+ questions: about 50 minutes).
+
+## 2026-11-06 — Login security for the React front end (Joe, step 5.6)
+
+**Asked:** check the instructor's request (React, login for everyone, chat page) against our
+requirements, then add roles user/admin, CSRF, a login limit and generic login errors to a JSON API.
+1. **Guide code told attackers which accounts exist.** Found while checking the request against our
+   rules: `check_login` (guide p. 19-21) answered "This account is locked for 15 minutes" only for an
+   email that exists, and "Wrong email or password" otherwise. Fix: one message for every failure, and
+   an unknown email still costs one bcrypt check (same reply time). The guide's lock-out test looked for
+   the word "locked"; it now checks that the right password is refused while locked.
+2. **Claude edited a teammate's file.** The first version put the login-limit numbers in
+   `app/config.py`. How we caught it: before committing, `git log -- app/config.py` showed only Yasser
+   as author (step 1.1 is his). Fix: the numbers are in `app/api.py`; config.py is unchanged.
+3. **The login limit per IP would have been shared by everyone online.** The first version of the limit
+   used `request.client.host`. Behind Railway's proxy that is the proxy's address, so 10 failed logins
+   from anyone would block every visitor. Caught while preparing the Dockerfile for it. Fix: uvicorn
+   `--proxy-headers`. Remaining limit (SPEC section 11): a client can add to X-Forwarded-For, so the
+   per-IP limit can be dodged; the per-account lock (SR36) cannot.
+
+## 2026-11-06 — React chat page (Joe, step 5.8)
+
+1. **The retrieved passages were hidden.** Claude's first Answer component put the list of retrieved
+   passages inside a closed `<details>` menu, so the user saw only "Retrieved passages (1)". The brief
+   (section 5) and FR5 ask for the passages shown alongside the answer, as the Jinja page did. How we
+   caught it: the screenshot of the browser check, compared with the brief. Fix: the list is always
+   shown; only each passage's full text folds, as on the Jinja page.
+
+## 2026-11-06 — React admin pages (Joe, step 5.9)
+
+1. **A test that checked nothing.** The first version of `test_every_admin_route_refuses_visitors` read
+   the admin routes from `app.routes`. With FastAPI 0.143, included routers appear there as one
+   `_IncludedRouter` entry without a path, so the list was empty and the test passed without checking
+   a single route. How we caught it: the extra test `test_there_are_admin_routes` (at least 18 routes)
+   failed with 0. Fix: the routes are read from the app's OpenAPI description (20 routes); removing the
+   admin check from the router now makes two tests fail.
+2. **/app/ADMIN was not protected.** The first server check for the React admin pages compared the path
+   with "admin". React Router ignores capitals, so /app/ADMIN showed the admin page frame without the
+   server check (the data stayed protected by /api/admin). Caught while reviewing the route before
+   writing its test. Fix: the first part of the path is lower-cased; the test tries /app/ADMIN and
+   /app//admin/eval.
+3. **The build failed.** `useLoad.js` contains JSX (the `Waiting` component), which Vite only accepts in
+   `.jsx` files. Caught by `npm run build`. Fix: renamed to `useLoad.jsx`.
+4. **Guide code crashed on a missing log row.** Porting the abstention labels showed that the Jinja route
+   (guide pp. 56-62) does `q["question"]` when the UPDATE found no row: a 500 for an unknown id with an
+   "add as ..." label (reproduced with the test client). The API returns 404, and a test checks it.
+
+## 2026-11-06 — Switch to React at / (Joe, step 5.10)
+
+1. **The React catch-all route hid other routes.** Claude made the React page answer every address
+   (`/{path:path}`, so /login and /admin/... work). FastAPI tries routes in the order they were added,
+   so any route added after it is never reached. How we caught it: the whole test suite; 5 tests in
+   tests/test_api_auth.py failed with 404, because they add their test-only routes after the app is
+   built. Fix: the catch-all stays the LAST route in app/main.py (after /api and /health), an unknown
+   /api address gets a JSON 404 instead of the page, and the test helper moves its routes in front.
+   A new test checks /health, /api/me and an unknown /api address are not the React page; removing the
+   /api check makes it fail.
+
+## 2026-11-06 — Research page public again, only the administrator logs in (Joe, step 5.11)
+
+1. **A requirement was changed before the instructor confirmed it.** What we asked: React pages,
+   "login screens with proper security" and a chat page (the instructor's notes). What came back: Claude
+   listed the contradiction with SR33 (visitor without login) and proposed options. Joe chose "everyone
+   logs in" (roles user and administrator), and Claude then built steps 5.6-5.10 on it: a 'user' role,
+   /api/ask and /api/passage behind a login, a server-side history per user. What was wrong: SPEC section
+   11 itself said the decision was "to be confirmed with the instructor", and we wrote four steps of code
+   on it before he answered. How we caught it: Joe asked the instructor, who answered "only admin" and
+   "what do the requirements say exactly". Fix (step 5.11): back to SR33 as written. The research routes
+   are open to visitors again, /api/history is removed, a migration removes the 'user' accounts, and the
+   tests now check the requirement (a visitor asks without an account; no 'user' account can be created).
+   All the login security of step 5.6 is kept. Lesson: a requirement change waits for the person who
+   owns the requirement, even when it is written down as "to be confirmed".
+
+## 2026-11-06 — Joe's test questions, step 3.1 (Joe)
+
+1. **Questions merged into main without Joe's approval.** What we asked: Claude proposes test questions,
+   Joe reads and validates each one (they are graded as his and he must explain them). Joe validated 14
+   answerable questions on 14 cases (Obergefell, Kyllo, Jones, Atkins, Roper, Miller, Crawford,
+   Boumediene, Snyder, Brown, Hobby Lobby, 303 Creative, Alice, Raich); the decision ids and gold quotes
+   were found word for word in the database with scripts.find_case and scripts.find_quote. What came
+   back: a second Claude session working on Joe's PC for another step read short replies from Joe
+   ("ok", "A") as approval, wrote a different list (7 cases, 2 questions each), pushed it and merged
+   it (PR #43). What was wrong: Joe had not seen that list and never said "merge it". How we caught it:
+   the branch appeared on GitHub; Joe confirmed he had not approved it. Fix: this branch puts back the
+   list Joe validated, with a normal commit (history not rewritten). Lesson: a short "ok" is only an
+   approval for the question it answers; Claude sessions on Joe's PC now get a strict, written scope.
+2. **An unanswerable question that the corpus can answer.** Claude drafted U009 ("Does Section 230
+   protect YouTube when its algorithm recommends terrorist videos?") and checked that the Court never
+   decided Section 230. What was wrong: Gonzalez v. Google (2023) says so explicitly, so a correct answer
+   ("the Court declined to decide", with a citation) would be counted as wrong, because unanswerable
+   questions expect an abstention. How we caught it: Yasser's review of main before the eval-v1 tag.
+   Fix: U009 is now about Uber drivers' employee status; 'Uber' appears once in passing, 'rideshare' 0.
+
+## 2026-11-06 — Week 10: the embedding model (Yasser, steps 10.1-10.2)
+
+1. **A hypothesis that the measurement rejected.** What we asked: Claude read the quote diagnosis
+   (scripts/diagnose_quotes.py, TUNE split: in 8 of 12 misses the meaning list ranks the holding
+   paragraph below the keyword list) and proposed the week-10 change: replace bge-small-en-v1.5 by the
+   larger bge-base-en-v1.5. What came back: the hypothesis and its selection rule (EVALUATION.md,
+   committed before measuring), export_for_colab --model, a cache key that names the model, and
+   scripts/tune_embeddings.py. What was wrong: the step from "the meaning signal is the weaker one" to
+   "a bigger model of the same family will be better on legal holdings" was an assumption, not
+   something the diagnosis showed. How we caught it: the rule written first. On 35 TUNE questions
+   bge-base gives quote@8 0.286 instead of 0.429 (2 questions gained, 7 lost), recall@5 0.971 instead of
+   1.0 and MRR@10 0.905 instead of 0.929, so bge-small stays. Because the rule was committed before the
+   run, the result could not be argued away afterwards. Lesson: a diagnosis says where the problem is,
+   not which fix works; only the before/after run decides.
+
+## 2026-11-06 — Limit of questions per IP address (Joe, step 5.12)
+
+1. **Tests that shared a counter.** What we asked: a limit of 10 questions per minute per IP address on
+   /api/ask (Yasser's request), with tests written from the expected behaviour before the code. What
+   came back: tests/test_ask_rate_limit.py (written first; 3 of 4 failed until the code existed) and the
+   limit in app/api.py. What was wrong: the counter of questions lives in memory for the whole test run,
+   and the fixture of the research tests did not empty it. All tests passed, but the 13 research tests
+   and the 4 new ones all ask from the same test address, so a test could pass or fail depending on how
+   many questions the tests before it had asked. How we caught it: reading the fixture after the first
+   green run, next to the login limit, which the fixture already empties. Fix: the fixture empties
+   ASKED_BY_IP too. We also broke the code on purpose: without the limit 3 tests fail; checking the
+   limit before SR3 makes the "too short questions do not count" test fail.

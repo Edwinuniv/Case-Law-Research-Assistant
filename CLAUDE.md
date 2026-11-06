@@ -123,6 +123,14 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 5.4 Admin templates (Joe) — 13 pages in app/templates/admin/ as in the guide, merged (PR #17)
 - [x] 5.5 Run it, test it, commit (Joe) — run with Yasser's dump: research page, citation panel, 9 admin pages OK; tests/test_admin.py from the guide + 2 tests for a gap found by breaking the code (AI_LOG) (8 passed, whole suite 66 passed) ⏳ Chevron question gives Not supported (search not finding the majority passage, told Yasser)
 
+- [x] 5.6 Login security for the API (Joe) — branch step/5.6-login-security: roles user/admin (db.py + migration), one login message, app/api.py (login, logout, /api/me, CSRF, limit per IP, role checks); 21 new tests; instructor's React/chat request in SPEC §11 ⏳ 5.7-5.10 (API research, React chat, React admin, switch)
+- [x] 5.7 Research API for the chat (Joe) — branch step/5.7-api-research: /api/ask, /api/passage, /api/history (own questions only), query_log.user_id + answer as shown; 15 new tests ⏳ 5.8 React chat page
+- [x] 5.8 React login and chat pages (Joe) — branch step/5.8-react-chat: frontend/ (Vite + React Router), served at /app, Dockerfile Node stage; checked in a browser with a test database ⏳ run with Joe's real database; 5.9 admin pages
+- [x] 5.9 React admin pages (Joe) — branch step/5.9-react-admin: app/api_admin.py (20 routes, admin role + CSRF on the router), 9 admin pages in frontend/src/admin, /app/admin refused by the server; 14 new tests ⏳ 5.10 switch (React at / and /admin, remove Jinja)
+- [x] 5.10 Switch to React (Joe) — branch step/5.10-switch-to-react: React at / and /admin, Jinja templates and routes removed (main.py 405 → 73 lines), tests/test_admin.py rewritten for /api/login; 143 tests pass ⏳ run with Joe's new database
+- [x] 5.11 Public research page (Joe) — branch step/5.11-public-research: instructor's answer (only the admin logs in, one question per message): /api/ask and /api/passage open to visitors, /api/history removed (list kept in the page), admin role only + migration removing 'user' accounts; 141 tests pass ⏳ run with Joe's new database
+- [x] 5.12 Limit of questions per IP (Joe) — branch step/5.12-ask-rate-limit: /api/ask accepts 10 questions per minute per IP address, then HTTP 429 with the wait time, before the model is called (Yasser's request: the page is public, protect the Groq credit); 4 new tests, 146 pass
+
 ### Week 6 — Deployment (Joe)
 - [x] 6.1 Deployment files — Dockerfile and .dockerignore; build step downloads the embedding model into data/models like app/embeddings.py (AI_LOG) ⏳ image built for real on Railway (6.2)
 - [ ] 6.2 Create the database and the website on Railway
@@ -140,8 +148,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
 ### Week 10 — Improvement (reranker)
-- [ ] 10.1 Hypothesis first, committed
-- [ ] 10.2 Measure before and after
+- [x] 10.1 Hypothesis first, committed (Yasser) — merged (PR #35): diagnose_quotes (why gold quotes miss the 8 passages) and the embedding-model rule in EVALUATION.md before measuring
+- [x] 10.2 Measure before and after (Yasser) — branch step/10.2-embedding-model: tune_embeddings on 35 TUNE questions; bge-base worse (quote@8 0.286 vs 0.429), bge-small kept, reported as a measured regression
 
 ## Style
 - Explain things in simple, plain English (I am a student).

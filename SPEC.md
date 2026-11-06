@@ -45,6 +45,20 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
   dockets or names (e.g. Miller v. Alabama, 2012: 3 clusters; "EPA" / "E.P.A. v. EME Homer", 2014).
   Clusters with the same date and the same docket, or the same case name (letters and digits), or the
   same official citation (U.S., S. Ct., L. Ed. 2d) form one decision (field decision_group).
+  Copies with different dates (step 1.8, 2026-10-29): CourtListener also stores some decisions twice a
+  few days or weeks apart (slip opinion and later version; e.g. Bruen 2022: 6480696 and 7686272, about
+  60 same-name pairs, mostly 2020-2022). After loading, decisions with the same case name, dates at
+  most 60 days apart and opinion texts at least 80% identical (5-word sequences) are merged into the
+  copy with the most text; the others' ids become aliases. Same-name decisions with different texts
+  stay apart (Bush v. Gore: stay of Dec 9 and decision of Dec 12, 2000; two Williams v. Taylor cases
+  of 2000-04-18). Measured on 2026-11-05: 54 copies removed.
+  Combined texts (2026-10-31): CourtListener also stores some decisions both as one combined text
+  (majority + concurrences + dissents) and as separate opinions (366 of 2,421 decisions, e.g. Heller,
+  Citizens United), so every passage appeared twice (measured on 2026-11-05: 1,859 opinion copies
+  skipped at loading, 3,647 opinions and 18.9 million words kept, against 27.5 million before). An
+  opinion whose text is at least 80% contained
+  in another of the same decision is dropped: the separate opinions are kept if together they cover
+  the combined text (their labels come from CourtListener), otherwise the combined text is kept.
   Safety rules: a citation is used only if all kept clusters carrying it have the same date
   (CourtListener gives new decisions placeholders such as "538 U.S. 1", shared by different cases),
   and two groups with different SCDB ids are never merged.
@@ -65,7 +79,11 @@ and says "Not supported by the retrieved opinions" when the opinions do not answ
 
 ## 3. Architecture
 
-PostgreSQL 16 + pgvector. Tables: decisions, cluster_alias, opinions, chunks (vector(384)),
+PostgreSQL 16 + pgvector, run with Docker: locally the pgvector/pgvector:pg16 image
+(docker-compose.yml), online the website is built from the Dockerfile on Railway. The code only
+reads DATABASE_URL, so any PostgreSQL 16 with pgvector works. Asked on 2026-10-29, the instructor
+said both a direct install and Docker are acceptable and that he prefers Docker (portable, comes
+pre-installed); we keep Docker. Tables: decisions, cluster_alias, opinions, chunks (vector(384)),
 citations, citation_map, test_questions, query_log, eval_runs, eval_results, users, settings, jobs.
 
 question -> input check, 3-1000 characters (SR3)
@@ -74,7 +92,9 @@ question -> input check, 3-1000 characters (SR3)
    (dense search is exact, no HNSW index: 57 ms for 104,904 chunks measured on 2026-10-26; HNSW took
    3 ms but is approximate and, with its default ef_search=40, returned only 40 of 50 rows, none of
    them the exact top 50. BM25 is a sparse matrix built once and saved in data/work/bm25.*;
-   words are stemmed (Snowball English), so "overrule" in a question matches "overruled")
+   words are stemmed (Snowball English), so "overrule" in a question matches "overruled";
+   the fusion has three settings, w_bm25, w_separate (weight of concurring/dissenting passages) and
+   fusion_pool, chosen on the tune split by the rule in EVALUATION.md; defaults = plain RRF)
 -> cheap gate: best passage similarity < min_retrieval => NOT SUPPORTED, model not called
 -> model (30 s limit, one retry on invalid JSON) returns sentences with passage ids P1..P8
    and exact quotes, or NOT_SUPPORTED (SR4, SR19, SR20)
@@ -82,22 +102,37 @@ question -> input check, 3-1000 characters (SR3)
 -> support score (SR26) -> status (SR27)
 -> case names and citations shown to the user are rendered from OUR database (SR21).
 
+Website (since step 5.6, 2026-11-06): FastAPI serves the pages and a JSON API under /api (app/api.py)
+for the React front end, which replaced the Jinja pages of the guide in step 5.10 (section 11).
+The research routes (/api/ask, /api/passage) are open to visitors (SR33); every /api/admin route
+checks the login and the role on the server, reading the account from the database at each request;
+every POST needs the session's CSRF token (X-CSRF-Token header). Each question is sent alone to
+pipeline.answer (FR1); the page's "My questions" list lives only in the browser page.
+Front end (step 5.8): React + Vite in frontend/ (react, react-router-dom; no UI library), built into
+frontend/dist and served by FastAPI at / (every address that is not /api or /health gets the same page); the Dockerfile builds it in a first Node stage, so
+Railway still runs one service. Pages: chat (research, no login), administrator login and the 9 admin pages under /admin
+(step 5.9; admin JSON API in app/api_admin.py, where the router itself requires the admin role and the
+CSRF token, so no admin route can be added without them). React only displays: it never decides who
+may see what; /admin pages are refused by the server (401 / 403) like every admin route (SR35).
+
 ## 4. Chunking strategy (FR31, SR16)
 
 Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
 238,580 paragraphs (median 88 words, 90th percentile 300, longest 24,116 words); paragraphs with at
 most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
-(median 292 words), 27,500,424 words in total.
+(median 292 words), 27,500,424 words in total. Since 2026-10-29 (one section per opinion, opinions on a
+denial of certiorari labelled): 105,626 chunks. Since 2026-11-05 (no duplicate opinions, opinion starts
+found inside PDF-style paragraphs): 2,423 decisions, 3,647 opinions, 72,593 chunks, 18,852,079 words.
 
 | Rule | Justification |
 |---|---|
-| Never mix two opinions | A chunk mixing majority and dissent could present a dissent as the Court's ruling. Each opinion is chunked on its own, and CourtListener's "combined" texts (majority + concurrences + dissents in one text, e.g. Loper Bright, 2024) are cut at each "JUSTICE X, concurring/dissenting." or "... delivered the opinion of the Court." line; the section names the opinion ("Kagan, J., dissenting") and is shown to the model and the reader. |
+| Never mix two opinions | A chunk mixing majority and dissent could present a dissent as the Court's ruling. Each opinion is chunked on its own, and CourtListener's "combined" texts (majority + concurrences + dissents in one text, e.g. Loper Bright, 2024) are cut at each "JUSTICE X, concurring/dissenting." or "... delivered the opinion of the Court." line; the section names the opinion ("Kagan, J., dissenting") and is shown to the model and the reader. Texts that came from a PDF have no paragraph breaks (281 of 4,709 opinions, e.g. Kennedy v. Bremerton, 2022), so these lines are also found inside a paragraph, and the Syllabus is recognised by its standard "NOTE: Where it is feasible, a syllabus" line. |
 | Whole paragraphs, at most 350 words (SR16: 250-400) | 98.3% of our paragraphs have at most 350 words (median 88), so they stay whole and quotes stay intact; at 250 words only 84.3% would. |
 | Split long paragraphs between sentences | Only 1.7% of paragraphs are longer than 350 words; they are cut at sentence ends, never inside a sentence. |
 | New chunk at each Part heading (I, II, A...) and at the Syllabus | The section label is stored and shown to the reader; the Syllabus (written by Court staff, not part of the opinion) is flagged. |
 | Exact start/end positions | Needed to highlight the passage in its opinion (FR4, SR31); checked by tests/test_chunking.py. |
 | Header embedded with each chunk | "Case (year) - opinion type - section" is added to the embedded text, so a passage keeps its context (including which Justice's opinion it is). |
-| Measured choice | Week 3: recall@5 with 250 vs 350 vs 400 words on the tune questions (step 3.5). |
+| Measured choice | Step 3.5 (2026-10-29, tune split, run tune_chunks_2026-10-29T18-09-07.json): quote@8 0.364 / 0.455 / 0.364 and MRR@10 0.955 / 0.939 / 0.894 for 250 / 350 / 400 words; 350 kept by the rule in EVALUATION.md. |
 
 Known exception: 9 chunks of 104,904 are longer than 350 words (longest 830). They are tables with
 no sentence ends (e.g. the appendix of Senate recess dates in NLRB v. Noel Canning, 2014); the model
@@ -149,9 +184,19 @@ Deliberate improvement (week 10): reranker, measured before and after on the sam
 
 ## 8. Roles (SR33-SR36)
 
-Visitor: no login, public research page only.
-Administrator: login (bcrypt hashes, locked 15 minutes after 5 failures); evaluation,
-test questions, abstentions, analytics, settings, corpus and citation lookup, re-index, accounts.
+SR33 as written (confirmed by the instructor on 2026-11-06, section 11): two roles.
+Visitor: no login, no account; the public research (chat) page only.
+Administrator: login; the research page and the admin pages: evaluation, test questions,
+abstentions, analytics, settings, corpus and citation lookup, re-index, accounts. Administrator
+accounts are created and disabled by an administrator (FR12); there is no self-registration.
+Login security (administrator): bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the
+same error message for every failed login; at most 10 failed logins per IP address in 15 minutes
+(HTTP 429); a new session at each login; logout clears the session; session cookie HttpOnly,
+SameSite=Lax, Secure online (HTTPS_ONLY=1); CSRF token on every POST, visitors included (they get the
+token with their session from /api/me); role checked on the server at every admin request (SR35, NFR8).
+Research page (visitors, step 5.12): at most 10 questions per minute per IP address on /api/ask; the
+next one gets HTTP 429 with a message that says how long to wait, before the model is called and
+without being saved. It protects the model credit and the demo (NFR5) now that no account is needed.
 
 ## 9. Work process
 
@@ -179,7 +224,17 @@ Week 2 and later (1.8 was merged in PR #5):
 |---|---|---|---|
 | 2.1-2.3 chunking, embeddings, search index, statistics | Yasser | step/2-index | merged (PR #16) |
 | 3.2-3.4 hybrid search (BM25 + pgvector, RRF), reranker switch, retrieval baseline script | Yasser | step/3-search | merged (PR #20); baseline needs eval/questions.jsonl (tag eval-v1) |
-| 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | code ready; needs a re-index (Colab) and a check on the real data |
+| 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | merged (PR #23) |
+| 5.6 login and security for the API (roles user/admin, CSRF, login limit per IP, one login message) | Joe | step/5.6-login-security | code and tests ready (21 new tests); React pages in 5.8-5.10 |
+| 5.7 research API for the chat (/api/ask, /api/passage, /api/history; query_log.user_id) | Joe | step/5.7-api-research | code and tests ready (15 new tests) |
+| 5.8 React login and chat pages under /app; Dockerfile Node stage | Joe | step/5.8-react-chat | built and checked in a browser (test database, fake model); 3 new tests |
+| 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
+| 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
+| 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
+| 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
+| Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
+| 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
+| 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 
 ## 11. Divergences log
 
@@ -209,3 +264,73 @@ instead of FABRICATED, so the fabrication count is not inflated by CourtListener
 2026-10-29 - Evaluation: waits and retries when the model provider refuses a call for its rate limit
 (Groq free tier: 8,000 tokens per minute; one question costs about 5,000). Only the evaluation waits;
 a visitor's request still ends with ERROR at once (SR4). Details in AI_LOG.md.
+
+2026-10-29 - The planned week-10 improvement (reranker, SR18) gave no gain on the tune split
+(EVALUATION.md, run tune_rerank_2026-10-29T15-53-59.json) and costs 5-69 s per question on a laptop
+CPU. It stays available (use_reranker) but is off; the improvement to report will be chosen from
+measured candidates (chunk size, step 3.5, first).
+
+2026-11-06 - Website: the instructor asked for (1) a React front end instead of the server-rendered
+Jinja pages of the guide (pp. 56-70), (2) login screens with proper security, (3) a chat page for the
+research questions. Decision (Joe, 2026-11-06, to be confirmed with the instructor): everyone logs in,
+roles "user" and "administrator", accounts created by an administrator. This changes SR33 ("visitor,
+no login"), FR1, FR4, FR10, FR12, O7 and sections 1.2, 4 and 6 of the Requirements Document, which
+will be updated once the instructor confirms (new SR33: "There shall be two roles, user and
+administrator. Both log in. A user can use the research page only; an administrator can also use
+the admin pages. Accounts are created and disabled by an administrator; there is no
+self-registration."). The chat answers each question on its own: pipeline.answer does not use earlier
+questions, and the page says so. The Jinja pages stay until the React pages do the same (step 5.10).
+Plan: steps 5.6 (login security) to 5.10 (switch), one branch each.
+
+2026-11-06 - Login (step 5.6): the guide's check_login said "This account is locked" only for emails
+that exist, which tells an attacker which accounts exist. Every failed login now gives "Wrong email or
+password." (unknown email, wrong password, locked or disabled account), and an unknown email still
+costs one bcrypt check so the reply time does not give it away either. Added on top of SR36: at most
+10 failed logins per IP address in 15 minutes. Known limit: on Railway the address comes from the
+X-Forwarded-For header (uvicorn --proxy-headers), which a client can add to; the per-account lock
+(SR36) does not depend on it.
+
+2026-11-06 - Chat history (step 5.7): query_log (FR28, SR41) also saves who asked (user_id) and the
+answer exactly as it was shown, so a user can open an earlier answer again without calling the model.
+No new table. A user only sees their own questions (someone else's gives 404); the admin pages show
+the questions but not who asked them.
+
+2026-11-06 - Admin API (step 5.9): the abstention list no longer shows who asked (the admin does not
+need it to tune abstention). Labels must be one of the four buttons; labelling a question that is not in
+the log gives 404 (the guide's Jinja route crashed with a 500 when the label was "add as ..."). Creating
+an account with a short password or a wrong role gives an error instead of doing nothing silently.
+
+2026-11-06 - Switch (step 5.10): the React pages moved from /app to / and /admin, and the Jinja
+templates and routes of the guide (pp. 56-70) were removed from app/main.py; the admin SQL now has one
+copy, in app/api_admin.py. The guide's tests/test_admin.py (p. 63) checks the same behaviour through
+POST /api/login and the React /admin pages. The "research aid, not legal advice" footer (SR7) is in
+frontend/index.html, outside React, so it is on every page even before the JavaScript loads.
+
+2026-11-06 - Instructor's answer: only the administrator logs in; the chat takes one independent
+question per message (FR1). Dr. Salloum answered our two questions about the website: (1) login is
+"only admin", visitors do not log in; (2) the chat follows the Phase 1 requirements, which ask for one
+question at a time and no follow-up questions. The earlier decision "everyone logs in, roles user and
+administrator" (entry above, which was waiting for his confirmation) is REVERTED in step 5.11: SR33,
+FR1, FR4, FR10, FR12, O7 and sections 1.2, 4 and 6 of the Requirements Document stay as written, and
+the Requirements Document needs no change. /api/ask and /api/passage are open to visitors (still with
+the CSRF token, SR3 and the query log); /api/history is removed (a visitor has no account, so "My
+questions" lives only in the open page); the accounts page creates administrators only; a migration
+removes the 'user' accounts made during steps 5.6-5.10 (their questions stay in the log without the
+account) and the database allows the role 'admin' only. All the login security of step 5.6 stays.
+
+2026-11-06 - Question limit per IP address (step 5.12, asked by Yasser): no requirement asks for it;
+it is added on top, like the login limit of step 5.6. Since step 5.11 anyone can use the research page
+without an account, so a script could send questions in a loop and use up our Groq credit (Edwin's
+retry for Groq's own limit, PR #28, is for the evaluation runs, not for visitors). One address may ask
+10 questions per minute; the next one gets HTTP 429 and a Retry-After header, the model is not called
+and the question is not saved in the query log (like a question refused by SR3, which is checked first
+and does not count). Evaluation runs from the admin pages call the pipeline directly, so the limit does
+not apply to them. Known limits: kept in memory (a restart empties it); on Railway the address comes from
+X-Forwarded-For, as for the login limit; many visitors behind one address (a university network) share
+the 10 questions; many addresses together are not limited.
+
+2026-11-06 - Week 10 improvement (step 10.2): the hypothesis written first in EVALUATION.md (a larger
+embedding model, bge-base-en-v1.5, finds the holding paragraph more often) was measured on the TUNE
+split and rejected by its rule: quote@8 0.286 instead of 0.429, recall@5 0.971 instead of 1.0
+(run tune_embeddings_2026-11-06T19-04-10.json). The embedding model stays bge-small-en-v1.5 (section 3);
+the before/after numbers are reported as a measured regression (brief section 8).
