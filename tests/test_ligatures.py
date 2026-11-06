@@ -31,3 +31,28 @@ def test_a_clean_opinion_with_one_odd_word_is_left_alone():
     mapping = ligatures.repairs(ligatures.vocabulary([CLEAN, BROKEN]))
     one_odd = "This opinion is clean except one frst word."
     assert ligatures.fix_opinion(one_odd, mapping) == (one_odd, 0)
+
+
+def test_words_that_can_be_real_in_a_broken_pdf_need_the_clean_opinions_to_agree():
+    """Yasser's dry run: 'rife' -> 'rifle' and 'fred' -> 'fired' were proposed. 'rife' and 'Fred' contain no
+    'fi'/'fl', so a broken PDF prints them intact: they are repaired only if the clean opinions never use them.
+    'fled' contains 'fl', which a broken PDF cannot print, so there it can only be 'filed'."""
+    clean = ["The suspect fled. The report was rife with errors. Fred testified. " * 5,
+             "The brief was filed first. The rifle was fired. The filing was late. " * 80]
+    broken = "The motion was fled. The brief was fled. The rife was fred. Frst, the fling deadline."
+    first = ligatures.repairs(ligatures.vocabulary(clean + [broken]))
+    mapping = ligatures.final_repairs(first, clean)
+    fixed, _ = ligatures.fix_opinion(broken, mapping)
+    assert "was filed. The brief was filed." in fixed               # 'fled' -> 'filed' inside the broken PDF
+    assert "The rife was fred." in fixed                            # ambiguous: left as it is
+    assert "rife" not in mapping and "fred" not in mapping
+
+
+def test_a_clean_opinion_that_often_says_fled_is_not_touched():
+    """A police chase: 'fled' five times, but also many intact fi/fl words, so it is not a broken PDF."""
+    corpus = ["The brief was filed first. The filing was late. " * 80]
+    chase = "The suspect fled. He fled again, then fled on foot, fled the officers and fled. " \
+            "The officer was the first to find him; the flight ended in a field. The final finding stood."
+    mapping = ligatures.repairs(ligatures.vocabulary(corpus + [chase]))
+    assert mapping.get("fled") == "filed"                     # 'fled' is a known repair...
+    assert ligatures.fix_opinion(chase, mapping) == (chase, 0)   # ...but this opinion is not broken
