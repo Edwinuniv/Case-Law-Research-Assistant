@@ -166,7 +166,7 @@ def best_citation(citations):
 def citation_label(p, d):
     """How a passage is cited in the answer, e.g. "Loper Bright ..., No. 22-451 (2024) · Majority"
     (the same text as the old Jinja page)."""
-    cite = d["citations"][0] if d and d["citations"] else f"No. {d['docket_number'] if d else '?'}"
+    cite = best_citation(d["citations"]) if d and d["citations"] else f"No. {d['docket_number'] if d else '?'}"
     return f"{p['case_name']}, {cite} ({p['date_filed'][:4]}) · {p['opinion_label']}"
 
 
