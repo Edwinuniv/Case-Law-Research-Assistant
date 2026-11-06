@@ -1,5 +1,6 @@
 """Run all test questions from the terminal (the admin page does the same).
 Usage: python -m scripts.run_eval "note about this run"   -> TUNE split only: metrics and the tau sweep
+       python -m scripts.run_eval --resume RUN_ID         -> continue a run paused at the provider's daily limit
        python -m scripts.run_eval --test RUN_ID           -> TEST split, ONCE, after tau_abstain is chosen
 Not the guide's version: it printed both splits after every run, but EVALUATION.md chooses tau on the
 TUNE split without looking at the TEST split (SR29)."""
@@ -27,7 +28,14 @@ def main(argv, s=None):
         print(f"TEST split of run {run_id}, with tau_abstain = {s['tau_abstain']} (report it once, unchanged)")
         report(evaluate.load_run(run_id), s, "test")
     else:
-        run_id = evaluate.run_evaluation(Searcher(), CitationIndex(), "command line", " ".join(argv))
+        if argv[:1] == ["--resume"]:
+            run_id = evaluate.run_evaluation(Searcher(), CitationIndex(), resume=int(argv[1]))
+        else:
+            run_id = evaluate.run_evaluation(Searcher(), CitationIndex(), "command line", " ".join(argv))
+        if evaluate.run_status(run_id) == "paused":      # Groq free tier: 200,000 tokens per day
+            print(f"\nRun {run_id} is paused at the model provider's daily limit. Continue it later with:\n"
+                  f"    python -m scripts.run_eval --resume {run_id}")
+            return
         report(evaluate.load_run(run_id), s, "tune")
         print(f"\nSaved as run {run_id}: open /admin/eval/{run_id}")
 
