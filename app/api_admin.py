@@ -30,3 +30,47 @@ def home():
     m = evaluate.metrics(evaluate.load_run(last), s, "test") if last else None
     return {"counts": counts, "last_run": last, "metrics": m, "jobs": jobs,
             "chunk_max_words": s.get("chunk_max_words", 350)}
+
+
+# ---------------- settings (FR23: preview on the latest run BEFORE saving) ----------------
+PREVIEW_KEYS = ["abstention_precision", "abstention_recall", "answered_but_should_abstain",
+                "abstained_but_should_answer", "low_confidence", "false_citations_shown"]
+
+
+@router.get("/settings")
+def settings():
+    return db.get_settings()
+
+
+@router.get("/settings/preview")
+def settings_preview(tau_abstain: float, tau_confident: float, min_retrieval: float):
+    """What the latest evaluation run would give with these thresholds. Saves nothing."""
+    s = db.get_settings()
+    last = latest_run_id()
+    if not last:
+        raise HTTPException(404, "No evaluation run yet: run one first.")
+    new = dict(s, tau_abstain=tau_abstain, tau_confident=max(tau_confident, tau_abstain), min_retrieval=min_retrieval)
+    pairs = evaluate.load_run(last)
+    now, then = evaluate.metrics(pairs, s, "test"), evaluate.metrics(pairs, new, "test")
+    return {"run": last, "rows": [{"metric": k, "now": now.get(k), "then": then.get(k)} for k in PREVIEW_KEYS]}
+
+
+class Settings(BaseModel):
+    tau_abstain: float
+    tau_confident: float
+    min_retrieval: float
+    top_k: int
+    retrieve_k: int
+    use_reranker: bool
+
+
+@router.post("/settings")
+def settings_save(body: Settings):
+    """The same limits as the Jinja page: tau_confident >= tau_abstain, 8-50 passages searched, 1-10 sent."""
+    db.set_setting("tau_abstain", body.tau_abstain)
+    db.set_setting("tau_confident", max(body.tau_confident, body.tau_abstain))
+    db.set_setting("min_retrieval", body.min_retrieval)
+    db.set_setting("retrieve_k", max(8, min(body.retrieve_k, 50)))
+    db.set_setting("top_k", max(1, min(body.top_k, 10)))
+    db.set_setting("use_reranker", body.use_reranker)
+    return db.get_settings()
