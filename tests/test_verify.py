@@ -175,3 +175,26 @@ def test_year_of_another_case_named_in_the_sentence_is_kept():
                "text": ROBERTS["text"] + " In 2019, the Court decided Kisor v. Wilkie."}
     kept, _ = run_on(passage, "In 2019, the Court decided Kisor v. Wilkie.", OVERRULED)
     assert kept
+
+
+# --- Metadata (2026-11-06): case names are compared with the whole case_name, both parties ---
+def test_case_name_with_the_right_first_word_but_a_wrong_party_is_removed():
+    kept, removed = run("In Trump v. Anything, the President enjoys absolute immunity.")
+    assert not kept and "FABRICATED case name: Trump v. Anything" in removed[0]["problems"]
+
+def test_other_case_sharing_only_a_generic_word_is_removed():
+    passage = {**PASSAGE, "case_name": "Shelby County v. Holder"}
+    kept, removed = run_on(passage, "In Fulton County v. Holder, the President enjoys absolute immunity.", QUOTE)
+    assert not kept and any("Fulton County v. Holder" in p for p in removed[0]["problems"])
+
+def test_short_forms_of_the_cited_case_name_are_kept():
+    kept, _ = run_on(ROBERTS, "In Loper Bright v. Raimondo, the Court held that courts must exercise their "
+                              "independent judgment.", OVERRULED)
+    assert kept
+    passage = {**PASSAGE, "case_name": "SEC v. Jarkesy Revisions: 6/27/24"}     # as in our data (told Yasser)
+    kept, _ = run_on(passage, "In SEC v. Jarkesy, the President enjoys absolute immunity.", QUOTE)
+    assert kept
+
+def test_a_verb_before_the_cited_case_name_is_not_part_of_the_name():
+    kept, _ = run("Applying Trump v. United States, the President enjoys absolute immunity.")
+    assert kept
