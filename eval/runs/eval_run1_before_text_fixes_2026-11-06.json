@@ -1,0 +1,2150 @@
+{
+ "run_id": 1,
+ "created_at": "2026-11-06T19:24:34.257717+00:00",
+ "trigger": "command line",
+ "status": "paused",
+ "note": "week 8 full evaluation, eval-v1 (85 questions), new dump, case_filter on",
+ "settings": {
+  "top_k": 8,
+  "w_bm25": 1.0,
+  "index_meta": {
+   "words": 18852079,
+   "chunks": 72593,
+   "built_at": "2026-11-05T18:31:45+00:00",
+   "opinions": 3647,
+   "max_words": 350
+  },
+  "retrieve_k": 20,
+  "w_grounded": 0.4,
+  "w_passages": 0.1,
+  "w_separate": 1.0,
+  "case_filter": true,
+  "fusion_pool": 50,
+  "tau_abstain": 0.55,
+  "w_retrieval": 0.5,
+  "use_reranker": false,
+  "min_retrieval": 0.35,
+  "tau_confident": 0.7,
+  "chunk_max_words": 350
+ },
+ "data": {
+  "decisions": 2423,
+  "chunks": 72593,
+  "dump": "Yasser's dump of 2026-11-05 (before the fi/fl and opinion-heading fixes, step/2.2-text-fixes)"
+ },
+ "why_stopped": "Paused at Groq's daily limit after 39 questions; not resumed (decision 2026-11-07, option B): a fresh run starts on the fixed data. Kept as the 'before the fix' run.",
+ "results": [
+  {
+   "question_id": "A001",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 4800,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.8327,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9986254,
+     8509976,
+     9986254,
+     8509976,
+     118450,
+     9986254,
+     799969,
+     8509976,
+     868384,
+     145903,
+     145854
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A002",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court overruled Roe v. Wade, as the opinion states that \"Roe and Casey must be overruled\".",
+      "quote": "Roe and Casey must be overruled",
+      "sources": [
+       "P7"
+      ],
+      "problems": [
+       "FABRICATED case name: Roe v. Wade"
+      ]
+     },
+     {
+      "text": "The majority\u2019s analysis notes that the decision is \"overruling Roe and Casey\" in favor of overturning the precedent.",
+      "quote": "overruling Roe and Casey",
+      "sources": [
+       "P4"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2579,
+    "n_removed": 2,
+    "sentences": [],
+    "top_score": 0.8192,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4746633,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     118387,
+     130160,
+     130160,
+     145744,
+     4764452,
+     130160
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 1
+   }
+  },
+  {
+   "question_id": "A003",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court adopted a text, history, and tradition test for evaluating Second Amendment regulations.",
+      "quote": "The Court employs and elaborates on the text, history, and tradition test that Heller and McDonald require for evaluating whether a government regulation infringes on the Second Amendment right to possess and carry guns for self-defense.",
+      "sources": [
+       "P3"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     }
+    ],
+    "ms_total": 2573,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8201,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     7686272,
+     7686272,
+     7686272,
+     7686272,
+     7686272,
+     7686272,
+     7686272,
+     7686272
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A004",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court held that the race\u2011based admissions programs at Harvard and the University of North Carolina violated the Equal Protection Clause of the Fourteenth Amendment.",
+      "quote": "race-based admissions programs violated, respectively, Title VI ... and the Equal Protection Clause of the Fourteenth Amendment.",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 6852,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8259,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     10049657,
+     10049657,
+     10049657,
+     10049657,
+     10049657,
+     10049657,
+     3216495,
+     10049657
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A005",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The government must show that the agency has clear congressional authorization for the power it claims to regulate in a highly consequential way.",
+      "quote": "administrative agencies must be able to point to \u201cclear congressional authorization\u201d when they claim the power to make decisions of vast \u201ceconomic and political significance.\u201d",
+      "sources": [
+       "P5"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2723,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8521,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     6623243,
+     6623243,
+     6623243,
+     6623243,
+     6623243,
+     6623243,
+     6623243,
+     6623243
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A006",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3334,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that disciplining Kennedy for his brief post\u2011game prayer violated his First Amendment Free Exercise and Free Speech rights.",
+      "sources": [
+       "P6"
+      ],
+      "groundedness": 0.643
+     },
+     {
+      "text": "The Court said the district\u2019s policy was not neutral or generally applicable because it specifically targeted religious practice.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.8
+     }
+    ],
+    "top_score": 0.8081,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7834,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     6623460,
+     6623460,
+     6623460,
+     6623460,
+     6623460,
+     6623460,
+     6623460,
+     6623460
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A007",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court held that the government\u2019s acquisition of historical cell\u2011site location records is a search under the Fourth Amendment.",
+      "quote": "Held: 1. The Government\u2019s acquisition of Carpenter\u2019s cell\u2011site records was a Fourth Amendment search.",
+      "sources": [
+       "P4"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 3161,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8109,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A008",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3066,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court holds that a warrant is generally required before searching the digital data on a seized cell phone, even when it is taken incident to arrest.",
+      "sources": [
+       "P8"
+      ],
+      "groundedness": 0.8
+     },
+     {
+      "text": "The Court says officer\u2011safety concerns do not justify dispensing with the warrant requirement across the board.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 1.0
+     }
+    ],
+    "top_score": 0.816,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8542,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     2680439,
+     2680439,
+     2680439,
+     2680439,
+     2680439,
+     2680439,
+     2680439,
+     2680439,
+     4512666
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A009",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3031,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that the individual mandate could not be upheld under the Commerce Clause.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 1.0
+     }
+    ],
+    "top_score": 0.8363,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8682,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     809122,
+     809122,
+     809122,
+     809122,
+     4898460,
+     809122,
+     809122,
+     809122
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A010",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "The majority rejected the government\u2019s argument that it could protect dissenting shareholders by banning such speech.",
+      "quote": "The First Amendment does not allow that power. There is, furthermore, little evidence of abuse that cannot be corrected by shareholders \u201cthrough the procedures of corporate democracy.\u201d",
+      "sources": [
+       "P7"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2906,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The Court held that a ban on corporate independent expenditures using general treasury funds violates the First Amendment.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.455
+     },
+     {
+      "text": "The Court noted that Buckley found the governmental interest in preventing corruption inadequate to justify an expenditure ban on independent expenditures.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.923
+     }
+    ],
+    "top_score": 0.8324,
+    "judgements": [
+     "no",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.5279,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     1741,
+     1741,
+     1741,
+     1741,
+     1741,
+     1741,
+     1741,
+     1741,
+     131149
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A011",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3951,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court holds that the Second Amendment confers an individual right to keep and bear arms, unconnected with militia service.",
+      "sources": [
+       "P8"
+      ],
+      "groundedness": 0.727
+     },
+     {
+      "text": "The majority emphasizes a strong presumption that the right is exercised individually and belongs to all Americans.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.8
+     }
+    ],
+    "top_score": 0.8025,
+    "judgements": [
+     "partly",
+     "partly"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7978,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     4760994,
+     149702,
+     149702,
+     149702,
+     3217333
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A012",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3830,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that a city may use eminent domain to transfer land to private developers if the taking serves a public purpose such as economic development.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.714
+     },
+     {
+      "text": "The Court emphasized that courts should not second\u2011guess the city\u2019s determination of which parcels are needed for the plan, leaving that decision to the legislative branch.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 0.5
+     }
+    ],
+    "top_score": 0.7718,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7259,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     799984,
+     799984,
+     799984,
+     799984,
+     799984,
+     799984,
+     4895709,
+     799984,
+     4897041
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A013",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score between the two thresholds",
+    "removed": [],
+    "ms_total": 3062,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that a state may not criminalize private, consensual sexual intimacy between same\u2011sex adults in their home",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.455
+     },
+     {
+      "text": "The Court noted that historically such sodomy laws were not enforced against consenting adults acting in private, underscoring that the statute lacks constitutional justification",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.533
+     }
+    ],
+    "top_score": 0.7192,
+    "judgements": [
+     "yes",
+     "partly"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "LOW_CONFIDENCE",
+    "support_score": 0.6474,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     130160,
+     945737,
+     130160,
+     130160,
+     3181499,
+     130160,
+     130160,
+     130160,
+     145669,
+     2812209,
+     145669,
+     2812209,
+     2812209,
+     4883694
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A014",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "",
+      "sources": [],
+      "problems": [
+       "not a valid sentence"
+      ]
+     }
+    ],
+    "ms_total": 15020,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The Court halted the recount because the election dispute could not be completed by the December\u202f12 deadline required by the safe\u2011harbor provision of 3\u202fU.S.C.\u202f\u00a7\u202f5, and any recount attempting to meet that date would be unconstitutional.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.667
+     },
+     {
+      "text": "It also held that the recount procedures violated the Equal Protection Clause, as the lack of a uniform, specific standard for counting ballots rendered the recount constitutionally infirm.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 0.353
+     }
+    ],
+    "top_score": 0.7971,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.4664,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     118393,
+     118395,
+     118395,
+     118395,
+     118395,
+     118395,
+     118395,
+     118395
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A015",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Constitution, via the Fourteenth Amendment, requires each State to license a marriage between two people of the same sex.",
+      "quote": "Held: The Fourteenth Amendment requires a State to license a marriage between two people of the same sex",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     },
+     {
+      "text": "",
+      "sources": [],
+      "problems": [
+       "not a valid sentence"
+      ]
+     },
+     {
+      "text": "It also obligates States to recognize same\u2011sex marriages lawfully performed elsewhere.",
+      "quote": "and to recognize a marriage between two people of the same sex when their marriage was lawfully licensed and performed out-of-State",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 3376,
+    "n_removed": 3,
+    "sentences": [],
+    "top_score": 0.7794,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     945737,
+     2812209,
+     2812209,
+     2812209,
+     4792661
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A016",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "The Court framed the issue as whether using a thermal\u2011imaging device aimed at a private home from a public street to detect relative amounts of heat inside the home is a \u201csearch\u201d under the Fourth Amendment.",
+      "quote": "This case presents the question whether the use of a thermal\u2011imaging device aimed at a private home from a public street to detect relative amounts of heat within the home constitutes a \u201csearch\u201d within the meaning of the Fourth Amendment.",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 4145,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The majority held that a thermal imager reveals interior heat information, which is information about the interior of the home and therefore constitutes a search.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.643
+     },
+     {
+      "text": "The Court emphasized that the Fourth Amendment\u2019s protection of the home is not limited by how much information is obtained, so even passive heat\u2011detecting devices are covered by the warrant requirement.",
+      "sources": [
+       "P6"
+      ],
+      "groundedness": 0.611
+     }
+    ],
+    "top_score": 0.8231,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.5058,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     118443,
+     118443,
+     118443,
+     856347,
+     118443,
+     118443,
+     137742,
+     118443,
+     4512666
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A017",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court held that attaching a GPS device to a vehicle and using it to monitor the vehicle\u2019s movements constitutes a search under the Fourth Amendment.",
+      "quote": "Held: The Government\u2019s attachment of the GPS device to the vehicle, and its use of that device to monitor the vehicle\u2019s movements, constitutes a search under the Fourth Amendment.",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 4846,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8196,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     622304,
+     622304,
+     622304,
+     622304,
+     622304,
+     2789928,
+     622304,
+     856347,
+     4497658,
+     4512666,
+     4512666,
+     4512666,
+     2760668,
+     137742
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A018",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 54229,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court holds that the Eighth and Fourteenth Amendments forbid the execution of persons with intellectual disability.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 1.0
+     }
+    ],
+    "top_score": 0.7763,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8382,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     2676594,
+     2676594,
+     2676594,
+     2676594,
+     4838506,
+     2676594,
+     2676594,
+     2676594,
+     6620340,
+     4378726,
+     4591647
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A019",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "This prohibition was expressly extended in Roper, which barred executions of anyone who committed a crime before turning 18.",
+      "quote": "we extended the prohibition on executions to those who committed their crimes before the age of 18.",
+      "sources": [
+       "P4"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 5132,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The Court holds that the death penalty may not be imposed on offenders who were under 18 at the time of their crime.",
+      "sources": [
+       "P2"
+      ],
+      "groundedness": 0.857
+     }
+    ],
+    "top_score": 0.7725,
+    "judgements": [
+     "no"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.3852,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     124465,
+     137749,
+     137749,
+     146790,
+     137749,
+     137749,
+     137749,
+     137749,
+     2812588,
+     3207964,
+     2959737,
+     799976,
+     2959737,
+     799976,
+     4876196,
+     145726
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A020",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score between the two thresholds",
+    "removed": [
+     {
+      "text": "The Court explained that Miller established that the penological justifications for life without parole collapse in light of \"the distinctive attributes of youth.\"",
+      "quote": "Miller \u2026 established that the penological justifications for life without parole collapse in light of \"the distinctive attributes of youth.\"",
+      "sources": [
+       "P5"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 5984,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The Court holds that mandatory life without parole for those under the age of 18 at the time of their crimes violates the Eighth Amendment\u2019s prohibition on \u201ccruel and unusual punishments.\u201d",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 1.0
+     },
+     {
+      "text": "The Court has declared that mandatory life without parole for juvenile offenders is unconstitutional.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.889
+     }
+    ],
+    "top_score": 0.8087,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "LOW_CONFIDENCE",
+    "support_score": 0.5881,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     2959737,
+     2959737,
+     4316744,
+     2959737,
+     3171724,
+     2959737,
+     2959737,
+     9987647,
+     146790,
+     146790,
+     146790,
+     146790,
+     146790,
+     146790
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A021",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3508,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court holds that a witness\u2019s testimony is inadmissible unless the witness appears at trial or, if the witness is unavailable, the defendant had a prior opportunity for cross\u2011examination.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 1.0
+     },
+     {
+      "text": "The Court further requires that a prior opportunity to cross\u2011examine be a necessary condition for admitting testimonial statements.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 0.727
+     }
+    ],
+    "top_score": 0.7564,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8236,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     145853,
+     798255,
+     134724,
+     145781,
+     134724,
+     145641,
+     4792659,
+     802772,
+     219509,
+     2959736,
+     219509,
+     127691,
+     219509,
+     10049665
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A022",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3241,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that the petitioners, who are foreign detainees at Guantanamo Bay, have the constitutional privilege of habeas corpus.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.9
+     },
+     {
+      "text": "Accordingly, the Court affirmed that they are entitled to the privilege of habeas corpus to challenge the legality of their detention.",
+      "sources": [
+       "P8"
+      ],
+      "groundedness": 0.778
+     }
+    ],
+    "top_score": 0.801,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8361,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     145795,
+     137000,
+     145795,
+     145943,
+     137000,
+     145795,
+     145625,
+     145795,
+     4763596,
+     2151
+    ],
+    "false_by_sentence": [
+     [
+      "rendered citation does not match: 128 S. Ct. 2229"
+     ],
+     [
+      "rendered citation does not match: 128 S. Ct. 2229"
+     ]
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A023",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3073,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that the First Amendment shields the church from tort liability for emotional distress caused by picketing near a soldier\u2019s funeral.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.769
+     }
+    ],
+    "top_score": 0.7361,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7214,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     205789,
+     205789,
+     205789,
+     205789,
+     205789,
+     205789,
+     205789,
+     205789,
+     6454238
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A024",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "The majority also found the statute underinclusive and overinclusive, concluding that its lack of narrow tailoring defeats its asserted justification.",
+      "quote": "the regulation is wildly underinclusive when judged against its asserted justification, which in our view is alone enough to defeat it.",
+      "sources": [
+       "P7"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 5381,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The majority held that California\u2019s ban on the sale of violent video games to minors is unconstitutional because the law does not satisfy a compelling state interest.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.562
+     },
+     {
+      "text": "The dissent argued that the statute is constitutional, asserting that the restriction is justified by a compelling interest and that no less restrictive alternative exists.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.692
+     }
+    ],
+    "top_score": 0.8418,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.511,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     219734,
+     219734,
+     219734,
+     219734,
+     219734,
+     219734,
+     219734,
+     219734
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A025",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court holds that, as applied to closely held for\u2011profit corporations, the HHS contraceptive mandate violates RFRA and therefore cannot be required.",
+      "quote": "As applied to closely held corporations, the HHS regulations imposing the contraceptive mandate violate RFRA.",
+      "sources": [
+       "P8"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 4326,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.762,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     2681317,
+     2681317,
+     2681962,
+     2681317,
+     2681317,
+     2681317,
+     2681962,
+     2681317,
+     3203761,
+     4766379,
+     4766379,
+     4766379
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A026",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "No, Colorado may not force the website designer to create wedding websites that express messages she disagrees with.",
+      "quote": "Colorado seeks to compel speech she does not wish to provide... This Court's First Amendment precedents teach otherwise.",
+      "sources": [
+       "P6"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2544,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8042,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     10049656,
+     10049656,
+     10049656,
+     10049656,
+     10049656,
+     10049656,
+     10049656,
+     10049656,
+     4507882,
+     4507882,
+     4507882,
+     4507882
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A027",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 4519,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that a method for reducing settlement risk is an abstract idea of intermediated settlement and that merely requiring generic computer implementation does not make it patent\u2011eligible.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.765
+     },
+     {
+      "text": "According to the Court, because the claims only require generic computer implementation, they fail to transform the abstract idea into a patent\u2011eligible invention.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 0.812
+     }
+    ],
+    "top_score": 0.7566,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7937,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     2679558,
+     2679558,
+     2679558,
+     2679558,
+     2679558,
+     2679558,
+     2679558,
+     2679558,
+     4879669,
+     4898858,
+     149649,
+     149649,
+     149649,
+     4879669,
+     3212622
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A028",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "According to the majority, Congress may ban home\u2011grown medical marijuana because the CSA treats marijuana as contraband for any purpose and finds it has no acceptable medical uses.",
+      "quote": "The CSA designates marijuana as contraband for any purpose; ... Congress expressly found that the drug has no acceptable medical uses.",
+      "sources": [
+       "P3"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     },
+     {
+      "text": "The dissent argues that such patients belong to a distinct subclass that should not be regulable, asserting \u201cRespondents are not regulable simply because they belong to a large class \u2026 that does not undermine the CSA\u2019s interstate ban.\u201d",
+      "quote": "Respondents are not regulable simply because they belong to a large class (local growers and users of marijuana) that ... does not undermine the CSA\u2019s interstate ban.",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 3580,
+    "n_removed": 2,
+    "sentences": [
+     {
+      "text": "The concurring opinion also holds that home\u2011grown marijuana cannot be distinguished from interstate commerce, stating that it is \u201cnever more than an instant from the interstate market.\u201d",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.625
+     }
+    ],
+    "top_score": 0.7346,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.2224,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     799995,
+     799995,
+     799995,
+     799995,
+     799995,
+     799995,
+     799995,
+     799995,
+     118426,
+     4895263,
+     118426,
+     118426,
+     4895263,
+     118426
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A029",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "At a minimum, the Court requires presumptive immunity for a President\u2019s acts within the outer perimeter of his official responsibility to protect the executive branch\u2019s independence.",
+      "quote": "the Court concludes that the separation of powers principles ... necessitate at least a presumptive immunity from criminal prosecution for a President\u2019s acts within the outer perimeter of his official responsibility.",
+      "sources": [
+       "P4"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 5036,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The Court holds that a former President has some immunity from criminal prosecution for official acts performed while in office, with absolute immunity for core constitutional powers and at least presumptive immunity for other official actions.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.87
+     }
+    ],
+    "top_score": 0.8318,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.3961,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A030",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3174,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "A former President is not immune from prosecution for unofficial acts.",
+      "sources": [
+       "P2",
+       "P8"
+      ],
+      "groundedness": 1.0
+     }
+    ],
+    "top_score": 0.8162,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8884,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A031",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 5,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3728,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The dissent argued that granting former President criminal immunity makes a mockery of the principle that no one is above the law.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.769
+     },
+     {
+      "text": "The dissent said the Constitution does not shield a former President from answering for criminal and treasonous acts.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 1.0
+     },
+     {
+      "text": "The dissent described immunity as an exemption from the duties and liabilities imposed by law.",
+      "sources": [
+       "P2"
+      ],
+      "groundedness": 0.875
+     },
+     {
+      "text": "The dissent maintained that no constitutional text supports presidential immunity, a premise the Court previously rejected as unpersuasive.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.818
+     },
+     {
+      "text": "The dissent warned that undermining the certainty of punishment could erode the deterrence value of punishment.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 0.556
+     }
+    ],
+    "top_score": 0.8092,
+    "judgements": [
+     "yes",
+     "yes",
+     "yes",
+     "yes",
+     "partly"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.826,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186,
+     9987186
+    ],
+    "false_by_sentence": [
+     [],
+     [],
+     [],
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A032",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "Yes, the SEC may impose civil penalties in its own in\u2011house proceedings.",
+      "quote": "the SEC may now seek civil penalties in federal court, or it may impose them through its own in\u2011house proceedings.",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     },
+     {
+      "text": "The Dodd\u2011Frank Act expressly authorized the SEC to impose such penalties through its own in\u2011house proceedings.",
+      "quote": "The Act authorized the SEC to impose such penalties through its own in\u2011house proceedings.",
+      "sources": [
+       "P8"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2676,
+    "n_removed": 2,
+    "sentences": [],
+    "top_score": 0.7865,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4762680,
+     9971894,
+     4397057,
+     821431,
+     821431,
+     9971894,
+     821431,
+     9971894,
+     118513
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A033",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 2054,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court relied on the Seventh Amendment right to a jury trial.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.833
+     }
+    ],
+    "top_score": 0.8021,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.779,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A034",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "It also argues the majority overturns longstanding precedent and threatens separation of powers by allowing Congress to concentrate the roles of prosecutor, judge, and jury in the executive.",
+      "quote": "the dissent would permit Congress to concentrate the roles of prosecutor, judge, and jury in the hands of the Executive Branch. That is the very opposite of the separation of powers that the Constitution demands.",
+      "sources": [
+       "P3"
+      ],
+      "problems": [
+       "quote not found in the cited passage",
+       "dissent or concurrence presented as the Court's view"
+      ]
+     }
+    ],
+    "ms_total": 3094,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The dissent says the Constitution does not require the government to seek civil penalties before a jury and that Congress may assign enforcement to an agency without a jury.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.875
+     }
+    ],
+    "top_score": 0.8277,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.4069,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A035",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "The Court holds that recklessness is sufficient for a true\u2011threats prosecution.",
+      "quote": "recklessness is quite suffcient.",
+      "sources": [
+       "P7"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2869,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The State must prove that the defendant acted with recklessness, meaning it must show the defendant consciously disregarded a substantial risk that his communications would be viewed as threatening violence.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.875
+     }
+    ],
+    "top_score": 0.7891,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.3861,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     10049662,
+     2804674,
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     145624,
+     145624,
+     4374565,
+     6619003
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A036",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "It reasoned that requiring a culpable mental\u2011state requirement lessens the hazard of self\u2011censorship by compensating for the law\u2019s uncertainties, providing \"breathing room\" for protected speech.",
+      "quote": "the requirement lessens \u201cthe hazard of selfcensorship\u201d by \u201ccompensat[ing]\u201d for the law's uncertainties.",
+      "sources": [
+       "P4"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2681,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The Court said that prohibitions on speech can chill or deter speech outside their boundaries, leading to self\u2011censorship of otherwise protected expression.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.857
+     },
+     {
+      "text": "Accordingly, the Court held that the State must prove the defendant had some understanding of his statements\u2019 threatening character, and that a recklessness standard satisfies the First Amendment\u2019s requirement.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.812
+     }
+    ],
+    "top_score": 0.7751,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.5465,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     10049662,
+     10049662
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A037",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3820,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "Title VII prohibits an employer from firing an employee merely for being gay or transgender.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.9
+     },
+     {
+      "text": "The Court holds that firing a homosexual or transgender employee because sex is a but\u2011for cause violates the law even if the employer treats males and females alike.",
+      "sources": [
+       "P2"
+      ],
+      "groundedness": 0.867
+     }
+    ],
+    "top_score": 0.8067,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8515,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     183480,
+     3205842
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A038",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 2139,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court used a but\u2011for causation test, describing it as the \u201csimple\u201d and traditional standard of causation.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.875
+     }
+    ],
+    "top_score": 0.8028,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.8014,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A039",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "Justice Alito, dissenting, argued that Title VII lists only race, color, religion, sex, and national origin, and does not include sexual orientation or gender identity.",
+      "quote": "Title VII of the Civil Rights Act of 1964 prohibits employment discrimination on any of five specified grounds: \u201crace, color, religion, sex, [and] national origin.\u201d ... Neither \u201csexual orientation\u201d nor \u201cgender identity\u201d appears on that list.",
+      "sources": [
+       "P6"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     },
+     {
+      "text": "He also noted that Title VII makes it unlawful for an employer to discriminate because of sex, reinforcing that the statute does not extend to sexual orientation or gender identity.",
+      "quote": "It shall be an unlawful employment practice for an employer\u2014 \u201c(1) to fail or refuse to hire or to discharge any individual ... because of such individual\u2019s race, color, religion, sex, or national origin;",
+      "sources": [
+       "P5"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 4188,
+    "n_removed": 2,
+    "sentences": [
+     {
+      "text": "He further contended that the ordinary meaning of \u201csex\u201d in 1964 would not have been understood to cover discrimination based on sexual orientation or gender identity.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.786
+     },
+     {
+      "text": "Justice Kavanaugh, dissenting, emphasized that the statutory phrase \u201cdiscriminate because of sex\u201d is synonymous with refusing to hire or discharge an individual because of sex, and that the plaintiffs do not dispute this ordinary meaning.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.7
+     }
+    ],
+    "top_score": 0.8681,
+    "judgements": [
+     "yes",
+     "partly"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.4044,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  }
+ ]
+}
