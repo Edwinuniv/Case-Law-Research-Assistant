@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin')),
+    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'user')),
     active BOOLEAN NOT NULL DEFAULT TRUE,
     failed_logins INT NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
@@ -98,6 +98,14 @@ CREATE INDEX IF NOT EXISTS chunks_decision ON chunks (decision_id);
 CREATE INDEX IF NOT EXISTS query_log_time ON query_log (created_at);
 """
 
+# Changes to tables that already exist (CREATE TABLE IF NOT EXISTS does not change them).
+# Safe to run at every start.
+MIGRATIONS = """
+-- 2026-11-06 (step 5.6): a second role, 'user' (SR33, new wording, SPEC section 11)
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'));
+"""
+
 
 def connect():
     """Use as: with db.connect() as con: ...  (commits automatically at the end)."""
@@ -108,6 +116,7 @@ def init_db():
     with connect() as con:
         con.execute(SCHEMA)
         con.execute(INDEXES)
+        con.execute(MIGRATIONS)
         for key, value in config.DEFAULT_SETTINGS.items():
             con.execute("INSERT INTO settings (key, value) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                         (key, Jsonb(value)))
@@ -128,24 +137,36 @@ def set_setting(key, value):
                     "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", (key, Jsonb(value)))
 
 
-# ---------------- users (administrators) ----------------
-def create_user(email, password):
+# ---------------- users (roles 'admin' and 'user', SR33) ----------------
+ROLES = ("admin", "user")
+LOGIN_FAILED = "Wrong email or password."     # the same message in every case: it does not say which emails exist
+# a real bcrypt hash of a random text, used when the email is unknown, so that every login takes the same time
+DUMMY_HASH = bcrypt.hashpw(b"no-such-user", bcrypt.gensalt()).decode()
+
+
+def create_user(email, password, role="admin"):
+    """Creates the account, or resets its password, role and 'active' if the email exists (FR12)."""
+    if role not in ROLES:
+        raise ValueError(f"unknown role: {role}")
     h = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     with connect() as con:
-        con.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s) "
-                    "ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, active = TRUE",
-                    (email.lower().strip(), h))
+        con.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s) "
+                    "ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, "
+                    "role = EXCLUDED.role, active = TRUE",
+                    (email.lower().strip(), h, role))
 
 
 def check_login(email, password):
-    """Returns (user, message). Locks the account for 15 minutes after 5 failures (SR36)."""
+    """Returns (user, message). Locks the account for 15 minutes after 5 failures (SR36).
+    Every failure gives the same message (unknown email, wrong password, locked or disabled account)."""
     now = datetime.datetime.now(datetime.timezone.utc)
     with connect() as con:
         u = con.execute("SELECT * FROM users WHERE email = %s", (email.lower().strip(),)).fetchone()
         if not u or not u["active"]:
-            return None, "Wrong email or password."
+            bcrypt.checkpw(password.encode(), DUMMY_HASH.encode())      # same time as a real check
+            return None, LOGIN_FAILED
         if u["locked_until"] and u["locked_until"] > now:
-            return None, "Too many failed attempts. This account is locked for 15 minutes."
+            return None, LOGIN_FAILED
         if bcrypt.checkpw(password.encode(), u["password_hash"].encode()):
             con.execute("UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = %s", (u["id"],))
             return {"id": u["id"], "email": u["email"], "role": u["role"]}, ""
@@ -153,15 +174,21 @@ def check_login(email, password):
         if failed >= config.LOCK_AFTER_FAILED_LOGINS:
             con.execute("UPDATE users SET failed_logins = 0, locked_until = %s WHERE id = %s",
                         (now + datetime.timedelta(minutes=config.LOCK_MINUTES), u["id"]))
-            return None, "Too many failed attempts. This account is locked for 15 minutes."
-        con.execute("UPDATE users SET failed_logins = %s WHERE id = %s", (failed, u["id"]))
-        return None, "Wrong email or password."
+        else:
+            con.execute("UPDATE users SET failed_logins = %s WHERE id = %s", (failed, u["id"]))
+        return None, LOGIN_FAILED
+
+
+def active_role(user_id):
+    """The role of an active account ('admin' or 'user'), or None if it does not exist or is disabled.
+    Read from the database at every request, so a disabled account loses access at once (NFR8)."""
+    with connect() as con:
+        u = con.execute("SELECT active, role FROM users WHERE id = %s", (user_id,)).fetchone()
+    return u["role"] if u and u["active"] else None
 
 
 def user_is_active_admin(user_id):
-    with connect() as con:
-        u = con.execute("SELECT active, role FROM users WHERE id = %s", (user_id,)).fetchone()
-    return bool(u and u["active"] and u["role"] == "admin")
+    return active_role(user_id) == "admin"
 
 
 # ---------------- query log ----------------

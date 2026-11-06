@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from app import config, db, evaluate
+from app import api, config, db, evaluate
 from app.citations import CitationIndex
 from app.indexing import build_index
 from app.pipeline import answer, check_input
@@ -36,8 +36,13 @@ async def lifespan(app):
 
 
 app = FastAPI(title="Verdicta", lifespan=lifespan)
+if config.HTTPS_ONLY and config.SESSION_SECRET == "change-me-in-production":
+    # with the default secret anyone could sign a session cookie and log in as admin
+    raise RuntimeError("Set SESSION_SECRET in the environment before running online.")
+# session cookie: signed, HttpOnly (JavaScript cannot read it), Secure when HTTPS_ONLY=1, SameSite=Lax
 app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, max_age=8 * 3600,
-                   https_only=config.HTTPS_ONLY)
+                   https_only=config.HTTPS_ONLY, same_site="lax")
+app.include_router(api.router)                                       # JSON API for React (/api/...)
 
 
 def page(request, name, status_code=200, **context):

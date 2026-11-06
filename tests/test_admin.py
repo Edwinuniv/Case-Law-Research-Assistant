@@ -27,7 +27,9 @@ def test_lock_after_five_failures(clean_db):                                    
         for _ in range(5):
             c.post("/admin/login", data={"email": "boss@example.com", "password": "wrong"})
         r = c.post("/admin/login", data={"email": "boss@example.com", "password": "a-long-password"})
-        assert r.status_code == 401 and "locked" in r.text
+        # locked: even the right password is refused, with the same message as a wrong one (step 5.6)
+        assert r.status_code == 401 and "Wrong email or password." in r.text
+        assert c.get("/admin").status_code == 401
 
 def test_disabled_account_loses_access(clean_db):
     clean_db.create_user("boss@example.com", "a-long-password")
