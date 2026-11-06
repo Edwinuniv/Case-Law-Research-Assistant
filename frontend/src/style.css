@@ -58,10 +58,12 @@ button:disabled{opacity:.6;cursor:wait}
 .history button:hover{background:none;color:var(--gold)}
 .panel h3{margin:0 0 4px;font-size:20px}
 .panel{border-top:3px solid var(--gold)}
-.login{max-width:380px;margin:60px auto}
-.login label{display:block;margin:10px 0 4px}
+.login{max-width:400px;margin:70px auto;padding:28px 32px;border-top:3px solid var(--gold)}
+.login h2{text-align:center}
+.login label{display:block;margin:12px 0 4px;font-size:14px;color:var(--muted)}
 .login input{width:100%;box-sizing:border-box}
-.error{color:#b3342b}
+.login button{width:100%;padding:10px}
+.error{color:#a33a2f}
 /* admin pages (same as app/templates/base.html) */
 table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
 th,td{border:1px solid #dde2e8;padding:5px 8px;text-align:left;vertical-align:top}
