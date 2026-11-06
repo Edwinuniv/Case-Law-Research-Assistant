@@ -6,12 +6,13 @@ A sentence is kept only if ALL of these are true:
   3. Every citation in it resolves to a real case (citation table) AND is either the case of a
      retrieved passage or written in its cited passage (SR23).
   4. Every case name in it ("X v. Y") is the case of a cited passage or appears in one.
-  5. Every number and date in it appears in its cited passages (SR25).
+  5. Every number and date in it appears in its cited passages or is the year of a cited decision
+     (SR25); a sentence that dates the decision must give the cited decision's year (metadata).
   6. It does not present a dissent or concurrence as the Court's view (added in Week 7).
 Otherwise the sentence is removed and we record why (FR7)."""
 import re
 import unicodedata
-from app.citations import find_citations, find_case_names, name_key, CITATION_LIKE
+from app.citations import find_citations, find_case_names, same_case, CITATION_LIKE
 
 STOPWORDS = set("""the a an of to in and or for on by with that this is was were be been are as at from
 it its which who whom whose not no but if than then so such court courts held holds said says
@@ -33,6 +34,14 @@ PASSAGE_MARK = re.compile(r"\s*\[\s*\"?P\d+\"?(?:\s*,\s*\"?P\d+\"?)*\s*\]")
 SEPARATE_OPINION = re.compile(r"dissent|concurr", re.I)
 COURT_VIEW = re.compile(r"\b(?:the (?:supreme )?court|the majority)\b", re.I)
 NAMES_SEPARATE_OPINION = re.compile(r"\b(?:dissent\w*|concurr\w*|justice \w+|\w+, j\.)", re.I)
+# Check 5, metadata (2026-11-06): the year of a decision is in its metadata (date_filed, shown to the
+# model in the passage header) and often not in the passage text. A sentence that dates the decision
+# ("its 2023 decision", "in 2023, the Court held") must give the year of a cited decision.
+YEAR = r"((?:17|18|19|20)\d\d)"
+DECISION_YEAR = re.compile(rf"\b(?:the|its|this|that)\s+{YEAR}\s+(?:decision|ruling|opinion|judgment|case)\b"
+                           rf"|\bdecided\s+in\s+{YEAR}\b"
+                           rf"|\bin\s+{YEAR},?\s+the\s+(?:supreme\s+)?court\s+(?:held|decided|ruled|found|concluded)\b",
+                           re.I)
 
 
 def separate_opinion(passage):
@@ -97,19 +106,28 @@ def check_sentence(sentence, passages, index):
         else:
             problems.append(f"real citation not supported by the retrieved opinions: {cite}")
 
-    cited_names = [name_key(c["case_name"]) for c in cited]
+    other_case_named = False                             # used by check 5: whose year is it?
     for name in find_case_names(text):                                             # check 4
-        if name_key(name) in cited_names or norm(name) in cited_text:
+        if any(same_case(name, c["case_name"]) for c in cited):
+            continue
+        other_case_named = True
+        if norm(name) in cited_text:
             continue
         kind = "case name not supported by the cited passage" if index.known_case_name(name) \
             else "FABRICATED case name"
         problems.append(f"{kind}: {name}")
 
     text_without_citations = CITATION_LIKE.sub(" ", text)                         # check 5
-    passage_numbers = numbers_in(cited_text) | number_words_in(cited_text)
+    decision_years = {c["date_filed"][:4] for c in cited if c.get("date_filed")}
+    passage_numbers = numbers_in(cited_text) | number_words_in(cited_text) | decision_years
     sentence_numbers = numbers_in(text_without_citations) | number_words_in(text_without_citations)
     for number in sorted(sentence_numbers - passage_numbers):
         problems.append(f"number or date not in the cited passage: {number}")
+    if decision_years and not other_case_named:          # "its 2023 decision" must be the cited decision's year
+        for match in DECISION_YEAR.finditer(text_without_citations):
+            year = next(y for y in match.groups() if y)
+            if year not in decision_years:
+                problems.append(f"year of the decision does not match the cited case: {year}")
 
     if COURT_VIEW.search(text) and not NAMES_SEPARATE_OPINION.search(text) \
             and all(separate_opinion(c) for c in cited):                          # check 6
