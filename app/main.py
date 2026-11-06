@@ -1,6 +1,5 @@
 """The website. Public part: research page (no login, SR33). Admin part: /admin/* (login + role)."""
 import datetime
-import threading
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
