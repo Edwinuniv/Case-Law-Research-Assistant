@@ -41,6 +41,7 @@ export default function Chat({ info }) {
     <div className="layout">
       <aside className="card history">
         <b>My questions</b>
+        <p className="muted">Only in this page: they are gone when you reload it.</p>
         {history.length === 0 && <p className="muted">None yet.</p>}
         {history.map((h) => (
           <button key={h.id} onClick={() => showEarlier(h)} title={h.status}>{h.question}</button>
