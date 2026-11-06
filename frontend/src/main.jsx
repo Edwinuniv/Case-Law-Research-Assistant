@@ -65,7 +65,6 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
-      <footer>This is a research aid, not legal advice. · Data: CourtListener (Free Law Project), public domain.</footer>
     </>
   );
 }
