@@ -103,15 +103,15 @@ question -> input check, 3-1000 characters (SR3)
 -> case names and citations shown to the user are rendered from OUR database (SR21).
 
 Website (since step 5.6, 2026-11-06): FastAPI serves the pages and a JSON API under /api (app/api.py)
-for the React front end that replaces the Jinja pages step by step (section 11). Every /api route
+for the React front end, which replaced the Jinja pages of the guide in step 5.10 (section 11). Every /api route
 checks the login and the role on the server, reading the account from the database at each request;
 every POST needs the session's CSRF token (X-CSRF-Token header).
 Front end (step 5.8): React + Vite in frontend/ (react, react-router-dom; no UI library), built into
-frontend/dist and served by FastAPI under /app; the Dockerfile builds it in a first Node stage, so
-Railway still runs one service. Pages: login, chat (research) and the 9 admin pages under /app/admin
+frontend/dist and served by FastAPI at / (every address that is not /api or /health gets the same page); the Dockerfile builds it in a first Node stage, so
+Railway still runs one service. Pages: login, chat (research) and the 9 admin pages under /admin
 (step 5.9; admin JSON API in app/api_admin.py, where the router itself requires the admin role and the
 CSRF token, so no admin route can be added without them). React only displays: it never decides who
-may see what; /app/admin pages are refused by the server (401 / 403) like every admin route (SR35).
+may see what; /admin pages are refused by the server (401 / 403) like every admin route (SR35).
 
 ## 4. Chunking strategy (FR31, SR16)
 
@@ -191,7 +191,6 @@ Both: bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the same 
 every failed login; at most 10 failed logins per IP address in 15 minutes (HTTP 429); a new session
 at each login; logout clears the session; session cookie HttpOnly, SameSite=Lax, Secure online
 (HTTPS_ONLY=1); CSRF token on every POST; role checked on the server at every request (SR35, NFR8).
-(Until step 5.10 the old Jinja research page stays public, so the demo keeps working.)
 
 ## 9. Work process
 
@@ -224,6 +223,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.7 research API for the chat (/api/ask, /api/passage, /api/history; query_log.user_id) | Joe | step/5.7-api-research | code and tests ready (15 new tests) |
 | 5.8 React login and chat pages under /app; Dockerfile Node stage | Joe | step/5.8-react-chat | built and checked in a browser (test database, fake model); 3 new tests |
 | 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
+| 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
@@ -285,3 +285,9 @@ the questions but not who asked them.
 need it to tune abstention). Labels must be one of the four buttons; labelling a question that is not in
 the log gives 404 (the guide's Jinja route crashed with a 500 when the label was "add as ..."). Creating
 an account with a short password or a wrong role gives an error instead of doing nothing silently.
+
+2026-11-06 - Switch (step 5.10): the React pages moved from /app to / and /admin, and the Jinja
+templates and routes of the guide (pp. 56-70) were removed from app/main.py; the admin SQL now has one
+copy, in app/api_admin.py. The guide's tests/test_admin.py (p. 63) checks the same behaviour through
+POST /api/login and the React /admin pages. The "research aid, not legal advice" footer (SR7) is in
+frontend/index.html, outside React, so it is on every page even before the JavaScript loads.
