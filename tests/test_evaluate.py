@@ -129,11 +129,24 @@ def test_judge_waits_on_rate_limit_but_not_on_other_errors(monkeypatch):
 
 
 # --- Week 8: the TEST split is reported once, after tau is chosen on TUNE (EVALUATION.md, SR29) ---
-def test_run_report_shows_only_the_tune_split(capsys):
-    from scripts.run_eval import report
+def fake_run(monkeypatch):
+    import scripts.run_eval as run_eval
     pairs = [({**q("a", "answerable"), "split": "tune"}, res(0.9)), (q("b", "answerable"), res(0.2))]
-    report(pairs, S, "tune")
+    monkeypatch.setattr(run_eval, "Searcher", lambda: None)
+    monkeypatch.setattr(run_eval, "CitationIndex", lambda: None)
+    monkeypatch.setattr(run_eval.evaluate, "run_evaluation", lambda *a, **kw: 7)
+    monkeypatch.setattr(run_eval.evaluate, "load_run", lambda run_id: pairs)
+    return run_eval
+
+def test_a_run_shows_only_the_tune_split_and_the_sweep(monkeypatch, capsys):
+    fake_run(monkeypatch).main(["week 8"], S)
     out = capsys.readouterr().out
-    assert "== tune split ==" in out and "test" not in out.lower()
+    assert "== tune split ==" in out and "test split" not in out.lower()
     assert "answerable                       1" in out          # only the tune question is counted
-    assert "tau" in out                                          # the sweep, to choose tau_abstain
+    assert "tau    precision" in out                             # the sweep, to choose tau_abstain
+
+def test_the_test_split_is_shown_only_when_asked(monkeypatch, capsys):
+    fake_run(monkeypatch).main(["--test", "7"], S)
+    out = capsys.readouterr().out
+    assert "== test split ==" in out and "== tune split ==" not in out
+    assert "answerable                       1" in out          # only the test question is counted
