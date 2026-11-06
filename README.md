@@ -15,6 +15,18 @@ Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Do
     python -m pytest -q                        # uses the TEST database
     uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin)
 
+## React front end (step 5.8, under /app until step 5.10)
+Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs`).
+
+    cd frontend
+    npm install                                # once (about 50 MB, into frontend/node_modules)
+    npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000/app
+    npm run dev                                # while changing the React code: http://127.0.0.1:5173/app (uvicorn must run too)
+
+Everyone logs in (roles user and admin). A user account is created by an administrator, for now with:
+
+    python -c "from app import db; db.create_user('name@example.com', 'a-long-password', role='user')"
+
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
