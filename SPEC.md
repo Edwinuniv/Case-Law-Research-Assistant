@@ -106,6 +106,10 @@ Website (since step 5.6, 2026-11-06): FastAPI serves the pages and a JSON API un
 for the React front end that replaces the Jinja pages step by step (section 11). Every /api route
 checks the login and the role on the server, reading the account from the database at each request;
 every POST needs the session's CSRF token (X-CSRF-Token header).
+Front end (step 5.8): React + Vite in frontend/ (react, react-router-dom; no UI library), built into
+frontend/dist and served by FastAPI under /app; the Dockerfile builds it in a first Node stage, so
+Railway still runs one service. Pages so far: login, chat (research). React only displays: it never
+decides who may see what.
 
 ## 4. Chunking strategy (FR31, SR16)
 
@@ -216,6 +220,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 2.1 fix + 3.2 fix: one label per opinion in combined texts; BM25 stemming | Yasser | step/3-opinion-sections | merged (PR #23) |
 | 5.6 login and security for the API (roles user/admin, CSRF, login limit per IP, one login message) | Joe | step/5.6-login-security | code and tests ready (21 new tests); React pages in 5.8-5.10 |
 | 5.7 research API for the chat (/api/ask, /api/passage, /api/history; query_log.user_id) | Joe | step/5.7-api-research | code and tests ready (15 new tests) |
+| 5.8 React login and chat pages under /app; Dockerfile Node stage | Joe | step/5.8-react-chat | built and checked in a browser (test database, fake model); 3 new tests |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
