@@ -179,11 +179,11 @@ def test_react_admin_pages_are_refused_by_the_server(c, monkeypatch, tmp_path): 
     from app import main
     (tmp_path / "index.html").write_text("<div id=root></div>")
     monkeypatch.setattr(main, "FRONTEND", tmp_path)
-    for url in ["/app/admin", "/app/admin/users", "/app/ADMIN", "/app//admin/eval"]:
+    for url in ["/admin", "/admin/users", "/ADMIN", "http://testserver//admin/eval", "/admin/"]:
         assert c.get(url).status_code == 401, url
     log_in(c, "reader@example.com")
-    assert c.get("/app/admin").status_code == 403 and c.get("/app/Admin/settings").status_code == 403
-    assert c.get("/app").status_code == 200                             # the chat page is for users
+    assert c.get("/admin").status_code == 403 and c.get("/Admin/settings").status_code == 403
+    assert c.get("/").status_code == 200                                # the chat page is for users
     c.post("/api/logout", headers=csrf(c))
     log_in(c, "boss@example.com")
-    assert c.get("/app/admin/users").status_code == 200
+    assert c.get("/admin/users").status_code == 200
