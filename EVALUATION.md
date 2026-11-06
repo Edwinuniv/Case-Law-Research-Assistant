@@ -142,3 +142,24 @@ The hypothesis is rejected. The diagnosis (step 10.1) showed that the meaning li
 two signals for finding the holding paragraph; it did not show that a larger general-purpose model of
 the same family would read legal holdings better, and the measurement says it does not: a better score
 on general benchmarks did not carry over to our questions. The TEST split was not looked at.
+
+### Retrieval baseline on eval-v1 (2026-11-06, Yasser)
+The evaluation set is frozen (tag eval-v1: 85 questions, 42 answerable). Same settings as above
+(350-word chunks, bge-small-en-v1.5, w_bm25 1.0 / w_separate 1.0 / fusion_pool 50, no reranker), all
+chosen on the TUNE split before this run.
+
+| split | run | questions | recall@1 | recall@5 | MRR@10 | quote@8 |
+|---|---|---|---|---|---|---|
+| **TEST (reported)** | `eval/runs/retrieval_2026-11-06T20-43-45.json` | 8 | 0.875 | 1.0 | 0.938 | 0.25 |
+| all answerable | `eval/runs/retrieval_2026-11-06T20-42-11.json` | 42 | 0.857 | 0.976 | 0.913 | 0.357 |
+
+The TEST split was used once, here, after every search choice was made on TUNE (rules above).
+The gold decision is in the top 5 for all 8 TEST questions and first for 7 (A019 at rank 2); the
+holding sentence is among the 8 passages given to the model for 2 of the 8 (quote@8 0.25), the same
+weak point as on TUNE (see the diagnosis above).
+On all 42, one question misses the top 20: A018 ("Can a state execute a person with an intellectual
+disability?", gold: Atkins v. Virginia, 2002). The search returns Hall v. Florida (2014), whose opinion
+of the Court answers the question in the same words ("intellectual disability"); Atkins (2002) says
+"mentally retarded", the term used before the vocabulary changed. So the search finds a correct source
+that the gold list does not include. The question is not changed (eval-v1 is frozen); it is kept as a
+known case where a vocabulary change hides the original decision.
