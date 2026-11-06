@@ -93,9 +93,16 @@ if (FRONTEND / "assets").is_dir():
 
 @app.get("/app")
 @app.get("/app/{path:path}")
-def react_app(path: str = ""):
+def react_app(request: Request, path: str = ""):
     """Every /app page is the same index.html; React Router then shows the right page.
-    The page itself holds no data: every /api call checks the login and the role."""
+    The page itself holds no data: every /api call checks the login and the role.
+    /app/admin pages are refused by the server too (401 / 403), as SR35 asks for every admin route."""
+    if path == "admin" or path.startswith("admin/"):
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return HTMLResponse('401 - please <a href="/app/login">log in</a> as an administrator.', status_code=401)
+        if db.active_role(user_id) != "admin":
+            return PlainTextResponse("403 - administrators only", status_code=403)
     if not (FRONTEND / "index.html").is_file():
         return PlainTextResponse("The React app is not built. Run: cd frontend && npm install && npm run build",
                                  status_code=404)
