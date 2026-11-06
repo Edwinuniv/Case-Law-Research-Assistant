@@ -66,3 +66,24 @@ def test_every_admin_post_needs_the_csrf_token(c):
     for method, url in admin_routes():
         if method == "POST":
             assert call(c, method, url).status_code == 403, url
+
+
+def test_admin_opens_every_page_on_an_empty_database(c):
+    log_in(c, "boss@example.com")
+    for url in ["/api/admin/home", "/api/admin/settings", "/api/admin/eval", "/api/admin/questions",
+                "/api/admin/questions/export", "/api/admin/abstentions", "/api/admin/analytics",
+                "/api/admin/corpus", "/api/admin/users"]:
+        assert c.get(url).status_code == 200, url
+    assert c.get("/api/admin/eval/1").status_code == 404                  # no such run
+    assert c.get("/api/admin/settings/preview",
+                 params={"tau_abstain": 0.5, "tau_confident": 0.6, "min_retrieval": 0.3}).status_code == 404
+
+
+def test_settings_are_saved_within_limits(c):
+    log_in(c, "boss@example.com")
+    body = {"tau_abstain": 0.6, "tau_confident": 0.4, "min_retrieval": 0.3, "top_k": 99, "retrieve_k": 2,
+            "use_reranker": True}
+    s = c.post("/api/admin/settings", json=body, headers=csrf(c)).json()
+    assert s["tau_confident"] == 0.6                 # never below the abstention threshold
+    assert s["top_k"] == 10 and s["retrieve_k"] == 8 and s["use_reranker"] is True
+    assert c.get("/api/admin/settings").json()["tau_abstain"] == 0.6
