@@ -182,15 +182,16 @@ Deliberate improvement (week 10): reranker, measured before and after on the sam
 
 ## 8. Roles (SR33-SR36)
 
-Since 2026-11-06 (instructor's request, section 11): everyone logs in. Accounts are created and
-disabled by an administrator (FR12); there is no self-registration.
-User: login; research (chat) page only.
+SR33 as written (confirmed by the instructor on 2026-11-06, section 11): two roles.
+Visitor: no login, no account; the public research (chat) page only.
 Administrator: login; the research page and the admin pages: evaluation, test questions,
-abstentions, analytics, settings, corpus and citation lookup, re-index, accounts.
-Both: bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the same error message for
-every failed login; at most 10 failed logins per IP address in 15 minutes (HTTP 429); a new session
-at each login; logout clears the session; session cookie HttpOnly, SameSite=Lax, Secure online
-(HTTPS_ONLY=1); CSRF token on every POST; role checked on the server at every request (SR35, NFR8).
+abstentions, analytics, settings, corpus and citation lookup, re-index, accounts. Administrator
+accounts are created and disabled by an administrator (FR12); there is no self-registration.
+Login security (administrator): bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the
+same error message for every failed login; at most 10 failed logins per IP address in 15 minutes
+(HTTP 429); a new session at each login; logout clears the session; session cookie HttpOnly,
+SameSite=Lax, Secure online (HTTPS_ONLY=1); CSRF token on every POST, visitors included (they get the
+token with their session from /api/me); role checked on the server at every admin request (SR35, NFR8).
 
 ## 9. Work process
 
