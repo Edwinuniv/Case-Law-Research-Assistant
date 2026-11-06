@@ -51,6 +51,7 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
     python -m scripts.eval_retrieval "baseline"
+    python -m scripts.eval_retrieval "eval-v1 baseline" --split test   # the numbers for the report
     python -m scripts.tune_search              # search settings on the TUNE split (EVALUATION.md)
     python -m scripts.tune_rerank              # reranker variants on the TUNE split
     python -m scripts.export_for_colab --sizes 250 350 400   # embeddings for step 3.5, on a Colab GPU

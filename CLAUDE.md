@@ -98,16 +98,16 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 1.10 First tests, and commit (Edwin) — tests/conftest.py, tests/test_citations.py: 5 passed, merged (PR #11)
 
 ### Week 2 — Chunks and embeddings (Yasser)
-- [ ] 2.1 Understand the chunking code (app/chunking.py, created in 1.8)
-- [ ] 2.2 Embeddings into pgvector
-- [ ] 2.3 Numbers for the justification
+- [x] 2.1 Understand the chunking code (app/chunking.py, created in 1.8) — sections name the opinion; inline opinion starts (PR #33)
+- [x] 2.2 Embeddings into pgvector — bge-small, cached blocks, Colab GPU route (PR #16, #30)
+- [x] 2.3 Numbers for the justification — SPEC §4 (72,593 chunks of 350 words)
 
 ### Week 3 — Test questions and search
-- [ ] 3.1 Write at least 80 test questions in eval/questions.jsonl (all three; tag eval-v1) — Edwin's 28 on branch step/3.1-questions-edwin (14 answerable, 7 unanswerable, 7 adversarial; checked on the real data; gold quotes word for word) ⏳ Yasser's and Joe's questions, then tag eval-v1
-- [ ] 3.2 Keyword search (BM25) (Yasser)
-- [ ] 3.3 Hybrid search and the reranker (Yasser)
-- [ ] 3.4 Measure the search: the baseline (Yasser)
-- [ ] 3.5 Compare chunk sizes, then commit (Yasser)
+- [x] 3.1 Write at least 80 test questions in eval/questions.jsonl (all three; tag eval-v1) — 85 questions (28 each + U022), tag eval-v1 pushed 2026-11-06
+- [x] 3.2 Keyword search (BM25) (Yasser) — app/bm25.py, Snowball stemming, cached (PR #20, #30)
+- [x] 3.3 Hybrid search and the reranker (Yasser) — weighted RRF; reranker measured, no gain, off (PR #30)
+- [x] 3.4 Measure the search: the baseline (Yasser) — eval-v1: TEST recall@5 1.0, MRR@10 0.938, quote@8 0.25 (branch step/3.4-eval-v1-baseline)
+- [x] 3.5 Compare chunk sizes, then commit (Yasser) — 350 words kept (PR #30)
 
 ### Week 4 — Model call and verifier (Edwin)
 - [x] 4.1 The model call — merged (PR #7, history restored in #8): app/llm.py, live check with Groq OK (SUPPORTED, NOT_SUPPORTED, judge; 1-2 s). Note for 4.2: model puts ["P1"] in sentence text, check 5 would read it as the number 1
