@@ -41,6 +41,22 @@ question on the laptop CPU stays under 0.5 s (SR2: answers within 15 s). Otherwi
 the result is recorded here. The TEST split is not looked at while choosing; it is reported once, with
 the final evaluation.
 
+## Case-name filter selection rule (written 2026-11-06, before measuring; Edwin, metadata)
+Hypothesis (the instructor: "use metadata for faster search"): when a question names a case of our
+corpus ("What did the Court decide in Loper Bright Enterprises v. Raimondo?"), searching only the
+passages of that decision (decisions.case_name and chunks.decision_id) finds the holding more often and
+scans about 100 passages instead of all of them. Questions without a name, or whose name matches no
+decision of the corpus (invented or mixed names, like the adversarial questions), use the normal search.
+How it is measured: `python -m scripts.tune_case_filter` on the TUNE split only, search only (no model
+call), same settings, filter off then on. Measured on: quote@8 and MRR@10 on the answerable questions,
+mean search time per question, and on the adversarial and unanswerable questions how many switch the
+filter on. The filter is switched on (setting case_filter) only if ALL hold:
+(1) quote@8 is not lower, and no answerable question that names a case loses its gold quote;
+(2) MRR@10 is not lower; (3) it never switches on for an invented or mixed case name (questions whose
+must_not_appear contains the name); (4) the mean search time is not higher. If (1)-(3) hold but quote@8
+and MRR@10 are unchanged, the filter is kept only for speed, and reported as such. Otherwise it stays
+off and the result is recorded here. The TEST split is not looked at while choosing.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
