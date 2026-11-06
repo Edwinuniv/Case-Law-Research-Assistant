@@ -1,4 +1,5 @@
-// Accounts (FR12): only an administrator creates accounts (role user or admin) and disables them.
+// Accounts (FR12): an administrator creates and disables the other administrators.
+// Visitors need no account (SR33), so there is no role to choose.
 import { useState } from "react";
 import { api } from "../api.js";
 import { day, useLoad, Waiting } from "./useLoad.jsx";
@@ -6,14 +7,14 @@ import { day, useLoad, Waiting } from "./useLoad.jsx";
 export default function Users({ user }) {
   const [list, error] = useLoad("/admin/users");
   const [users, setUsers] = useState(null);           // the list after a change
-  const [form, setForm] = useState({ email: "", password: "", role: "user" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [msg, setMsg] = useState("");
   const shown = users || list;
   if (!shown) return <Waiting data={list} error={error} />;
 
   async function create(e) {
     e.preventDefault(); setMsg("");
-    try { setUsers(await api("/admin/users", form)); setForm({ email: "", password: "", role: "user" }); setMsg("Account created."); }
+    try { setUsers(await api("/admin/users", form)); setForm({ email: "", password: "" }); setMsg("Administrator account created."); }
     catch (err) { setMsg(err.message); }
   }
   async function toggle(id) {
@@ -31,14 +32,12 @@ export default function Users({ user }) {
               <button className="light" onClick={() => toggle(u.id)}>{u.active ? "Disable" : "Enable"}</button>}</td></tr>
         ))}</tbody></table>
       <form className="card" onSubmit={create} style={{ marginTop: 14 }}>
-        <b>Create an account</b><br />
+        <b>Create an administrator account</b><br />
         Email <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />{" "}
         Password (10+ characters) <input type="password" minLength={10} required value={form.password}
                                          onChange={(e) => setForm({ ...form, password: e.target.value })} />{" "}
-        Role <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-          <option value="user">user (research page only)</option><option value="admin">admin</option></select>{" "}
         <button>Create</button> {msg && <span className="muted">{msg}</span>}
-        <p className="muted">There is no sign-up page: give the person their email and password yourself.</p>
+        <p className="muted">Visitors use the research page without an account. There is no sign-up page: give the new administrator their email and password yourself.</p>
       </form>
     </>
   );
