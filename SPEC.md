@@ -115,6 +115,11 @@ Railway still runs one service. Pages: chat (research, no login), administrator 
 CSRF token, so no admin route can be added without them). React only displays: it never decides who
 may see what; /admin pages are refused by the server (401 / 403) like every admin route (SR35).
 
+Search filter (step 4.6, for Edwin's case filter): `Searcher.search(question, k, settings, decision_ids)`;
+with decision_ids, the pgvector list and the BM25 list only contain passages of those decisions (same
+format, score still the cosine similarity); without it the whole corpus is searched as before. The setting
+case_filter (off) decides whether the pipeline uses it.
+
 ## 4. Chunking strategy (FR31, SR16)
 
 Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,765 opinions,
