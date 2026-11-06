@@ -114,6 +114,26 @@ def me(request: Request):
             "examples": config.EXAMPLE_QUESTIONS}
 
 
+# ---------------- question limit per IP address (step 5.12) ----------------
+# The research page is open to visitors (SR33), so anyone could send questions in a loop and use up
+# our model credit. One address may ask at most ASK_LIMIT_PER_IP questions in ASK_LIMIT_SECONDS.
+# Same idea as the login limit above: kept in memory, one process, a restart empties it.
+ASK_LIMIT_PER_IP, ASK_LIMIT_SECONDS = 10, 60
+ASKED_BY_IP = defaultdict(deque)
+
+
+def seconds_to_wait(ip):
+    """0 if this address may ask now (and the question is counted), otherwise the seconds to wait."""
+    now = time.time()
+    asked = ASKED_BY_IP[ip]
+    while asked and asked[0] <= now - ASK_LIMIT_SECONDS:      # forget questions older than the window
+        asked.popleft()
+    if len(asked) >= ASK_LIMIT_PER_IP:
+        return int(asked[0] + ASK_LIMIT_SECONDS - now) + 1    # when the oldest one leaves the window
+    asked.append(now)
+    return 0
+
+
 # ======================= RESEARCH (step 5.7) =======================
 # Every question is answered on its own by pipeline.answer (Edwin): earlier questions are NOT used.
 class Question(BaseModel):
@@ -158,12 +178,17 @@ def public_answer(r):
 
 
 @router.post("/ask")
-def ask(body: Question):
+def ask(request: Request, body: Question):
     """Open to visitors, without an account (SR33, FR1). The CSRF check of the router still applies:
     the visitor's browser gets its token from GET /api/me with its own session."""
     error = check_input(body.question)                                         # SR3
     if error:
         raise HTTPException(400, error)
+    wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
+    if wait:                                    # refused BEFORE the model is called, and not saved
+        raise HTTPException(429, f"Too many questions from your address: at most {ASK_LIMIT_PER_IP} questions "
+                                 f"per minute. Please wait {wait} seconds and try again.",
+                            headers={"Retry-After": str(wait)})
     if STATE["searcher"] is None:
         raise HTTPException(503, "The search index is not ready yet.")
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
