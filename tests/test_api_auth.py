@@ -54,11 +54,11 @@ def test_me_without_login(c):
     assert "2000" in r["coverage"] and len(r["examples"]) >= 2              # SR30
 
 
-def test_user_and_admin_can_log_in(c, clean_db):
-    clean_db.create_user("reader@example.com", PW, role="user")
-    r = log_in(c, "reader@example.com")
-    assert r.status_code == 200 and r.json()["user"] == {"email": "reader@example.com", "role": "user"}
-    assert c.get("/api/me").json()["user"]["role"] == "user"
+def test_admin_can_log_in(c, clean_db):                                    # SR33: only the admin logs in
+    clean_db.create_user("boss@example.com", PW)
+    r = log_in(c, "boss@example.com")
+    assert r.status_code == 200 and r.json()["user"] == {"email": "boss@example.com", "role": "admin"}
+    assert c.get("/api/me").json()["user"]["role"] == "admin"
 
 
 def test_login_error_is_generic(c, clean_db):
@@ -97,13 +97,12 @@ def test_new_csrf_token_after_login(c, clean_db):
 
 def test_roles_are_checked_on_the_server(c, clean_db):                       # SR35, NFR8
     add_test_routes()
-    assert c.get("/api/test/user").status_code == 401
+    assert c.get("/api/test/user").status_code == 401                # a visitor has no account
     assert c.get("/api/test/admin").status_code == 401
-    clean_db.create_user("reader@example.com", PW, role="user")
-    log_in(c, "reader@example.com")
-    assert c.get("/api/test/user").status_code == 200
-    assert c.get("/api/test/admin").status_code == 403
-    assert c.post("/api/test/admin-action", headers=csrf(c)).status_code == 403
+    assert c.post("/api/test/admin-action", headers=csrf(c)).status_code == 401
+    clean_db.create_user("boss@example.com", PW)
+    log_in(c, "boss@example.com", "wrong")                              # a failed login gives no access
+    assert c.get("/api/test/admin").status_code == 401
 
 
 def test_admin_reaches_admin_routes(c, clean_db):
@@ -115,32 +114,22 @@ def test_admin_reaches_admin_routes(c, clean_db):
 
 def test_disabled_account_loses_access_at_once(c, clean_db):
     add_test_routes()
-    clean_db.create_user("reader@example.com", PW, role="user")
-    log_in(c, "reader@example.com")
-    with clean_db.connect() as con:
-        con.execute("UPDATE users SET active = FALSE")
-    assert c.get("/api/test/user").status_code == 403
-    with clean_db.connect() as con:
-        con.execute("UPDATE users SET active = TRUE")
-    assert c.get("/api/test/user").status_code == 401             # the session was cleared
-
-
-def test_role_change_applies_at_once(c, clean_db):
-    """The role comes from the database at each request, not from the cookie."""
-    add_test_routes()
     clean_db.create_user("boss@example.com", PW)
     log_in(c, "boss@example.com")
     with clean_db.connect() as con:
-        con.execute("UPDATE users SET role = 'user'")
+        con.execute("UPDATE users SET active = FALSE")
     assert c.get("/api/test/admin").status_code == 403
+    with clean_db.connect() as con:
+        con.execute("UPDATE users SET active = TRUE")
+    assert c.get("/api/test/admin").status_code == 401            # the session was cleared
 
 
 def test_logout_clears_the_session(c, clean_db):
     add_test_routes()
-    clean_db.create_user("reader@example.com", PW, role="user")
-    log_in(c, "reader@example.com")
+    clean_db.create_user("boss@example.com", PW)
+    log_in(c, "boss@example.com")
     assert c.post("/api/logout", headers=csrf(c)).status_code == 200
-    assert c.get("/api/test/user").status_code == 401
+    assert c.get("/api/test/admin").status_code == 401
     assert c.get("/api/me").json()["user"] is None
 
 

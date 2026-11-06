@@ -1,5 +1,6 @@
 """JSON API for the React front end (step 5.6: login, logout, roles, CSRF).
-Every route checks the role ON THE SERVER; the front end is never trusted (SR35, NFR8)."""
+The research routes are open to visitors (SR33); only the administrator logs in.
+The role is checked ON THE SERVER; the front end is never trusted (SR35, NFR8)."""
 import re
 import secrets
 import time
@@ -39,7 +40,8 @@ router = APIRouter(prefix="/api", dependencies=[Depends(check_csrf)])   # applie
 
 # ---------------- who is logged in, and with which role ----------------
 def require_user(request: Request):
-    """Any logged-in account ('user' or 'admin'). 401 = not logged in, 403 = account disabled."""
+    """A logged-in, active account (since step 5.11 only administrators have one).
+    401 = not logged in, 403 = account disabled."""
     user_id = request.session.get("user_id")
     if not user_id:
         raise HTTPException(401, "Please log in.")
@@ -156,7 +158,9 @@ def public_answer(r):
 
 
 @router.post("/ask")
-def ask(body: Question, user=Depends(require_user)):
+def ask(body: Question):
+    """Open to visitors, without an account (SR33, FR1). The CSRF check of the router still applies:
+    the visitor's browser gets its token from GET /api/me with its own session."""
     error = check_input(body.question)                                         # SR3
     if error:
         raise HTTPException(400, error)
@@ -164,7 +168,7 @@ def ask(body: Question, user=Depends(require_user)):
         raise HTTPException(503, "The search index is not ready yet.")
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
     shown = public_answer(r)
-    shown["id"] = db.log_query(r, user_id=user["id"], shown=shown)              # FR28, SR41
+    shown["id"] = db.log_query(r, shown=shown)                  # FR28, SR41 (no account: user_id stays empty)
     return shown
 
 
@@ -189,8 +193,9 @@ def passage_view(chunk_id, quote=""):
 
 
 @router.get("/passage/{chunk_id}")
-def passage(chunk_id: str, quote: str = "", user=Depends(require_user)):
-    """The side panel (SR31): the opinion around the passage, the quote highlighted, the CourtListener link."""
+def passage(chunk_id: str, quote: str = ""):
+    """The side panel (SR31): the opinion around the passage, the quote highlighted, the CourtListener link.
+    Open to visitors, like /api/ask (public opinions, public domain)."""
     v = passage_view(chunk_id, quote)
     if v is None:
         raise HTTPException(404, "Passage not found.")
@@ -198,24 +203,3 @@ def passage(chunk_id: str, quote: str = "", user=Depends(require_user)):
     return {"case_name": c["case_name"], "date_filed": str(c["date_filed"]), "opinion_label": c["label"],
             "section": c["section"], "citation": ", ".join(c["citations"] or []) or f"No. {c['docket_number']}",
             "source_url": c["source_url"], "licence": c["licence"], **v}
-
-
-@router.get("/history")
-def history(user=Depends(require_user)):
-    """The user's own last 50 questions (never someone else's)."""
-    with db.connect() as con:
-        rows = con.execute("""SELECT id, created_at, question, status FROM query_log
-                              WHERE user_id = %s ORDER BY id DESC LIMIT 50""", (user["id"],)).fetchall()
-    return [{**r, "created_at": r["created_at"].isoformat()} for r in rows]
-
-
-@router.get("/history/{log_id}")
-def history_item(log_id: int, user=Depends(require_user)):
-    """One earlier answer, exactly as it was shown (the model is not called again).
-    Someone else's question gives 404, the same as a question that does not exist."""
-    with db.connect() as con:
-        row = con.execute("SELECT details FROM query_log WHERE id = %s AND user_id = %s",
-                          (log_id, user["id"])).fetchone()
-    if not row or "shown" not in (row["details"] or {}):
-        raise HTTPException(404, "Not found.")
-    return {**row["details"]["shown"], "id": log_id}

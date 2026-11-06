@@ -103,12 +103,14 @@ question -> input check, 3-1000 characters (SR3)
 -> case names and citations shown to the user are rendered from OUR database (SR21).
 
 Website (since step 5.6, 2026-11-06): FastAPI serves the pages and a JSON API under /api (app/api.py)
-for the React front end, which replaced the Jinja pages of the guide in step 5.10 (section 11). Every /api route
+for the React front end, which replaced the Jinja pages of the guide in step 5.10 (section 11).
+The research routes (/api/ask, /api/passage) are open to visitors (SR33); every /api/admin route
 checks the login and the role on the server, reading the account from the database at each request;
-every POST needs the session's CSRF token (X-CSRF-Token header).
+every POST needs the session's CSRF token (X-CSRF-Token header). Each question is sent alone to
+pipeline.answer (FR1); the page's "My questions" list lives only in the browser page.
 Front end (step 5.8): React + Vite in frontend/ (react, react-router-dom; no UI library), built into
 frontend/dist and served by FastAPI at / (every address that is not /api or /health gets the same page); the Dockerfile builds it in a first Node stage, so
-Railway still runs one service. Pages: login, chat (research) and the 9 admin pages under /admin
+Railway still runs one service. Pages: chat (research, no login), administrator login and the 9 admin pages under /admin
 (step 5.9; admin JSON API in app/api_admin.py, where the router itself requires the admin role and the
 CSRF token, so no admin route can be added without them). React only displays: it never decides who
 may see what; /admin pages are refused by the server (401 / 403) like every admin route (SR35).
@@ -182,15 +184,16 @@ Deliberate improvement (week 10): reranker, measured before and after on the sam
 
 ## 8. Roles (SR33-SR36)
 
-Since 2026-11-06 (instructor's request, section 11): everyone logs in. Accounts are created and
-disabled by an administrator (FR12); there is no self-registration.
-User: login; research (chat) page only.
+SR33 as written (confirmed by the instructor on 2026-11-06, section 11): two roles.
+Visitor: no login, no account; the public research (chat) page only.
 Administrator: login; the research page and the admin pages: evaluation, test questions,
-abstentions, analytics, settings, corpus and citation lookup, re-index, accounts.
-Both: bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the same error message for
-every failed login; at most 10 failed logins per IP address in 15 minutes (HTTP 429); a new session
-at each login; logout clears the session; session cookie HttpOnly, SameSite=Lax, Secure online
-(HTTPS_ONLY=1); CSRF token on every POST; role checked on the server at every request (SR35, NFR8).
+abstentions, analytics, settings, corpus and citation lookup, re-index, accounts. Administrator
+accounts are created and disabled by an administrator (FR12); there is no self-registration.
+Login security (administrator): bcrypt hashes (SR34); locked 15 minutes after 5 failures (SR36); the
+same error message for every failed login; at most 10 failed logins per IP address in 15 minutes
+(HTTP 429); a new session at each login; logout clears the session; session cookie HttpOnly,
+SameSite=Lax, Secure online (HTTPS_ONLY=1); CSRF token on every POST, visitors included (they get the
+token with their session from /api/me); role checked on the server at every admin request (SR35, NFR8).
 
 ## 9. Work process
 
@@ -224,6 +227,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.8 React login and chat pages under /app; Dockerfile Node stage | Joe | step/5.8-react-chat | built and checked in a browser (test database, fake model); 3 new tests |
 | 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
 | 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
+| 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
@@ -291,3 +295,15 @@ templates and routes of the guide (pp. 56-70) were removed from app/main.py; the
 copy, in app/api_admin.py. The guide's tests/test_admin.py (p. 63) checks the same behaviour through
 POST /api/login and the React /admin pages. The "research aid, not legal advice" footer (SR7) is in
 frontend/index.html, outside React, so it is on every page even before the JavaScript loads.
+
+2026-11-06 - Instructor's answer: only the administrator logs in; the chat takes one independent
+question per message (FR1). Dr. Salloum answered our two questions about the website: (1) login is
+"only admin", visitors do not log in; (2) the chat follows the Phase 1 requirements, which ask for one
+question at a time and no follow-up questions. The earlier decision "everyone logs in, roles user and
+administrator" (entry above, which was waiting for his confirmation) is REVERTED in step 5.11: SR33,
+FR1, FR4, FR10, FR12, O7 and sections 1.2, 4 and 6 of the Requirements Document stay as written, and
+the Requirements Document needs no change. /api/ask and /api/passage are open to visitors (still with
+the CSRF token, SR3 and the query log); /api/history is removed (a visitor has no account, so "My
+questions" lives only in the open page); the accounts page creates administrators only; a migration
+removes the 'user' accounts made during steps 5.6-5.10 (their questions stay in the log without the
+account) and the database allows the role 'admin' only. All the login security of step 5.6 stays.

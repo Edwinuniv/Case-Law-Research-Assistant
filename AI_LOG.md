@@ -333,3 +333,18 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    /api address gets a JSON 404 instead of the page, and the test helper moves its routes in front.
    A new test checks /health, /api/me and an unknown /api address are not the React page; removing the
    /api check makes it fail.
+
+## 2026-11-06 — Research page public again, only the administrator logs in (Joe, step 5.11)
+
+1. **A requirement was changed before the instructor confirmed it.** What we asked: React pages,
+   "login screens with proper security" and a chat page (the instructor's notes). What came back: Claude
+   listed the contradiction with SR33 (visitor without login) and proposed options. Joe chose "everyone
+   logs in" (roles user and administrator), and Claude then built steps 5.6-5.10 on it: a 'user' role,
+   /api/ask and /api/passage behind a login, a server-side history per user. What was wrong: SPEC section
+   11 itself said the decision was "to be confirmed with the instructor", and we wrote four steps of code
+   on it before he answered. How we caught it: Joe asked the instructor, who answered "only admin" and
+   "what do the requirements say exactly". Fix (step 5.11): back to SR33 as written. The research routes
+   are open to visitors again, /api/history is removed, a migration removes the 'user' accounts, and the
+   tests now check the requirement (a visitor asks without an account; no 'user' account can be created).
+   All the login security of step 5.6 is kept. Lesson: a requirement change waits for the person who
+   owns the requirement, even when it is written down as "to be confirmed".

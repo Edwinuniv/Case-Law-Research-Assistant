@@ -12,7 +12,7 @@ def c(clean_db, monkeypatch):
     monkeypatch.setattr(main, "load_index", lambda: None)
     api.FAILED_BY_IP.clear()
     clean_db.create_user("boss@example.com", PW)                      # admin
-    clean_db.create_user("reader@example.com", PW, role="user")
+    clean_db.create_user("second@example.com", PW)                    # another admin
     with TestClient(main.app) as client:
         yield client
 
@@ -53,10 +53,17 @@ def test_every_admin_route_refuses_visitors(c, clean_db):                     # 
         assert con.execute("SELECT count(*) AS n FROM users").fetchone()["n"] == 2       # nothing created
 
 
-def test_every_admin_route_refuses_users(c, clean_db):                        # SR35, NFR8
-    log_in(c, "reader@example.com")
+def test_every_admin_route_refuses_a_disabled_account(c, clean_db):           # SR35, NFR8
+    """An administrator disabled while logged in loses every admin route at once (403):
+    the account is read from the database at each request, not from the cookie."""
     for method, url in admin_routes():
-        assert call(c, method, url, csrf(c)).status_code == 403, (method, url)
+        with clean_db.connect() as con:
+            con.execute("UPDATE users SET active = TRUE WHERE email = 'second@example.com'")
+        log_in(c, "second@example.com")
+        token = csrf(c)                         # before disabling: /api/me ends a disabled account's session
+        with clean_db.connect() as con:
+            con.execute("UPDATE users SET active = FALSE WHERE email = 'second@example.com'")
+        assert call(c, method, url, token).status_code == 403, (method, url)
     with clean_db.connect() as con:
         assert con.execute("SELECT count(*) AS n FROM jobs").fetchone()["n"] == 0        # nothing started
 
@@ -111,13 +118,12 @@ def test_bad_test_question_is_refused(c, clean_db):
         assert con.execute("SELECT count(*) AS n FROM test_questions").fetchone()["n"] == 0
 
 
-def logged_question(clean_db, user_email="reader@example.com"):
-    """One NOT_SUPPORTED question in the log, asked by the user."""
+def logged_question(clean_db):
+    """One NOT_SUPPORTED question in the log, asked by a visitor (no account)."""
     with clean_db.connect() as con:
-        uid = con.execute("SELECT id FROM users WHERE email = %s", (user_email,)).fetchone()["id"]
-        return con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score, details, user_id)
+        return con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score, details)
                               VALUES ('Who won the 2030 election?', 'NOT_SUPPORTED', 'no passage is close enough',
-                              0, 0.2, '{"passages": [], "removed": []}', %s) RETURNING id""", (uid,)).fetchone()["id"]
+                              0, 0.2, '{"passages": [], "removed": []}') RETURNING id""").fetchone()["id"]
 
 
 def test_abstentions_do_not_say_who_asked(c, clean_db):                      # FR22
@@ -125,7 +131,7 @@ def test_abstentions_do_not_say_who_asked(c, clean_db):                      # F
     log_in(c, "boss@example.com")
     [row] = c.get("/api/admin/abstentions").json()
     assert row["id"] == log_id and row["question"] == "Who won the 2030 election?"
-    assert "user_id" not in row and "reader@example.com" not in str(row)
+    assert "user_id" not in row
 
 
 def test_label_and_add_to_the_test_set(c, clean_db):                         # SR43
@@ -141,16 +147,26 @@ def test_label_and_add_to_the_test_set(c, clean_db):                         # S
                   headers=csrf(c)).status_code == 404               # the Jinja route crashed here (500)
 
 
-def test_admin_creates_a_user_who_can_then_log_in(c):                        # FR12
+def test_admin_creates_another_admin_who_can_then_log_in(c):                 # FR12
     log_in(c, "boss@example.com")
-    accounts = c.post("/api/admin/users", json={"email": "new@example.com", "password": PW, "role": "user"},
+    accounts = c.post("/api/admin/users", json={"email": "new@example.com", "password": PW},
                       headers=csrf(c)).json()
-    assert {"email": "new@example.com", "role": "user"}.items() <= next(
+    assert {"email": "new@example.com", "role": "admin"}.items() <= next(
         a for a in accounts if a["email"] == "new@example.com").items()
     assert all("password_hash" not in a for a in accounts)
     c.post("/api/logout", headers=csrf(c))
     log_in(c, "new@example.com")
-    assert c.get("/api/me").json()["user"]["role"] == "user"
+    assert c.get("/api/me").json()["user"]["role"] == "admin"
+
+
+def test_accounts_page_cannot_create_a_user_account(c, clean_db):            # SR33
+    """SR33: the visitor has no account, so the accounts page only makes administrators."""
+    log_in(c, "boss@example.com")
+    r = c.post("/api/admin/users", json={"email": "reader@example.com", "password": PW, "role": "user"},
+               headers=csrf(c))
+    assert r.status_code == 400
+    with clean_db.connect() as con:
+        assert con.execute("SELECT count(*) AS n FROM users WHERE email = 'reader@example.com'").fetchone()["n"] == 0
 
 
 def test_bad_new_accounts_are_refused(c, clean_db):
@@ -168,22 +184,23 @@ def test_disable_an_account_but_not_yourself(c, clean_db):
         ids = {r["email"]: r["id"] for r in con.execute("SELECT id, email FROM users").fetchall()}
     log_in(c, "boss@example.com")
     assert c.post(f"/api/admin/users/{ids['boss@example.com']}/toggle", headers=csrf(c)).status_code == 400
-    assert c.post(f"/api/admin/users/{ids['reader@example.com']}/toggle", headers=csrf(c)).status_code == 200
+    assert c.post(f"/api/admin/users/{ids['second@example.com']}/toggle", headers=csrf(c)).status_code == 200
     assert c.post("/api/admin/users/99999/toggle", headers=csrf(c)).status_code == 404
     c.post("/api/logout", headers=csrf(c))
-    r = c.post("/api/login", json={"email": "reader@example.com", "password": PW}, headers=csrf(c))
+    r = c.post("/api/login", json={"email": "second@example.com", "password": PW}, headers=csrf(c))
     assert r.status_code == 401                                         # the disabled account cannot log in
 
 
-def test_react_admin_pages_are_refused_by_the_server(c, monkeypatch, tmp_path):   # SR35
+def test_react_admin_pages_are_refused_by_the_server(c, clean_db, monkeypatch, tmp_path):   # SR35
     from app import main
     (tmp_path / "index.html").write_text("<div id=root></div>")
     monkeypatch.setattr(main, "FRONTEND", tmp_path)
     for url in ["/admin", "/admin/users", "/ADMIN", "http://testserver//admin/eval", "/admin/"]:
         assert c.get(url).status_code == 401, url
-    log_in(c, "reader@example.com")
-    assert c.get("/admin").status_code == 403 and c.get("/Admin/settings").status_code == 403
-    assert c.get("/").status_code == 200                                # the chat page is for users
-    c.post("/api/logout", headers=csrf(c))
+    assert c.get("/").status_code == 200                                # the research page is for everyone
+    log_in(c, "second@example.com")
+    with clean_db.connect() as con:                                     # disabled while logged in
+        con.execute("UPDATE users SET active = FALSE WHERE email = 'second@example.com'")
+    assert c.get("/admin").status_code == 403
     log_in(c, "boss@example.com")
-    assert c.get("/admin/users").status_code == 200
+    assert c.get("/admin/users").status_code == 200 and c.get("/Admin/settings").status_code == 200

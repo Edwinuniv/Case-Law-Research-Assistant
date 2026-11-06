@@ -1,4 +1,5 @@
-"""Login and roles in the database (SR33, SR34, SR36, step 5.6). Uses the TEST database."""
+"""Login and roles in the database (SR33, SR34, SR36; step 5.6, roles back to SR33 as written in 5.11).
+Uses the TEST database."""
 import pytest
 
 PW = "a-long-password"
@@ -38,15 +39,17 @@ def test_four_failures_do_not_lock(clean_db):
     assert user is not None
 
 
-def test_user_role_and_admin_role(clean_db):                                        # SR33
-    clean_db.create_user("reader@example.com", PW, role="user")
+def test_only_the_administrator_role_exists(clean_db):                              # SR33
+    """SR33: two roles, the visitor (no account at all) and the administrator. So an account is
+    always an administrator, and no 'user' account can be created."""
     clean_db.create_user("boss@example.com", PW)                     # admin by default (seed.py)
-    reader, _ = clean_db.check_login("reader@example.com", PW)
     boss, _ = clean_db.check_login("boss@example.com", PW)
-    assert reader["role"] == "user" and boss["role"] == "admin"
-    assert clean_db.active_role(reader["id"]) == "user"
-    assert not clean_db.user_is_active_admin(reader["id"])
-    assert clean_db.user_is_active_admin(boss["id"])
+    assert boss["role"] == "admin" and clean_db.user_is_active_admin(boss["id"])
+    with pytest.raises(ValueError):
+        clean_db.create_user("reader@example.com", PW, role="user")
+    with clean_db.connect() as con:                                  # the database refuses it too
+        with pytest.raises(Exception):
+            con.execute("INSERT INTO users (email, password_hash, role) VALUES ('r@example.com', 'x', 'user')")
 
 
 def test_unknown_role_is_refused(clean_db):
@@ -57,7 +60,7 @@ def test_unknown_role_is_refused(clean_db):
 
 
 def test_disabled_account_has_no_role(clean_db):
-    clean_db.create_user("reader@example.com", PW, role="user")
+    clean_db.create_user("boss@example.com", PW)
     with clean_db.connect() as con:
         con.execute("UPDATE users SET active = FALSE")
         uid = con.execute("SELECT id FROM users").fetchone()["id"]
@@ -65,12 +68,20 @@ def test_disabled_account_has_no_role(clean_db):
     assert clean_db.active_role(99999) is None                       # no such account
 
 
-def test_existing_database_gets_the_user_role(clean_db):
-    """A database made before step 5.6 only allows 'admin'; init_db must fix that (Joe's PC, Railway)."""
-    with clean_db.connect() as con:
+def test_existing_database_loses_the_user_accounts(clean_db):
+    """A database made during steps 5.6-5.10 allows 'user' accounts (Joe's PC, maybe Railway).
+    init_db must remove them, keep their questions in the log (FR28) and keep the administrators."""
+    clean_db.create_user("boss@example.com", PW)
+    with clean_db.connect() as con:                                  # the database as it was in 5.6-5.10
         con.execute("ALTER TABLE users DROP CONSTRAINT users_role_check")
-        con.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin'))")
+        con.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'))")
+        uid = con.execute("INSERT INTO users (email, password_hash, role) VALUES ('reader@example.com', 'x', 'user') "
+                          "RETURNING id").fetchone()["id"]
+        con.execute("INSERT INTO query_log (question, status, user_id) VALUES ('Is it legal?', 'ANSWERED', %s)", (uid,))
     clean_db.init_db()
-    clean_db.create_user("reader@example.com", PW, role="user")
     with clean_db.connect() as con:
-        assert con.execute("SELECT role FROM users").fetchone()["role"] == "user"
+        assert [u["email"] for u in con.execute("SELECT email FROM users").fetchall()] == ["boss@example.com"]
+        log = con.execute("SELECT question, user_id FROM query_log").fetchall()
+        assert log == [{"question": "Is it legal?", "user_id": None}]
+    with pytest.raises(ValueError):
+        clean_db.create_user("reader@example.com", PW, role="user")
