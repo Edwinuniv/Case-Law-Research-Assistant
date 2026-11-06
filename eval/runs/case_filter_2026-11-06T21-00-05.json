@@ -1,0 +1,682 @@
+{
+ "date": "2026-11-06T21:00:05",
+ "note": "case filter, new dump 2026-11-05",
+ "split": "tune",
+ "answerable": 34,
+ "answerable_with_filter": 8,
+ "off": {
+  "quote@8": 0.382,
+  "recall@5": 0.971,
+  "mrr@10": 0.907,
+  "mean_search_ms": 186.6
+ },
+ "on": {
+  "quote@8": 0.382,
+  "recall@5": 0.971,
+  "mrr@10": 0.907,
+  "mean_search_ms": 151.2
+ },
+ "quotes_lost": [],
+ "other_questions_with_filter": [
+  "X021",
+  "X003",
+  "X005",
+  "X006",
+  "X007",
+  "X009",
+  "X011"
+ ],
+ "switched_on_for_an_invented_or_mixed_name": [],
+ "search_settings": {
+  "w_bm25": 1.0,
+  "w_separate": 1.0,
+  "fusion_pool": 50,
+  "retrieve_k": 20,
+  "top_k": 8
+ },
+ "per_question": {
+  "A029": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 227.62393099947076
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 227.62393099947076
+   }
+  },
+  "A031": {
+   "tag": "answerable",
+   "filter_decisions": [
+    9987186
+   ],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 191.21142199946917
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 27.392409000640328
+   }
+  },
+  "A032": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 2,
+    "quote": false,
+    "ms": 167.3692390004362
+   },
+   "on": {
+    "rank": 2,
+    "quote": false,
+    "ms": 167.3692390004362
+   }
+  },
+  "A033": {
+   "tag": "answerable",
+   "filter_decisions": [
+    9971894
+   ],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 174.20539100021415
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 27.035934000195994
+   }
+  },
+  "A034": {
+   "tag": "answerable",
+   "filter_decisions": [
+    9971894
+   ],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 157.3531260000891
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 24.217322000367858
+   }
+  },
+  "A035": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 196.6238559998601
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 196.6238559998601
+   }
+  },
+  "A037": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 161.86607999952685
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 161.86607999952685
+   }
+  },
+  "A038": {
+   "tag": "answerable",
+   "filter_decisions": [
+    4760997
+   ],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 177.3203390002891
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 29.266022999763663
+   }
+  },
+  "A039": {
+   "tag": "answerable",
+   "filter_decisions": [
+    4760997
+   ],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 175.2397669997663
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 27.113595000628266
+   }
+  },
+  "A040": {
+   "tag": "answerable",
+   "filter_decisions": [
+    931614
+   ],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 192.24559099984617
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 30.813129000307526
+   }
+  },
+  "A042": {
+   "tag": "answerable",
+   "filter_decisions": [
+    931614
+   ],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 191.71098400056508
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 31.6438650006603
+   }
+  },
+  "U015": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U016": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U018": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U019": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U020": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U021": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "X015": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X017": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X018": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X019": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X020": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X021": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    931614
+   ]
+  },
+  "A001": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 197.6533590004692
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 197.6533590004692
+   }
+  },
+  "A002": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 2,
+    "quote": true,
+    "ms": 165.68381499928364
+   },
+   "on": {
+    "rank": 2,
+    "quote": true,
+    "ms": 165.68381499928364
+   }
+  },
+  "A003": {
+   "tag": "answerable",
+   "filter_decisions": [
+    7686272
+   ],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 171.89670800053136
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 31.16721799960942
+   }
+  },
+  "A004": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 197.23964999957388
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 197.23964999957388
+   }
+  },
+  "A006": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 182.98784099988552
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 182.98784099988552
+   }
+  },
+  "A007": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 170.1571600005991
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 170.1571600005991
+   }
+  },
+  "A008": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 189.1374850001739
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 189.1374850001739
+   }
+  },
+  "A009": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 174.71902999932354
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 174.71902999932354
+   }
+  },
+  "A011": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 183.80985900057567
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 183.80985900057567
+   }
+  },
+  "A012": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 184.5383359996049
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 184.5383359996049
+   }
+  },
+  "A013": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 201.86675900004047
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 201.86675900004047
+   }
+  },
+  "A014": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 2,
+    "quote": true,
+    "ms": 181.81428000025335
+   },
+   "on": {
+    "rank": 2,
+    "quote": true,
+    "ms": 181.81428000025335
+   }
+  },
+  "U001": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U002": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U004": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U005": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U007": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "X001": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X003": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    799984
+   ]
+  },
+  "X005": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    4512666
+   ]
+  },
+  "X006": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    130160
+   ]
+  },
+  "X007": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    118395,
+    9259216
+   ]
+  },
+  "A015": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 252.63559299946792
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 252.63559299946792
+   }
+  },
+  "A017": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 172.80010000013135
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 172.80010000013135
+   }
+  },
+  "A018": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": null,
+    "quote": false,
+    "ms": 240.53048200039484
+   },
+   "on": {
+    "rank": null,
+    "quote": false,
+    "ms": 240.53048200039484
+   }
+  },
+  "A020": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 180.9081569999762
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 180.9081569999762
+   }
+  },
+  "A021": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 3,
+    "quote": false,
+    "ms": 195.69771999977092
+   },
+   "on": {
+    "rank": 3,
+    "quote": false,
+    "ms": 195.69771999977092
+   }
+  },
+  "A022": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": true,
+    "ms": 180.38059399987105
+   },
+   "on": {
+    "rank": 1,
+    "quote": true,
+    "ms": 180.38059399987105
+   }
+  },
+  "A023": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 179.68055300025298
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 179.68055300025298
+   }
+  },
+  "A024": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 197.59155100018688
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 197.59155100018688
+   }
+  },
+  "A025": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 174.68224599997484
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 174.68224599997484
+   }
+  },
+  "A026": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 177.7907559999221
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 177.7907559999221
+   }
+  },
+  "A028": {
+   "tag": "answerable",
+   "filter_decisions": [],
+   "off": {
+    "rank": 1,
+    "quote": false,
+    "ms": 176.7068819999622
+   },
+   "on": {
+    "rank": 1,
+    "quote": false,
+    "ms": 176.7068819999622
+   }
+  },
+  "U008": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U010": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U011": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U012": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "U013": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  },
+  "X008": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X009": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    2812209
+   ]
+  },
+  "X011": {
+   "tag": "adversarial",
+   "filter_decisions": [
+    118443
+   ]
+  },
+  "X012": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X013": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "X014": {
+   "tag": "adversarial",
+   "filter_decisions": []
+  },
+  "U022": {
+   "tag": "unanswerable",
+   "filter_decisions": []
+  }
+ }
+}
