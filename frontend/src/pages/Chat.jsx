@@ -1,5 +1,7 @@
-// The research page as a conversation. Each question is sent ALONE to /api/ask:
-// the pipeline does not use earlier questions, and the page says so.
+// The research page as a conversation, open to visitors (SR33). Each question is sent ALONE to /api/ask:
+// the pipeline does not use earlier questions (FR1), and the page says so.
+// "My questions" lives only in this page (React memory): visitors have no account, so nothing is
+// kept on the server for them, and reloading the page empties the list.
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Answer from "../components/Answer.jsx";
@@ -10,11 +12,10 @@ export default function Chat({ info }) {
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [history, setHistory] = useState([]);      // my earlier questions (saved in query_log)
+  const [history, setHistory] = useState([]);      // the questions asked in this page, newest first
   const [open, setOpen] = useState(null);          // the passage shown in the side panel
   const bottom = useRef(null);
 
-  useEffect(() => { api("/history").then(setHistory).catch(() => {}); }, []);
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [turns]);
 
   async function ask(e) {
@@ -23,7 +24,7 @@ export default function Chat({ info }) {
     try {
       const a = await api("/ask", { question });
       setTurns((t) => [...t, { question: a.question, answer: a }]);
-      setHistory((h) => [{ id: a.id, question: a.question, status: a.status }, ...h]);
+      setHistory((h) => [{ id: a.id, question: a.question, status: a.status, answer: a }, ...h]);
       setQuestion("");
     } catch (err) {
       setError(err.message);                       // e.g. the SR3 length message
@@ -32,9 +33,8 @@ export default function Chat({ info }) {
     }
   }
 
-  async function showEarlier(id) {                 // an earlier answer, as it was shown (no new model call)
-    const a = await api(`/history/${id}`);
-    setTurns((t) => [...t, { question: a.question, answer: a, earlier: true }]);
+  function showEarlier(h) {                        // an earlier answer, from memory (no new model call)
+    setTurns((t) => [...t, { question: h.question, answer: h.answer, earlier: true }]);
   }
 
   return (
@@ -43,7 +43,7 @@ export default function Chat({ info }) {
         <b>My questions</b>
         {history.length === 0 && <p className="muted">None yet.</p>}
         {history.map((h) => (
-          <button key={h.id} onClick={() => showEarlier(h.id)} title={h.status}>{h.question}</button>
+          <button key={h.id} onClick={() => showEarlier(h)} title={h.status}>{h.question}</button>
         ))}
       </aside>
 
