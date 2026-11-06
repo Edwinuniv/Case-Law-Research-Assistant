@@ -61,4 +61,6 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.tune_embeddings          # step 10.2: bge-small vs bge-base on the TUNE split
     python -m scripts.tune_case_filter "note"  # search only the case named in the question: off vs on (TUNE split)
     python -m scripts.seed --questions         # after editing eval/questions.jsonl
-    python -m scripts.run_eval "note"          # all test questions; saved as a run, see /admin/eval
+    python -m scripts.run_eval "note"          # all test questions; prints the TUNE split and the tau sweep
+    python -m scripts.run_eval --resume RUN_ID # continue a run paused at Groq's daily limit (200,000 tokens/day)
+    python -m scripts.run_eval --test RUN_ID   # the TEST split, once, after tau_abstain is chosen (EVALUATION.md)

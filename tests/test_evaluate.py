@@ -1,3 +1,4 @@
+import pytest
 from app.evaluate import status_at, metrics
 from app.config import DEFAULT_SETTINGS
 
@@ -126,3 +127,90 @@ def test_judge_waits_on_rate_limit_but_not_on_other_errors(monkeypatch):
     def timeout(statement, text): raise llm.ModelError("timeout after 30 seconds")
     monkeypatch.setattr(llm, "judge_support", timeout)
     assert evaluate.judge_with_retry("s", "p", log=lambda m: None) == "error" and waits == [3.0]
+
+
+# --- Week 8: the TEST split is reported once, after tau is chosen on TUNE (EVALUATION.md, SR29) ---
+def fake_run(monkeypatch):
+    import scripts.run_eval as run_eval
+    pairs = [({**q("a", "answerable"), "split": "tune"}, res(0.9)), (q("b", "answerable"), res(0.2))]
+    monkeypatch.setattr(run_eval, "Searcher", lambda: None)
+    monkeypatch.setattr(run_eval, "CitationIndex", lambda: None)
+    monkeypatch.setattr(run_eval.evaluate, "run_evaluation", lambda *a, **kw: 7)
+    monkeypatch.setattr(run_eval.evaluate, "load_run", lambda run_id: pairs)
+    monkeypatch.setattr(run_eval.evaluate, "run_status", lambda run_id: "done")
+    return run_eval
+
+def test_a_run_shows_only_the_tune_split_and_the_sweep(monkeypatch, capsys):
+    fake_run(monkeypatch).main(["week 8"], S)
+    out = capsys.readouterr().out
+    assert "== tune split ==" in out and "test split" not in out.lower()
+    assert "answerable                       1" in out          # only the tune question is counted
+    assert "tau    precision" in out                             # the sweep, to choose tau_abstain
+
+def test_the_test_split_is_shown_only_when_asked(monkeypatch, capsys):
+    fake_run(monkeypatch).main(["--test", "7"], S)
+    out = capsys.readouterr().out
+    assert "== test split ==" in out and "== tune split ==" not in out
+    assert "answerable                       1" in out          # only the test question is counted
+
+
+# --- Week 8: Groq's free tier allows 200,000 tokens per day; a full run needs about 500,000,
+#     so a run pauses at the daily limit and is resumed later (--resume), as ONE run ---
+DAILY = ("ERROR", "language model failed: rate limit reached per day, retry after 1320 s")
+OK = ("NOT_SUPPORTED", "the model said the passages do not answer this")
+
+def scripted_run(clean_db, monkeypatch, replies, seen_settings):
+    from app import evaluate
+    with clean_db.connect() as con:
+        for i in ("U1", "U2", "U3"):
+            con.execute("INSERT INTO test_questions (id, tag, split, question) VALUES (%s, 'unanswerable', 'tune', 'q?')", (i,))
+    def fake_answer(question, searcher, index, settings, skip_gate=False):
+        seen_settings.append(settings)
+        status, reason = replies.pop(0)
+        return {"question": question, "status": status, "reason": reason, "sentences": [], "removed": [],
+                "passages": [], "top_score": 0.9, "support_score": 0.0, "fabrications_caught": 0,
+                "retrieved_decisions": [], "model_said": None, "ms_total": 1}
+    monkeypatch.setattr(evaluate, "answer", fake_answer)
+    monkeypatch.setattr(evaluate.time, "sleep", lambda seconds: None)
+    return evaluate
+
+def test_daily_limit_pauses_the_run_without_saving_an_error(clean_db, monkeypatch):
+    evaluate = scripted_run(clean_db, monkeypatch, [OK, DAILY], [])
+    run_id = evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None)
+    assert evaluate.run_status(run_id) == "paused"
+    assert [q["id"] for q, _ in evaluate.load_run(run_id)] == ["U1"]          # U2 is not saved as an ERROR
+
+def test_resume_finishes_the_same_run_with_its_own_settings(clean_db, monkeypatch):
+    seen = []
+    evaluate = scripted_run(clean_db, monkeypatch, [OK, DAILY, OK, OK], seen)
+    run_id = evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None)
+    assert evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None, resume=run_id) == run_id
+    assert evaluate.run_status(run_id) == "done"
+    assert [q["id"] for q, _ in evaluate.load_run(run_id)] == ["U1", "U2", "U3"]   # U1 not asked twice
+    assert len(seen) == 4 and all(s == seen[0] for s in seen)
+
+def test_resume_refuses_if_the_settings_changed(clean_db, monkeypatch):
+    evaluate = scripted_run(clean_db, monkeypatch, [OK, DAILY], [])
+    run_id = evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None)
+    with clean_db.connect() as con:
+        con.execute("INSERT INTO settings (key, value) VALUES ('tau_abstain', '0.4') "
+                    "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value")
+    with pytest.raises(ValueError, match="tau_abstain"):
+        evaluate.run_evaluation(object(), CHECK_INDEX, log=lambda m: None, resume=run_id)
+
+def test_daily_limit_during_the_judge_also_pauses(monkeypatch):
+    from app import evaluate, llm
+    monkeypatch.setattr(evaluate.time, "sleep", lambda seconds: None)     # never really wait in a test
+    def judge(statement, text):
+        raise llm.ModelError("rate limit reached per day, retry after 600 s")
+    monkeypatch.setattr(llm, "judge_support", judge)
+    with pytest.raises(evaluate.DailyLimit):
+        evaluate.judge_with_retry("s", "p", log=lambda m: None)
+
+def test_a_paused_run_says_how_to_resume_and_shows_no_metrics(monkeypatch, capsys):
+    run_eval = fake_run(monkeypatch)
+    monkeypatch.setattr(run_eval.evaluate, "run_status", lambda run_id: "paused")
+    run_eval.main(["--resume", "7"], S)
+    out = capsys.readouterr().out
+    assert "--resume 7" in out and "split ==" not in out
+

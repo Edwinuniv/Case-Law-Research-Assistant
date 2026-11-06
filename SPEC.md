@@ -365,3 +365,14 @@ runs, a run, the compare page and the threshold preview. EVALUATION.md and SR29 
 chosen on TUNE and TEST is reported once, at the end, so an admin who opened those pages after a run saw
 TEST numbers while choosing. They now show TUNE (one setting, DEFAULT_SPLIT in app/api_admin.py); TEST
 is still one click away on the run page (split selector, ?split=test) for the final report.
+
+2026-11-06 - Week 8 (Edwin): scripts/run_eval.py prints only the TUNE split and the tau sweep after a run;
+the TEST split is printed with `--test RUN_ID`, once, after tau_abstain is chosen (EVALUATION.md, SR29).
+The guide's version (p. 77) printed both splits after every run.
+
+2026-11-06 - Week 8 (Edwin): Groq's free tier allows 200,000 tokens per day and a full run needs about
+500,000, so a run pauses when the model provider refuses for its daily limit and is continued with
+`run_eval --resume RUN_ID`. It stays one run (one run id, the settings saved when it started; a resume
+is refused if the settings changed). The full run takes about 3 days; while it runs, the website shares
+the same daily budget.
+

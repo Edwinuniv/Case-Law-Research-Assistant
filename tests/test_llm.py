@@ -39,9 +39,9 @@ def test_timeout_is_not_retried(monkeypatch):                # SR4
 import httpx
 from openai import RateLimitError
 
-def rate_limited(seconds):
+def rate_limited(seconds, limit="tokens per minute (TPM)"):
     response = httpx.Response(429, headers={"retry-after": seconds}, request=httpx.Request("POST", "http://x"))
-    return RateLimitError("Rate limit reached for model on tokens per minute (TPM)", response=response, body=None)
+    return RateLimitError(f"Rate limit reached for model on {limit}", response=response, body=None)
 
 def test_rate_limit_says_how_long_to_wait(monkeypatch):
     make, calls = fake_client([rate_limited("4"), "{}"])
@@ -49,3 +49,10 @@ def test_rate_limit_says_how_long_to_wait(monkeypatch):
     with pytest.raises(llm.ModelError, match="rate limit reached, retry after 4 s"):
         llm.ask_model("q", {})
     assert len(calls) == 1                     # no waiting inside a visitor's request (SR4)
+
+def test_daily_limit_is_named_in_the_error(monkeypatch):     # the evaluation pauses on it (--resume)
+    make, _ = fake_client([rate_limited("1320", "tokens per day (TPD)")])
+    monkeypatch.setattr(llm, "_client", make)
+    with pytest.raises(llm.ModelError, match="rate limit reached per day, retry after 1320 s"):
+        llm.ask_model("q", {})
+

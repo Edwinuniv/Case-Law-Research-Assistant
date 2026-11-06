@@ -463,3 +463,34 @@ rule in EVALUATION.md before any code or measurement.
    default without checking it against our own rule. How we caught it: Edwin, preparing Week 8, saw
    split || "test" in the run page. Fix: one default (DEFAULT_SPLIT = "tune") in app/api_admin.py, the
    React pages say which split they show, TEST is still reachable on the run page; 5 tests written first.
+
+## 2026-11-06 — Week 8: the run report must not show the TEST split (Edwin, step 8.2)
+
+1. **The guide's run_eval.py shows the TEST split before tau is chosen.** The script (guide p. 77, committed
+   as is in PR #25) prints the metrics of both splits after every run. EVALUATION.md (written before
+   measuring) chooses tau_abstain on the TUNE split without looking at the TEST split, then reports TEST
+   once. How we caught it: checking the prerequisites of step 8.2 against the rule, before the first run.
+   Fix: a run prints the TUNE split and the tau sweep; the TEST split only with `--test RUN_ID`. The
+   guide's script also ran a whole evaluation when the file was imported (code at the top level); found
+   when the first test imported it (empty test database, no model call). It now runs from main() only.
+   The admin pages (Joe's) still open on the TEST split by default (guide pp. 56-62): written down for Joe.
+2. **A test that did not test the risky part.** Claude's first test called report() directly. Breaking
+   the code on purpose (printing both splits after a run) made no test fail, because the choice of split
+   is made in the main part. Fix: the split choice is in main(), tested with a fake run; three planted
+   bugs now each make a test fail.
+
+## 2026-11-06 — Week 8: Groq's daily limit, pause and resume (Edwin, step 8.2)
+
+1. **The rate-limit retry (PR #28) only knew the per-minute limit.** Claude's retry waits and tries
+   again up to 6 times, which is right for 8,000 tokens per minute. Groq's free tier also allows only
+   200,000 tokens per day (console limits page, checked 2026-11-06), and a full run of the 85 questions
+   needs about 450,000-550,000 tokens. After about 40 questions every call would have been refused, saved
+   as ERROR, and the run spoiled. How we caught it: checking the daily limit before the first full run (it
+   was on the to-do list since PR #28, but the run would have started without it). Fix: llm.py says "per
+   day" when the refusal is for a daily limit; the run then pauses (status paused, the refused question is
+   not saved) and `run_eval --resume RUN_ID` continues it as the same run, with the settings it started
+   with, and refuses if the settings changed in between (the search reads the current settings).
+2. **A test that could wait for an hour.** Breaking the code on purpose (removing the judge's pause) made
+   the judge test call time.sleep(601) six times for real: the test did not replace sleep. Fix: it does now;
+   each of 7 planted bugs makes a test fail within seconds.
+
