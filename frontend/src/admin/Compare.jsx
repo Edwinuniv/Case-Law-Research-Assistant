@@ -4,7 +4,7 @@ import { num, useLoad, Waiting } from "./useLoad.jsx";
 
 export default function Compare() {
   const [p] = useSearchParams();
-  const [d, error] = useLoad(`/admin/eval/compare?a=${p.get("a")}&b=${p.get("b")}&split=${p.get("split") ?? "test"}`);
+  const [d, error] = useLoad(`/admin/eval/compare?a=${p.get("a")}&b=${p.get("b")}&split=${p.get("split") ?? "tune"}`);
   if (!d) return <Waiting data={d} error={error} />;
   return (
     <>
