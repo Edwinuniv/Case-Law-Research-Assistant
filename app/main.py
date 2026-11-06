@@ -4,7 +4,8 @@ import threading
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import RedirectResponse, HTMLResponse, PlainTextResponse
+from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from app import api, config, db, evaluate
@@ -81,6 +82,24 @@ def passage(request: Request, chunk_id: str, quote: str = "", panel: int = 0):
     if v is None:
         return HTMLResponse("Passage not found", status_code=404)
     return page(request, "passage_panel.html" if panel else "passage.html", **v)
+
+
+# ======================= REACT FRONT END (step 5.8), under /app until step 5.10 =======================
+# `npm run build` (in frontend/) writes the app into frontend/dist; the Dockerfile does it on Railway.
+FRONTEND = config.ROOT / "frontend" / "dist"
+if (FRONTEND / "assets").is_dir():
+    app.mount("/app/assets", StaticFiles(directory=FRONTEND / "assets"), name="react-assets")
+
+
+@app.get("/app")
+@app.get("/app/{path:path}")
+def react_app(path: str = ""):
+    """Every /app page is the same index.html; React Router then shows the right page.
+    The page itself holds no data: every /api call checks the login and the role."""
+    if not (FRONTEND / "index.html").is_file():
+        return PlainTextResponse("The React app is not built. Run: cd frontend && npm install && npm run build",
+                                 status_code=404)
+    return FileResponse(FRONTEND / "index.html")
 
 
 @app.get("/health")
