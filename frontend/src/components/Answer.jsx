@@ -29,10 +29,10 @@ export default function Answer({ a, onOpen }) {
       <p className="muted">Support score {a.support_score.toFixed(2)} · best passage {a.top_score.toFixed(2)} · {a.ms_total} ms</p>
 
       {a.passages.length > 0 && (                     // retrieved passages, shown with the answer (FR5)
-        <details>
-          <summary>Retrieved passages ({a.passages.length})</summary>
+        <div>
+          <b>Retrieved passages ({a.passages.length})</b>
           {a.passages.map((p) => (
-            <details key={p.pid} style={{ marginLeft: 12 }}>
+            <details key={p.pid}>
               <summary>
                 <b>[{p.pid}]</b> {p.case_name} ({p.year}) — {p.opinion_label} — {p.section}
                 {p.is_syllabus && <i> — Syllabus (not part of the opinion)</i>}
@@ -42,7 +42,7 @@ export default function Answer({ a, onOpen }) {
               <button className="chip" onClick={() => onOpen(p.chunk_id, "")}>Show in the opinion</button>
             </details>
           ))}
-        </details>
+        </div>
       )}
     </div>
   );
