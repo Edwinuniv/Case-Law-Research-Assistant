@@ -23,6 +23,7 @@ class Searcher:
                                    ORDER BY c.chunk_id""").fetchall()
         self.chunks = rows
         self.by_id = {r["chunk_id"]: r for r in rows}
+        self.decision_of = np.array([r["decision_id"] for r in rows])   # decision of each chunk, BM25 order
         self.bm25 = self.keyword_index(rows)
         embeddings.embed_query("warm-up")     # load (or download) the model now, not at the first question
 
@@ -40,14 +41,18 @@ class Searcher:
             bm25.save(path, key)
         return bm25
 
-    def dense(self, qvec, k):
+    def dense(self, qvec, k, decision_ids=None):
         """Meaning-based: cosine similarity computed by PostgreSQL. <=> is cosine DISTANCE.
         Exact search over all chunks (no HNSW index): measured 57 ms for 104,904 chunks, and the
-        approximate HNSW index silently returns fewer rows with its default ef_search=40."""
+        approximate HNSW index silently returns fewer rows with its default ef_search=40.
+        decision_ids: only the chunks of these decisions (the chunks_decision index finds them)."""
+        if decision_ids is not None and not decision_ids:
+            return []
+        where, args = ("WHERE decision_id = ANY(%s)", [list(decision_ids)]) if decision_ids else ("", [])
         with db.connect() as con:
-            rows = con.execute("""SELECT chunk_id, 1 - (embedding <=> %s::vector) AS score
-                                  FROM chunks ORDER BY embedding <=> %s::vector LIMIT %s""",
-                               (qvec, qvec, k)).fetchall()
+            rows = con.execute(f"""SELECT chunk_id, 1 - (embedding <=> %s::vector) AS score
+                                   FROM chunks {where} ORDER BY embedding <=> %s::vector LIMIT %s""",
+                               [qvec, *args, qvec, k]).fetchall()
         return [(r["chunk_id"], float(r["score"])) for r in rows]
 
     def dense_scores_for(self, qvec, chunk_ids):
@@ -56,8 +61,12 @@ class Searcher:
                                "WHERE chunk_id = ANY(%s)", (qvec, list(chunk_ids))).fetchall()
         return {r["chunk_id"]: float(r["score"]) for r in rows}
 
-    def keyword(self, question, k):
+    def keyword(self, question, k, decision_ids=None):
+        """Keyword-based: BM25 scores of all chunks. decision_ids: the other chunks get 0, so they are
+        left out like chunks without any word of the question."""
         scores = self.bm25.scores(question)
+        if decision_ids is not None:
+            scores = np.where(np.isin(self.decision_of, list(decision_ids)), scores, 0)
         order = np.argsort(-scores)[:k]
         return [(self.chunks[i]["chunk_id"], float(scores[i])) for i in order if scores[i] > 0]
 
@@ -66,10 +75,10 @@ class Searcher:
         c = self.by_id[chunk_id]
         return bool(SEPARATE.search(f"{c['section']} {c['opinion_label']}"))
 
-    def candidates(self, question, pool):
+    def candidates(self, question, pool, decision_ids=None):
         """The two ranked lists: meaning (pgvector) and keywords (BM25), pool candidates each."""
         qvec = vector_literal(embeddings.embed_query(question))
-        return qvec, self.dense(qvec, pool), self.keyword(question, pool)
+        return qvec, self.dense(qvec, pool, decision_ids), self.keyword(question, pool, decision_ids)
 
     def fuse(self, dense, keyword, k, settings):
         """Weighted Reciprocal Rank Fusion: each list gives weight / (60 + rank) to a passage.
@@ -83,10 +92,12 @@ class Searcher:
                 fused[cid] = fused.get(cid, 0) + w / (60 + rank + 1)
         return sorted(fused, key=fused.get, reverse=True)[:k]
 
-    def search(self, question, k=20, settings=None):
-        """Top k passages. Each passage's 'score' is its meaning similarity (0..1)."""
+    def search(self, question, k=20, settings=None, decision_ids=None):
+        """Top k passages. Each passage's 'score' is its meaning similarity (0..1).
+        decision_ids (optional, Edwin's case filter, step 4.6): search only the passages of these
+        decisions (ids of the decisions table; an empty list finds nothing). None = the whole corpus."""
         settings = settings or db.get_settings()
-        qvec, dense, keyword = self.candidates(question, int(settings.get("fusion_pool", 50)))
+        qvec, dense, keyword = self.candidates(question, int(settings.get("fusion_pool", 50)), decision_ids)
         best = self.fuse(dense, keyword, k, settings)
         score = dict(dense)
         missing = [c for c in best if c not in score]
