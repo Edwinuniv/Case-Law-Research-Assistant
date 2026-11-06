@@ -198,3 +198,8 @@ def test_short_forms_of_the_cited_case_name_are_kept():
 def test_a_verb_before_the_cited_case_name_is_not_part_of_the_name():
     kept, _ = run("Applying Trump v. United States, the President enjoys absolute immunity.")
     assert kept
+
+def test_one_party_name_is_not_a_two_party_case():
+    # Found by breaking same_case on purpose: without comparing the number of parties this was kept
+    kept, removed = run("In re Trump, the President enjoys absolute immunity.")
+    assert not kept and any("In re Trump" in p for p in removed[0]["problems"])
