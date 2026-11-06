@@ -18,7 +18,7 @@ Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Do
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
-(plus `HTTPS_ONLY=1`), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
+(plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
 
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets
