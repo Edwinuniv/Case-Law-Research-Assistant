@@ -200,6 +200,7 @@ def test_resume_refuses_if_the_settings_changed(clean_db, monkeypatch):
 
 def test_daily_limit_during_the_judge_also_pauses(monkeypatch):
     from app import evaluate, llm
+    monkeypatch.setattr(evaluate.time, "sleep", lambda seconds: None)     # never really wait in a test
     def judge(statement, text):
         raise llm.ModelError("rate limit reached per day, retry after 600 s")
     monkeypatch.setattr(llm, "judge_support", judge)
