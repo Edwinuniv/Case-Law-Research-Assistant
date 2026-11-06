@@ -194,6 +194,9 @@ same error message for every failed login; at most 10 failed logins per IP addre
 (HTTP 429); a new session at each login; logout clears the session; session cookie HttpOnly,
 SameSite=Lax, Secure online (HTTPS_ONLY=1); CSRF token on every POST, visitors included (they get the
 token with their session from /api/me); role checked on the server at every admin request (SR35, NFR8).
+Research page (visitors, step 5.12): at most 10 questions per minute per IP address on /api/ask; the
+next one gets HTTP 429 with a message that says how long to wait, before the model is called and
+without being saved. It protects the model credit and the demo (NFR5) now that no account is needed.
 
 ## 9. Work process
 
@@ -228,6 +231,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
 | 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
+| 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
@@ -309,6 +313,17 @@ the CSRF token, SR3 and the query log); /api/history is removed (a visitor has n
 questions" lives only in the open page); the accounts page creates administrators only; a migration
 removes the 'user' accounts made during steps 5.6-5.10 (their questions stay in the log without the
 account) and the database allows the role 'admin' only. All the login security of step 5.6 stays.
+
+2026-11-06 - Question limit per IP address (step 5.12, asked by Yasser): no requirement asks for it;
+it is added on top, like the login limit of step 5.6. Since step 5.11 anyone can use the research page
+without an account, so a script could send questions in a loop and use up our Groq credit (Edwin's
+retry for Groq's own limit, PR #28, is for the evaluation runs, not for visitors). One address may ask
+10 questions per minute; the next one gets HTTP 429 and a Retry-After header, the model is not called
+and the question is not saved in the query log (like a question refused by SR3, which is checked first
+and does not count). Evaluation runs from the admin pages call the pipeline directly, so the limit does
+not apply to them. Known limits: kept in memory (a restart empties it); on Railway the address comes from
+X-Forwarded-For, as for the login limit; many visitors behind one address (a university network) share
+the 10 questions; many addresses together are not limited.
 
 2026-11-06 - Week 10 improvement (step 10.2): the hypothesis written first in EVALUATION.md (a larger
 embedding model, bge-base-en-v1.5, finds the holding paragraph more often) was measured on the TUNE
