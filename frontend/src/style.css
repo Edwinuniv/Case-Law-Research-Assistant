@@ -80,3 +80,13 @@ button.light:hover{background:#f1ede3}
 .two{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
 @media(max-width:850px){.two{grid-template-columns:1fr}}
 a.active{font-weight:700}
+/* admin: the menu on the left, the page on the right */
+.admin{display:grid;grid-template-columns:210px minmax(0,1fr);gap:24px;align-items:start}
+.side{position:sticky;top:16px;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);
+  border-radius:4px;padding:14px 0}
+.side b{font-family:var(--serif);color:var(--navy);padding:0 16px 8px;font-size:16px}
+.side a{padding:7px 16px;text-decoration:none;color:var(--ink);border-left:3px solid transparent;font-size:14px}
+.side a:hover{background:#faf8f3}
+.side a.active{border-left-color:var(--gold);background:#f6f1e4;color:var(--navy)}
+.side .muted{padding:12px 16px 0;word-break:break-all}
+@media(max-width:850px){.admin{grid-template-columns:1fr}.side{position:static}}
