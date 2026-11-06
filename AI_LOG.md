@@ -451,3 +451,18 @@ rule in EVALUATION.md before any code or measurement.
    rule (3). How we caught it: reading the check against the rule's words before running it. Fix: only a
    case name found in the question that is itself listed in must_not_appear counts.
 
+## 2026-11-06 — Week 8: the run report must not show the TEST split (Edwin, step 8.2)
+
+1. **The guide's run_eval.py shows the TEST split before tau is chosen.** The script (guide p. 77, committed
+   as is in PR #25) prints the metrics of both splits after every run. EVALUATION.md (written before
+   measuring) chooses tau_abstain on the TUNE split without looking at the TEST split, then reports TEST
+   once. How we caught it: checking the prerequisites of step 8.2 against the rule, before the first run.
+   Fix: a run prints the TUNE split and the tau sweep; the TEST split only with `--test RUN_ID`. The
+   guide's script also ran a whole evaluation when the file was imported (code at the top level); found
+   when the first test imported it (empty test database, no model call). It now runs from main() only.
+   The admin pages (Joe's) still open on the TEST split by default (guide pp. 56-62): written down for Joe.
+2. **A test that did not test the risky part.** Claude's first test called report() directly. Breaking
+   the code on purpose (printing both splits after a run) made no test fail, because the choice of split
+   is made in the main part. Fix: the split choice is in main(), tested with a fake run; three planted
+   bugs now each make a test fail.
+
