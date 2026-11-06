@@ -1,12 +1,26 @@
 """JSON API for the React admin pages (step 5.9). Same work as the Jinja admin routes in main.py.
 EVERY route here is protected by the router itself: CSRF on POST and the admin role checked in the
 database at each request (SR35, NFR8). A route cannot be added here without that protection."""
+import threading
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app import api, db, evaluate
 
 router = APIRouter(prefix="/api/admin",
                    dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
+
+
+def run_in_background(kind, work):
+    """Long work (evaluation, re-index) runs in a thread; its progress is saved in the jobs table."""
+    job_id = db.start_job(kind)
+
+    def target():
+        try:
+            db.end_job(job_id, "done", str(work() or ""))
+        except Exception as e:
+            db.end_job(job_id, "failed", f"{type(e).__name__}: {e}")
+    threading.Thread(target=target, daemon=True).start()
+    return job_id
 
 
 def latest_run_id():
@@ -74,3 +88,25 @@ def settings_save(body: Settings):
     db.set_setting("top_k", max(1, min(body.top_k, 10)))
     db.set_setting("use_reranker", body.use_reranker)
     return db.get_settings()
+
+
+# ---------------- evaluation (FR13-FR20) ----------------
+@router.get("/eval")
+def eval_runs():
+    s = db.get_settings()
+    with db.connect() as con:
+        runs = con.execute("SELECT * FROM eval_runs ORDER BY id DESC").fetchall()
+    return [{**run, "metrics": evaluate.metrics(evaluate.load_run(run["id"]), s, "test") if run["status"] == "done" else {}}
+            for run in runs]
+
+
+class RunNote(BaseModel):
+    note: str = ""
+
+
+@router.post("/eval/run")
+def eval_run(body: RunNote):
+    if api.STATE["searcher"] is None:
+        raise HTTPException(503, "The search index is not ready yet.")
+    job = run_in_background("evaluation", lambda: f"run {evaluate.run_evaluation(api.STATE['searcher'], api.STATE['index'], 'manual', body.note, log=lambda *a: None)}")
+    return {"job": job}
