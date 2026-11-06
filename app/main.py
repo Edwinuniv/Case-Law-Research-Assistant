@@ -1,19 +1,14 @@
-"""The website. Public part: research page (no login, SR33). Admin part: /admin/* (login + role)."""
-import datetime
-from urllib.parse import quote
+"""The website: the React pages (frontend/dist) and the JSON API (app/api.py, app/api_admin.py).
+Everyone logs in (roles user and admin); the server checks the role on every /api call and every /admin page."""
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse, PlainTextResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from app import api, api_admin, config, db, evaluate
+from app import api, api_admin, config, db
 from app.citations import CitationIndex
-from app.indexing import build_index
-from app.pipeline import answer, check_input
 from app.search import Searcher
 
-templates = Jinja2Templates(directory=str(config.ROOT / "app" / "templates"))
 STATE = api.STATE                      # shared with the /api routes (app/api.py)
 
 
