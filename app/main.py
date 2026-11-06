@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse, Plai
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from app import api, config, db, evaluate
+from app import api, api_admin, config, db, evaluate
 from app.citations import CitationIndex
 from app.indexing import build_index
 from app.pipeline import answer, check_input
@@ -43,6 +43,7 @@ if config.HTTPS_ONLY and config.SESSION_SECRET == "change-me-in-production":
 app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, max_age=8 * 3600,
                    https_only=config.HTTPS_ONLY, same_site="lax")
 app.include_router(api.router)                                       # JSON API for React (/api/...)
+app.include_router(api_admin.router)                                 # admin JSON API (/api/admin/...)
 
 
 def page(request, name, status_code=200, **context):
@@ -139,15 +140,7 @@ def logout(request: Request):
     return RedirectResponse("/", 303)
 
 
-def run_in_background(kind, work):
-    job_id = db.start_job(kind)
-
-    def target():
-        try:
-            db.end_job(job_id, "done", str(work() or ""))
-        except Exception as e:
-            db.end_job(job_id, "failed", f"{type(e).__name__}: {e}")
-    threading.Thread(target=target, daemon=True).start()
+run_in_background = api_admin.run_in_background          # one copy, shared with the admin API
 
 
 # ======================= ADMIN: overview and settings =======================
