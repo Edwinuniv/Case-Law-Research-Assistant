@@ -191,8 +191,9 @@ def passage_view(chunk_id, quote=""):
 
 
 @router.get("/passage/{chunk_id}")
-def passage(chunk_id: str, quote: str = "", user=Depends(require_user)):
-    """The side panel (SR31): the opinion around the passage, the quote highlighted, the CourtListener link."""
+def passage(chunk_id: str, quote: str = ""):
+    """The side panel (SR31): the opinion around the passage, the quote highlighted, the CourtListener link.
+    Open to visitors, like /api/ask (public opinions, public domain)."""
     v = passage_view(chunk_id, quote)
     if v is None:
         raise HTTPException(404, "Passage not found.")
