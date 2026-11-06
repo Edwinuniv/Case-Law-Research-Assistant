@@ -37,10 +37,11 @@ function App() {
       <header>
         <span className="brand">Verdicta</span>
         <span className="muted" style={{ color: "#c9d6e8" }}>{info.coverage}</span>
+        <Link to="/">Research</Link>
         {user && <span>{user.email}</span>}
-        {user && <Link to="/">Research</Link>}
         {user?.role === "admin" && <Link to="/admin">Admin</Link>}
-        {user && <button className="link" onClick={logout}>Log out</button>}
+        {user ? <button className="link" onClick={logout}>Log out</button>
+              : <Link to="/login">Admin login</Link>}      {/* only the administrator logs in */}
       </header>
       <main>
         <Routes>
