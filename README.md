@@ -23,9 +23,9 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000/app
     npm run dev                                # while changing the React code: http://127.0.0.1:5173/app (uvicorn must run too)
 
-Everyone logs in (roles user and admin). A user account is created by an administrator, for now with:
-
-    python -c "from app import db; db.create_user('name@example.com', 'a-long-password', role='user')"
+Everyone logs in (roles user and admin). The research (chat) page is http://127.0.0.1:8000/app and the
+admin pages are http://127.0.0.1:8000/app/admin (admins only). Accounts are created by an administrator
+on the admin page "Accounts" (role user or admin); there is no sign-up page.
 
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
