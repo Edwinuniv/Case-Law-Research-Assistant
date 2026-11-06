@@ -198,3 +198,50 @@ def question_save(q: TestQuestion):
                     (q.id.strip(), q.tag, q.split, q.question, q.expected_answer, q.gold_decision_ids, q.gold_quote,
                      [x.strip() for x in q.must_not_appear if x.strip()], q.why, q.author))
     return question(q.id.strip())
+
+
+# ---------------- abstentions / failures (FR22, SR43) ----------------
+STATUSES = ("NOT_SUPPORTED", "LOW_CONFIDENCE", "ERROR")
+LABELS = ("correct", "should have answered", "add as unanswerable test question", "add as answerable test question")
+
+
+@router.get("/abstentions")
+def abstentions(status: str = "NOT_SUPPORTED"):
+    """The questions the system did not answer confidently, with their passages and removed sentences.
+    Who asked is NOT sent (the admin does not need it to tune abstention)."""
+    if status not in STATUSES:
+        raise HTTPException(400, "Unknown status.")
+    with db.connect() as con:
+        rows = con.execute("""SELECT id, created_at, question, status, reason, support_score, top_score, label, details
+                              FROM query_log WHERE status = %s ORDER BY id DESC LIMIT 200""", (status,)).fetchall()
+        ids = [cid for row in rows for _, cid, _ in (row["details"] or {}).get("passages", [])]
+        chunks = {c["chunk_id"]: c for c in con.execute(
+            "SELECT c.chunk_id, d.case_name, o.label FROM chunks c JOIN opinions o USING (opinion_id) "
+            "JOIN decisions d ON d.decision_id = c.decision_id WHERE c.chunk_id = ANY(%s)", (ids,)).fetchall()}
+    out = []
+    for row in rows:
+        d = row.pop("details") or {}
+        row["passages"] = [{"chunk_id": cid, "score": score, "case_name": chunks.get(cid, {}).get("case_name"),
+                            "label": chunks.get(cid, {}).get("label")} for _, cid, score in d.get("passages", [])]
+        row["removed"] = d.get("removed", [])
+        out.append(row)
+    return out
+
+
+class Label(BaseModel):
+    label: str
+
+
+@router.post("/abstentions/{log_id}/label")
+def abstention_label(log_id: int, body: Label):
+    """Marks one case. 'add as ...' also returns the question and tag to prefill a new test question (SR43)."""
+    if body.label not in LABELS:
+        raise HTTPException(400, "Unknown label.")
+    with db.connect() as con:
+        q = con.execute("UPDATE query_log SET label = %s WHERE id = %s RETURNING question", (body.label, log_id)).fetchone()
+    if not q:
+        raise HTTPException(404, "No such question in the log.")
+    if body.label.startswith("add as"):
+        return {"prefill": {"question": q["question"],
+                            "tag": "unanswerable" if "unanswerable" in body.label else "answerable"}}
+    return {"ok": True}
