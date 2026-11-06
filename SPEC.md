@@ -228,6 +228,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
 | 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
+| Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log

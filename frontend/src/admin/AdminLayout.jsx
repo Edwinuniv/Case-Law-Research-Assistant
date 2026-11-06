@@ -1,4 +1,4 @@
-// The admin menu, shown above every admin page. Pages are only reachable for admins:
+// The admin menu, on the left of every admin page. Pages are only reachable for admins:
 // the server refuses /admin (401/403) and every /api/admin call.
 import { NavLink, Outlet } from "react-router-dom";
 
@@ -8,15 +8,15 @@ const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test que
 
 export default function AdminLayout({ user }) {
   return (
-    <>
-      <div className="card" style={{ padding: "8px 14px" }}>
-        <b>Admin</b>{" "}
+    <div className="admin">
+      <nav className="side">
+        <b>Administration</b>
         {PAGES.map(([path, name]) => (
-          <span key={path}> · <NavLink end to={"/admin/" + path}>{name}</NavLink></span>
+          <NavLink key={path} end to={"/admin/" + path}>{name}</NavLink>
         ))}
-        <span className="muted" style={{ float: "right" }}>{user.email}</span>
-      </div>
-      <Outlet />
-    </>
+        <span className="muted">{user.email}</span>
+      </nav>
+      <section><Outlet /></section>
+    </div>
   );
 }
