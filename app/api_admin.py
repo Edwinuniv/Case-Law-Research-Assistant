@@ -31,6 +31,12 @@ def latest_run_id():
     return last["id"] if last else None
 
 
+# ---------------- which split the admin pages show by default ----------------
+# Thresholds are chosen on the TUNE split; the TEST split is reported once, at the end (EVALUATION.md, SR29).
+# So every admin page shows TUNE unless the admin asks for test (the run page has a selector).
+DEFAULT_SPLIT = "tune"
+
+
 # ---------------- overview ----------------
 @router.get("/home")
 def home():
@@ -43,7 +49,7 @@ def home():
             (SELECT count(*) FROM query_log WHERE created_at::date = now()::date) AS queries_today""").fetchone()
         jobs = con.execute("SELECT * FROM jobs ORDER BY id DESC LIMIT 6").fetchall()
     last = latest_run_id()
-    m = evaluate.metrics(evaluate.load_run(last), s, "test") if last else None
+    m = evaluate.metrics(evaluate.load_run(last), s, DEFAULT_SPLIT) if last else None
     return {"counts": counts, "last_run": last, "metrics": m, "jobs": jobs,
             "chunk_max_words": s.get("chunk_max_words", 350)}
 
@@ -67,8 +73,8 @@ def settings_preview(tau_abstain: float, tau_confident: float, min_retrieval: fl
         raise HTTPException(404, "No evaluation run yet: run one first.")
     new = dict(s, tau_abstain=tau_abstain, tau_confident=max(tau_confident, tau_abstain), min_retrieval=min_retrieval)
     pairs = evaluate.load_run(last)
-    now, then = evaluate.metrics(pairs, s, "test"), evaluate.metrics(pairs, new, "test")
-    return {"run": last, "rows": [{"metric": k, "now": now.get(k), "then": then.get(k)} for k in PREVIEW_KEYS]}
+    now, then = evaluate.metrics(pairs, s, DEFAULT_SPLIT), evaluate.metrics(pairs, new, DEFAULT_SPLIT)
+    return {"run": last, "split": DEFAULT_SPLIT, "rows": [{"metric": k, "now": now.get(k), "then": then.get(k)} for k in PREVIEW_KEYS]}
 
 
 class Settings(BaseModel):
@@ -98,7 +104,7 @@ def eval_runs():
     s = db.get_settings()
     with db.connect() as con:
         runs = con.execute("SELECT * FROM eval_runs ORDER BY id DESC").fetchall()
-    return [{**run, "metrics": evaluate.metrics(evaluate.load_run(run["id"]), s, "test") if run["status"] == "done" else {}}
+    return [{**run, "metrics": evaluate.metrics(evaluate.load_run(run["id"]), s, DEFAULT_SPLIT) if run["status"] == "done" else {}}
             for run in runs]
 
 
