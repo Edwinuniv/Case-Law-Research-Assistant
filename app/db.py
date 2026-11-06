@@ -104,6 +104,9 @@ MIGRATIONS = """
 -- 2026-11-06 (step 5.6): a second role, 'user' (SR33, new wording, SPEC section 11)
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'));
+-- 2026-11-06 (step 5.7): who asked each question, for the chat history (FR28 already saves the question)
+ALTER TABLE query_log ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
+CREATE INDEX IF NOT EXISTS query_log_user ON query_log (user_id, id);
 """
 
 
@@ -192,18 +195,24 @@ def user_is_active_admin(user_id):
 
 
 # ---------------- query log ----------------
-def log_query(r):
+def log_query(r, user_id=None, shown=None):
+    """Saves one question and its result (FR28, SR41). Returns the new row's id.
+    user_id: who asked (chat history, step 5.7). shown: the answer exactly as the user saw it,
+    so the history can show it again without calling the model."""
     removed_citations = [p for s in r["removed"] for p in s["problems"] if "citation" in p or "case name" in p]
     details = {"removed": r["removed"],
                "passages": [(pid, p["chunk_id"], p["score"]) for pid, p in r["passages"]]}
+    if shown is not None:
+        details["shown"] = shown
     with connect() as con:
-        con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
+        row = con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
             n_sentences, n_removed, removed_citations, fabrications_caught, ms_search, ms_model,
-            ms_total, details) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                    (r["question"], r["status"], r["reason"], r["support_score"], r["top_score"],
-                     len(r["shown_sentences"]), len(r["removed"]), Jsonb(removed_citations),
-                     r["fabrications_caught"], r["ms_search"], r["ms_model"], r["ms_total"],
-                     Jsonb(details)))
+            ms_total, details, user_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                          (r["question"], r["status"], r["reason"], r["support_score"], r["top_score"],
+                           len(r["shown_sentences"]), len(r["removed"]), Jsonb(removed_citations),
+                           r["fabrications_caught"], r["ms_search"], r["ms_model"], r["ms_total"],
+                           Jsonb(details), user_id)).fetchone()
+    return row["id"]
 
 
 # ---------------- jobs (re-index / evaluation in the background) ----------------
