@@ -233,6 +233,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.10 switch: React at / and /admin; Jinja templates and routes removed; tests/test_admin.py rewritten | Joe | step/5.10-switch-to-react | built and checked in a browser (test database, fake model); 143 tests pass |
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
+| Admin pages open on the TUNE split (overview, runs, a run, compare, threshold preview); TEST only when asked | Joe | feature/admin-tune-default | checked in a browser (test database, fake model); 5 new tests |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 | 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
@@ -352,3 +353,10 @@ nothing and use the normal search. Measured search time today: about 0.27 s per 
 passage, not answer time (SR2 is already met). Off (setting case_filter) until measured on the TUNE split
 with the rule written first in EVALUATION.md. Needs a decision_ids parameter in Searcher.search
 (Yasser's file), requested in writing.
+
+2026-11-06 - Admin pages show the TUNE split by default (asked by Edwin for Week 8). The guide's admin
+code (pp. 56-62, kept in the React pages of step 5.9) showed the TEST split on the overview, the list of
+runs, a run, the compare page and the threshold preview. EVALUATION.md and SR29 say the thresholds are
+chosen on TUNE and TEST is reported once, at the end, so an admin who opened those pages after a run saw
+TEST numbers while choosing. They now show TUNE (one setting, DEFAULT_SPLIT in app/api_admin.py); TEST
+is still one click away on the run page (split selector, ?split=test) for the final report.
