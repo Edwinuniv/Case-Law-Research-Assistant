@@ -83,10 +83,10 @@ def test_named_case_limits_the_search_to_its_decision(monkeypatch):
     assert searcher.decision_ids == [9986254] and r["case_filter"] == [9986254]
 
 def test_case_filter_is_off_unless_switched_on(monkeypatch):
-    # Off by default (EVALUATION.md: on only after the measurement); a searcher without the
-    # decision_ids parameter (search(q, k)) must still work
+    # With the setting off, the normal search runs; a searcher without the decision_ids parameter
+    # (search(q, k)) must still work. (The default is on since the measurement: EVALUATION.md.)
     monkeypatch.setattr(llm, "ask_model", good_model)
-    r = pipeline.answer(LOPER_QUESTION, FakeSearcher(0.8), INDEX, S)
+    r = pipeline.answer(LOPER_QUESTION, FakeSearcher(0.8), INDEX, dict(S, case_filter=False))
     assert r["status"] == "ANSWERED" and r["case_filter"] == []
 
 def test_invented_or_mixed_name_uses_the_normal_search(monkeypatch):
