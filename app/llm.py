@@ -49,7 +49,8 @@ def _ask_json(system, user):
             raise ModelError("timeout after 30 seconds") from e
         except RateLimitError as e:                          # Groq free tier: 8,000 tokens per minute;
             wait = e.response.headers.get("retry-after", "10")   # the evaluation waits and retries
-            raise ModelError(f"rate limit reached, retry after {wait} s") from e
+            per_day = " per day" if "per day" in str(e) else ""   # 200,000 tokens per day: the run pauses
+            raise ModelError(f"rate limit reached{per_day}, retry after {wait} s") from e
         except json.JSONDecodeError as e:
             last_error = e
         except Exception as e:
