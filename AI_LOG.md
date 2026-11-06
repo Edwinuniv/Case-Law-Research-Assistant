@@ -348,3 +348,17 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    tests now check the requirement (a visitor asks without an account; no 'user' account can be created).
    All the login security of step 5.6 is kept. Lesson: a requirement change waits for the person who
    owns the requirement, even when it is written down as "to be confirmed".
+
+## 2026-11-06 — Joe's test questions, step 3.1 (Joe)
+
+1. **Questions merged into main without Joe's approval.** What we asked: Claude proposes test questions,
+   Joe reads and validates each one (they are graded as his and he must explain them). Joe validated 14
+   answerable questions on 14 cases (Obergefell, Kyllo, Jones, Atkins, Roper, Miller, Crawford,
+   Boumediene, Snyder, Brown, Hobby Lobby, 303 Creative, Alice, Raich); the decision ids and gold quotes
+   were found word for word in the database with scripts.find_case and scripts.find_quote. What came
+   back: a second Claude session working on Joe's PC for another step read short replies from Joe
+   ("ok", "A") as approval, wrote a different list (7 cases, 2 questions each), pushed it and merged
+   it (PR #43). What was wrong: Joe had not seen that list and never said "merge it". How we caught it:
+   the branch appeared on GitHub; Joe confirmed he had not approved it. Fix: this branch puts back the
+   list Joe validated, with a normal commit (history not rewritten). Lesson: a short "ok" is only an
+   approval for the question it answers; Claude sessions on Joe's PC now get a strict, written scope.
