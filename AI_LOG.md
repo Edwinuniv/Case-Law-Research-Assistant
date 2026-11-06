@@ -277,3 +277,21 @@ read the related line ourselves before relying on these entries.
    remove, but relabel. Fix: "citation not in the citation table (written in the passage)", not counted
    by `count_fabrications`; a citation missing from the table AND absent from the passage is still
    FABRICATED (an existing test fails if the relabel is made too broad).
+
+## 2026-11-06 — Login security for the React front end (Joe, step 5.6)
+
+**Asked:** check the instructor's request (React, login for everyone, chat page) against our
+requirements, then add roles user/admin, CSRF, a login limit and generic login errors to a JSON API.
+1. **Guide code told attackers which accounts exist.** Found while checking the request against our
+   rules: `check_login` (guide p. 19-21) answered "This account is locked for 15 minutes" only for an
+   email that exists, and "Wrong email or password" otherwise. Fix: one message for every failure, and
+   an unknown email still costs one bcrypt check (same reply time). The guide's lock-out test looked for
+   the word "locked"; it now checks that the right password is refused while locked.
+2. **Claude edited a teammate's file.** The first version put the login-limit numbers in
+   `app/config.py`. How we caught it: before committing, `git log -- app/config.py` showed only Yasser
+   as author (step 1.1 is his). Fix: the numbers are in `app/api.py`; config.py is unchanged.
+3. **The login limit per IP would have been shared by everyone online.** The first version of the limit
+   used `request.client.host`. Behind Railway's proxy that is the proxy's address, so 10 failed logins
+   from anyone would block every visitor. Caught while preparing the Dockerfile for it. Fix: uvicorn
+   `--proxy-headers`. Remaining limit (SPEC section 11): a client can add to X-Forwarded-For, so the
+   per-IP limit can be dodged; the per-account lock (SR36) cannot.
