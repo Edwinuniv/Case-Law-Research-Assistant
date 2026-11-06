@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'user')),
+    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin')),
     active BOOLEAN NOT NULL DEFAULT TRUE,
     failed_logins INT NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
@@ -101,12 +101,16 @@ CREATE INDEX IF NOT EXISTS query_log_time ON query_log (created_at);
 # Changes to tables that already exist (CREATE TABLE IF NOT EXISTS does not change them).
 # Safe to run at every start.
 MIGRATIONS = """
--- 2026-11-06 (step 5.6): a second role, 'user' (SR33, new wording, SPEC section 11)
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'));
--- 2026-11-06 (step 5.7): who asked each question, for the chat history (FR28 already saves the question)
+-- 2026-11-06 (step 5.7): who asked each question (FR28 already saves the question)
 ALTER TABLE query_log ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
 CREATE INDEX IF NOT EXISTS query_log_user ON query_log (user_id, id);
+-- 2026-11-06 (step 5.11): the instructor's answer, only the administrator logs in (SR33 as written).
+-- Steps 5.6-5.10 had a 'user' role: those accounts are removed (their questions stay in the log,
+-- without the account), then the rule allows 'admin' only. Does nothing on a database without them.
+UPDATE query_log SET user_id = NULL WHERE user_id IN (SELECT id FROM users WHERE role <> 'admin');
+DELETE FROM users WHERE role <> 'admin';
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin'));
 """
 
 
@@ -140,8 +144,8 @@ def set_setting(key, value):
                     "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", (key, Jsonb(value)))
 
 
-# ---------------- users (roles 'admin' and 'user', SR33) ----------------
-ROLES = ("admin", "user")
+# ---------------- users: administrators only (SR33; visitors have no account) ----------------
+ROLES = ("admin",)
 LOGIN_FAILED = "Wrong email or password."     # the same message in every case: it does not say which emails exist
 # a real bcrypt hash of a random text, used when the email is unknown, so that every login takes the same time
 DUMMY_HASH = bcrypt.hashpw(b"no-such-user", bcrypt.gensalt()).decode()
@@ -183,7 +187,7 @@ def check_login(email, password):
 
 
 def active_role(user_id):
-    """The role of an active account ('admin' or 'user'), or None if it does not exist or is disabled.
+    """The role of an active account ('admin'), or None if it does not exist or is disabled.
     Read from the database at every request, so a disabled account loses access at once (NFR8)."""
     with connect() as con:
         u = con.execute("SELECT active, role FROM users WHERE id = %s", (user_id,)).fetchone()
