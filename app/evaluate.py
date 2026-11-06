@@ -1,5 +1,7 @@
 """Evaluation: test questions, runs, the separate false-citation checker, metrics, sweep, comparison."""
 import json
+import re
+import time
 from psycopg.types.json import Jsonb
 from app import config, db, llm
 from app.citations import find_citations
@@ -80,6 +82,39 @@ def check_shown_citations(r, q, index):
 
 
 # ---------------- running ----------------
+# Groq's free tier allows 8,000 tokens per minute and one question costs 4,400-5,200 tokens, so a full run
+# hits the limit. The evaluation (not the website) waits the time Groq asks for and tries again.
+RATE_LIMIT_RETRIES = 6
+
+
+def rate_limit_wait(message):
+    """Seconds to wait if the message is a rate-limit refusal, else None."""
+    m = re.search(r"rate limit reached, retry after ([\d.]+)", message or "")
+    return float(m.group(1)) + 1 if m else None
+
+
+def answer_with_retry(question, searcher, index, settings, log):
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        r = answer(question, searcher, index, settings, skip_gate=True)
+        wait = rate_limit_wait(r["reason"]) if r["status"] == ERROR else None
+        if wait is None or attempt == RATE_LIMIT_RETRIES:
+            return r
+        log(f"   rate limit: waiting {wait:.0f} s")
+        time.sleep(wait)
+
+
+def judge_with_retry(statement, passage_text, log):
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        try:
+            return llm.judge_support(statement, passage_text)
+        except llm.ModelError as e:
+            wait = rate_limit_wait(str(e))
+            if wait is None or attempt == RATE_LIMIT_RETRIES:
+                return "error"
+            log(f"   rate limit (judge): waiting {wait:.0f} s")
+            time.sleep(wait)
+
+
 def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=print):
     settings = db.get_settings()
     with db.connect() as con:
@@ -87,16 +122,13 @@ def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=p
                              "RETURNING id", (trigger, Jsonb(settings), note)).fetchone()["id"]
     questions = load_questions()
     for n, q in enumerate(questions, 1):
-        r = answer(q["question"], searcher, index, settings, skip_gate=True)
+        r = answer_with_retry(q["question"], searcher, index, settings, log)
         false_by_sentence, n_cites = check_shown_citations(r, q, index)
         judgements = []
         if judge and r["status"] != ERROR:
             passages = dict(r["passages"])
             for s in r["sentences"]:
-                try:
-                    judgements.append(llm.judge_support(s["text"], " ".join(passages[p]["text"] for p in s["sources"])))
-                except llm.ModelError:
-                    judgements.append("error")
+                judgements.append(judge_with_retry(s["text"], " ".join(passages[p]["text"] for p in s["sources"]), log))
         chosen = [p["decision_id"] for _, p in r["passages"]]
         row = {"top_score": r["top_score"], "support_score": r["support_score"], "status_raw": r["status"],
                "model_said": r["model_said"], "reason": r["reason"],
