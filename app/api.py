@@ -148,10 +148,25 @@ def decision_info(decision_ids):
     return {r["decision_id"]: r for r in rows}
 
 
+# The official U.S. Reports first, then the Supreme Court Reporter, then the Lawyers' Edition.
+# CourtListener's first citation is sometimes an odd reporter ("0 Cal. Daily Op. Serv. 3128").
+# Edwin's citation checker uses the same order, so the page and the evaluation agree.
+REPORTER_ORDER = ("U.S.", "S. Ct.", "L. Ed. 2d", "L. Ed.")
+
+
+def best_citation(citations):
+    """The citation to show: the best reporter of REPORTER_ORDER; with none of them, the first one."""
+    def rank(cite):
+        m = re.fullmatch(r"\d+ (.+) \d+", cite.strip())       # "553 U.S. 723" -> reporter "U.S."
+        reporter = m.group(1) if m else ""
+        return REPORTER_ORDER.index(reporter) if reporter in REPORTER_ORDER else len(REPORTER_ORDER)
+    return min(citations, key=rank)                          # min keeps the first one when ranks are equal
+
+
 def citation_label(p, d):
     """How a passage is cited in the answer, e.g. "Loper Bright ..., No. 22-451 (2024) · Majority"
     (the same text as the old Jinja page)."""
-    cite = d["citations"][0] if d and d["citations"] else f"No. {d['docket_number'] if d else '?'}"
+    cite = best_citation(d["citations"]) if d and d["citations"] else f"No. {d['docket_number'] if d else '?'}"
     return f"{p['case_name']}, {cite} ({p['date_filed'][:4]}) · {p['opinion_label']}"
 
 
