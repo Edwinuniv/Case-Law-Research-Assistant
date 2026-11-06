@@ -109,3 +109,33 @@ def test_bad_test_question_is_refused(c, clean_db):
         assert c.post("/api/admin/questions", json=bad, headers=csrf(c)).status_code == 400
     with clean_db.connect() as con:
         assert con.execute("SELECT count(*) AS n FROM test_questions").fetchone()["n"] == 0
+
+
+def logged_question(clean_db, user_email="reader@example.com"):
+    """One NOT_SUPPORTED question in the log, asked by the user."""
+    with clean_db.connect() as con:
+        uid = con.execute("SELECT id FROM users WHERE email = %s", (user_email,)).fetchone()["id"]
+        return con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score, details, user_id)
+                              VALUES ('Who won the 2030 election?', 'NOT_SUPPORTED', 'no passage is close enough',
+                              0, 0.2, '{"passages": [], "removed": []}', %s) RETURNING id""", (uid,)).fetchone()["id"]
+
+
+def test_abstentions_do_not_say_who_asked(c, clean_db):                      # FR22
+    log_id = logged_question(clean_db)
+    log_in(c, "boss@example.com")
+    [row] = c.get("/api/admin/abstentions").json()
+    assert row["id"] == log_id and row["question"] == "Who won the 2030 election?"
+    assert "user_id" not in row and "reader@example.com" not in str(row)
+
+
+def test_label_and_add_to_the_test_set(c, clean_db):                         # SR43
+    log_id = logged_question(clean_db)
+    log_in(c, "boss@example.com")
+    r = c.post(f"/api/admin/abstentions/{log_id}/label", json={"label": "add as unanswerable test question"},
+               headers=csrf(c)).json()
+    assert r["prefill"] == {"question": "Who won the 2030 election?", "tag": "unanswerable"}
+    assert c.get("/api/admin/abstentions").json()[0]["label"] == "add as unanswerable test question"
+    assert c.post(f"/api/admin/abstentions/{log_id}/label", json={"label": "whatever"},
+                  headers=csrf(c)).status_code == 400
+    assert c.post("/api/admin/abstentions/99999/label", json={"label": "add as answerable test question"},
+                  headers=csrf(c)).status_code == 404               # the Jinja route crashed here (500)
