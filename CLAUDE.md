@@ -127,6 +127,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 5.7 Research API for the chat (Joe) — branch step/5.7-api-research: /api/ask, /api/passage, /api/history (own questions only), query_log.user_id + answer as shown; 15 new tests ⏳ 5.8 React chat page
 - [x] 5.8 React login and chat pages (Joe) — branch step/5.8-react-chat: frontend/ (Vite + React Router), served at /app, Dockerfile Node stage; checked in a browser with a test database ⏳ run with Joe's real database; 5.9 admin pages
 - [x] 5.9 React admin pages (Joe) — branch step/5.9-react-admin: app/api_admin.py (20 routes, admin role + CSRF on the router), 9 admin pages in frontend/src/admin, /app/admin refused by the server; 14 new tests ⏳ 5.10 switch (React at / and /admin, remove Jinja)
+- [x] 5.10 Switch to React (Joe) — branch step/5.10-switch-to-react: React at / and /admin, Jinja templates and routes removed (main.py 405 → 73 lines), tests/test_admin.py rewritten for /api/login; 143 tests pass ⏳ run with Joe's new database
 
 ### Week 6 — Deployment (Joe)
 - [x] 6.1 Deployment files — Dockerfile and .dockerignore; build step downloads the embedding model into data/models like app/embeddings.py (AI_LOG) ⏳ image built for real on Railway (6.2)

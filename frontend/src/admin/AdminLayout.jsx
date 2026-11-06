@@ -1,5 +1,5 @@
 // The admin menu, shown above every admin page. Pages are only reachable for admins:
-// the server refuses /app/admin (401/403) and every /api/admin call.
+// the server refuses /admin (401/403) and every /api/admin call.
 import { NavLink, Outlet } from "react-router-dom";
 
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],

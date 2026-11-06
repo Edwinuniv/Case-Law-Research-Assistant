@@ -1,4 +1,4 @@
-"""JSON API for the React admin pages (step 5.9). Same work as the Jinja admin routes in main.py.
+"""JSON API for the React admin pages (step 5.9). Same work as the old Jinja admin pages (guide pp. 56-62, removed in step 5.10).
 EVERY route here is protected by the router itself: CSRF on POST and the admin role checked in the
 database at each request (SR35, NFR8). A route cannot be added here without that protection."""
 import datetime
@@ -82,7 +82,7 @@ class Settings(BaseModel):
 
 @router.post("/settings")
 def settings_save(body: Settings):
-    """The same limits as the Jinja page: tau_confident >= tau_abstain, 8-50 passages searched, 1-10 sent."""
+    """The same limits as the old Jinja page: tau_confident >= tau_abstain, 8-50 passages searched, 1-10 sent."""
     db.set_setting("tau_abstain", body.tau_abstain)
     db.set_setting("tau_confident", max(body.tau_confident, body.tau_abstain))
     db.set_setting("min_retrieval", body.min_retrieval)
@@ -184,7 +184,7 @@ class TestQuestion(BaseModel):
 
 @router.post("/questions")
 def question_save(q: TestQuestion):
-    """Adds a question or changes one (same SQL as the Jinja page)."""
+    """Adds a question or changes one (same SQL as the old Jinja page)."""
     if not q.id.strip() or not q.question.strip():
         raise HTTPException(400, "The ID and the question are required.")
     if q.tag not in TAGS or q.split not in SPLITS:

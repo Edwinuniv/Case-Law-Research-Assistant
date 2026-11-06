@@ -322,3 +322,14 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
 4. **Guide code crashed on a missing log row.** Porting the abstention labels showed that the Jinja route
    (guide pp. 56-62) does `q["question"]` when the UPDATE found no row: a 500 for an unknown id with an
    "add as ..." label (reproduced with the test client). The API returns 404, and a test checks it.
+
+## 2026-11-06 — Switch to React at / (Joe, step 5.10)
+
+1. **The React catch-all route hid other routes.** Claude made the React page answer every address
+   (`/{path:path}`, so /login and /admin/... work). FastAPI tries routes in the order they were added,
+   so any route added after it is never reached. How we caught it: the whole test suite; 5 tests in
+   tests/test_api_auth.py failed with 404, because they add their test-only routes after the app is
+   built. Fix: the catch-all stays the LAST route in app/main.py (after /api and /health), an unknown
+   /api address gets a JSON 404 instead of the page, and the test helper moves its routes in front.
+   A new test checks /health, /api/me and an unknown /api address are not the React page; removing the
+   /api check makes it fail.

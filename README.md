@@ -13,18 +13,19 @@ Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Do
     pip install -r requirements.txt
     cp .env.example .env                       # then fill in the keys
     python -m pytest -q                        # uses the TEST database
-    uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin)
+    uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin; build React first, below)
 
-## React front end (step 5.8, under /app until step 5.10)
+## React front end (the website's pages)
 Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs`).
 
     cd frontend
     npm install                                # once (about 50 MB, into frontend/node_modules)
-    npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000/app
-    npm run dev                                # while changing the React code: http://127.0.0.1:5173/app (uvicorn must run too)
+    npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000
+    npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
-Everyone logs in (roles user and admin). The research (chat) page is http://127.0.0.1:8000/app and the
-admin pages are http://127.0.0.1:8000/app/admin (admins only). Accounts are created by an administrator
+Everyone logs in (roles user and admin). The research (chat) page is http://127.0.0.1:8000 and the
+admin pages are http://127.0.0.1:8000/admin (admins only). Run `npm run build` again after each
+`git pull` that changes frontend/, then restart uvicorn. Accounts are created by an administrator
 on the admin page "Accounts" (role user or admin); there is no sign-up page.
 
 ## Deploy (week 6)
