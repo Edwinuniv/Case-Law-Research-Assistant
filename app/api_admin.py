@@ -1,6 +1,7 @@
 """JSON API for the React admin pages (step 5.9). Same work as the Jinja admin routes in main.py.
 EVERY route here is protected by the router itself: CSRF on POST and the admin role checked in the
 database at each request (SR35, NFR8). A route cannot be added here without that protection."""
+import datetime
 import threading
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -245,3 +246,26 @@ def abstention_label(log_id: int, body: Label):
         return {"prefill": {"question": q["question"],
                             "tag": "unanswerable" if "unanswerable" in body.label else "answerable"}}
     return {"ok": True}
+
+
+# ---------------- analytics (FR24-FR27, SR42) ----------------
+@router.get("/analytics")
+def analytics(start: datetime.date | None = None, end: datetime.date | None = None):
+    """Per day: queries by result, median and 95th percentile response time, failure rate;
+    and the questions it could not answer. Default: the last 30 days."""
+    end = end or datetime.date.today()
+    start = start or end - datetime.timedelta(days=30)
+    with db.connect() as con:
+        days = con.execute("""SELECT created_at::date AS day, count(*) AS n,
+              percentile_cont(0.5) WITHIN GROUP (ORDER BY ms_total) AS p50,
+              percentile_cont(0.95) WITHIN GROUP (ORDER BY ms_total) AS p95,
+              avg((status = 'ERROR')::int) AS failure_rate,
+              sum((status = 'ANSWERED')::int) AS answered, sum((status = 'LOW_CONFIDENCE')::int) AS low,
+              sum((status = 'NOT_SUPPORTED')::int) AS not_supported, sum((status = 'ERROR')::int) AS errors
+              FROM query_log WHERE created_at::date BETWEEN %s AND %s GROUP BY 1 ORDER BY 1""",
+                           (start, end)).fetchall()
+        unanswered = con.execute("""SELECT created_at, question, reason FROM query_log
+              WHERE status = 'NOT_SUPPORTED' AND created_at::date BETWEEN %s AND %s
+              ORDER BY id DESC LIMIT 50""", (start, end)).fetchall()
+    days = [{k: (str(v) if k == "day" else float(v or 0)) for k, v in d.items()} for d in days]
+    return {"start": str(start), "end": str(end), "days": days, "unanswered": unanswered}
