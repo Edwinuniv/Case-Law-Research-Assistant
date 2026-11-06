@@ -479,3 +479,18 @@ rule in EVALUATION.md before any code or measurement.
    is made in the main part. Fix: the split choice is in main(), tested with a fake run; three planted
    bugs now each make a test fail.
 
+## 2026-11-06 — Week 8: Groq's daily limit, pause and resume (Edwin, step 8.2)
+
+1. **The rate-limit retry (PR #28) only knew the per-minute limit.** Claude's retry waits and tries
+   again up to 6 times, which is right for 8,000 tokens per minute. Groq's free tier also allows only
+   200,000 tokens per day (console limits page, checked 2026-11-06), and a full run of the 85 questions
+   needs about 450,000-550,000 tokens. After about 40 questions every call would have been refused, saved
+   as ERROR, and the run spoiled. How we caught it: checking the daily limit before the first full run (it
+   was on the to-do list since PR #28, but the run would have started without it). Fix: llm.py says "per
+   day" when the refusal is for a daily limit; the run then pauses (status paused, the refused question is
+   not saved) and `run_eval --resume RUN_ID` continues it as the same run, with the settings it started
+   with, and refuses if the settings changed in between (the search reads the current settings).
+2. **A test that could wait for an hour.** Breaking the code on purpose (removing the judge's pause) made
+   the judge test call time.sleep(601) six times for real: the test did not replace sleep. Fix: it does now;
+   each of 7 planted bugs makes a test fail within seconds.
+
