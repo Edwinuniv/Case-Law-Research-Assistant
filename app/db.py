@@ -98,6 +98,21 @@ CREATE INDEX IF NOT EXISTS chunks_decision ON chunks (decision_id);
 CREATE INDEX IF NOT EXISTS query_log_time ON query_log (created_at);
 """
 
+# Changes to tables that already exist (CREATE TABLE IF NOT EXISTS does not change them).
+# Safe to run at every start.
+MIGRATIONS = """
+-- 2026-11-06 (step 5.7): who asked each question (FR28 already saves the question)
+ALTER TABLE query_log ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
+CREATE INDEX IF NOT EXISTS query_log_user ON query_log (user_id, id);
+-- 2026-11-06 (step 5.11): the instructor's answer, only the administrator logs in (SR33 as written).
+-- Steps 5.6-5.10 had a 'user' role: those accounts are removed (their questions stay in the log,
+-- without the account), then the rule allows 'admin' only. Does nothing on a database without them.
+UPDATE query_log SET user_id = NULL WHERE user_id IN (SELECT id FROM users WHERE role <> 'admin');
+DELETE FROM users WHERE role <> 'admin';
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin'));
+"""
+
 
 def connect():
     """Use as: with db.connect() as con: ...  (commits automatically at the end)."""
@@ -108,6 +123,7 @@ def init_db():
     with connect() as con:
         con.execute(SCHEMA)
         con.execute(INDEXES)
+        con.execute(MIGRATIONS)
         for key, value in config.DEFAULT_SETTINGS.items():
             con.execute("INSERT INTO settings (key, value) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                         (key, Jsonb(value)))
@@ -128,24 +144,36 @@ def set_setting(key, value):
                     "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", (key, Jsonb(value)))
 
 
-# ---------------- users (administrators) ----------------
-def create_user(email, password):
+# ---------------- users: administrators only (SR33; visitors have no account) ----------------
+ROLES = ("admin",)
+LOGIN_FAILED = "Wrong email or password."     # the same message in every case: it does not say which emails exist
+# a real bcrypt hash of a random text, used when the email is unknown, so that every login takes the same time
+DUMMY_HASH = bcrypt.hashpw(b"no-such-user", bcrypt.gensalt()).decode()
+
+
+def create_user(email, password, role="admin"):
+    """Creates the account, or resets its password, role and 'active' if the email exists (FR12)."""
+    if role not in ROLES:
+        raise ValueError(f"unknown role: {role}")
     h = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     with connect() as con:
-        con.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s) "
-                    "ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, active = TRUE",
-                    (email.lower().strip(), h))
+        con.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s) "
+                    "ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, "
+                    "role = EXCLUDED.role, active = TRUE",
+                    (email.lower().strip(), h, role))
 
 
 def check_login(email, password):
-    """Returns (user, message). Locks the account for 15 minutes after 5 failures (SR36)."""
+    """Returns (user, message). Locks the account for 15 minutes after 5 failures (SR36).
+    Every failure gives the same message (unknown email, wrong password, locked or disabled account)."""
     now = datetime.datetime.now(datetime.timezone.utc)
     with connect() as con:
         u = con.execute("SELECT * FROM users WHERE email = %s", (email.lower().strip(),)).fetchone()
         if not u or not u["active"]:
-            return None, "Wrong email or password."
+            bcrypt.checkpw(password.encode(), DUMMY_HASH.encode())      # same time as a real check
+            return None, LOGIN_FAILED
         if u["locked_until"] and u["locked_until"] > now:
-            return None, "Too many failed attempts. This account is locked for 15 minutes."
+            return None, LOGIN_FAILED
         if bcrypt.checkpw(password.encode(), u["password_hash"].encode()):
             con.execute("UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = %s", (u["id"],))
             return {"id": u["id"], "email": u["email"], "role": u["role"]}, ""
@@ -153,30 +181,42 @@ def check_login(email, password):
         if failed >= config.LOCK_AFTER_FAILED_LOGINS:
             con.execute("UPDATE users SET failed_logins = 0, locked_until = %s WHERE id = %s",
                         (now + datetime.timedelta(minutes=config.LOCK_MINUTES), u["id"]))
-            return None, "Too many failed attempts. This account is locked for 15 minutes."
-        con.execute("UPDATE users SET failed_logins = %s WHERE id = %s", (failed, u["id"]))
-        return None, "Wrong email or password."
+        else:
+            con.execute("UPDATE users SET failed_logins = %s WHERE id = %s", (failed, u["id"]))
+        return None, LOGIN_FAILED
+
+
+def active_role(user_id):
+    """The role of an active account ('admin'), or None if it does not exist or is disabled.
+    Read from the database at every request, so a disabled account loses access at once (NFR8)."""
+    with connect() as con:
+        u = con.execute("SELECT active, role FROM users WHERE id = %s", (user_id,)).fetchone()
+    return u["role"] if u and u["active"] else None
 
 
 def user_is_active_admin(user_id):
-    with connect() as con:
-        u = con.execute("SELECT active, role FROM users WHERE id = %s", (user_id,)).fetchone()
-    return bool(u and u["active"] and u["role"] == "admin")
+    return active_role(user_id) == "admin"
 
 
 # ---------------- query log ----------------
-def log_query(r):
+def log_query(r, user_id=None, shown=None):
+    """Saves one question and its result (FR28, SR41). Returns the new row's id.
+    user_id: the account that asked (empty for visitors, who have no account; step 5.11).
+    shown: the answer exactly as it was shown on the page."""
     removed_citations = [p for s in r["removed"] for p in s["problems"] if "citation" in p or "case name" in p]
     details = {"removed": r["removed"],
                "passages": [(pid, p["chunk_id"], p["score"]) for pid, p in r["passages"]]}
+    if shown is not None:
+        details["shown"] = shown
     with connect() as con:
-        con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
+        row = con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
             n_sentences, n_removed, removed_citations, fabrications_caught, ms_search, ms_model,
-            ms_total, details) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                    (r["question"], r["status"], r["reason"], r["support_score"], r["top_score"],
-                     len(r["shown_sentences"]), len(r["removed"]), Jsonb(removed_citations),
-                     r["fabrications_caught"], r["ms_search"], r["ms_model"], r["ms_total"],
-                     Jsonb(details)))
+            ms_total, details, user_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                          (r["question"], r["status"], r["reason"], r["support_score"], r["top_score"],
+                           len(r["shown_sentences"]), len(r["removed"]), Jsonb(removed_citations),
+                           r["fabrications_caught"], r["ms_search"], r["ms_model"], r["ms_total"],
+                           Jsonb(details), user_id)).fetchone()
+    return row["id"]
 
 
 # ---------------- jobs (re-index / evaluation in the background) ----------------

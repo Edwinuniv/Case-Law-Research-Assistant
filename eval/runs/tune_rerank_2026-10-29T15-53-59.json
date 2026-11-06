@@ -1,0 +1,103 @@
+{
+ "date": "2026-10-29T15:53:59",
+ "questions": [
+  "A029",
+  "A031",
+  "A032",
+  "A033",
+  "A034",
+  "A035",
+  "A037",
+  "A038",
+  "A039",
+  "A040",
+  "A042"
+ ],
+ "result": {
+  "baseline": {
+   "quote@8": 0.455,
+   "mean_seconds": 0.0
+  },
+  "A_fused20": {
+   "quote@8": 0.455,
+   "mean_seconds": 5.09
+  },
+  "B_fused50": {
+   "quote@8": 0.364,
+   "mean_seconds": 12.09
+  },
+  "C_top3_decisions": {
+   "quote@8": 0.455,
+   "mean_seconds": 69.37
+  }
+ },
+ "chosen": "baseline",
+ "per_question": {
+  "A029": {
+   "baseline": true,
+   "A_fused20": true,
+   "B_fused50": true,
+   "C_top3_decisions": true
+  },
+  "A031": {
+   "baseline": true,
+   "A_fused20": true,
+   "B_fused50": true,
+   "C_top3_decisions": true
+  },
+  "A032": {
+   "baseline": false,
+   "A_fused20": false,
+   "B_fused50": false,
+   "C_top3_decisions": false
+  },
+  "A033": {
+   "baseline": false,
+   "A_fused20": false,
+   "B_fused50": false,
+   "C_top3_decisions": false
+  },
+  "A034": {
+   "baseline": false,
+   "A_fused20": false,
+   "B_fused50": false,
+   "C_top3_decisions": false
+  },
+  "A035": {
+   "baseline": false,
+   "A_fused20": false,
+   "B_fused50": false,
+   "C_top3_decisions": true
+  },
+  "A037": {
+   "baseline": false,
+   "A_fused20": false,
+   "B_fused50": false,
+   "C_top3_decisions": false
+  },
+  "A038": {
+   "baseline": true,
+   "A_fused20": true,
+   "B_fused50": true,
+   "C_top3_decisions": true
+  },
+  "A039": {
+   "baseline": true,
+   "A_fused20": true,
+   "B_fused50": true,
+   "C_top3_decisions": true
+  },
+  "A040": {
+   "baseline": true,
+   "A_fused20": true,
+   "B_fused50": false,
+   "C_top3_decisions": false
+  },
+  "A042": {
+   "baseline": false,
+   "A_fused20": false,
+   "B_fused50": false,
+   "C_top3_decisions": false
+  }
+ }
+}
