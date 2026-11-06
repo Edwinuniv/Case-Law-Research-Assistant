@@ -145,7 +145,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 ### Week 8 — Calibration (Edwin)
 - [x] 8.1 Write the rule before measuring — branch step/8.1-threshold-rule: EVALUATION.md, committed 2026-10-26 before any evaluation run
 - [ ] 8.2 Run the full evaluation — scripts/run_eval.py ready (PR #25); rate-limit retry merged (PR #28: 4 real questions, 0 ERRORs, ~35 s each); eval-v1 tagged by Joe (85 questions, 4d9e179); branch step/8.2-tune-only-report: a run prints TUNE + tau sweep, TEST only with --test RUN_ID (AI_LOG) pause at Groq's daily limit (200,000 tokens/day) and `--resume RUN_ID` (AI_LOG). New dump restored (2,423 decisions, 72,593 passages), 85 questions seeded, check_questions 0 problems ⏳ the run itself (about 3 days)
-- [ ] 8.3 False citations = 0
+- [ ] 8.3 False citations = 0 — branch step/8.3-citation-report: scripts/show_citations.py (shown, removed, quotes by decision; TUNE by default), 4 tests. Found on run 1 so far: the checker flags real rendered citations of 88/2,006 decisions (duplicate decisions, one citation for two orders, odd first citation; cluster_for LIMIT 1) ⏳ after the run: fix the checker, re-check the saved run, notes to Yasser/Joe; "FABRICATED case name" for real cases outside the corpus (Roe v. Wade)
 
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
