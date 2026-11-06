@@ -451,3 +451,15 @@ rule in EVALUATION.md before any code or measurement.
    rule (3). How we caught it: reading the check against the rule's words before running it. Fix: only a
    case name found in the question that is itself listed in must_not_appear counts.
 
+
+## 2026-11-06 — Admin pages open on the TUNE split (Joe, asked by Edwin)
+
+1. **Pages that showed the TEST split while we choose thresholds.** What we asked (step 5.9): the
+   admin pages in React, doing the same as the guide's Jinja pages. What came back: the same metrics,
+   with the guide's default split "test" on the overview, the list of runs, a run, the compare page and
+   the threshold preview. What was wrong: EVALUATION.md (and SR29) says the thresholds are chosen on TUNE
+   and TEST is reported once at the end; with these defaults, opening the admin pages after a run showed
+   TEST numbers, so we could look at TEST while choosing without meaning to. Claude copied the guide's
+   default without checking it against our own rule. How we caught it: Edwin, preparing Week 8, saw
+   split || "test" in the run page. Fix: one default (DEFAULT_SPLIT = "tune") in app/api_admin.py, the
+   React pages say which split they show, TEST is still reachable on the run page; 5 tests written first.

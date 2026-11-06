@@ -130,6 +130,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 5.10 Switch to React (Joe) — branch step/5.10-switch-to-react: React at / and /admin, Jinja templates and routes removed (main.py 405 → 73 lines), tests/test_admin.py rewritten for /api/login; 143 tests pass ⏳ run with Joe's new database
 - [x] 5.11 Public research page (Joe) — branch step/5.11-public-research: instructor's answer (only the admin logs in, one question per message): /api/ask and /api/passage open to visitors, /api/history removed (list kept in the page), admin role only + migration removing 'user' accounts; 141 tests pass ⏳ run with Joe's new database
 - [x] 5.12 Limit of questions per IP (Joe) — branch step/5.12-ask-rate-limit: /api/ask accepts 10 questions per minute per IP address, then HTTP 429 with the wait time, before the model is called (Yasser's request: the page is public, protect the Groq credit); 4 new tests, 146 pass
+- [x] Admin pages on TUNE (Joe, Edwin's request) — branch feature/admin-tune-default: overview, runs, a run, compare and threshold preview show the TUNE split (EVALUATION.md: choose on TUNE, report TEST once); TEST still on the run page; 5 new tests
 
 ### Week 6 — Deployment (Joe)
 - [x] 6.1 Deployment files — Dockerfile and .dockerignore; build step downloads the embedding model into data/models like app/embeddings.py (AI_LOG) ⏳ image built for real on Railway (6.2)
