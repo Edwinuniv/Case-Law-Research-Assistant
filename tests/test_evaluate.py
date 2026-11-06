@@ -39,7 +39,7 @@ from app.evaluate import check_shown_citations
 from app.citations import StaticCitationIndex
 
 CHECK_INDEX = StaticCitationIndex(citations={"603 U.S. 593": 9987186, "467 U.S. 837": 111, "500 U.S. 1": 222},
-                                  alias={9987186: 9987186}, case_names=[])
+                                  alias={9987186: 9987186}, decisions={})
 TRUMP = {"decision_id": 9987186, "opinion_id": 1, "text": "..."}
 
 def add_decision(clean_db, decision_id, citation):

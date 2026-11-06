@@ -1,6 +1,7 @@
 """The journey of one question: check input -> search -> gate -> model -> verify -> support score -> status."""
 import time
 from app import config, llm
+from app.citations import find_case_names
 from app.verify import verify, count_fabrications
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
@@ -34,6 +35,14 @@ def decide(support, n_kept, settings):
     return LOW_CONFIDENCE if support < settings["tau_confident"] else ANSWERED
 
 
+def named_decisions(question, index):
+    """Metadata (2026-11-06, the instructor: "use metadata for faster search"): the decisions of our
+    corpus named in the question, e.g. "... in Loper Bright Enterprises v. Raimondo". The search can then
+    look only at their passages. Invented or mixed names match no decision, so the normal search runs.
+    Off unless the setting case_filter is on (EVALUATION.md: switched on only after the measurement)."""
+    return sorted({d for name in find_case_names(question) for d in index.decisions_named(name)})
+
+
 def answer(question, searcher, index, settings, skip_gate=False):
     """skip_gate=True is used by the evaluation: the model is always called, so any threshold
     can be tested later without calling the model again."""
@@ -43,7 +52,11 @@ def answer(question, searcher, index, settings, skip_gate=False):
          "retrieved_decisions": [], "model_said": None, "ms_search": 0, "ms_model": 0, "ms_total": 0}
 
     t = time.perf_counter()                                      # 1. SEARCH (+ optional reranker)
-    found = searcher.search(r["question"], k=int(settings["retrieve_k"]))
+    r["case_filter"] = named_decisions(r["question"], index) if settings.get("case_filter") else []
+    if r["case_filter"]:                                         # only the named case's passages
+        found = searcher.search(r["question"], k=int(settings["retrieve_k"]), decision_ids=r["case_filter"])
+    else:
+        found = searcher.search(r["question"], k=int(settings["retrieve_k"]))
     chosen = searcher.choose(r["question"], found, int(settings["top_k"]), settings["use_reranker"])
     r["ms_search"] = ms(t)
     r["retrieved_decisions"] = [p["decision_id"] for p in found]

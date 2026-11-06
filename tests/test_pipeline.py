@@ -63,3 +63,37 @@ def test_not_supported_hides_sentences_that_passed_verification(monkeypatch):   
     monkeypatch.setattr(llm, "ask_model", half_fabricated)
     r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)
     assert r["status"] == "NOT_SUPPORTED" and len(r["sentences"]) == 1 and r["shown_sentences"] == []
+
+
+# --- Metadata (2026-11-06): a case named in the question limits the search to its decision ---
+class FilterSearcher(FakeSearcher):
+    def __init__(self):
+        super().__init__(0.8)
+        self.decision_ids = "not called"
+    def search(self, q, k, decision_ids=None):
+        self.decision_ids = decision_ids
+        return super().search(q, k)
+
+LOPER_QUESTION = "What did the Court decide in Loper Bright Enterprises v. Raimondo about Chevron?"
+
+def test_named_case_limits_the_search_to_its_decision(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", good_model)
+    searcher = FilterSearcher()
+    r = pipeline.answer(LOPER_QUESTION, searcher, INDEX, dict(S, case_filter=True))
+    assert searcher.decision_ids == [9986254] and r["case_filter"] == [9986254]
+
+def test_case_filter_is_off_unless_switched_on(monkeypatch):
+    # Off by default (EVALUATION.md: on only after the measurement); a searcher without the
+    # decision_ids parameter (search(q, k)) must still work
+    monkeypatch.setattr(llm, "ask_model", good_model)
+    r = pipeline.answer(LOPER_QUESTION, FakeSearcher(0.8), INDEX, S)
+    assert r["status"] == "ANSWERED" and r["case_filter"] == []
+
+def test_invented_or_mixed_name_uses_the_normal_search(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", good_model)
+    for question in ("Summarise Halvorsen v. Pacific Grain Co., 598 U.S. 377 (2023).",
+                     "What did the Court hold in Trump v. Raimondo?", "Is the President immune?"):
+        searcher = FilterSearcher()
+        pipeline.answer(question, searcher, INDEX, dict(S, case_filter=True))
+        assert searcher.decision_ids is None, question
+
