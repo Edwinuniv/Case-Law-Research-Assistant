@@ -8,14 +8,16 @@ Some opinions were extracted from PDFs where the single glyph for "fi" or "fl" b
   broken word (RATIO times), so a real word such as "lies" or "fed" is never changed;
 - only broken opinions are touched: at least MIN_HITS repairable words, and more of them than intact
   fi/fl words (is_broken), so a clean opinion stays exactly as it is, even one that says "fled" often;
-- a broken form that could be a real word in a broken PDF too ("rife", "Fred": no 'fi'/'fl' inside) is
-  repaired only if the clean opinions almost never use it (final_repairs).
+- a broken form that is also a real word ("fled", "rife", "Fred": used in clearly clean opinions) is
+  repaired only inside a broken PDF, and only if a broken PDF could not have printed it intact
+  ("fled" has an 'fl', so there it can only be "filed"; "rife" stays); partly broken opinions get only
+  the forms that are never real words ("specifc") (real_words, fix_opinion).
 The corpus itself is the dictionary: the 3,500 clean opinions spell the words correctly."""
 import re
 from collections import Counter
 
 MIN_GOOD, RATIO, MIN_HITS, MIN_LEN = 20, 10, 3, 3
-MAX_CLEAN = 2      # see final_repairs
+MAX_CLEAN, CLEAN_RATIO = 2, 10      # see real_words
 WORD = re.compile(r"[A-Za-z]+")
 
 
@@ -49,11 +51,23 @@ def can_be_printed_intact(word):
     return "fi" not in word and "fl" not in word
 
 
-def final_repairs(mapping, clean_texts, max_clean=MAX_CLEAN):
-    """Drop the repairs that could be a real word: a broken form that a broken PDF can print intact ('rife',
-    'Fred') is kept only if the clean opinions (the ones not repaired) almost never use it."""
-    clean = vocabulary(clean_texts)
-    return {w: r for w, r in mapping.items() if not (can_be_printed_intact(w) and clean.get(w, 0) > max_clean)}
+def counts(text, mapping):
+    """(repairable words, intact fi/fl words) in one text."""
+    words = [w.lower() for w in WORD.findall(text)]
+    return (sum(1 for w in words if w in mapping),
+            sum(1 for w in words if ("fi" in w or "fl" in w) and w not in mapping))
+
+
+def real_words(mapping, texts):
+    """The broken forms that are also real words ('fled', 'rife', 'Fred'): used more than MAX_CLEAN times
+    in the CLEARLY clean opinions (at least CLEAN_RATIO intact fi/fl words per repairable word). Partly
+    broken opinions are left out of this count, otherwise their 'specifc' would look like a real word."""
+    clean = Counter()
+    for text in texts:
+        hits, intact = counts(text, mapping)
+        if intact >= CLEAN_RATIO * max(hits, 1):
+            clean.update(w.lower() for w in WORD.findall(text) if w.lower() in mapping)
+    return {w for w in mapping if clean[w] > MAX_CLEAN}
 
 
 def same_case(original, repaired):
@@ -83,14 +97,17 @@ def is_broken(text, mapping):
     """A broken PDF has (almost) no intact 'fi'/'fl' left, a clean opinion has hundreds ("first", "find",
     "flight"). So an opinion is broken only if it has at least MIN_HITS repairable words AND more of them than
     intact fi/fl words. A clean opinion that says "fled" five times (a police chase) is NOT broken."""
-    words = [w.lower() for w in WORD.findall(text)]
-    hits = sum(1 for w in words if w in mapping)
-    intact = sum(1 for w in words if ("fi" in w or "fl" in w) and w not in mapping)
+    hits, intact = counts(text, mapping)
     return hits >= MIN_HITS and intact < hits
 
 
-def fix_opinion(text, mapping):
-    """Repair an opinion only if it is broken (is_broken); otherwise leave it exactly as it is."""
-    if not is_broken(text, mapping):
-        return text, 0
-    return fix_text(text, mapping)
+def fix_opinion(text, mapping, real=frozenset()):
+    """- a broken opinion: every repair, except the real words a broken PDF can still print intact ('rife');
+         'fled' IS repaired there, because a broken PDF cannot print the 'fl' of a real 'fled';
+       - any other opinion (clean, or partly broken): only the forms that are never real words
+         ('specifc'), and only if there are at least MIN_HITS of them; a clean opinion stays as it is."""
+    if is_broken(text, mapping):
+        use = {w: r for w, r in mapping.items() if not (w in real and can_be_printed_intact(w))}
+        return fix_text(text, use)
+    fixed, hits = fix_text(text, {w: r for w, r in mapping.items() if w not in real})
+    return (fixed, hits) if hits >= MIN_HITS else (text, 0)
