@@ -45,7 +45,7 @@ function App() {
       </header>
       <main>
         <Routes>
-          <Route path="/login" element={user ? <Navigate to="/" /> :
+          <Route path="/login" element={user ? <Navigate to="/admin" /> :
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
           <Route path="/" element={<Chat info={info} />} />    {/* open to everyone, no account (SR33) */}
           {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others

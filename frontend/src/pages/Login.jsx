@@ -1,7 +1,7 @@
-// Login page for users and administrators. Accounts are created by an administrator (FR12):
-// there is no "sign up" link. The server gives the same message for every failure.
+// Login page for the administrator only (SR33): visitors use the research page without an account.
+// Accounts are created by an administrator (FR12): there is no "sign up" link. The server gives the same message for every failure.
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 
 export default function Login({ onLogin }) {
@@ -17,7 +17,7 @@ export default function Login({ onLogin }) {
     try {
       const data = await api("/login", { email, password });
       onLogin(data.user);
-      navigate("/");
+      navigate("/admin");
     } catch (err) {
       setError(err.message);            // "Wrong email or password." or "Too many failed logins..."
     } finally {
@@ -28,7 +28,7 @@ export default function Login({ onLogin }) {
 
   return (
     <form className="card login" onSubmit={submit}>
-      <h2 style={{ marginTop: 0 }}>Log in to Verdicta</h2>
+      <h2 style={{ marginTop: 0 }}>Administrator login</h2>
       <label htmlFor="email">Email</label>
       <input id="email" type="email" autoComplete="username" required value={email}
              onChange={(e) => setEmail(e.target.value)} />
@@ -37,7 +37,7 @@ export default function Login({ onLogin }) {
              onChange={(e) => setPassword(e.target.value)} />
       {error && <p className="error" role="alert">{error}</p>}
       <p><button disabled={busy}>{busy ? "Checking…" : "Log in"}</button></p>
-      <p className="muted">No account? Ask an administrator to create one.</p>
+      <p className="muted">Only administrators log in. The <Link to="/">research page</Link> needs no account.</p>
     </form>
   );
 }
