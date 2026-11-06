@@ -352,3 +352,8 @@ nothing and use the normal search. Measured search time today: about 0.27 s per 
 passage, not answer time (SR2 is already met). Off (setting case_filter) until measured on the TUNE split
 with the rule written first in EVALUATION.md. Needs a decision_ids parameter in Searcher.search
 (Yasser's file), requested in writing.
+
+2026-11-06 - Week 8 (Edwin): scripts/run_eval.py prints only the TUNE split and the tau sweep after a run;
+the TEST split is printed with `--test RUN_ID`, once, after tau_abstain is chosen (EVALUATION.md, SR29).
+The guide's version (p. 77) printed both splits after every run.
+
