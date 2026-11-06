@@ -23,10 +23,11 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000
     npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
-Everyone logs in (roles user and admin). The research (chat) page is http://127.0.0.1:8000 and the
-admin pages are http://127.0.0.1:8000/admin (admins only). Run `npm run build` again after each
-`git pull` that changes frontend/, then restart uvicorn. Accounts are created by an administrator
-on the admin page "Accounts" (role user or admin); there is no sign-up page.
+The research (chat) page is http://127.0.0.1:8000 and needs no account. Only the administrator logs
+in ("Admin login" in the header, http://127.0.0.1:8000/login); the admin pages are
+http://127.0.0.1:8000/admin. Run `npm run build` again after each `git pull` that changes frontend/,
+then restart uvicorn. Other administrator accounts are created on the admin page "Accounts"; there is
+no sign-up page.
 
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
