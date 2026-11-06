@@ -438,3 +438,16 @@ metadata), then fix the two gaps the list showed in verify.py.
    old first-word code had the same problem: "inc" is not "spokeo".)
 4. **A rule without a test.** Breaking same_case on purpose: removing "same number of parties" made no
    test fail, although "In re Trump" would then match Trump v. United States. Fix: a test for it.
+
+## 2026-11-06 — Metadata search: the case-name filter (Edwin)
+
+**Asked:** the instructor said "use metadata for faster search". Claude measured the search first (0.27 s
+per question, the model 1-4 s), proposed searching only the case named in the question, and wrote the
+rule in EVALUATION.md before any code or measurement.
+1. **A measuring check that would have counted correct behaviour as a failure.** Claude's first
+   tune_case_filter.py counted the filter as "switched on for an invented name" whenever any
+   must_not_appear string was in the question. X021 ("the 2019 decision in Shelby County v. Holder")
+   forbids "2019", which is in the question, so the filter on the real Shelby County would have broken
+   rule (3). How we caught it: reading the check against the rule's words before running it. Fix: only a
+   case name found in the question that is itself listed in must_not_appear counts.
+
