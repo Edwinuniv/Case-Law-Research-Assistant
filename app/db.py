@@ -201,8 +201,8 @@ def user_is_active_admin(user_id):
 # ---------------- query log ----------------
 def log_query(r, user_id=None, shown=None):
     """Saves one question and its result (FR28, SR41). Returns the new row's id.
-    user_id: who asked (chat history, step 5.7). shown: the answer exactly as the user saw it,
-    so the history can show it again without calling the model."""
+    user_id: the account that asked (empty for visitors, who have no account; step 5.11).
+    shown: the answer exactly as it was shown on the page."""
     removed_citations = [p for s in r["removed"] for p in s["problems"] if "citation" in p or "case name" in p]
     details = {"removed": r["removed"],
                "passages": [(pid, p["chunk_id"], p["score"]) for pid, p in r["passages"]]}
