@@ -10,7 +10,11 @@ from app import db, ligatures
 apply = "--apply" in sys.argv
 with db.connect() as con:
     opinions = con.execute("SELECT opinion_id, decision_id, text FROM opinions ORDER BY opinion_id").fetchall()
-mapping = ligatures.repairs(ligatures.vocabulary(o["text"] for o in opinions))
+first = ligatures.repairs(ligatures.vocabulary(o["text"] for o in opinions))
+clean = [o["text"] for o in opinions if ligatures.fix_opinion(o["text"], first)[1] == 0]
+mapping = ligatures.final_repairs(first, clean)          # without the forms that can be real words
+print(f"{len(first) - len(mapping)} forms left alone because they can be real words: "
+      f"{', '.join(sorted(set(first) - set(mapping))[:15])}")
 
 changed, used, decisions = [], Counter(), set()
 for o in opinions:
