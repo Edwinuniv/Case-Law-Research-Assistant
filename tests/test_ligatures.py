@@ -33,26 +33,41 @@ def test_a_clean_opinion_with_one_odd_word_is_left_alone():
     assert ligatures.fix_opinion(one_odd, mapping) == (one_odd, 0)
 
 
+# three clearly clean opinions: many intact fi/fl words, and the real words 'fled', 'rife', 'Fred'
+CLEAN_DOCS = [("The first finding was final; the brief was filed and the field was flat. " * 20)
+              + "The suspect fled. The report was rife with errors. Fred testified."] * 3
+DICTIONARY = ["The brief was filed first. The rifle was fired. The filing was late. Specific. " * 80]
+
+
 def test_words_that_can_be_real_in_a_broken_pdf_need_the_clean_opinions_to_agree():
-    """Yasser's dry run: 'rife' -> 'rifle' and 'fred' -> 'fired' were proposed. 'rife' and 'Fred' contain no
-    'fi'/'fl', so a broken PDF prints them intact: they are repaired only if the clean opinions never use them.
-    'fled' contains 'fl', which a broken PDF cannot print, so there it can only be 'filed'."""
-    clean = ["The suspect fled. The report was rife with errors. Fred testified. " * 5,
-             "The brief was filed first. The rifle was fired. The filing was late. " * 80]
+    """Yasser's dry run proposed 'rife' -> 'rifle' and 'fred' -> 'fired'. 'rife' and 'Fred' contain no 'fi'/'fl',
+    so a broken PDF prints them intact: inside it they stay. 'fled' contains 'fl', which a broken PDF cannot
+    print, so there it can only be 'filed'."""
     broken = "The motion was fled. The brief was fled. The rife was fred. Frst, the fling deadline."
-    first = ligatures.repairs(ligatures.vocabulary(clean + [broken]))
-    mapping = ligatures.final_repairs(first, clean)
-    fixed, _ = ligatures.fix_opinion(broken, mapping)
-    assert "was filed. The brief was filed." in fixed               # 'fled' -> 'filed' inside the broken PDF
-    assert "The rife was fred." in fixed                            # ambiguous: left as it is
-    assert "rife" not in mapping and "fred" not in mapping
+    texts = CLEAN_DOCS + DICTIONARY + [broken]
+    mapping = ligatures.repairs(ligatures.vocabulary(texts))
+    real = ligatures.real_words(mapping, texts)
+    assert {"fled", "rife", "fred"} <= real and "frst" not in real
+    fixed, _ = ligatures.fix_opinion(broken, mapping, real)
+    assert fixed == "The motion was filed. The brief was filed. The rife was fred. First, the filing deadline."
 
 
 def test_a_clean_opinion_that_often_says_fled_is_not_touched():
-    """A police chase: 'fled' five times, but also many intact fi/fl words, so it is not a broken PDF."""
-    corpus = ["The brief was filed first. The filing was late. " * 80]
-    chase = "The suspect fled. He fled again, then fled on foot, fled the officers and fled. " \
-            "The officer was the first to find him; the flight ended in a field. The final finding stood."
-    mapping = ligatures.repairs(ligatures.vocabulary(corpus + [chase]))
-    assert mapping.get("fled") == "filed"                     # 'fled' is a known repair...
-    assert ligatures.fix_opinion(chase, mapping) == (chase, 0)   # ...but this opinion is not broken
+    """A police chase: 'fled' five times, but 'fled' is a real word and the opinion is not a broken PDF."""
+    chase = ("The suspect fled. He fled again, then fled on foot, fled the officers and fled. "
+             + "The officer was the first to find him; the flight ended in a field. " * 3)
+    texts = CLEAN_DOCS + DICTIONARY + [chase]
+    mapping = ligatures.repairs(ligatures.vocabulary(texts))
+    assert mapping.get("fled") == "filed"                                 # 'fled' is a known repair...
+    assert ligatures.fix_opinion(chase, mapping, ligatures.real_words(mapping, texts)) == (chase, 0)   # ...not here
+
+
+def test_a_partly_broken_opinion_gets_only_the_forms_that_are_never_real_words():
+    """Part PDF, part clean: more intact fi/fl words than repairable ones, so not 'broken'; its 'specifc'
+    (never a real word) is repaired, its real 'fled' is not."""
+    partly = ("The first finding was final and the field was flat. " * 4
+              + "The specifc rule. A specifc case. The specifc point. The suspect fled.")
+    texts = CLEAN_DOCS + DICTIONARY + [partly]
+    mapping = ligatures.repairs(ligatures.vocabulary(texts))
+    fixed, hits = ligatures.fix_opinion(partly, mapping, ligatures.real_words(mapping, texts))
+    assert hits == 3 and "specific rule" in fixed and "The suspect fled." in fixed
