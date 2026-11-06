@@ -42,6 +42,11 @@ def add_test_routes():
     def admin_action(user=Depends(api.require_admin)):
         return {"done": True}
 
+    # FastAPI tries routes in order and the React page (app/main.py) answers every other address,
+    # so these 3 routes, added at the end, are moved in front of it (step 5.10).
+    routes = app.router.routes
+    routes[:] = routes[-3:] + routes[:-3]
+
 
 def test_me_without_login(c):
     r = c.get("/api/me").json()
