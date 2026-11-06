@@ -121,14 +121,14 @@ def eval_run(body: RunNote):
 
 
 @router.get("/eval/compare")          # before /eval/{run_id}, or "compare" would be read as a run id
-def eval_compare(a: int, b: int, split: str = "test"):
+def eval_compare(a: int, b: int, split: str = DEFAULT_SPLIT):
     """Before / after on the same questions (the week-10 improvement); worse metrics are flagged (SR40)."""
     rows, flips = evaluate.compare(a, b, db.get_settings(), split or None)
     return {"a": a, "b": b, "split": split, "rows": rows, "flips": flips}
 
 
 @router.get("/eval/{run_id}")
-def eval_detail(run_id: int, split: str = "test", tau: float | None = None):
+def eval_detail(run_id: int, split: str = DEFAULT_SPLIT, tau: float | None = None):
     """One run: metrics, threshold sweep (tune split) and every question, wrong outcomes first.
     tau = a what-if abstention threshold; it does not change the live system."""
     s = db.get_settings()
