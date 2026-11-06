@@ -13,12 +13,26 @@ Build guide: docs/Verdicta_Build_Guide.pdf · Requirements: docs/Requirements_Do
     pip install -r requirements.txt
     cp .env.example .env                       # then fill in the keys
     python -m pytest -q                        # uses the TEST database
-    uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin)
+    uvicorn app.main:app --reload              # http://127.0.0.1:8000  (admin: /admin; build React first, below)
+
+## React front end (the website's pages)
+Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs`).
+
+    cd frontend
+    npm install                                # once (about 50 MB, into frontend/node_modules)
+    npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000
+    npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
+
+The research (chat) page is http://127.0.0.1:8000 and needs no account. Only the administrator logs
+in ("Admin login" in the header, http://127.0.0.1:8000/login); the admin pages are
+http://127.0.0.1:8000/admin. Run `npm run build` again after each `git pull` that changes frontend/,
+then restart uvicorn. Other administrator accounts are created on the admin page "Accounts"; there is
+no sign-up page.
 
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
-(plus `HTTPS_ONLY=1`), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
+(plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
 
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets

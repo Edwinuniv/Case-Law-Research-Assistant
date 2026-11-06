@@ -8,3 +8,5 @@ data/*
 *:Zone.Identifier
 *Zone.Identifier
 .claude/
+frontend/node_modules/
+frontend/dist/
