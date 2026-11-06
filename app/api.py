@@ -114,6 +114,26 @@ def me(request: Request):
             "examples": config.EXAMPLE_QUESTIONS}
 
 
+# ---------------- question limit per IP address (step 5.12) ----------------
+# The research page is open to visitors (SR33), so anyone could send questions in a loop and use up
+# our model credit. One address may ask at most ASK_LIMIT_PER_IP questions in ASK_LIMIT_SECONDS.
+# Same idea as the login limit above: kept in memory, one process, a restart empties it.
+ASK_LIMIT_PER_IP, ASK_LIMIT_SECONDS = 10, 60
+ASKED_BY_IP = defaultdict(deque)
+
+
+def seconds_to_wait(ip):
+    """0 if this address may ask now (and the question is counted), otherwise the seconds to wait."""
+    now = time.time()
+    asked = ASKED_BY_IP[ip]
+    while asked and asked[0] <= now - ASK_LIMIT_SECONDS:      # forget questions older than the window
+        asked.popleft()
+    if len(asked) >= ASK_LIMIT_PER_IP:
+        return int(asked[0] + ASK_LIMIT_SECONDS - now) + 1    # when the oldest one leaves the window
+    asked.append(now)
+    return 0
+
+
 # ======================= RESEARCH (step 5.7) =======================
 # Every question is answered on its own by pipeline.answer (Edwin): earlier questions are NOT used.
 class Question(BaseModel):
