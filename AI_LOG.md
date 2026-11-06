@@ -320,5 +320,5 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
 3. **The build failed.** `useLoad.js` contains JSX (the `Waiting` component), which Vite only accepts in
    `.jsx` files. Caught by `npm run build`. Fix: renamed to `useLoad.jsx`.
 4. **Guide code crashed on a missing log row.** Porting the abstention labels showed that the Jinja route
-   (guide p. 61) does `q["question"]` when the UPDATE found no row: a 500 for an unknown id with an
+   (guide pp. 56-62) does `q["question"]` when the UPDATE found no row: a 500 for an unknown id with an
    "add as ..." label (reproduced with the test client). The API returns 404, and a test checks it.
