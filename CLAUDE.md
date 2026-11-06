@@ -143,7 +143,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 ### Week 8 — Calibration (Edwin)
 - [x] 8.1 Write the rule before measuring — branch step/8.1-threshold-rule: EVALUATION.md, committed 2026-10-26 before any evaluation run
-- [ ] 8.2 Run the full evaluation — scripts/run_eval.py ready (PR #25); branch step/8.2-rate-limit: waits and retries on Groq's 8,000 tokens/min limit (4 real questions, 0 ERRORs, ~35 s each) ⏳ needs the full question set + eval-v1
+- [ ] 8.2 Run the full evaluation — scripts/run_eval.py ready (PR #25); rate-limit retry merged (PR #28: 4 real questions, 0 ERRORs, ~35 s each); eval-v1 tagged by Joe (85 questions, 4d9e179); branch step/8.2-tune-only-report: a run prints TUNE + tau sweep, TEST only with --test RUN_ID (AI_LOG) ⏳ Yasser's new dump restored + Groq tokens-per-day checked, then the run
 - [ ] 8.3 False citations = 0
 
 ### Week 9 — Usability test
