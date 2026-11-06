@@ -2,8 +2,20 @@
 // The server checks the login and the role again on every /api call: this is only for display.
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import { api, me } from "./api.js";
+import Abstentions from "./admin/Abstentions.jsx";
+import AdminLayout from "./admin/AdminLayout.jsx";
+import Analytics from "./admin/Analytics.jsx";
+import Compare from "./admin/Compare.jsx";
+import Corpus from "./admin/Corpus.jsx";
+import Eval from "./admin/Eval.jsx";
+import EvalRun from "./admin/EvalRun.jsx";
+import AdminHome from "./admin/Home.jsx";
+import QuestionForm from "./admin/QuestionForm.jsx";
+import Questions from "./admin/Questions.jsx";
+import Settings from "./admin/Settings.jsx";
+import Users from "./admin/Users.jsx";
 import Chat from "./pages/Chat.jsx";
 import Login from "./pages/Login.jsx";
 import "./style.css";
@@ -26,7 +38,8 @@ function App() {
         <span className="brand">Verdicta</span>
         <span className="muted" style={{ color: "#c9d6e8" }}>{info.coverage}</span>
         {user && <span>{user.email}</span>}
-        {user?.role === "admin" && <a href="/admin">Admin</a>}
+        {user && <Link to="/">Research</Link>}
+        {user?.role === "admin" && <Link to="/admin">Admin</Link>}
         {user && <button className="link" onClick={logout}>Log out</button>}
       </header>
       <main>
@@ -34,6 +47,21 @@ function App() {
           <Route path="/login" element={user ? <Navigate to="/" /> :
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
           <Route path="/" element={user ? <Chat info={info} /> : <Navigate to="/login" />} />
+          {user?.role === "admin" && (       // display only: the server refuses /app/admin and /api/admin to others
+            <Route path="/admin" element={<AdminLayout user={user} />}>
+              <Route index element={<AdminHome />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="eval" element={<Eval />} />
+              <Route path="eval/compare" element={<Compare />} />
+              <Route path="eval/:runId" element={<EvalRun />} />
+              <Route path="questions" element={<Questions />} />
+              <Route path="questions/edit" element={<QuestionForm user={user} />} />
+              <Route path="abstentions" element={<Abstentions />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="corpus" element={<Corpus />} />
+              <Route path="users" element={<Users user={user} />} />
+            </Route>
+          )}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

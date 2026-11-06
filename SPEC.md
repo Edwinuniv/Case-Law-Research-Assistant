@@ -108,8 +108,10 @@ checks the login and the role on the server, reading the account from the databa
 every POST needs the session's CSRF token (X-CSRF-Token header).
 Front end (step 5.8): React + Vite in frontend/ (react, react-router-dom; no UI library), built into
 frontend/dist and served by FastAPI under /app; the Dockerfile builds it in a first Node stage, so
-Railway still runs one service. Pages so far: login, chat (research). React only displays: it never
-decides who may see what.
+Railway still runs one service. Pages: login, chat (research) and the 9 admin pages under /app/admin
+(step 5.9; admin JSON API in app/api_admin.py, where the router itself requires the admin role and the
+CSRF token, so no admin route can be added without them). React only displays: it never decides who
+may see what; /app/admin pages are refused by the server (401 / 403) like every admin route (SR35).
 
 ## 4. Chunking strategy (FR31, SR16)
 
@@ -221,6 +223,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.6 login and security for the API (roles user/admin, CSRF, login limit per IP, one login message) | Joe | step/5.6-login-security | code and tests ready (21 new tests); React pages in 5.8-5.10 |
 | 5.7 research API for the chat (/api/ask, /api/passage, /api/history; query_log.user_id) | Joe | step/5.7-api-research | code and tests ready (15 new tests) |
 | 5.8 React login and chat pages under /app; Dockerfile Node stage | Joe | step/5.8-react-chat | built and checked in a browser (test database, fake model); 3 new tests |
+| 5.9 React admin pages (9 pages) and admin API (20 routes) | Joe | step/5.9-react-admin | built and checked in a browser (test database, fake model); 14 new tests |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 
 ## 11. Divergences log
@@ -277,3 +280,8 @@ X-Forwarded-For header (uvicorn --proxy-headers), which a client can add to; the
 answer exactly as it was shown, so a user can open an earlier answer again without calling the model.
 No new table. A user only sees their own questions (someone else's gives 404); the admin pages show
 the questions but not who asked them.
+
+2026-11-06 - Admin API (step 5.9): the abstention list no longer shows who asked (the admin does not
+need it to tune abstention). Labels must be one of the four buttons; labelling a question that is not in
+the log gives 404 (the guide's Jinja route crashed with a 500 when the label was "add as ..."). Creating
+an account with a short password or a wrong role gives an error instead of doing nothing silently.

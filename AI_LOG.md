@@ -303,3 +303,22 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    (section 5) and FR5 ask for the passages shown alongside the answer, as the Jinja page did. How we
    caught it: the screenshot of the browser check, compared with the brief. Fix: the list is always
    shown; only each passage's full text folds, as on the Jinja page.
+
+## 2026-11-06 — React admin pages (Joe, step 5.9)
+
+1. **A test that checked nothing.** The first version of `test_every_admin_route_refuses_visitors` read
+   the admin routes from `app.routes`. With FastAPI 0.143, included routers appear there as one
+   `_IncludedRouter` entry without a path, so the list was empty and the test passed without checking
+   a single route. How we caught it: the extra test `test_there_are_admin_routes` (at least 18 routes)
+   failed with 0. Fix: the routes are read from the app's OpenAPI description (20 routes); removing the
+   admin check from the router now makes two tests fail.
+2. **/app/ADMIN was not protected.** The first server check for the React admin pages compared the path
+   with "admin". React Router ignores capitals, so /app/ADMIN showed the admin page frame without the
+   server check (the data stayed protected by /api/admin). Caught while reviewing the route before
+   writing its test. Fix: the first part of the path is lower-cased; the test tries /app/ADMIN and
+   /app//admin/eval.
+3. **The build failed.** `useLoad.js` contains JSX (the `Waiting` component), which Vite only accepts in
+   `.jsx` files. Caught by `npm run build`. Fix: renamed to `useLoad.jsx`.
+4. **Guide code crashed on a missing log row.** Porting the abstention labels showed that the Jinja route
+   (guide pp. 56-62) does `q["question"]` when the UPDATE found no row: a 500 for an unknown id with an
+   "add as ..." label (reproduced with the test client). The API returns 404, and a test checks it.

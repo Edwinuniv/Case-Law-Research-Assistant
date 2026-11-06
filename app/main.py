@@ -1,6 +1,5 @@
 """The website. Public part: research page (no login, SR33). Admin part: /admin/* (login + role)."""
 import datetime
-import threading
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
@@ -8,7 +7,7 @@ from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse, Plai
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from app import api, config, db, evaluate
+from app import api, api_admin, config, db, evaluate
 from app.citations import CitationIndex
 from app.indexing import build_index
 from app.pipeline import answer, check_input
@@ -43,6 +42,7 @@ if config.HTTPS_ONLY and config.SESSION_SECRET == "change-me-in-production":
 app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, max_age=8 * 3600,
                    https_only=config.HTTPS_ONLY, same_site="lax")
 app.include_router(api.router)                                       # JSON API for React (/api/...)
+app.include_router(api_admin.router)                                 # admin JSON API (/api/admin/...)
 
 
 def page(request, name, status_code=200, **context):
@@ -93,9 +93,17 @@ if (FRONTEND / "assets").is_dir():
 
 @app.get("/app")
 @app.get("/app/{path:path}")
-def react_app(path: str = ""):
+def react_app(request: Request, path: str = ""):
     """Every /app page is the same index.html; React Router then shows the right page.
-    The page itself holds no data: every /api call checks the login and the role."""
+    The page itself holds no data: every /api call checks the login and the role.
+    /app/admin pages are refused by the server too (401 / 403), as SR35 asks for every admin route."""
+    first = path.strip("/").split("/")[0].lower()        # React Router ignores capitals: /app/ADMIN is admin too
+    if first == "admin":
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return HTMLResponse('401 - please <a href="/app/login">log in</a> as an administrator.', status_code=401)
+        if db.active_role(user_id) != "admin":
+            return PlainTextResponse("403 - administrators only", status_code=403)
     if not (FRONTEND / "index.html").is_file():
         return PlainTextResponse("The React app is not built. Run: cd frontend && npm install && npm run build",
                                  status_code=404)
@@ -139,15 +147,7 @@ def logout(request: Request):
     return RedirectResponse("/", 303)
 
 
-def run_in_background(kind, work):
-    job_id = db.start_job(kind)
-
-    def target():
-        try:
-            db.end_job(job_id, "done", str(work() or ""))
-        except Exception as e:
-            db.end_job(job_id, "failed", f"{type(e).__name__}: {e}")
-    threading.Thread(target=target, daemon=True).start()
+run_in_background = api_admin.run_in_background          # one copy, shared with the admin API
 
 
 # ======================= ADMIN: overview and settings =======================
