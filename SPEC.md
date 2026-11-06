@@ -295,3 +295,15 @@ templates and routes of the guide (pp. 56-70) were removed from app/main.py; the
 copy, in app/api_admin.py. The guide's tests/test_admin.py (p. 63) checks the same behaviour through
 POST /api/login and the React /admin pages. The "research aid, not legal advice" footer (SR7) is in
 frontend/index.html, outside React, so it is on every page even before the JavaScript loads.
+
+2026-11-06 - Instructor's answer: only the administrator logs in; the chat takes one independent
+question per message (FR1). Dr. Salloum answered our two questions about the website: (1) login is
+"only admin", visitors do not log in; (2) the chat follows the Phase 1 requirements, which ask for one
+question at a time and no follow-up questions. The earlier decision "everyone logs in, roles user and
+administrator" (entry above, which was waiting for his confirmation) is REVERTED in step 5.11: SR33,
+FR1, FR4, FR10, FR12, O7 and sections 1.2, 4 and 6 of the Requirements Document stay as written, and
+the Requirements Document needs no change. /api/ask and /api/passage are open to visitors (still with
+the CSRF token, SR3 and the query log); /api/history is removed (a visitor has no account, so "My
+questions" lives only in the open page); the accounts page creates administrators only; a migration
+removes the 'user' accounts made during steps 5.6-5.10 (their questions stay in the log without the
+account) and the database allows the role 'admin' only. All the login security of step 5.6 stays.
