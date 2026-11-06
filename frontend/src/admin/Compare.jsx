@@ -1,6 +1,6 @@
 // Run a (before) against run b (after): worse metrics are flagged in red with text, not only colour.
 import { useSearchParams } from "react-router-dom";
-import { num, useLoad, Waiting } from "./useLoad.js";
+import { num, useLoad, Waiting } from "./useLoad.jsx";
 
 export default function Compare() {
   const [p] = useSearchParams();

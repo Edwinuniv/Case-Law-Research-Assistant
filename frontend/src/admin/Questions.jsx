@@ -1,6 +1,6 @@
 // Test questions: filter by tag, add, edit, export questions.jsonl (to commit in git).
 import { Link, useSearchParams } from "react-router-dom";
-import { useLoad, Waiting } from "./useLoad.js";
+import { useLoad, Waiting } from "./useLoad.jsx";
 
 export default function Questions() {
   const [p, setP] = useSearchParams();

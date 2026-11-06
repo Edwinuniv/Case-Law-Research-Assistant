@@ -1,7 +1,7 @@
 // Settings: 1. preview new thresholds on the latest run (saves nothing, FR23); 2. save.
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
-import { num, useLoad, Waiting } from "./useLoad.js";
+import { num, useLoad, Waiting } from "./useLoad.jsx";
 
 const FIELDS = [["tau_abstain", "Abstain below support score"], ["tau_confident", "Low confidence below"],
   ["min_retrieval", "Minimum passage similarity"]];

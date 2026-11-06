@@ -1,7 +1,7 @@
 // Questions the system did not answer confidently: label each one, add real mistakes to the test set (SR43).
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
-import { day, num, useLoad, Waiting } from "./useLoad.js";
+import { day, num, useLoad, Waiting } from "./useLoad.jsx";
 
 const LABELS = [["correct", "Correct"], ["should have answered", "Should have answered"],
   ["add as unanswerable test question", "Add to test set (unanswerable)"],

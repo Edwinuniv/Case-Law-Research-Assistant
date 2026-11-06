@@ -1,7 +1,7 @@
 // Corpus: citation lookup (the week-1 gate), latest ingestion reports, decisions 100 at a time.
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { day, useLoad, Waiting } from "./useLoad.js";
+import { day, useLoad, Waiting } from "./useLoad.jsx";
 
 function lookupClass(status) {          // in our corpus = green, exists elsewhere = yellow, else red
   if (status.includes("OUTSIDE")) return "LOW_CONFIDENCE";

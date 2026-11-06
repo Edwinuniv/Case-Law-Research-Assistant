@@ -1,7 +1,7 @@
 // Accounts (FR12): only an administrator creates accounts (role user or admin) and disables them.
 import { useState } from "react";
 import { api } from "../api.js";
-import { day, useLoad, Waiting } from "./useLoad.js";
+import { day, useLoad, Waiting } from "./useLoad.jsx";
 
 export default function Users({ user }) {
   const [list, error] = useLoad("/admin/users");

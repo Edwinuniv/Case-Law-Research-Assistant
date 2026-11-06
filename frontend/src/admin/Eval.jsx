@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
-import { day, num, useLoad, Waiting } from "./useLoad.js";
+import { day, num, useLoad, Waiting } from "./useLoad.jsx";
 
 export default function Eval() {
   const [runs, error, reload] = useLoad("/admin/eval");

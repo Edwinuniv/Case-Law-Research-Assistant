@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Chart from "chart.js/auto";
-import { day, useLoad, Waiting } from "./useLoad.js";
+import { day, useLoad, Waiting } from "./useLoad.jsx";
 
 function ChartBox({ title, config }) {          // one chart; redrawn when its data changes
   const canvas = useRef(null);

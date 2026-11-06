@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
-import { day, num, useLoad, Waiting } from "./useLoad.js";
+import { day, num, useLoad, Waiting } from "./useLoad.jsx";
 
 export default function Home() {
   const [d, error, reload] = useLoad("/admin/home");

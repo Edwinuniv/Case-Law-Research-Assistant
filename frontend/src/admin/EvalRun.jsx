@@ -2,7 +2,7 @@
 // the threshold sweep on the tune split, and every question (wrong outcomes first).
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { num, useLoad, Waiting } from "./useLoad.js";
+import { num, useLoad, Waiting } from "./useLoad.jsx";
 
 export default function EvalRun() {
   const { runId } = useParams();
