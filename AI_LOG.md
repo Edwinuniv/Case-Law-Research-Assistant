@@ -390,7 +390,7 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    /api/ask (Yasser's request), with tests written from the expected behaviour before the code. What
    came back: tests/test_ask_rate_limit.py (written first; 3 of 4 failed until the code existed) and the
    limit in app/api.py. What was wrong: the counter of questions lives in memory for the whole test run,
-   and the fixture of the research tests did not empty it. All tests passed, but the 11 research tests
+   and the fixture of the research tests did not empty it. All tests passed, but the 13 research tests
    and the 4 new ones all ask from the same test address, so a test could pass or fail depending on how
    many questions the tests before it had asked. How we caught it: reading the fixture after the first
    green run, next to the login limit, which the fixture already empties. Fix: the fixture empties
