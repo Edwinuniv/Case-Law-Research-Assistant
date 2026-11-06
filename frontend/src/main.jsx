@@ -47,7 +47,7 @@ function App() {
           <Route path="/login" element={user ? <Navigate to="/" /> :
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
           <Route path="/" element={user ? <Chat info={info} /> : <Navigate to="/login" />} />
-          {user?.role === "admin" && (       // display only: the server refuses /app/admin and /api/admin to others
+          {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others
             <Route path="/admin" element={<AdminLayout user={user} />}>
               <Route index element={<AdminHome />} />
               <Route path="settings" element={<Settings />} />
@@ -71,5 +71,5 @@ function App() {
 }
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode><BrowserRouter basename="/app"><App /></BrowserRouter></StrictMode>
+  <StrictMode><BrowserRouter><App /></BrowserRouter></StrictMode>
 );
