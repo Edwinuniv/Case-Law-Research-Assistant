@@ -24,3 +24,15 @@ button:disabled{opacity:.6;cursor:wait}
 .login label{display:block;margin:10px 0 4px}
 .login input{width:100%;box-sizing:border-box}
 .error{color:#b3342b}
+/* admin pages (same as app/templates/base.html) */
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
+th,td{border:1px solid #dde2e8;padding:5px 8px;text-align:left;vertical-align:top}
+th{background:#eef2f7}
+select{font:inherit;padding:6px;border:1px solid #c5cdd6;border-radius:4px}
+button.light{background:#e8edf4;color:#1f3a5f}
+.red{background:#fde8e6}.green{background:#e7f5ea}.warn{background:#fff6dd}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid #dde2e8;border-radius:6px;padding:10px}.stat b{font-size:22px;display:block}
+.two{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
+@media(max-width:850px){.two{grid-template-columns:1fr}}
+a.active{font-weight:700}
