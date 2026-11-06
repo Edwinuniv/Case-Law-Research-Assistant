@@ -410,3 +410,31 @@ requirements, then add roles user/admin, CSRF, a login limit and generic login e
    green run, next to the login limit, which the fixture already empties. Fix: the fixture empties
    ASKED_BY_IP too. We also broke the code on purpose: without the limit 3 tests fail; checking the
    limit before SR3 makes the "too short questions do not count" test fail.
+
+## 2026-11-06 — Metadata in the verifier: decision years and full case names (Edwin)
+
+**Asked:** list every piece of metadata the system has and what uses it (after the instructor asked about
+metadata), then fix the two gaps the list showed in verify.py.
+1. **Years were checked against the passage text only.** The guide's check 5 (p. 45) looks for every number
+   in the cited passage text. The model sees the decision's year in the passage header ("(2024)", from
+   date_filed), so a correct "In 2024, the Court held..." was removed whenever the text did not repeat
+   2024, and "its 2023 decision" about a 2024 decision passed when 2023 was in the text for another reason
+   (attack X021 was caught only because 2019 happens not to be in Shelby County's text). How we caught it:
+   the metadata inventory (date_filed was used by the website, never by the verifier). Fix: the year of a
+   cited decision counts as being in the passage, and a sentence that dates the decision ("its 2023
+   decision", "decided in 2023", "in 2023, the Court held") must give that year, unless it names another
+   case. Two tests failed before the fix; breaking each of the three parts on purpose makes one test fail.
+2. **Case names were compared on their first word.** The guide's check 4 (p. 45, kept in name_key in Week 7) compared only the
+   first word, so "Trump v. Anything" passed as Trump v. United States, and "Applying Trump v. United
+   States" was removed. Fix: same_case compares both parties, with generic words ("County", "United
+   States", "Inc.") counting only for a party that has nothing else. Measured on our 2,477 case names: a
+   name now matches its own decision 2,462 times out of 2,463 (first word: 2,123), and a different
+   decision 647 times (first word: 19,388; 390 of the 647 are identical names like "Johnson v. United
+   States", which no name check can separate).
+3. **Claude's first version of same_case removed 209 real case names.** The case-name regex stops at a
+   comma, so "Spokeo, Inc. v. Robins" is read as "Inc. v. Robins", and a first party of only generic words
+   never matched. All tests passed. How we caught it: running same_case on every case name in the
+   database before committing. Fix: a party of only generic words must be part of the cited party. (The
+   old first-word code had the same problem: "inc" is not "spokeo".)
+4. **A rule without a test.** Breaking same_case on purpose: removing "same number of parties" made no
+   test fail, although "In re Trump" would then match Trump v. United States. Fix: a test for it.
