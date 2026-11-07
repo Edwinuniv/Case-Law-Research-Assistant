@@ -200,3 +200,24 @@ OK; (4) search time not higher: OK (-35 ms on average, 6 times faster on the que
 quote@8 and MRR@10 are unchanged, so by the rule the filter is switched on for speed only, and reported as
 such: it does not find the holding more often on our questions, because the search already finds the
 named decision first. The TEST split was not looked at.
+
+### Retrieval after the text fixes (2026-11-06, Yasser)
+Edwin found two data problems in the 2026-11-05 dump: 65 passages of 4 combined texts labelled as the
+majority although they belong to dissents or concurrences (headings such as "JUSTICE GINSBURG, with whom
+..., and with whom ... join as to Parts II and III, dissenting." were not recognised), and the letters "fi"/"fl"
+lost in PDF texts ("frst", "specifc", "fled" for "filed"). Both were fixed (PR #59): `fix_ligatures --apply`
+repaired 7,098 words in 61 opinions, and the re-index gives 72,628 chunks (72,593 before: the relabelled
+texts are now cut at each opinion). After the fix: 0 passages with the broken forms checked, the dissents
+and concurrences of Nat'l Railroad v. Morgan, Nike v. Kasky, Pasquantino and Gomez-Perez under their own
+labels, and `check_questions` 85 OK. Same settings as the eval-v1 baseline.
+
+| split | run | questions | recall@1 | recall@5 | MRR@10 | quote@8 |
+|---|---|---|---|---|---|---|
+| **TEST (reported)** | `eval/runs/retrieval_2026-11-06T23-17-10.json` | 8 | 0.875 | 1.0 | 0.938 | 0.25 |
+| all answerable | `eval/runs/retrieval_2026-11-06T23-17-26.json` | 42 | 0.857 | 0.976 | 0.913 | 0.357 |
+
+Identical to the eval-v1 baseline above, question by question: the fixes correct the text that the model and
+the reader see, but none of the 42 gold decisions or gold quotes sat in the repaired passages, so the search
+ranks did not move. The text fixes are kept for correctness, not for a retrieval gain. This dump is the one
+Edwin's final week 8 run uses (his first run, stopped at 39/85 on the old dump, is kept as
+`eval/runs/eval_run1_before_text_fixes_2026-11-06.json`).
