@@ -4,7 +4,7 @@ import json
 import hashlib
 import re
 from collections import defaultdict
-from app import config, db
+from app import config, db, scope
 from app.chunking import pick_text, OPINION_TYPES
 
 
@@ -178,11 +178,14 @@ def load_corpus():
     report = {"clusters": len(clusters), "decisions": 0, "duplicates_merged": 0,
               "decisions_without_text": 0, "opinions": 0, "opinions_without_text": 0,
               "opinion_copies_skipped": 0,
-              "rejected_without_licence": 0,
+              "rejected_without_licence": 0, "out_of_scope": 0,
               "filters": {f.stem[7:]: json.load(open(f)) for f in sorted(config.WORK.glob("report_*.json"))}}
     with db.connect() as con:
         con.execute("TRUNCATE decisions, cluster_alias, opinions, chunks CASCADE")
         for group in groups.values():
+            if any(c["cluster_id"] in scope.OUT_OF_SCOPE for c in group):   # not SCOTUS 2000-2024 (app/scope.py)
+                report["out_of_scope"] += 1
+                continue
             main, ops, copies, empty = group_opinions(group, opinions_by_cluster)
             report["opinion_copies_skipped"] += copies
             report["opinions_without_text"] += empty
