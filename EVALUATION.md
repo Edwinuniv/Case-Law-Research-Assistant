@@ -216,8 +216,9 @@ labels, and `check_questions` 85 OK. Same settings as the eval-v1 baseline.
 | **TEST (reported)** | `eval/runs/retrieval_2026-11-06T23-17-10.json` | 8 | 0.875 | 1.0 | 0.938 | 0.25 |
 | all answerable | `eval/runs/retrieval_2026-11-06T23-17-26.json` | 42 | 0.857 | 0.976 | 0.913 | 0.357 |
 
-Identical to the eval-v1 baseline above, question by question: the fixes correct the text that the model and
-the reader see, but none of the 42 gold decisions or gold quotes sat in the repaired passages, so the search
-ranks did not move. The text fixes are kept for correctness, not for a retrieval gain. This dump is the one
+Identical to the eval-v1 baseline above: the rank of the gold decision is the same for each of the 42
+questions, and quote@8 is the same 15 of 42 (the baseline run does not list which questions hit, so only the
+count can be compared). The fixes correct the text that the model and the reader see, and did not move the
+search. The text fixes are kept for correctness, not for a retrieval gain. This dump is the one
 Edwin's final week 8 run uses (his first run, stopped at 39/85 on the old dump, is kept as
 `eval/runs/eval_run1_before_text_fixes_2026-11-06.json`).

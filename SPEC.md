@@ -389,4 +389,4 @@ labelled as the majority; the chunker now recognises them. (2) PDF texts had los
 ("frst" for "first", "fled" for "filed"); `scripts/fix_ligatures.py` puts the letter back only where the corpus
 itself shows the real word, and only in opinions that are broken PDFs (7,098 words in 61 opinions; rules in
 app/ligatures.py, report in ingestion_reports). Re-indexed: 72,628 chunks. Retrieval unchanged
-(EVALUATION.md); Edwin's final week 8 run uses this dump. Online database (Railway, step 6.3) loaded from it.
+(EVALUATION.md); Edwin's final week 8 run and the online database (step 6.3) use this dump.
