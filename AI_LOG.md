@@ -494,3 +494,26 @@ rule in EVALUATION.md before any code or measurement.
    the judge test call time.sleep(601) six times for real: the test did not replace sleep. Fix: it does now;
    each of 7 planted bugs makes a test fail within seconds.
 
+
+## 2026-11-06 — Fixing the corpus text after Edwin's findings (Yasser)
+
+1. **Two cleaning gaps that our own checks missed.** What we asked earlier (steps 1.8 and 2.1): Claude
+   wrote the chunker's opinion-start patterns and the text cleaning. What was wrong: (a) a heading with
+   several "with whom" groups ending in "join as to Parts II and III, dissenting." was not recognised, so 65
+   passages of 4 combined texts were labelled as the majority; (b) PDF texts had lost the "fi"/"fl" ligatures
+   ("frst", "specifc", "fled" for "filed"; 1,865 passages). How we caught it: Edwin's checks on the new dump
+   during his week 8 run. Fix (PR #59): the pattern accepts "join(s) [except] as to Parts ...", with a test
+   written from his example first; the ligature repair below. Edwin stopped his run at 39/85 so the final
+   numbers use the fixed data.
+2. **A repair rule that was too loose, twice.** What we asked: put back the lost letters. What came back
+   first: insert "i"/"l" after an "f" when the repaired word is common in the corpus, in any opinion with at
+   least 3 such words. What was wrong: Yasser's dry run listed "fled -> filed" and "fling -> filing" ("fled" is
+   a real word, so a clean opinion about a suspect who fled three times would have been changed) and
+   "rife -> rifle", "fred -> fired". Second version: an opinion is broken only if it has more repairable
+   words than intact fi/fl words, and forms that are real words need the clean opinions to agree. What was
+   wrong: the next dry run kept "specifc" and "defned" as "real words", because partly broken opinions sat
+   in the "clean" pool. Third version: only clearly clean opinions (10 intact fi/fl words per repairable one)
+   decide what is a real word, and partly broken opinions get only the forms that are never real words.
+   How we caught it: reading the dry-run lists, and real sentences for "fled" from the database, before
+   anything was written. Lesson: a dry run on the real data is the test that matters for a data fix; each
+   rule found there now has its own test (a police-chase opinion, "rife", a partly broken opinion).
