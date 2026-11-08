@@ -62,6 +62,27 @@ must_not_appear contains the name); (4) the mean search time is not higher. If (
 and MRR@10 are unchanged, the filter is kept only for speed, and reported as such. Otherwise it stays
 off and the result is recorded here. The TEST split is not looked at while choosing.
 
+## Quote matching selection rule (written 2026-11-08, before measuring; Edwin, step 8.2)
+Finding (run 2, first 38 questions, TUNE; the passages found again with the same search, no model call): of
+15 quotes removed as "not found", 10 are in the cited passage and were missed by our text matching: words
+broken at the end of a line in our text ("mar- riage"), the model's non-breaking hyphen (U+2011, which
+NFKC turns into U+2010, not "-"), CourtListener page markers inside the text ("authority, *490 however"),
+and a final full stop where the passage has a comma. The other 5 left words out ("...") or dropped a word:
+those stay removed (word for word is the rule).
+Change (in `verify.norm`, applied the same way to the quote and to the passage): every hyphen and dash
+becomes "-"; "*123" page markers are removed; a hyphen at a line break between two letters is joined
+("mar- riage" -> "marriage"); the quote's final . , ; : is ignored. Ellipses are NOT accepted.
+How it is measured: run 2 is finished first with the current verifier and stays the baseline. Then the
+sentences the model wrote in run 2 are checked again by the changed verifier (same drafts, same passages
+found by the same search, no new answer from the model; the judge is asked only about newly kept
+sentences); support scores and statuses are recomputed. TUNE split only. The change is kept only if ALL
+hold: (1) the search finds the same 8 passages as in run 2 for every question (otherwise the comparison
+is not the same input, and is not made); (2) every quote newly accepted is checked by hand to be in its
+cited passage (0 false acceptances); (3) the false citations shown stay at 0; (4) no sentence that the
+current verifier removes for another reason (checks 1 and 3-6) is kept. Then tau_abstain is chosen on TUNE
+with the verifier that was kept (threshold rule above), and the TEST split is reported once with it.
+Both verifiers' TUNE numbers are reported, whatever the result.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
