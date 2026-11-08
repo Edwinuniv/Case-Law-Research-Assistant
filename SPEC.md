@@ -244,6 +244,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
 | 4.6 metadata search: a case named in the question limits the search to its decision (setting case_filter, off) | Edwin | step/4.6-case-filter | merged (PR #50; Searcher.search(decision_ids) in PR #52); measured on TUNE: same quote@8 and MRR@10, search 179 -> 29 ms when a case is named; on by the rule, for speed only (EVALUATION.md) |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
+| 8.2 run 2 on the fixed data; compare_runs: run 1 (saved file) against run 2 on the TUNE questions both answered | Edwin | step/8.2-run2-compare | run 2 started 2026-11-08; 3 new tests |
 
 ## 11. Divergences log
 
@@ -398,3 +399,10 @@ a page). Check 3 uses every row too. A case name outside our corpus is still rem
 "case name not in our corpus or the cited passage": only citations can be proved fabricated, so the
 "fabrications caught" count now counts citations only.
 
+2026-11-08 - Week 8 (Edwin): run 2 data. Yasser's dump of 2026-11-06 21:20 UTC (text fixes, PR #59) still held
+the 8 decisions his step/1.8-out-of-scope branch lists as not SCOTUS 2000-2024 (7 old cases filed under
+2005-2010, 1 Sixth Circuit case); no test question uses them. They were removed from the local database with
+his script (dry run, then --apply) before run 2 started, so the data does not change during the run: 2,415
+decisions, 72,502 chunks. The restore empties eval_runs, so run 2 has database id 1; run 1 exists only in its
+file. `scripts/compare_runs.py` reads a run from a file or the database and compares the two on the TUNE
+questions both answered (run 1 stopped after 39).
