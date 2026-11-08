@@ -193,12 +193,27 @@ def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=p
 
 
 def load_run(run_id):
-    questions = {q["id"]: q for q in load_questions()}
     with db.connect() as con:
         rows = con.execute("SELECT * FROM eval_results WHERE run_id = %s ORDER BY question_id", (run_id,)).fetchall()
+    return with_questions(rows)
+
+
+def load_run_file(path):
+    """A run saved in eval/runs/*.json (step 8.2: a restore empties eval_runs, run 1 lives in its file)."""
+    return with_questions(sorted(json.load(open(path))["results"], key=lambda r: r["question_id"]))
+
+
+def with_questions(rows):
+    questions = {q["id"]: q for q in load_questions()}
     return [(questions.get(r["question_id"], {"id": r["question_id"], "tag": r["tag"], "split": r["split"],
                                               "question": "(deleted question)", "gold_decision_ids": []}),
              r["result"]) for r in rows]
+
+
+def same_questions(pairs_a, pairs_b):
+    """Keep only the questions both runs answered: a paused run is compared on what it has (step 8.2)."""
+    common = {q["id"] for q, _ in pairs_a} & {q["id"] for q, _ in pairs_b}
+    return [p for p in pairs_a if p[0]["id"] in common], [p for p in pairs_b if p[0]["id"] in common]
 
 
 # ---------------- metrics ----------------
@@ -276,7 +291,10 @@ BETTER_LOWER = {"false_citations_shown", "false_citation_rate", "errors", "answe
 
 def compare(run_a, run_b, s, split=None):
     """FR19 / SR40: metrics side by side, worse values flagged, and questions whose status changed."""
-    pa, pb = load_run(run_a), load_run(run_b)
+    return compare_pairs(load_run(run_a), load_run(run_b), s, split)
+
+
+def compare_pairs(pa, pb, s, split=None):
     ma, mb = metrics(pa, s, split), metrics(pb, s, split)
     rows = []
     for k in mb:
