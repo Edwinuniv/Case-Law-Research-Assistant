@@ -245,6 +245,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 4.6 metadata search: a case named in the question limits the search to its decision (setting case_filter, off) | Edwin | step/4.6-case-filter | merged (PR #50; Searcher.search(decision_ids) in PR #52); measured on TUNE: same quote@8 and MRR@10, search 179 -> 29 ms when a case is named; on by the rule, for speed only (EVALUATION.md) |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 | 8.2 run 2 on the fixed data; compare_runs: run 1 (saved file) against run 2 on the TUNE questions both answered | Edwin | step/8.2-run2-compare | run 2 started 2026-11-08; 3 new tests |
+| 8.2 export_run (a run saved in eval/runs with its TUNE metrics and sweep); threshold rule clarified; drafts of the final EVALUATION section and the report sections | Edwin | step/8.2-results-draft | run 2 saved after day 1 (38/85); 2 new tests |
 
 ## 11. Divergences log
 
@@ -406,3 +407,9 @@ his script (dry run, then --apply) before run 2 started, so the data does not ch
 decisions, 72,502 chunks. The restore empties eval_runs, so run 2 has database id 1; run 1 exists only in its
 file. `scripts/compare_runs.py` reads a run from a file or the database and compares the two on the TUNE
 questions both answered (run 1 stopped after 39).
+
+2026-11-08 - Week 8 (Edwin): the threshold rule (EVALUATION.md, 2026-10-26) did not define "best balance" or
+say what to do if no tau reaches 0.80 for both precision and recall. Clarified while run 2 was running and
+before its sweep was printed: the highest min(precision, recall), then the fewest wrong answers, then the
+lowest tau; if no tau qualifies, the same order on all tau and NFR3 reported as not met. A run is now saved
+to eval/runs with `scripts/export_run.py`, because a restore of the database empties eval_runs.
