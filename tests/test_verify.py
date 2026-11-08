@@ -203,3 +203,11 @@ def test_one_party_name_is_not_a_two_party_case():
     # Found by breaking same_case on purpose: without comparing the number of parties this was kept
     kept, removed = run("In re Trump, the President enjoys absolute immunity.")
     assert not kept and any("In re Trump" in p for p in removed[0]["problems"])
+
+
+# --- Step 8.3: a real citation shared by two copies of a decision (Boumediene) ---
+def test_citation_of_a_retrieved_decision_stored_twice_is_kept():                     # check 3, SR23
+    from tests.test_citations import BOUMEDIENE
+    s = {"text": "As held in 128 S. Ct. 2229, the President enjoys absolute immunity.", "sources": ["P1"], "quote": QUOTE}
+    kept, removed = verify({"sentences": [s]}, {"P1": {**PASSAGE, "decision_id": 145795}}, BOUMEDIENE)
+    assert kept, removed
