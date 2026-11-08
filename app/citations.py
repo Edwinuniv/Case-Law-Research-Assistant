@@ -49,8 +49,10 @@ def find_citations(text):
 
 
 def find_case_names(text):
-    return ([LEADING_WORDS.sub("", m.group(0)) for m in CASE_NAME.finditer(text or "")]
-            + [m.group(0) for m in ONE_PARTY_NAME.finditer(text or "")])
+    # rstrip("."): a name that ends a sentence ("... overruled Roe v. Wade.") must not keep the full stop,
+    # or it is not found word for word in a passage that writes "Roe v. Wade," (step 8.3)
+    return ([LEADING_WORDS.sub("", m.group(0)).rstrip(".") for m in CASE_NAME.finditer(text or "")]
+            + [m.group(0).rstrip(".") for m in ONE_PARTY_NAME.finditer(text or "")])
 
 
 def parties(name):
