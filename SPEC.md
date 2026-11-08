@@ -245,6 +245,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 4.6 metadata search: a case named in the question limits the search to its decision (setting case_filter, off) | Edwin | step/4.6-case-filter | merged (PR #50; Searcher.search(decision_ids) in PR #52); measured on TUNE: same quote@8 and MRR@10, search 179 -> 29 ms when a case is named; on by the rule, for speed only (EVALUATION.md) |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 | 8.2 run 2 on the fixed data; compare_runs: run 1 (saved file) against run 2 on the TUNE questions both answered | Edwin | step/8.2-run2-compare | run 2 started 2026-11-08; 3 new tests |
+| 8.2 error_analysis (why answerable TUNE questions abstain; gold quote in the 8 passages); requirements table for Edwin's part | Edwin | step/8.2-error-analysis | 5 new tests; 3 gaps written down (section 11) |
 | 8.2 export_run (a run saved in eval/runs with its TUNE metrics and sweep); threshold rule clarified; drafts of the final EVALUATION section and the report sections | Edwin | step/8.2-results-draft | run 2 saved after day 1 (38/85); 2 new tests |
 
 ## 11. Divergences log
@@ -413,3 +414,11 @@ say what to do if no tau reaches 0.80 for both precision and recall. Clarified w
 before its sweep was printed: the highest min(precision, recall), then the fewest wrong answers, then the
 lowest tau; if no tau qualifies, the same order on all tau and NFR3 reported as not met. A run is now saved
 to eval/runs with `scripts/export_run.py`, because a restore of the database empties eval_runs.
+
+2026-11-08 - Requirements check (Edwin, docs/requirements_edwin.md): two readings written down. (1) SR39:
+abstention precision and recall are computed on the answerable and unanswerable questions; the adversarial
+questions have their own rate (adversarial abstention rate), so the threshold is not tuned on the attack
+questions (the guide's evaluate.metrics). (2) SR23: a citation that is in the citation table but is not a
+retrieved decision is kept when it is written in the cited passage itself (a passage of Loper Bright that
+cites Chevron); this is rule 3 of section 5, a wider reading of SR23's "must match an opinion we retrieved".
+NFR2 is met by rule for numbers and dates, and only approximately for other facts (quote and groundedness).
