@@ -214,3 +214,25 @@ def test_a_paused_run_says_how_to_resume_and_shows_no_metrics(monkeypatch, capsy
     out = capsys.readouterr().out
     assert "--resume 7" in out and "split ==" not in out
 
+
+
+# --- Step 8.3: the checker gave false alarms on real citations (Boumediene in run 1; 88 of 2,006 decisions) ---
+from tests.test_citations import BOUMEDIENE
+
+def add_decision_with(clean_db, decision_id, citations):
+    with clean_db.connect() as con:
+        con.execute("INSERT INTO decisions (decision_id, all_cluster_ids, case_name, date_filed, citations, licence) "
+                    "VALUES (%s, %s, 'X v. Y', '2008-06-12', %s, 'test')", (decision_id, [decision_id], citations))
+
+def checked_for(decision_id, index):
+    r = {"passages": [("P1", {**TRUMP, "decision_id": decision_id})], "sentences": [{"text": "Text.", "sources": ["P1"]}]}
+    return check_shown_citations(r, {"must_not_appear": []}, index)
+
+def test_checker_accepts_a_real_citation_shared_by_two_copies_of_a_decision(clean_db):   # SR38 (a)
+    add_decision_with(clean_db, 145795, ["128 S. Ct. 2229"])        # Boumediene; its copy 145943 has the same citation
+    assert checked_for(145795, BOUMEDIENE) == ([[]], 1)
+
+def test_checker_checks_the_citation_the_page_shows(clean_db):                         # SR38 (a), Joe's #58
+    add_decision_with(clean_db, 145795, ["0 Cal. Daily Op. Serv. 3128", "553 U.S. 723"])
+    index = StaticCitationIndex(citations={"553 U.S. 723": 145795}, alias={145795: 145795}, decisions={})
+    assert checked_for(145795, index) == ([[]], 1)                  # 553 U.S. 723 is shown and checked

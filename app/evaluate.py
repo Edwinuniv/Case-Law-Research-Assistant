@@ -4,7 +4,7 @@ import re
 import time
 from psycopg.types.json import Jsonb
 from app import config, db, llm
-from app.citations import find_citations
+from app.citations import find_citations, best_citation
 from app.pipeline import answer, decide, ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR
 
 QUESTION_FIELDS = ["id", "tag", "split", "question", "expected_answer", "gold_decision_ids",
@@ -58,21 +58,22 @@ def check_shown_citations(r, q, index):
             for p in cited:                                                      # (a) rendered citations
                 d = con.execute("SELECT citations FROM decisions WHERE decision_id = %s",
                                 (p["decision_id"],)).fetchone()
-                for c in (d["citations"] if d else [])[:1]:
+                if d and d["citations"]:
+                    c = best_citation(d["citations"])                            # the one the page shows (#58)
                     citations_shown += 1
-                    cluster = index.cluster_for(c)
-                    if cluster is None or index.decision_for_cluster(cluster) != p["decision_id"]:
+                    # any row of the citation table may be this decision (a decision stored twice, step 8.3)
+                    if p["decision_id"] not in {index.decision_for_cluster(k) for k in index.clusters_for(c)}:
                         problems.append(f"rendered citation does not match: {c}")
             opinions = [p["opinion_id"] for p in cited]
             for c in find_citations(s["text"]):                                  # (b) citations in the text
                 citations_shown += 1
-                cluster = index.cluster_for(c)
-                if cluster is None:
+                clusters = list(index.clusters_for(c))
+                if not clusters:
                     problems.append(f"citation does not exist: {c}")
                     continue
                 in_map = con.execute("SELECT 1 FROM citation_map WHERE citing_opinion_id = ANY(%s) "
-                                     "AND cited_cluster_id = %s LIMIT 1", (opinions, cluster)).fetchone()
-                if index.decision_for_cluster(cluster) not in retrieved and not in_map:
+                                     "AND cited_cluster_id = ANY(%s) LIMIT 1", (opinions, clusters)).fetchone()
+                if not {index.decision_for_cluster(k) for k in clusters} & retrieved and not in_map:
                     problems.append(f"citation not from a retrieved opinion or its citation map: {c}")
             for bad in q.get("must_not_appear") or []:                           # (c) forbidden strings
                 if bad and bad.lower() in s["text"].lower():

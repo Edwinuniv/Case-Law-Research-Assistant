@@ -67,3 +67,22 @@ def test_opinions_starting_inside_a_paragraph_are_cut_and_labelled():
     assert by_kind["Majority text"] == {"Opinion of the Court (Gorsuch)"}
     assert by_kind["Dissent text"] == {"Sotomayor, J., dissenting"}
     assert all(c["is_syllabus"] == (c["section"] == "Syllabus") for c in chunks)
+
+
+def test_long_headings_with_join_as_to_parts_are_labelled():
+    """Edwin, 2026-11-06: 65 passages in 4 combined texts (Morgan 2002, Nike v. Kasky 2003, Pasquantino 2005,
+    Gomez-Perez 2008) were labelled as the majority because headings like this one were not recognised."""
+    from app.chunking import opinion_start, INLINE_START
+    heads = {
+        "JUSTICE GINSBURG, with whom JUSTICE BREYER joins, and with whom JUSTICE STEVENS and JUSTICE SOUTER "
+        "join as to Parts II and III, dissenting. The Court today holds": "Ginsburg, J., dissenting",
+        "JUSTICE KENNEDY, with whom JUSTICE THOMAS joins except as to Part II, concurring in the judgment. We":
+            "Kennedy, J., concurring in the judgment",
+        "CHIEF JUSTICE ROBERTS, with whom JUSTICE SCALIA joins as to Part I, dissenting. I would":
+            "Roberts, C. J., dissenting",
+    }
+    for head, label in heads.items():
+        assert opinion_start(head) == label
+        assert INLINE_START.match(head)
+    # the plain forms keep working
+    assert opinion_start("JUSTICE SCALIA, with whom JUSTICE THOMAS joins, dissenting. x") == "Scalia, J., dissenting"

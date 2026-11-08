@@ -180,7 +180,7 @@ def test_year_of_another_case_named_in_the_sentence_is_kept():
 # --- Metadata (2026-11-06): case names are compared with the whole case_name, both parties ---
 def test_case_name_with_the_right_first_word_but_a_wrong_party_is_removed():
     kept, removed = run("In Trump v. Anything, the President enjoys absolute immunity.")
-    assert not kept and "FABRICATED case name: Trump v. Anything" in removed[0]["problems"]
+    assert not kept and "case name not in our corpus or the cited passage: Trump v. Anything" in removed[0]["problems"]
 
 def test_other_case_sharing_only_a_generic_word_is_removed():
     passage = {**PASSAGE, "case_name": "Shelby County v. Holder"}
@@ -203,3 +203,23 @@ def test_one_party_name_is_not_a_two_party_case():
     # Found by breaking same_case on purpose: without comparing the number of parties this was kept
     kept, removed = run("In re Trump, the President enjoys absolute immunity.")
     assert not kept and any("In re Trump" in p for p in removed[0]["problems"])
+
+
+# --- Step 8.3: a real citation shared by two copies of a decision (Boumediene) ---
+def test_citation_of_a_retrieved_decision_stored_twice_is_kept():                     # check 3, SR23
+    from tests.test_citations import BOUMEDIENE
+    s = {"text": "As held in 128 S. Ct. 2229, the President enjoys absolute immunity.", "sources": ["P1"], "quote": QUOTE}
+    kept, removed = verify({"sentences": [s]}, {"P1": {**PASSAGE, "decision_id": 145795}}, BOUMEDIENE)
+    assert kept, removed
+
+
+# --- Step 8.3: a case name outside our corpus cannot be PROVED invented (Roe v. Wade, 1973, in run 1) ---
+def test_real_case_outside_the_corpus_is_removed_but_not_called_fabricated():
+    from app.verify import count_fabrications
+    dobbs = {**PASSAGE, "case_name": "Dobbs v. Jackson Women's Health Organization",
+             "text": "We hold that Roe and Casey must be overruled, and the authority to regulate abortion is returned."}
+    kept, removed = run_on(dobbs, "The Court overruled Roe v. Wade.", "We hold that Roe and Casey must be overruled")
+    assert not kept                                                          # rule 4 still applies
+    assert removed[0]["problems"] == ["case name not in our corpus or the cited passage: Roe v. Wade"]
+    assert count_fabrications(removed) == 0                                  # only citations can be proved fabricated
+

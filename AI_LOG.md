@@ -505,3 +505,49 @@ rule in EVALUATION.md before any code or measurement.
    the Week 8 evaluation run. Fix: best_citation picks U.S. Reports, then S. Ct., then L. Ed., otherwise
    the first citation (as before); 5 tests written before the code, including "2008 U.S. LEXIS" not being
    taken for U.S. Reports.
+
+## 2026-11-06 — Fixing the corpus text after Edwin's findings (Yasser)
+
+1. **Two cleaning gaps that our own checks missed.** What we asked earlier (steps 1.8 and 2.1): Claude
+   wrote the chunker's opinion-start patterns and the text cleaning. What was wrong: (a) a heading with
+   several "with whom" groups ending in "join as to Parts II and III, dissenting." was not recognised, so 65
+   passages of 4 combined texts were labelled as the majority; (b) PDF texts had lost the "fi"/"fl" ligatures
+   ("frst", "specifc", "fled" for "filed"; 1,865 passages). How we caught it: Edwin's checks on the new dump
+   during his week 8 run. Fix (PR #59): the pattern accepts "join(s) [except] as to Parts ...", with a test
+   written from his example first; the ligature repair below. Edwin stopped his run at 39/85 so the final
+   numbers use the fixed data.
+2. **A repair rule that was too loose, twice.** What we asked: put back the lost letters. What came back
+   first: insert "i"/"l" after an "f" when the repaired word is common in the corpus, in any opinion with at
+   least 3 such words. What was wrong: Yasser's dry run listed "fled -> filed" and "fling -> filing" ("fled" is
+   a real word, so a clean opinion about a suspect who fled three times would have been changed) and
+   "rife -> rifle", "fred -> fired". Second version: an opinion is broken only if it has more repairable
+   words than intact fi/fl words, and forms that are real words need the clean opinions to agree. What was
+   wrong: the next dry run kept "specifc" and "defned" as "real words", because partly broken opinions sat
+   in the "clean" pool. Third version: only clearly clean opinions (10 intact fi/fl words per repairable one)
+   decide what is a real word, and partly broken opinions get only the forms that are never real words.
+   How we caught it: reading the dry-run lists, and real sentences for "fled" from the database, before
+   anything was written. Lesson: a dry run on the real data is the test that matters for a data fix; each
+   rule found there now has its own test (a police-chase opinion, "rife", a partly broken opinion).
+
+## 2026-11-08 — Step 8.3: the false-citation checker gave false alarms (Edwin)
+
+1. **The guide's checker flagged real citations.** check_shown_citations (guide p. 50-51) checks
+   `citations[0]` of a decision with `cluster_for`, which keeps the FIRST row of the citation table
+   (`LIMIT 1`). How we caught it: scripts/show_citations.py on run 1 flagged A022 (Boumediene v. Bush,
+   128 S. Ct. 2229): the citation is real, but Boumediene is stored twice in our data (decisions 145795 and
+   145943) and the first row points to the other copy. On all decisions, the shown citation of 88 of 2,006
+   decisions would have been flagged (decisions stored twice, two short orders on one page, an odd first
+   reporter like "0 Cal. Daily Op. Serv. 3128"). Fix: `clusters_for` returns every row; the checker and the
+   verifier's check 3 accept a citation if any of its rows is the right decision; the checker checks the
+   citation the page shows (`best_citation`: U.S., then S. Ct., then L. Ed.; Joe's #58 uses the same order).
+2. **"FABRICATED" for a real case.** Run 1 removed "The Court overruled Roe v. Wade" (right: rule 4) with
+   the label "FABRICATED case name". Roe (1973) is real but outside our corpus; our data can only prove a
+   citation invented (the citation table), never a name. Fix: names outside the corpus are labelled "case
+   name not in our corpus or the cited passage" and are not counted as fabrications.
+3. **A full stop kept in case names.** Writing the Roe test showed that a name ending a sentence was read
+   as "Roe v. Wade." with the full stop, so it could not be found word for word in a passage that writes
+   "Roe v. Wade,". Fix: the full stop is removed; a test for it.
+Measured on the database of 2026-11-05: the shown citation of every decision that has one (2,006) leads back to
+its own decision for 2,006 with the fixed checker; the old checker flagged 88 of them, all false alarms.
+All fixed before run 2 starts, so run 2 is checked with the fixed checker from its first question.
+

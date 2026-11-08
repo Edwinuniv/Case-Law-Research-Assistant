@@ -127,7 +127,7 @@ Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,76
 most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
 (median 292 words), 27,500,424 words in total. Since 2026-10-29 (one section per opinion, opinions on a
 denial of certiorari labelled): 105,626 chunks. Since 2026-11-05 (no duplicate opinions, opinion starts
-found inside PDF-style paragraphs): 2,423 decisions, 3,647 opinions, 72,593 chunks, 18,852,079 words.
+found inside PDF-style paragraphs): 2,423 decisions, 3,647 opinions, 72,593 chunks, 18,852,079 words. Since 2026-11-06 (long opinion headings recognised, lost "fi"/"fl" letters repaired in 61 opinions): 72,628 chunks, 18,852,079 words.
 
 | Rule | Justification |
 |---|---|
@@ -390,3 +390,19 @@ CourtListener that is sometimes an odd reporter (Nelson v. Adams: "0 Cal. Daily 
 answer now shows the official U.S. Reports citation first, then the Supreme Court Reporter (S. Ct.), then
 the Lawyers' Edition (L. Ed. 2d, L. Ed.), and the first citation only when none of them exists. Edwin's
 citation checker uses the same order. The side panel still lists every citation of the decision.
+
+2026-11-06 - Corpus text (Edwin's findings on the 2026-11-05 dump): (1) headings naming several groups of
+justices who "join as to Parts II and III" were not recognised, so 65 passages of 4 combined texts were
+labelled as the majority; the chunker now recognises them. (2) PDF texts had lost the "fi"/"fl" ligatures
+("frst" for "first", "fled" for "filed"); `scripts/fix_ligatures.py` puts the letter back only where the corpus
+itself shows the real word, and only in opinions that are broken PDFs (7,098 words in 61 opinions; rules in
+app/ligatures.py, report in ingestion_reports). Re-indexed: 72,628 chunks. Retrieval unchanged
+(EVALUATION.md); Edwin's final week 8 run and the online database (step 6.3) use this dump.
+
+2026-11-08 - Step 8.3 (Edwin): the false-citation checker (SR38) checks the citation the answer page shows
+(U.S. Reports, then S. Ct., then L. Ed., as app/api.py after Joe's #58) and accepts it if any row of the
+citation table for it is the passage's decision (a decision can be stored twice; two short orders can share
+a page). Check 3 uses every row too. A case name outside our corpus is still removed (rule 4) but labelled
+"case name not in our corpus or the cited passage": only citations can be proved fabricated, so the
+"fabrications caught" count now counts citations only.
+
