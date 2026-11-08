@@ -39,7 +39,8 @@ def test_verifier_problems_are_counted_by_kind():
 
 def test_only_the_tune_split_is_read():                             # SR29: TEST is reported once, elsewhere
     seen = []
-    pairs = [(q("t", "answerable"), res(0.1)), (q("u", "unanswerable"), res(0.9)), (tune("a"), res(0.1))]
+    pairs = [(q("t", "answerable"), res(0.1)), (q("u", "unanswerable"), res(0.9)), (tune("a"), res(0.1)),
+             (tune("v", "unanswerable"), res(0.1))]                  # no gold quote to look for
     out = analyse(pairs, lambda x: seen.append(x["id"]) or True)
     assert [x["id"] for x in out["abstained_but_should_answer"]] == ["a"] and out["answered_but_should_abstain"] == []
     assert seen == ["a"]
