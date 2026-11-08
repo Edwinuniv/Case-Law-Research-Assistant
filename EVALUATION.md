@@ -222,3 +222,89 @@ count can be compared). The fixes correct the text that the model and the reader
 search. The text fixes are kept for correctness, not for a retrieval gain. This dump is the one
 Edwin's final week 8 run uses (his first run, stopped at 39/85 on the old dump, is kept as
 `eval/runs/eval_run1_before_text_fixes_2026-11-06.json`).
+
+### Final evaluation, week 8 (Edwin) - DRAFT: method written 2026-11-08, numbers filled from run 2
+Everything marked ⟨...⟩ is filled from a saved run file, never by hand. Until then this section only
+states the method.
+
+**Test set.** eval-v1 (tag at 4d9e179, 85 questions, written by the three of us, frozen):
+42 answerable (34 TUNE, 8 TEST), 22 unanswerable (17 TUNE, 5 TEST) and 21 adversarial (17 TUNE, 4 TEST)
+written to make the system invent or misattribute citations. The brief asks for at least 50 questions,
+at least 15 of them unanswerable.
+
+**Data.** Yasser's dump of 2026-11-06 21:20 UTC (text fixes, PR #59) without the 8 decisions that are
+not SCOTUS 2000-2024 (`step/1.8-out-of-scope`): 2,415 decisions, 72,502 passages of 350 words.
+
+**Settings** (saved in the run when it starts; a resume is refused if they change): hybrid search
+(w_bm25 1.0, w_separate 1.0, fusion_pool 50), retrieve_k 20, top_k 8, no reranker, case_filter on,
+min_retrieval 0.35, support score weights 0.5 / 0.4 / 0.1, tau_confident 0.70, tau_abstain 0.55 while
+the run is made (any tau can be tried afterwards without calling the model again: the status is
+recomputed from the saved support score). Model: openai/gpt-oss-120b on Groq (free tier, 200,000 tokens
+per day, so the run pauses and is resumed with `run_eval --resume`; about 3 days).
+
+**What each question goes through.** The normal pipeline (search, gate, model, verifier with its 6
+checks, support score, decision), then three things that are not part of the answer: the model as a
+judge of each kept sentence (yes/no: does the passage support it; FR15), the separate false-citation
+checker (SR38: the citation the page shows must be the cited passage's decision, every citation in the
+text must come from a retrieved opinion or the citation map, no forbidden text), and the retrieval ranks.
+
+**Metrics** (`app/evaluate.py metrics`):
+- abstention precision = of the questions where the system said "not supported", the share that were
+  unanswerable; abstention recall = of the unanswerable questions, the share where it said "not
+  supported" (FR17, NFR3: each at least 0.80). Answerable and unanswerable questions only;
+  "low confidence" counts as answering.
+- false-citation rate = citations shown that fail the separate checker / all citations shown, on
+  answered and low-confidence answers (SR38, FR16; NFR1: zero on the adversarial set).
+- groundedness (judge and lexical), recall@k and MRR@10 of the gold decision, mean time per question.
+The adversarial questions are counted in both splits, but they are not in the precision/recall used
+to choose tau, so they do not influence the threshold.
+
+#### 1. Before and after the text fixes (same questions)
+Run 1 (`eval/runs/eval_run1_before_text_fixes_2026-11-06.json`, old dump, stopped after 39 questions)
+against run 2 on the TUNE + adversarial questions both runs answered:
+`python -m scripts.compare_runs eval/runs/eval_run1_before_text_fixes_2026-11-06.json ⟨run 2 id⟩`
+-> `eval/runs/compare_⟨date⟩.json`, ⟨n⟩ questions, tau_abstain 0.55.
+
+| run | abstained but should answer | low confidence | citations shown | false citations shown | groundedness (judge) | mean time |
+|---|---|---|---|---|---|---|
+| run 1 (before) | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
+| run 2 (after) | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
+
+Questions whose status changed: ⟨list from the file⟩. Reading: ⟨what changed and why, or "no change"⟩.
+
+#### 2. Choosing tau_abstain on the TUNE split (rule at the top of this file)
+`python -m scripts.run_eval --resume ⟨id⟩` prints the sweep when the run is done (tau 0.20 to 0.90 by
+0.02, tau_confident = max(tau, 0.70)). Saved: ⟨file of the printed sweep⟩.
+
+| tau | precision | recall | wrong abstentions | wrong answers |
+|---|---|---|---|---|
+| ⟨rows around the chosen value⟩ | | | | |
+
+Chosen: tau_abstain = ⟨⟩, because ⟨rule applied, with the numbers⟩. Set in the admin settings before
+looking at the TEST split.
+
+#### 3. TEST split, reported once
+`python -m scripts.run_eval --test ⟨id⟩` with tau_abstain = ⟨⟩, unchanged afterwards.
+
+| split | abstention precision | abstention recall | false-citation rate | citations shown | groundedness (judge) | recall@5 | MRR@10 | mean time |
+|---|---|---|---|---|---|---|---|---|
+| **TEST (reported)** | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
+| TUNE (used to choose) | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
+
+NFR3 (each >= 0.80 on TEST): ⟨met / not met, by how much⟩.
+
+#### 4. False citations and the adversarial set (step 8.3)
+`python -m scripts.show_citations ⟨id⟩` (TUNE + adversarial) and `--test` once.
+- Citations shown with a problem: ⟨n⟩ of ⟨n⟩ (goal 0, NFR1). On the 21 adversarial questions: ⟨n⟩.
+- Adversarial questions answered "not supported": ⟨n⟩ of 21.
+- Removed by the verifier before a visitor could see them: ⟨n⟩ FABRICATED citations, ⟨n⟩ real citations
+  not supported by the retrieved opinions, ⟨n⟩ case names, ⟨n⟩ wrong decision years.
+- The checker was fixed before run 2 (it flagged 88 of 2,006 real rendered citations; 0 after the fix,
+  AI_LOG 2026-11-08), so a zero here is not a zero by a broken checker.
+
+#### 5. Error analysis
+Why answerable questions were answered "not supported" in run 2: ⟨n⟩ below the gate (min_retrieval),
+⟨n⟩ the model said the passages do not answer, ⟨n⟩ every sentence removed by the verifier (most common
+reason: ⟨⟩), ⟨n⟩ support score under tau. Quotes not found, by decision (`show_citations`): ⟨⟩.
+Retrieval sets a ceiling: the gold quote is in the 8 passages for ⟨n⟩ of 34 TUNE questions (quote@8
+⟨⟩ in the same run).
