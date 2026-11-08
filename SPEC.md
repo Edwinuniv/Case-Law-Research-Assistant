@@ -239,7 +239,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
 | Admin pages open on the TUNE split (overview, runs, a run, compare, threshold preview); TEST only when asked | Joe | feature/admin-tune-default | checked in a browser (test database, fake model); 5 new tests |
-| Answer cites the U.S. Reports citation first, then S. Ct., then L. Ed. (best_citation in app/api.py) | Joe | feature/citation-label-us-first | 5 new tests |
+| Answer cites the U.S. Reports citation first, then S. Ct., then L. Ed. (best_citation, shared with the checker in app/citations.py) | Joe | feature/citation-label-us-first | 5 new tests |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 | 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
