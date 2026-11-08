@@ -33,3 +33,20 @@ def test_invented_or_mixed_case_names_find_no_decision():
     assert INDEX.decisions_named("Halvorsen v. Pacific Grain Co.") == []
     assert INDEX.decisions_named("Trump v. Raimondo") == []         # adversarial: mixed names
 
+
+
+# --- Week 8, step 8.3: one citation can belong to several clusters (duplicate decisions, two orders on one page) ---
+from app.citations import best_citation
+
+BOUMEDIENE = StaticCitationIndex(citations={"128 S. Ct. 2229": [145944, 145795]},    # two rows in the citation table
+                                 alias={145944: 145943, 145795: 145795}, decisions={})
+
+def test_every_cluster_of_a_citation_is_found():
+    assert sorted(BOUMEDIENE.clusters_for("128 S.Ct. 2229")) == [145795, 145944]
+    assert BOUMEDIENE.clusters_for("999 U.S. 9999") == []
+
+def test_the_shown_citation_is_us_reports_then_s_ct_then_l_ed():      # the same order as the answer page (Joe, #58)
+    assert best_citation(["0 Cal. Daily Op. Serv. 3128", "128 S. Ct. 2229", "553 U.S. 723"]) == "553 U.S. 723"
+    assert best_citation(["171 L. Ed. 2d 41", "128 S. Ct. 2229"]) == "128 S. Ct. 2229"
+    assert best_citation(["2008 U.S. LEXIS 4887", "171 L. Ed. 2d 41"]) == "171 L. Ed. 2d 41"   # LEXIS is not U.S.
+    assert best_citation(["0 Cal. Daily Op. Serv. 3128"]) == "0 Cal. Daily Op. Serv. 3128"     # none: the first
