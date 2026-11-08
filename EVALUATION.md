@@ -4,6 +4,11 @@
 On the TUNE split (80%), choose the tau_abstain with the best balance of abstention precision and
 recall, both >= 0.80 (NFR3). If several qualify, take the one with fewest wrong answers on
 unanswerable questions. Then report the TEST split (20%) once, without changing tau.
+Clarification (2026-11-08, Edwin; written while run 2 is running, before its sweep is printed or looked at):
+"best balance" = the highest min(precision, recall). Among the tau with both >= 0.80, take the highest
+min(precision, recall); a tie goes to the fewest wrong answers on unanswerable questions, then to the
+lowest tau (it answers more). If no tau has both >= 0.80, the same order is applied to all tau, and NFR3
+is reported as not met, with the numbers.
 
 ## Search settings selection rule (written 2026-10-29, before measuring)
 Settings tried: w_bm25 (weight of the keyword list in the fusion), w_separate (weight of passages
