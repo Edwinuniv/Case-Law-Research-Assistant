@@ -8,6 +8,7 @@ from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from app import config, db
+from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import answer, check_input
 
 # The search index and the citation index, loaded by app/main.py when the site starts.
@@ -146,21 +147,6 @@ def decision_info(decision_ids):
         rows = con.execute("SELECT decision_id, citations, docket_number, source_url FROM decisions "
                            "WHERE decision_id = ANY(%s)", (list(decision_ids),)).fetchall()
     return {r["decision_id"]: r for r in rows}
-
-
-# The official U.S. Reports first, then the Supreme Court Reporter, then the Lawyers' Edition.
-# CourtListener's first citation is sometimes an odd reporter ("0 Cal. Daily Op. Serv. 3128").
-# Edwin's citation checker uses the same order, so the page and the evaluation agree.
-REPORTER_ORDER = ("U.S.", "S. Ct.", "L. Ed. 2d", "L. Ed.")
-
-
-def best_citation(citations):
-    """The citation to show: the best reporter of REPORTER_ORDER; with none of them, the first one."""
-    def rank(cite):
-        m = re.fullmatch(r"\d+ (.+) \d+", cite.strip())       # "553 U.S. 723" -> reporter "U.S."
-        reporter = m.group(1) if m else ""
-        return REPORTER_ORDER.index(reporter) if reporter in REPORTER_ORDER else len(REPORTER_ORDER)
-    return min(citations, key=rank)                          # min keeps the first one when ranks are equal
 
 
 def citation_label(p, d):
