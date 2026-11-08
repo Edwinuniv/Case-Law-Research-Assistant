@@ -540,3 +540,16 @@ Measured on the database of 2026-11-05: the shown citation of every decision tha
 its own decision for 2,006 with the fixed checker; the old checker flagged 88 of them, all false alarms.
 All fixed before run 2 starts, so run 2 is checked with the fixed checker from its first question.
 
+
+## 2026-11-08 — Week 8: saving and comparing runs (Edwin, step 8.2)
+
+1. **A run lived only in the database, and a restore erased it.** Restoring Yasser's fixed dump (pg_restore
+   --clean) emptied `eval_runs`; run 1 survived only because it had been saved to a file by hand, and run 2
+   was then given the id 1 again. Nothing in the guide's evaluation module saves a run to the repository.
+   How we caught it: the first query after the restore showed run 2 as run id 1. Fix: `scripts/export_run.py`
+   saves a run (results, its settings, the data counts, its TUNE metrics and sweep) in `eval/runs/`, run after
+   each resume; `scripts/compare_runs.py` reads a run from a file or the database.
+2. **A test that could not see the bug.** We asked Claude for tests of `export_run` before the code. Planting
+   bugs on purpose, one was NOT caught: computing the saved metrics with today's settings instead of the
+   run's own. The test run's settings were the defaults, the same as the database's, so both gave the same
+   numbers. Fix: the test run now has its own thresholds (tau 0.95), and the planted bug fails the test.
