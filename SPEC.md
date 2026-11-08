@@ -239,6 +239,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 5.11 public research: only the administrator logs in (instructor, SR33); /api/ask and /api/passage open to visitors; /api/history removed; user accounts removed by a migration | Joe | step/5.11-public-research | checked in a browser (test database, fake model); 141 tests pass |
 | 5.12 limit of questions per IP address on /api/ask (10 per minute, then HTTP 429) | Joe | step/5.12-ask-rate-limit | checked in a browser (test database, fake model); 4 new tests |
 | Admin pages open on the TUNE split (overview, runs, a run, compare, threshold preview); TEST only when asked | Joe | feature/admin-tune-default | checked in a browser (test database, fake model); 5 new tests |
+| Answer cites the U.S. Reports citation first, then S. Ct., then L. Ed. (best_citation, shared with the checker in app/citations.py) | Joe | feature/citation-label-us-first | 5 new tests |
 | Design of the React pages: sober legal style (navy, gold accent, serif headings, admin menu on the left); CSS only plus the header brand and admin menu | Joe | feature/react-design | checked in a browser (test database); 141 tests pass |
 | 3.3 settings: weighted fusion (w_bm25, w_separate, fusion_pool), tune_search, quote@8 | Yasser | step/3-search-weights | code ready; run tune_search on the real data |
 | 7.2 metadata in the verifier: decision years from date_filed (check 5), case names on both parties (check 4) | Edwin | step/7.2-metadata-checks | 8 new tests; checked on the 2,477 real case names (AI_LOG) |
@@ -385,6 +386,13 @@ after 39 questions and is NOT resumed. Yasser's step/2.2-text-fixes rewrites pas
 would mix old and new data. Decision: a fresh run 2 on the fixed data, same settings; run 1 is kept as
 the "before the fix" run (eval/runs/eval_run1_before_text_fixes_2026-11-06.json), and its 39 questions
 are compared with the same questions in run 2.
+
+2026-11-06 - Which citation the answer shows (asked by Edwin after the Week 8 run). The guide's research
+page (templates/ask.html; kept in app/api.py citation_label) shows the FIRST citation of the decision. In
+CourtListener that is sometimes an odd reporter (Nelson v. Adams: "0 Cal. Daily Op. Serv. 3128"). The
+answer now shows the official U.S. Reports citation first, then the Supreme Court Reporter (S. Ct.), then
+the Lawyers' Edition (L. Ed. 2d, L. Ed.), and the first citation only when none of them exists. Edwin's
+citation checker uses the same order. The side panel still lists every citation of the decision.
 
 2026-11-06 - Corpus text (Edwin's findings on the 2026-11-05 dump): (1) headings naming several groups of
 justices who "join as to Parts II and III" were not recognised, so 65 passages of 4 combined texts were

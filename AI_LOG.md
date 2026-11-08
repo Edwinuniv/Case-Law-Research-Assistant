@@ -495,6 +495,17 @@ rule in EVALUATION.md before any code or measurement.
    each of 7 planted bugs makes a test fail within seconds.
 
 
+## 2026-11-06 — The citation shown in the answer (Joe, asked by Edwin)
+
+1. **The first citation is not always the official one.** What we asked (steps 5.7-5.10): the research
+   API and the React chat, showing the same citation as the guide's research page. What came back:
+   citation_label in app/api.py with the guide's d.citations[0]. What was wrong: the guide assumes the
+   first citation is the U.S. Reports one; in CourtListener it is sometimes another reporter, e.g. Nelson
+   v. Adams is shown as "0 Cal. Daily Op. Serv. 3128". How we caught it: Edwin, reading the answers of
+   the Week 8 evaluation run. Fix: best_citation picks U.S. Reports, then S. Ct., then L. Ed., otherwise
+   the first citation (as before); 5 tests written before the code, including "2008 U.S. LEXIS" not being
+   taken for U.S. Reports.
+
 ## 2026-11-06 — Fixing the corpus text after Edwin's findings (Yasser)
 
 1. **Two cleaning gaps that our own checks missed.** What we asked earlier (steps 1.8 and 2.1): Claude

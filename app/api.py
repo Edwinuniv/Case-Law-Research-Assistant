@@ -8,6 +8,7 @@ from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from app import config, db
+from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import answer, check_input
 
 # The search index and the citation index, loaded by app/main.py when the site starts.
@@ -151,7 +152,7 @@ def decision_info(decision_ids):
 def citation_label(p, d):
     """How a passage is cited in the answer, e.g. "Loper Bright ..., No. 22-451 (2024) · Majority"
     (the same text as the old Jinja page)."""
-    cite = d["citations"][0] if d and d["citations"] else f"No. {d['docket_number'] if d else '?'}"
+    cite = best_citation(d["citations"]) if d and d["citations"] else f"No. {d['docket_number'] if d else '?'}"
     return f"{p['case_name']}, {cite} ({p['date_filed'][:4]}) · {p['opinion_label']}"
 
 
