@@ -93,7 +93,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 1.5 The opinions file (44.8 GB) (Yasser) — merged
 - [x] 1.6 The citation table and the citation map (Yasser) — merged
 - [x] 1.7 The database: tables and helpers (Joe owns; Yasser wrote it) — app/db.py as in the guide, merged (PR #6)
-- [x] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — merged (PR #5)
+- [x] 1.8 Cleaning text, and loading into PostgreSQL (Yasser) — merged (PR #5); out-of-scope removal (PR #67): 8 decisions not SCOTUS 2000-2024 removed, 2,415 decisions, 72,502 chunks, TEST retrieval unchanged
 - [x] 1.9 The citation lookup — the gate test (Edwin owns; Yasser wrote it) — reviewed by Edwin, merged (PR #10). Gate run 2026-10-29 on Yasser's dump: all four answers OK with Heller 554 U.S. 570 (the guide's 603 U.S. 593 has no citation in CourtListener: known source limit, SPEC §2)
 - [x] 1.10 First tests, and commit (Edwin) — tests/conftest.py, tests/test_citations.py: 5 passed, merged (PR #11)
 
