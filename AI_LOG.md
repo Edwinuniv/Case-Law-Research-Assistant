@@ -571,3 +571,20 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    supported" (error analysis), then the closest-match print. The guide's tests use plain "-" and clean text.
    Not fixed during run 2 (a run must use one verifier); the rule for the fix and its measurement is in
    EVALUATION.md, written before measuring. The broken words and page markers are data, told to Yasser.
+
+## 2026-11-08 — Decisions outside our scope (Yasser, step 1.8)
+
+1. **A first check that flagged the wrong things.** What we asked: find decisions in the corpus that are not
+   Supreme Court decisions of 2000-2024. What came back first: a check on the opinion authors (an author who
+   is not a justice of the period = suspicious). What was wrong: about 220 hits, almost all false alarms
+   (O'Connor read as "Connor", OCR misspellings of names, per curiam opinions with no author). How we caught
+   it: reading the hits before removing anything. Second approach, kept: two citation rules (a U.S. Reports
+   volume below 528 means before 2000; only lower-court reporters means another court), then every hit
+   checked by hand. They found 8 real problems (7 cases of 1884-1928 dated 2005-2010 by CourtListener, 1 Sixth
+   Circuit case) and 2 false alarms kept in the corpus: Gobeille and Lockhart (2016), whose S. Ct. citation
+   CourtListener stored as "U.S." (REVIEWED_IN_SCOPE in app/scope.py). Removal: dry run, then --apply.
+2. **A question explanation written from the wrong date.** What we asked earlier (step 3.1): explanations for
+   Yasser's test questions. What was wrong: U006's "why" names "Fisher v. Baker (2010)" among the decisions
+   that mention drones; it is a 1906 case that CourtListener dates 2010, one of the 8 above. How we caught
+   it: the scope check. Not edited, because eval-v1 is frozen; the question stays unanswerable and its
+   expected answer is unchanged (noted in EVALUATION.md).

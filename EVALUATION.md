@@ -249,6 +249,24 @@ search. The text fixes are kept for correctness, not for a retrieval gain. This 
 Edwin's final week 8 run uses (his first run, stopped at 39/85 on the old dump, is kept as
 `eval/runs/eval_run1_before_text_fixes_2026-11-06.json`).
 
+### Retrieval after the out-of-scope removal (2026-11-08, Yasser)
+A check of the citations (`scripts/check_scope.py`, rules in `app/scope.py`) found 8 decisions that are not
+Supreme Court decisions of 2000-2024 although CourtListener files them so: 7 old cases (1884-1928, U.S.
+Reports volumes below 528) dated 2005-2010, and 1 Sixth Circuit case. Each was checked by hand; they were
+removed with `scripts/remove_out_of_scope.py` (dry run, then --apply): 2,415 decisions, 72,502 chunks. No
+test question has one of them as its gold decision. Same settings as the eval-v1 baseline.
+
+| split | run | questions | recall@1 | recall@5 | MRR@10 | quote@8 |
+|---|---|---|---|---|---|---|
+| **TEST (reported)** | `eval/runs/retrieval_2026-11-08T18-22-10.json` | 8 | 0.875 | 1.0 | 0.938 | 0.25 |
+
+Identical to the run after the text fixes: the gold decision has the same rank for each of the 8 TEST
+questions (rank 1, except A019 at rank 2). The removal makes the corpus match the scope in SPEC.md
+(SCOTUS, 2000-2024); it was not expected to move the search. eval-v1 stays frozen: the explanation ("why") of
+U006 still names "Fisher v. Baker (2010)" among the decisions that mention drones, but that decision is one
+of the 8 (a 1906 case misdated by CourtListener) and is no longer in the corpus. The question's tag
+(unanswerable) and expected answer do not change.
+
 ### Final evaluation, week 8 (Edwin) - DRAFT: method written 2026-11-08, numbers filled from run 2
 Everything marked ⟨...⟩ is filled from a saved run file, never by hand. Until then this section only
 states the method.
