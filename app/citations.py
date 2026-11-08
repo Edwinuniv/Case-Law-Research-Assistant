@@ -81,6 +81,21 @@ def name_words(name):
     return re.sub(r"[^a-z0-9 ]+", " ", (name or "").lower()).split()
 
 
+# The citation shown for a decision: the official U.S. Reports first, then the Supreme Court Reporter, then the
+# Lawyers' Edition (CourtListener's first citation is sometimes "0 Cal. Daily Op. Serv. 3128"). The answer page
+# (Joe, app/api.py, #58) and the false-citation checker (evaluate.py) must show and check the same one.
+REPORTER_ORDER = ("U.S.", "S. Ct.", "L. Ed. 2d", "L. Ed.")
+
+
+def best_citation(citations):
+    """The best reporter of REPORTER_ORDER; with none of them, the first citation."""
+    def rank(cite):
+        m = re.fullmatch(r"\d+ (.+) \d+", cite.strip())       # "553 U.S. 723" -> reporter "U.S."
+        reporter = m.group(1) if m else ""
+        return REPORTER_ORDER.index(reporter) if reporter in REPORTER_ORDER else len(REPORTER_ORDER)
+    return min(citations, key=rank)                          # min keeps the first one when ranks are equal
+
+
 class CitationIndex:
     """Answers: which cluster does this citation point to, and is it one of our decisions?"""
 
@@ -101,6 +116,18 @@ class CitationIndex:
             row = con.execute("SELECT cluster_id FROM citations WHERE reporter = %s AND volume = %s "
                               "AND page = %s LIMIT 1", (p[1], p[0], p[2])).fetchone()
         return row["cluster_id"] if row else None
+
+    @lru_cache(maxsize=20_000)
+    def clusters_for(self, citation_text):
+        """EVERY cluster of a citation. cluster_for keeps only the first row, but one citation can have
+        several: a decision stored twice (Boumediene v. Bush), or two short orders on one page (step 8.3)."""
+        p = parse(citation_text)
+        if not p:
+            return ()
+        with db.connect() as con:
+            rows = con.execute("SELECT DISTINCT cluster_id FROM citations WHERE reporter = %s AND volume = %s "
+                               "AND page = %s", (p[1], p[0], p[2])).fetchall()
+        return tuple(r["cluster_id"] for r in rows)
 
     def decision_for_cluster(self, cluster_id):
         return self.alias.get(cluster_id)
@@ -135,4 +162,9 @@ class StaticCitationIndex(CitationIndex):
         self.case_names = list(decisions.values())
 
     def cluster_for(self, citation_text):
-        return self.table.get(normalise(citation_text))
+        found = self.clusters_for(citation_text)
+        return found[0] if found else None
+
+    def clusters_for(self, citation_text):
+        found = self.table.get(normalise(citation_text))
+        return list(found) if isinstance(found, list) else [found] if found else []
