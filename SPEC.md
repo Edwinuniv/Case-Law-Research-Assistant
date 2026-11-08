@@ -127,7 +127,7 @@ Measured on 2026-10-26 with `python -m scripts.stats` on the loaded corpus: 4,76
 most 250 / 350 / 400 words: 84.3% / 98.3% / 99.2%. Index built with max 350 words: 104,904 chunks
 (median 292 words), 27,500,424 words in total. Since 2026-10-29 (one section per opinion, opinions on a
 denial of certiorari labelled): 105,626 chunks. Since 2026-11-05 (no duplicate opinions, opinion starts
-found inside PDF-style paragraphs): 2,423 decisions, 3,647 opinions, 72,593 chunks, 18,852,079 words. Since 2026-11-06 (long opinion headings recognised, lost "fi"/"fl" letters repaired in 61 opinions): 72,628 chunks, 18,852,079 words.
+found inside PDF-style paragraphs): 2,423 decisions, 3,647 opinions, 72,593 chunks, 18,852,079 words. Since 2026-11-06 (long opinion headings recognised, lost "fi"/"fl" letters repaired in 61 opinions): 72,628 chunks, 18,852,079 words. Since 2026-11-08 (8 decisions that are not Supreme Court decisions of 2000-2024 removed, app/scope.py): 2,415 decisions, 72,502 chunks.
 
 | Rule | Justification |
 |---|---|
