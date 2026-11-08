@@ -68,3 +68,4 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.show_citations RUN_ID    # step 8.3: every citation shown or removed in a run (TUNE; --test once)
     python -m scripts.export_run RUN_ID NAME "which dump"   # save a run in eval/runs (after each resume: a restore erases runs)
     python -m scripts.compare_runs eval/runs/RUN.json RUN_ID   # two runs (file or database) on the TUNE questions both answered
+    python -m scripts.error_analysis RUN       # why answerable TUNE questions were 'not supported' (RUN = id or eval/runs file)
