@@ -536,5 +536,7 @@ rule in EVALUATION.md before any code or measurement.
 3. **A full stop kept in case names.** Writing the Roe test showed that a name ending a sentence was read
    as "Roe v. Wade." with the full stop, so it could not be found word for word in a passage that writes
    "Roe v. Wade,". Fix: the full stop is removed; a test for it.
+Measured on the database of 2026-11-05: the shown citation of every decision that has one (2,006) leads back to
+its own decision for 2,006 with the fixed checker; the old checker flagged 88 of them, all false alarms.
 All fixed before run 2 starts, so run 2 is checked with the fixed checker from its first question.
 
