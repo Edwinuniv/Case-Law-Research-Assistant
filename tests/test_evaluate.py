@@ -280,6 +280,7 @@ def test_compare_runs_uses_common_tune_questions_and_saves_the_numbers(monkeypat
 
 # --- Step 8.2: a run is saved to eval/runs so a restore of the database cannot erase it (run 1 did) ---
 from psycopg.types.json import Jsonb
+RUN_S = {**S, "tau_abstain": 0.95, "tau_confident": 0.95}   # not the database's settings: the run's own are used
 
 def saved_run(clean_db, monkeypatch, tmp_path):
     from scripts import export_run
@@ -287,7 +288,7 @@ def saved_run(clean_db, monkeypatch, tmp_path):
         con.execute("INSERT INTO test_questions (id, tag, split, question, gold_decision_ids) VALUES "
                     "('a', 'answerable', 'tune', 'q?', '{1}'), ('u', 'unanswerable', 'tune', 'q?', '{}')")
         run_id = con.execute("INSERT INTO eval_runs (trigger, status, settings, note) VALUES "
-                             "('command line', 'paused', %s, 'run 2') RETURNING id", (Jsonb(S),)).fetchone()["id"]
+                             "('command line', 'paused', %s, 'run 2') RETURNING id", (Jsonb(RUN_S),)).fetchone()["id"]
         for qid, tag, support in (("a", "answerable", 0.9), ("u", "unanswerable", 0.2)):
             con.execute("INSERT INTO eval_results (run_id, question_id, tag, split, result) VALUES (%s, %s, %s, 'tune', %s)",
                         (run_id, qid, tag, Jsonb(res(support))))
@@ -299,7 +300,7 @@ def test_an_exported_run_reads_back_like_the_database_run(clean_db, monkeypatch,
     from app import evaluate
     run_id, path = saved_run(clean_db, monkeypatch, tmp_path)
     saved = json.loads(path.read_text())
-    assert saved["run_id"] == run_id and saved["status"] == "paused" and saved["settings"] == S
+    assert saved["run_id"] == run_id and saved["status"] == "paused" and saved["settings"] == RUN_S
     assert saved["data"]["dump"] == "dump of 2026-11-06" and "decisions" in saved["data"]
     assert evaluate.load_run_file(path) == evaluate.load_run(run_id)
 
@@ -307,6 +308,7 @@ def test_an_exported_run_keeps_the_tune_metrics_and_sweep_of_its_own_settings(cl
     from app import evaluate
     run_id, path = saved_run(clean_db, monkeypatch, tmp_path)
     saved = json.loads(path.read_text())
-    assert saved["tune_metrics"] == evaluate.metrics(evaluate.load_run(run_id), S, "tune")
-    assert saved["tune_sweep"] == evaluate.sweep(evaluate.load_run(run_id), S, "tune")
+    assert saved["tune_metrics"] == evaluate.metrics(evaluate.load_run(run_id), RUN_S, "tune")
+    assert saved["tune_sweep"] == evaluate.sweep(evaluate.load_run(run_id), RUN_S, "tune")
+    assert saved["tune_metrics"]["abstained_but_should_answer"] == 1          # 0.9 < 0.95: abstains
     assert "test" not in json.dumps(saved["tune_metrics"]) and not any("test" in k for k in saved)   # SR29: no TEST numbers
