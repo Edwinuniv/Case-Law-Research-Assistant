@@ -268,7 +268,8 @@ to choose tau, so they do not influence the threshold.
 Run 1 (`eval/runs/eval_run1_before_text_fixes_2026-11-06.json`, old dump, stopped after 39 questions)
 against run 2 on the TUNE + adversarial questions both runs answered:
 `python -m scripts.compare_runs eval/runs/eval_run1_before_text_fixes_2026-11-06.json ⟨run 2 id⟩`
--> `eval/runs/compare_⟨date⟩.json`, ⟨n⟩ questions, tau_abstain 0.55.
+-> `eval/runs/compare_⟨date⟩.json`, ⟨n⟩ questions, tau_abstain 0.55 (run 2 can also be read from
+`eval/runs/eval_run2.json` instead of its database id).
 
 | run | abstained but should answer | low confidence | citations shown | false citations shown | groundedness (judge) | mean time |
 |---|---|---|---|---|---|---|
@@ -279,7 +280,8 @@ Questions whose status changed: ⟨list from the file⟩. Reading: ⟨what chang
 
 #### 2. Choosing tau_abstain on the TUNE split (rule at the top of this file)
 `python -m scripts.run_eval --resume ⟨id⟩` prints the sweep when the run is done (tau 0.20 to 0.90 by
-0.02, tau_confident = max(tau, 0.70)). Saved: ⟨file of the printed sweep⟩.
+0.02, tau_confident = max(tau, 0.70)). Saved: `eval/runs/eval_run2.json` (`tune_sweep`, with the run's own
+settings; `python -m scripts.export_run ⟨id⟩ run2 "dump"` after each resume).
 
 | tau | precision | recall | wrong abstentions | wrong answers |
 |---|---|---|---|---|
