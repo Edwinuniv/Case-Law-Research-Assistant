@@ -66,3 +66,4 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.run_eval --resume RUN_ID # continue a run paused at Groq's daily limit (200,000 tokens/day)
     python -m scripts.run_eval --test RUN_ID   # the TEST split, once, after tau_abstain is chosen (EVALUATION.md)
     python -m scripts.show_citations RUN_ID    # step 8.3: every citation shown or removed in a run (TUNE; --test once)
+    python -m scripts.compare_runs eval/runs/RUN.json RUN_ID   # two runs (file or database) on the TUNE questions both answered

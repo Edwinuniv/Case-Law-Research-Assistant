@@ -236,3 +236,43 @@ def test_checker_checks_the_citation_the_page_shows(clean_db):                  
     add_decision_with(clean_db, 145795, ["0 Cal. Daily Op. Serv. 3128", "553 U.S. 723"])
     index = StaticCitationIndex(citations={"553 U.S. 723": 145795}, alias={145795: 145795}, decisions={})
     assert checked_for(145795, index) == ([[]], 1)                  # 553 U.S. 723 is shown and checked
+
+
+# --- Step 8.2: run 1 (saved file) against run 2 (database), on the questions both runs answered ---
+import json
+
+def tune(i, tag="answerable"):
+    return {**q(i, tag), "split": "tune"}
+
+def test_a_saved_run_file_is_read_like_a_run_from_the_database(tmp_path, monkeypatch):
+    from app import evaluate
+    monkeypatch.setattr(evaluate, "load_questions", lambda: [tune("a")])
+    path = tmp_path / "run.json"
+    path.write_text(json.dumps({"run_id": 1, "results": [{"question_id": "a", "tag": "answerable", "split": "tune",
+                                                           "result": res(0.9)}]}))
+    assert evaluate.load_run_file(path) == [(tune("a"), res(0.9))]
+
+def test_only_questions_answered_in_both_runs_are_compared():
+    from app.evaluate import same_questions
+    a = [(tune("x"), res(0.9)), (tune("y"), res(0.9))]
+    b = [(tune("y"), res(0.2)), (tune("z"), res(0.2))]
+    pa, pb = same_questions(a, b)
+    assert [x["id"] for x, _ in pa] == ["y"] and [x["id"] for x, _ in pb] == ["y"]
+
+def compare_runs_main(monkeypatch, tmp_path, run_a, run_b):
+    from scripts import compare_runs
+    monkeypatch.setattr(compare_runs.evaluate, "load_run_file", lambda path: run_a)
+    monkeypatch.setattr(compare_runs.evaluate, "load_run", lambda run_id: run_b)
+    monkeypatch.setattr(compare_runs.config, "EVAL_DIR", tmp_path)
+    compare_runs.main(["eval/runs/run1.json", "1"], S)
+    saved, = (tmp_path / "runs").glob("compare_*.json")
+    return json.loads(saved.read_text())
+
+def test_compare_runs_uses_common_tune_questions_and_saves_the_numbers(monkeypatch, tmp_path, capsys):
+    run_a = [(tune("a"), res(0.9)), (tune("b"), res(0.9))]                      # b: not asked yet in run 2
+    run_b = [(tune("a"), res(0.2)), (q("t", "answerable"), res(0.9))]          # t: TEST split, never compared
+    saved = compare_runs_main(monkeypatch, tmp_path, run_a, run_b)
+    rows = {r["metric"]: r for r in saved["rows"]}
+    assert saved["questions"] == ["a"] and rows["answerable"]["a"] == 1 and rows["answerable"]["b"] == 1
+    assert rows["abstained_but_should_answer"]["worse"]
+    assert saved["flips"][0]["id"] == "a" and "1 question" in capsys.readouterr().out
