@@ -1,0 +1,32 @@
+{
+ "date": "2026-11-08T18:22:10",
+ "note": "",
+ "reranker": false,
+ "split": "test",
+ "questions": 8,
+ "recall@1": 0.875,
+ "recall@5": 1.0,
+ "recall@10": 1.0,
+ "recall@20": 1.0,
+ "mrr@10": 0.938,
+ "quote@8": 0.25,
+ "search_settings": {
+  "w_bm25": 1.0,
+  "w_separate": 1.0,
+  "fusion_pool": 50
+ },
+ "ranks": {
+  "A030": 1,
+  "A036": 1,
+  "A041": 1,
+  "A005": 1,
+  "A010": 1,
+  "A016": 1,
+  "A019": 2,
+  "A027": 1
+ },
+ "quote_hits": [
+  "A036",
+  "A027"
+ ]
+}
