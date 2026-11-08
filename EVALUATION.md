@@ -310,6 +310,7 @@ NFR3 (each >= 0.80 on TEST): ⟨met / not met, by how much⟩.
   AI_LOG 2026-11-08), so a zero here is not a zero by a broken checker.
 
 #### 5. Error analysis
+`python -m scripts.error_analysis eval/runs/eval_run2.json` -> `eval/runs/error_analysis_⟨date⟩.json`.
 Why answerable questions were answered "not supported" in run 2: ⟨n⟩ below the gate (min_retrieval),
 ⟨n⟩ the model said the passages do not answer, ⟨n⟩ every sentence removed by the verifier (most common
 reason: ⟨⟩), ⟨n⟩ support score under tau. Quotes not found, by decision (`show_citations`): ⟨⟩.

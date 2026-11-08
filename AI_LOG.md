@@ -553,3 +553,7 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    bugs on purpose, one was NOT caught: computing the saved metrics with today's settings instead of the
    run's own. The test run's settings were the defaults, the same as the database's, so both gave the same
    numbers. Fix: the test run now has its own thresholds (tau 0.95), and the planted bug fails the test.
+3. **Error analysis: another test that could not see a bug.** The first tests for `scripts/error_analysis.py`
+   (asked of Claude before the code) had no unanswerable TUNE question, so a planted bug that looked for the
+   gold quote on unanswerable questions too (and counted them in quote@8) was not caught. Fix: an unanswerable
+   TUNE question in the split test; the planted bug now fails it (6 of 6 other planted bugs were caught).
