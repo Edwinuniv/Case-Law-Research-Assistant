@@ -53,4 +53,4 @@ def test_the_shown_citation_is_us_reports_then_s_ct_then_l_ed():      # the same
 
 def test_a_case_name_at_the_end_of_a_sentence_has_no_full_stop():    # found by the Roe v. Wade test (step 8.3)
     assert find_case_names("The Court overruled Roe v. Wade.") == ["Roe v. Wade"]
-    assert find_case_names("See Merck & Co. v. Reynolds, at 1.") == ["Merck & Co. v. Reynolds"]
+    assert find_case_names("The rule comes from Smith v. Acme Co.") == ["Smith v. Acme Co"]
