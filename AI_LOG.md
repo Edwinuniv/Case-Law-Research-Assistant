@@ -557,3 +557,17 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    (asked of Claude before the code) had no unanswerable TUNE question, so a planted bug that looked for the
    gold quote on unanswerable questions too (and counted them in quote@8) was not caught. Fix: an unanswerable
    TUNE question in the split test; the planted bug now fails it (6 of 6 other planted bugs were caught).
+
+## 2026-11-08 — Week 8: correct quotes removed by the text matching (Edwin, step 8.2)
+
+1. **The quote check removed quotes that ARE in the passage.** `verify.norm` (guide code, built by Claude in
+   4.2) makes the quote and the passage comparable with NFKC and a list of quote marks and dashes. In run 2's
+   first 38 questions we looked at every quote removed as "not found" (TUNE): the passages were found again with
+   the same search, and the closest text was printed next to each quote. 10 of 15 were in the cited passage:
+   the model writes a non-breaking hyphen ("cross‑examination", U+2011), which NFKC turns into U+2010, not
+   "-" (3); our text has words broken at a line end, "mar- riage", "consti- tutes" (5, about 4,000 passages);
+   page markers "*490" inside a sentence (1, 22,235 passages); a final full stop where the passage has a comma
+   (1). The other 5 really left words out. How we caught it: reading why answerable questions were "not
+   supported" (error analysis), then the closest-match print. The guide's tests use plain "-" and clean text.
+   Not fixed during run 2 (a run must use one verifier); the rule for the fix and its measurement is in
+   EVALUATION.md, written before measuring. The broken words and page markers are data, told to Yasser.
