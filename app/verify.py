@@ -113,8 +113,10 @@ def check_sentence(sentence, passages, index):
         other_case_named = True
         if norm(name) in cited_text:
             continue
+        # A name outside our corpus cannot be PROVED invented (Roe v. Wade is real, 1973): removed, not counted
+        # as a fabrication; only citations can be proved fabricated, with the citation table (step 8.3)
         kind = "case name not supported by the cited passage" if index.known_case_name(name) \
-            else "FABRICATED case name"
+            else "case name not in our corpus or the cited passage"
         problems.append(f"{kind}: {name}")
 
     text_without_citations = CITATION_LIKE.sub(" ", text)                         # check 5
