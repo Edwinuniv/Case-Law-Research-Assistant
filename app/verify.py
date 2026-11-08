@@ -92,14 +92,14 @@ def check_sentence(sentence, passages, index):
     retrieved_decisions = {p["decision_id"] for p in passages.values()}
     passage_cites = set().union(*(find_citations(c["text"]) for c in cited))
     for cite in find_citations(text):                                              # check 3
-        cluster = index.cluster_for(cite)
-        if cluster is None and (cite in passage_cites or norm(cite) in cited_text):
+        clusters = index.clusters_for(cite)               # every row: a decision can be stored twice (step 8.3)
+        if not clusters and (cite in passage_cites or norm(cite) in cited_text):
             # Real but missing from CourtListener (most decisions from 2020 on): still removed (rule 3),
             # but the model copied it from the passage, so it is not counted as a fabrication (Week 7)
             problems.append(f"citation not in the citation table (written in the passage): {cite}")
-        elif cluster is None:
+        elif not clusters:
             problems.append(f"FABRICATED citation (not in the citation table): {cite}")
-        elif index.decision_for_cluster(cluster) in retrieved_decisions:
+        elif {index.decision_for_cluster(k) for k in clusters} & retrieved_decisions:
             continue
         elif cite in passage_cites or norm(cite) in cited_text:
             continue
@@ -113,8 +113,10 @@ def check_sentence(sentence, passages, index):
         other_case_named = True
         if norm(name) in cited_text:
             continue
+        # A name outside our corpus cannot be PROVED invented (Roe v. Wade is real, 1973): removed, not counted
+        # as a fabrication; only citations can be proved fabricated, with the citation table (step 8.3)
         kind = "case name not supported by the cited passage" if index.known_case_name(name) \
-            else "FABRICATED case name"
+            else "case name not in our corpus or the cited passage"
         problems.append(f"{kind}: {name}")
 
     text_without_citations = CITATION_LIKE.sub(" ", text)                         # check 5

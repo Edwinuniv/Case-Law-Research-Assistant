@@ -17,11 +17,11 @@ def test_a_citation_problem_counts_only_if_the_sentence_was_shown():      # FR16
 def test_removed_citations_and_case_names_are_listed_but_not_other_removals():
     from scripts.show_citations import collect
     r = {**res(0.9), "removed": [removed("See 599 U.S. 412.", "FABRICATED citation (not in the citation table): 599 U.S. 412"),
-                                 removed("In Trump v. Anything...", "FABRICATED case name: Trump v. Anything"),
+                                 removed("In Trump v. Anything...", "case name not in our corpus or the cited passage: Trump v. Anything"),
                                  removed("Five to four.", "number or date not in the cited passage: 5")]}
     report = collect([(q("a", "adversarial"), r)], S)
     assert [x["problem"].split(":")[0] for x in report["removed"]] == ["FABRICATED citation (not in the citation table)",
-                                                                       "FABRICATED case name"]
+                                                                       "case name not in our corpus or the cited passage"]
 
 def test_a_quote_not_found_is_traced_to_its_decision():
     from scripts.show_citations import collect

@@ -390,3 +390,11 @@ labelled as the majority; the chunker now recognises them. (2) PDF texts had los
 itself shows the real word, and only in opinions that are broken PDFs (7,098 words in 61 opinions; rules in
 app/ligatures.py, report in ingestion_reports). Re-indexed: 72,628 chunks. Retrieval unchanged
 (EVALUATION.md); Edwin's final week 8 run and the online database (step 6.3) use this dump.
+
+2026-11-08 - Step 8.3 (Edwin): the false-citation checker (SR38) checks the citation the answer page shows
+(U.S. Reports, then S. Ct., then L. Ed., as app/api.py after Joe's #58) and accepts it if any row of the
+citation table for it is the passage's decision (a decision can be stored twice; two short orders can share
+a page). Check 3 uses every row too. A case name outside our corpus is still removed (rule 4) but labelled
+"case name not in our corpus or the cited passage": only citations can be proved fabricated, so the
+"fabrications caught" count now counts citations only.
+
