@@ -32,3 +32,13 @@ def test_only_the_tune_split_and_adversarial_questions_by_default():        # SR
     from scripts.show_citations import keep_split
     pairs = [({**q("t", "answerable"), "split": "tune"}, {}), (q("s", "answerable"), {}), (q("x", "adversarial"), {})]
     assert [p["id"] for p, _ in keep_split(pairs, "tune")] == ["t", "x"]
+
+
+def test_a_saved_run_file_can_be_reported(monkeypatch, capsys):                # the rechecked run 2 is a file
+    from scripts import show_citations
+    pairs = [({**q("t", "answerable"), "split": "tune"}, {**res(0.9), "removed": []})]
+    monkeypatch.setattr(show_citations.evaluate, "load_run_file", lambda path: pairs)
+    monkeypatch.setattr(show_citations.evaluate, "load_run", lambda run_id: [])
+    monkeypatch.setattr(show_citations.db, "get_settings", lambda: S)
+    show_citations.main(["eval/runs/eval_run2_reverified.json"])
+    assert "1 questions" in capsys.readouterr().out

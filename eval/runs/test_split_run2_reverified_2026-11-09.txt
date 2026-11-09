@@ -1,0 +1,25 @@
+TEST split of run eval/runs/eval_run2_reverified.json, with tau_abstain = 0.2 (report it once, unchanged)
+
+== test split ==
+  questions                        34
+  answerable                       8
+  unanswerable                     5
+  adversarial                      21
+  recall@1                         0.875
+  recall@5                         1.0
+  recall@10                        1.0
+  mrr@10                           0.9375
+  abstention_precision             1.0
+  abstention_recall                0.8
+  answered_but_should_abstain      1
+  abstained_but_should_answer      0
+  low_confidence                   4
+  errors                           0
+  citations_shown                  23
+  false_citations_shown            0
+  false_citation_rate              0.0
+  fabrications_caught_by_verifier  0
+  groundedness_judge               0.76
+  groundedness_lexical             0.6966
+  adversarial_abstention_rate      0.7143
+  mean_ms                          1842.5882
