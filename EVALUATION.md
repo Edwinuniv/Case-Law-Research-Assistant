@@ -267,6 +267,33 @@ U006 still names "Fisher v. Baker (2010)" among the decisions that mention drone
 of the 8 (a 1906 case misdated by CourtListener) and is no longer in the corpus. The question's tag
 (unanswerable) and expected answer do not change.
 
+### Quote matching, step 8.2 (2026-11-09, Edwin)
+Run `eval/runs/eval_run2_reverified.json` (`python -m scripts.reverify_run eval/runs/eval_run2.json`): run 2's
+saved sentences checked again by the changed verifier, rule above. The model was asked nothing except the judge,
+for the newly kept sentences. Rule: (1) the 8 passages sent to the model are the same for every question (their
+decisions and the best score; the run saved no chunk ids). OK for all 85. Passages 9-20 are not compared: two with
+the same score can swap (A027), and the model never saw them. X017's 8 passages can swap because one opinion is
+stored twice, but the model said "not supported" there, so nothing was rechecked. (2) The 13 quotes newly accepted
+on TUNE + adversarial were each checked by hand in their passage: 13 of 13 are in it. OK. (3) False citations shown
+stay at 0. OK. (4) No sentence removed for another reason is kept, and no sentence kept in run 2 is now removed. OK.
+All hold, so the changed matching is kept.
+
+| TUNE + adversarial (72 questions), tau_abstain 0.55 | run 2 | rechecked |
+|---|---|---|
+| abstention precision | 0.548 | 0.64 |
+| abstention recall | 1.0 | 0.941 |
+| answerable but "not supported" | 14 | 9 |
+| unanswerable but answered | 0 | 1 (U022) |
+| citations shown / false | 40 / 0 | 53 / 0 |
+| groundedness (judge) | 0.841 | 0.817 |
+| adversarial "not supported" | 0.857 | 0.810 |
+
+The changed matching gives back 13 correct sentences. It also lets three questions be answered that should
+abstain: U022, X002 and X009. Each quotes a dissent with a real quote: "the Court today holds...", the Heller
+militia reading, and Alito on leaving it to the States. That is why recall falls. These sentences cite passages
+that exist and show no false citation, but a quote from a dissent can still mislead. tau_abstain is now chosen
+on this rechecked run (threshold rule above); the TEST split is reported once with it.
+
 ### Final evaluation, week 8 (Edwin) - DRAFT: method written 2026-11-08, numbers filled from run 2
 Everything marked ⟨...⟩ is filled from a saved run file, never by hand. Until then this section only
 states the method.
