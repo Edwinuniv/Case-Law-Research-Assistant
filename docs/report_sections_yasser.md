@@ -49,8 +49,8 @@ keywords alone miss the same idea in other words. The weights (keywords 1.0, dis
 look only at that decision (Edwin's case filter, measured for speed: section 5).
 
 The chunk size, the search weights and the reranker were measured on 29 October, on the earlier corpus
-(105,626 chunks, before the duplicate opinions were removed and the text was fixed); they were not
-measured again on the final corpus.
+(before the duplicate opinions were removed and the text was fixed); they were not measured again
+on the final corpus.
 
 **BM25 in Python, as a sparse matrix.** PostgreSQL's text ranking is not BM25. Our BM25 stores the word
 counts of all passages in a SciPy sparse matrix, so scoring a question is one matrix product and the
