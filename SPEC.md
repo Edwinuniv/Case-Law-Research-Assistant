@@ -430,3 +430,12 @@ questions (the guide's evaluate.metrics). (2) SR23: a citation that is in the ci
 retrieved decision is kept when it is written in the cited passage itself (a passage of Loper Bright that
 cites Chevron); this is rule 3 of section 5, a wider reading of SR23's "must match an opinion we retrieved".
 NFR2 is met by rule for numbers and dates, and only approximately for other facts (quote and groundedness).
+
+2026-11-09 - Week 8 (Edwin): how run 2 was made. Questions 1-38 on 2026-11-08 with Edwin's Groq key; it paused
+at the daily limit. To finish sooner, the run was resumed on 2026-11-09 with a teammate's key (same model,
+openai/gpt-oss-120b, same settings: a key is not a setting). A first try with an incomplete key failed with
+AuthenticationError on 6 questions (A039-A042, U001, U002); the run was stopped, those 6 error rows were
+deleted (they say nothing about the system) and the run set back to paused. Questions 39-85 then ran with
+Yasser's key. Run 2 finished with 85 of 85 questions and 0 errors (eval/runs/eval_run2.json). To do after the
+run: an authentication error should pause the run like the daily limit, not save an ERROR per question.
+
