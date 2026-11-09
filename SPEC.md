@@ -252,6 +252,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 8.2 quote matching: verify.norm changed, run 2 rechecked (reverify_run), kept by the rule | Edwin | step/8.2-quote-matching | 7 + 9 new tests; eval/runs/eval_run2_reverified.json |
 | 8.2 error_analysis (why answerable TUNE questions abstain; gold quote in the 8 passages); requirements table for Edwin's part | Edwin | step/8.2-error-analysis | 5 new tests; 3 gaps written down (section 11) |
 | 8.2 export_run (a run saved in eval/runs with its TUNE metrics and sweep); threshold rule clarified; drafts of the final EVALUATION section and the report sections | Edwin | step/8.2-results-draft | run 2 saved after day 1 (38/85); 2 new tests |
+| 6.2-6.3 Railway: pgvector database (PostgreSQL 18) and the website from main; online database filled with pg_restore of the Nov 6 dump, then remove_out_of_scope (2,415 decisions) and seed --admin; settings case_filter on, tau_abstain 0.20 | Joe | (no code change) | online since 2026-11-06, data loaded 2026-11-09; /health index_loaded true, a question answered live |
 
 ## 11. Divergences log
 

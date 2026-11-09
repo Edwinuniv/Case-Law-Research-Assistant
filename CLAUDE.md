@@ -135,8 +135,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 ### Week 6 — Deployment (Joe)
 - [x] 6.1 Deployment files — Dockerfile and .dockerignore; build step downloads the embedding model into data/models like app/embeddings.py (AI_LOG) ⏳ image built for real on Railway (6.2)
-- [ ] 6.2 Create the database and the website on Railway
-- [ ] 6.3 Fill the online database with the seed script
+- [x] 6.2 Create the database and the website on Railway — 2026-11-06: pgvector (pg18) + web service from main, variables, domain case-law-research-assistant-production.up.railway.app; /health OK
+- [x] 6.3 Fill the online database with the seed script — 2026-11-09: pg_restore of the Nov 6 dump (Hobby plan, volume enlarged), remove_out_of_scope --apply (8 decisions), seed --admin; index_loaded true, case_filter True, tau_abstain 0.20; live question answered by search + model + verifier ⏳ rotate the database password, switch the site to DATABASE_URL_PRIVATE
 
 ### Week 7 — Attack the verifier (Edwin)
 - [x] 7.1 Attack, test, fix, log — merged (PR #26): 13 attacks from the guide's list run with the real citation index; 3 got through and are fixed with tests + AI_LOG: concurrence/dissent as the Court (check 6), "In re"/"Ex parte" names (check 4), numbers in words (check 5). Also: real 2020+ citations copied from the passage are removed but no longer counted as FABRICATED (Edwin's decision). AI_LOG Week 7 entries 1-5
