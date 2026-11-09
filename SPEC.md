@@ -463,3 +463,11 @@ threshold rule (EVALUATION.md); tau_confident stays 0.70, min_retrieval 0.35. TE
 precision 1.0, recall 0.8, 0 false citations of 23 shown. Set in the local settings; the default in app/config.py
 (DEFAULT_SETTINGS, Yasser's file) and the online settings (admin Settings page, Joe) still say 0.55, to change by them.
 
+2026-11-09 - Requirements check (Joe, docs/requirements_joe.md): two readings written down.
+(1) SR37: test questions added or edited on the admin page are saved in the database, not straight into git.
+The admin downloads them with "Export" (`/api/admin/questions/export`, same JSONL format) and a team member
+commits eval/questions.jsonl. On purpose: the evaluation set is frozen (tag eval-v1) and must not change
+without a visible commit. (2) SR5: the online database (Railway, step 6.3) is filled with `pg_restore` of
+Yasser's dump (same data as run 2: 2,415 decisions, 72,502 passages), not with `seed --corpus`: the bulk files
+(about 52 GB) are not on the server and the embeddings were made on Colab. scripts/seed.py still does every
+part on a new database, and is used online for the admin account (`seed --admin`).
