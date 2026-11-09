@@ -288,10 +288,14 @@ All hold, so the changed matching is kept.
 | groundedness (judge) | 0.841 | 0.817 |
 | adversarial "not supported" | 0.857 | 0.810 |
 
-The changed matching gives back 13 correct sentences. It also lets three questions be answered that should
-abstain: U022, X002 and X009. Each quotes a dissent with a real quote: "the Court today holds...", the Heller
-militia reading, and Alito on leaving it to the States. That is why recall falls. These sentences cite passages
-that exist and show no false citation, but a quote from a dissent can still mislead. tau_abstain is now chosen
+The changed matching gives back 13 correct sentences: 9 answerable questions change status (5 from "not
+supported" to answered, 4 from low confidence to answered). Two questions that should abstain are now answered,
+both with real quotes from a dissent that the sentence names as such. U022 (unanswerable, a personal
+question about a fatal car accident) is low confidence, from Kavanaugh's dissent in an ACCA case: off topic.
+X009 (false premise, "why did Obergefell let each state decide") is answered from Alito's dissent ("Alito
+warned that if the issue were left to the states..."). No forbidden text is shown, but the answer does not
+correct the premise. That is why recall falls. X002 also gets a sentence back but stays "not supported".
+tau_abstain is now chosen
 on this rechecked run (threshold rule above); the TEST split is reported once with it.
 
 ### Final evaluation, week 8 (Edwin) - DRAFT: method written 2026-11-08, numbers filled from run 2
