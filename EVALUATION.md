@@ -357,8 +357,24 @@ settings; `python -m scripts.export_run ⟨id⟩ run2 "dump"` after each resume)
 |---|---|---|---|---|
 | ⟨rows around the chosen value⟩ | | | | |
 
-Chosen: tau_abstain = ⟨⟩, because ⟨rule applied, with the numbers⟩. Set in the admin settings before
-looking at the TEST split.
+Done on the rechecked run 2 (`eval/runs/eval_run2_reverified.json`, `tune_sweep`; quote matching kept, see
+above), 2026-11-09, before the TEST split was looked at:
+
+| tau | precision | recall | wrong abstentions | wrong answers |
+|---|---|---|---|---|
+| 0.20 to 0.36 | 0.80 | 0.941 | 4 | 1 |
+| 0.38 | 0.762 | 0.941 | 5 | 1 |
+| 0.40 | 0.696 | 0.941 | 7 | 1 |
+| 0.42 to 0.58 | 0.64 | 0.941 | 9 | 1 |
+| 0.60 to 0.64 | 0.654 | 1.0 | 9 | 0 |
+| 0.70 | 0.607 | 1.0 | 11 | 0 |
+| 0.90 | 0.34 | 1.0 | 33 | 0 |
+
+Chosen: **tau_abstain = 0.20**. By the rule: every tau from 0.20 to 0.36 has both precision and recall >= 0.80
+(NFR3); they tie on min(precision, recall) = 0.80 and on wrong answers (1), so the tie goes to the lowest tau.
+On TUNE the whole range 0.20-0.36 gives the same statuses; 0.20 answers more on new questions, and an answer
+with a support score between 0.20 and 0.70 is shown as "low confidence". The one wrong answer is U022 (see quote
+matching above). Set in the settings (tau_confident stays 0.70) before running the TEST split.
 
 #### 3. TEST split, reported once
 `python -m scripts.run_eval --test ⟨id⟩` with tau_abstain = ⟨⟩, unchanged afterwards.
