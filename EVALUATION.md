@@ -298,9 +298,8 @@ correct the premise. That is why recall falls. X002 also gets a sentence back bu
 tau_abstain is now chosen
 on this rechecked run (threshold rule above); the TEST split is reported once with it.
 
-### Final evaluation, week 8 (Edwin) - DRAFT: method written 2026-11-08, numbers filled from run 2
-Everything marked ⟨...⟩ is filled from a saved run file, never by hand. Until then this section only
-states the method.
+### Final evaluation, week 8 (Edwin): method written 2026-11-08, numbers filled 2026-11-09 from run 2
+Every number below comes from a saved file in eval/runs, named next to it.
 
 **Test set.** eval-v1 (tag at 4d9e179, 85 questions, written by the three of us, frozen):
 42 answerable (34 TUNE, 8 TEST), 22 unanswerable (17 TUNE, 5 TEST) and 21 adversarial (17 TUNE, 4 TEST)
@@ -335,27 +334,29 @@ The adversarial questions are counted in both splits, but they are not in the pr
 to choose tau, so they do not influence the threshold.
 
 #### 1. Before and after the text fixes (same questions)
-Run 1 (`eval/runs/eval_run1_before_text_fixes_2026-11-06.json`, old dump, stopped after 39 questions)
-against run 2 on the TUNE + adversarial questions both runs answered:
-`python -m scripts.compare_runs eval/runs/eval_run1_before_text_fixes_2026-11-06.json ⟨run 2 id⟩`
--> `eval/runs/compare_⟨date⟩.json`, ⟨n⟩ questions, tau_abstain 0.55 (run 2 can also be read from
-`eval/runs/eval_run2.json` instead of its database id).
+Run 1 (`eval/runs/eval_run1_before_text_fixes_2026-11-06.json`, old dump, stopped after 39 questions) against run
+2 as it was made (`eval/runs/eval_run2.json`, before the quote matching change, so only the data differs), on the
+32 TUNE questions both runs answered, tau_abstain 0.20:
+`python -m scripts.compare_runs eval/runs/eval_run1_before_text_fixes_2026-11-06.json eval/runs/eval_run2.json`
+-> `eval/runs/compare_2026-11-09T09-28-16.json`.
 
 | run | abstained but should answer | low confidence | citations shown | false citations shown | groundedness (judge) | mean time |
 |---|---|---|---|---|---|---|
-| run 1 (before) | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
-| run 2 (after) | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
+| run 1 (before) | 10 | 9 | 28 | 2 (checker false alarms) | 0.868 | 5.6 s |
+| run 2 (after) | 8 | 11 | 36 | 0 | 0.861 | 2.9 s |
 
-Questions whose status changed: ⟨list from the file⟩. Reading: ⟨what changed and why, or "no change"⟩.
+Retrieval is identical (recall@5 0.969, MRR@10 0.901 in both). 15 of 32 questions changed status, in both
+directions (A007 from "not supported" to answered, A021 and A033 the other way). The model does not write the same
+draft twice for the same question and passages, so most of these changes are run-to-run variation, not the effect
+of the text fixes. Run 1's 2 "false citations" are both Boumediene's 128 S. Ct. 2229, the false alarm of the old
+checker (a decision stored twice), fixed before run 2 (AI_LOG 2026-11-08); they were never false citations. The
+time difference is the provider's load on the two days. Reading: the text fixes did not measurably change the
+answers on these 32 questions. They were made so that the text the model and the reader see is right, and that
+is what they are reported for.
 
 #### 2. Choosing tau_abstain on the TUNE split (rule at the top of this file)
-`python -m scripts.run_eval --resume ⟨id⟩` prints the sweep when the run is done (tau 0.20 to 0.90 by
-0.02, tau_confident = max(tau, 0.70)). Saved: `eval/runs/eval_run2.json` (`tune_sweep`, with the run's own
-settings; `python -m scripts.export_run ⟨id⟩ run2 "dump"` after each resume).
-
-| tau | precision | recall | wrong abstentions | wrong answers |
-|---|---|---|---|---|
-| ⟨rows around the chosen value⟩ | | | | |
+The sweep (tau 0.20 to 0.90 by 0.02, tau_confident = max(tau, 0.70)) is saved with the run: `tune_sweep` in
+`eval/runs/eval_run2_reverified.json`, computed with the run's own settings.
 
 Done on the rechecked run 2 (`eval/runs/eval_run2_reverified.json`, `tune_sweep`; quote matching kept, see
 above), 2026-11-09, before the TEST split was looked at:
@@ -393,18 +394,31 @@ shown. 15 of the 21 adversarial questions abstained (0.714); the citations of th
 checker.
 
 #### 4. False citations and the adversarial set (step 8.3)
-`python -m scripts.show_citations ⟨id⟩` (TUNE + adversarial) and `--test` once.
-- Citations shown with a problem: ⟨n⟩ of ⟨n⟩ (goal 0, NFR1). On the 21 adversarial questions: ⟨n⟩.
-- Adversarial questions answered "not supported": ⟨n⟩ of 21.
-- Removed by the verifier before a visitor could see them: ⟨n⟩ FABRICATED citations, ⟨n⟩ real citations
-  not supported by the retrieved opinions, ⟨n⟩ case names, ⟨n⟩ wrong decision years.
+`python -m scripts.show_citations eval/runs/eval_run2_reverified.json` (TUNE + adversarial) and `--test` once,
+tau_abstain 0.20 -> `eval/runs/citations_tune_run2_reverified_2026-11-09.txt`,
+`eval/runs/citations_test_run2_reverified_2026-11-09.txt`.
+- Citations shown with a problem (separate checker, SR38): 0 of 56 on TUNE + adversarial, 0 of 23 on TEST
+  (goal 0). On the 21 adversarial questions: 6 were answered (X002, X005, X006, X007, X009, X011) with 10
+  citations shown, 0 false. NFR1 is met.
+- Adversarial questions answered "not supported": 15 of 21.
+- Removed by the verifier before a visitor could see them, all 85 questions: 0 FABRICATED citations, 0 real
+  citations not supported by the retrieved opinions, 1 case name (A002: "Roe v. Wade", outside our corpus), 0
+  wrong decision years. Also 8 sentences presenting a dissent or concurrence as the Court's view (check 6),
+  8 quotes not found, 1 sentence citing a passage that was not sent.
+- The model wrote no citation that the verifier had to remove: it is asked to cite passages (P1...P8), and our
+  code renders the citation. The verifier still checks the text of every sentence for citations (SR23).
 - The checker was fixed before run 2 (it flagged 88 of 2,006 real rendered citations; 0 after the fix,
   AI_LOG 2026-11-08), so a zero here is not a zero by a broken checker.
 
 #### 5. Error analysis
-`python -m scripts.error_analysis eval/runs/eval_run2.json` -> `eval/runs/error_analysis_⟨date⟩.json`.
-Why answerable questions were answered "not supported" in run 2: ⟨n⟩ below the gate (min_retrieval),
-⟨n⟩ the model said the passages do not answer, ⟨n⟩ every sentence removed by the verifier (most common
-reason: ⟨⟩), ⟨n⟩ support score under tau. Quotes not found, by decision (`show_citations`): ⟨⟩.
-Retrieval sets a ceiling: the gold quote is in the 8 passages for ⟨n⟩ of 34 TUNE questions (quote@8
-⟨⟩ in the same run).
+`python -m scripts.error_analysis eval/runs/eval_run2_reverified.json` -> `eval/runs/error_analysis_2026-11-09T09-28-15.json`
+(TUNE, tau_abstain 0.20). 4 of 34 answerable questions were answered "not supported": 1 because the model said the
+passages do not answer (A001, Chevron), 3 because every sentence was removed by the verifier (A003, A004, A026: three
+quotes with words left out by "...", one dissent presented as the Court's view). None was below the gate or under tau.
+For all 4, the gold quote was not among the 8 passages given to the model. The search found the right decision but
+not the paragraph with the holding. Over the 34 questions, the gold quote is in the 8 passages for 13 (quote@8 0.382):
+retrieval is the ceiling. Quotes still not found on TUNE after the quote matching change (6, `show_citations`) are the
+model's: words left out with "..." (303 Creative x2, Students for Fair Admissions, Trump v. United States), one dropped
+word (Jarkesy dissent), and one page header inside a passage ("in-house 2 sec v. jarkesy syllabus"). The "missing
+fi/fl letters" flag next to three of them in the report is a coincidence: those decisions contain an "affrm" word,
+but the quotes failed on "...". One unanswerable question was answered: U022 (section on quote matching above).

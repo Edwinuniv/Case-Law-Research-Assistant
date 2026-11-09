@@ -1,0 +1,47 @@
+{
+ "date": "2026-11-09T09:28:15",
+ "run": "eval/runs/eval_run2_reverified.json",
+ "split": "tune",
+ "tau_abstain": 0.2,
+ "abstained_but_should_answer": [
+  {
+   "id": "A001",
+   "cause": "the model said the passages do not answer",
+   "support": 0.0,
+   "gold_quote_in_8_passages": false
+  },
+  {
+   "id": "A003",
+   "cause": "every sentence removed by the verifier",
+   "support": 0.0,
+   "gold_quote_in_8_passages": false
+  },
+  {
+   "id": "A004",
+   "cause": "every sentence removed by the verifier",
+   "support": 0.0,
+   "gold_quote_in_8_passages": false
+  },
+  {
+   "id": "A026",
+   "cause": "every sentence removed by the verifier",
+   "support": 0.0,
+   "gold_quote_in_8_passages": false
+  }
+ ],
+ "verifier_problems": {
+  "quote not found in the cited passage": 3,
+  "dissent or concurrence presented as the Court's view": 1
+ },
+ "answered_but_should_abstain": [
+  {
+   "id": "U022",
+   "status": "LOW_CONFIDENCE",
+   "support": 0.5965
+  }
+ ],
+ "quote@8": {
+  "found": 13,
+  "of": 34
+ }
+}
