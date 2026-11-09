@@ -80,3 +80,13 @@ def test_a_quote_the_fix_still_does_not_find_stays_removed():                  #
     out = reverify([(q("a"), res(removed=[gap]))])
     (_, r), = out["pairs"]
     assert r["n_kept"] == 0 and out["newly_kept"] == [] and "quote not found in the cited passage" in r["removed"][0]["problems"]
+
+
+def test_only_the_8_passages_sent_to_the_model_must_be_the_same():              # A027: passages 9-20 tie and swap
+    from scripts import reverify_run
+    other = {**PASSAGE, "chunk_id": "2-0", "decision_id": 2, "score": 0.5}
+    third = {**PASSAGE, "chunk_id": "3-0", "decision_id": 3, "score": 0.5}
+    old = res(removed=[BROKEN], ranked=(1, 2, 3))                               # run 2: 2 then 3 after the 8
+    out = reverify_run.reverify([(q("a"), old)], S, lambda question: ([PASSAGE], [PASSAGE, third, other]), INDEX,
+                                lambda t, p: "yes", lambda r, q, i: ([[] for _ in r["sentences"]], len(r["sentences"])))
+    assert out["search_changed"] == [] and out["pairs"][0][1]["n_kept"] == 1
