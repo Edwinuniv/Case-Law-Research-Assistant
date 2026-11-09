@@ -2,7 +2,7 @@ import pytest
 from app.evaluate import status_at, metrics
 from app.config import DEFAULT_SETTINGS
 
-S = dict(DEFAULT_SETTINGS)
+S = dict(DEFAULT_SETTINGS, tau_abstain=0.55)   # these tests were written for the guide's 0.55; the live value is chosen on TUNE (EVALUATION.md)
 
 def res(support, top=0.8, said="SUPPORTED", kept=1, ranked=(1,), false=()):
     return {"status_raw": "ANSWERED", "top_score": top, "model_said": said, "support_score": support,

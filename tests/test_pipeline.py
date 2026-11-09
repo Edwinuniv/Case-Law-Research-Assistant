@@ -4,7 +4,7 @@ from app.config import DEFAULT_SETTINGS
 from tests.test_citations import INDEX
 from tests.test_verify import PASSAGE, QUOTE
 
-S = dict(DEFAULT_SETTINGS)
+S = dict(DEFAULT_SETTINGS, tau_abstain=0.55)   # these tests were written for the guide's 0.55; the live value is chosen on TUNE (EVALUATION.md)
 
 class FakeSearcher:
     def __init__(self, score): self.score = score
