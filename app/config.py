@@ -59,7 +59,7 @@ EXAMPLE_QUESTIONS = [
 # ---- Default thresholds and weights (admin can change them on the Settings page) ----
 DEFAULT_SETTINGS = {
     "min_retrieval": 0.35,   # best passage similarity below this -> not supported, model not called
-    "tau_abstain": 0.55,     # support score below this -> not supported   (SR27)
+    "tau_abstain": 0.20,     # support score below this -> not supported   (SR27); chosen on TUNE by the rule (EVALUATION.md, 2026-11-09)
     "tau_confident": 0.70,   # support score below this -> low confidence  (SR27)
     "retrieve_k": 20,        # passages kept after hybrid search          (SR17)
     "top_k": 8,              # passages given to the model                 (SR18)
