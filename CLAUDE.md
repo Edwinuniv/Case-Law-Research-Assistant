@@ -149,7 +149,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] 8.3 False citations = 0 — run 2 (rechecked), tau 0.20: 0 of 56 citations shown on TUNE + adversarial, 0 of 23 on TEST, 0 FABRICATED in 85 questions (eval/runs/citations_*_2026-11-09.txt; EVALUATION.md section 4); before that: — branch step/8.3-citation-report: scripts/show_citations.py (shown, removed, quotes by decision; TUNE by default), 4 tests. Found on run 1 so far: the checker flags real rendered citations of 88/2,006 decisions (duplicate decisions, one citation for two orders, odd first citation; cluster_for LIMIT 1) Fixed BEFORE run 2 (branch step/8.3-checker-fixes): checker checks the shown citation (best_citation) and any citation-table row (clusters_for); check 3 too; names outside the corpus no longer FABRICATED; full stop in case names; 9 new tests (AI_LOG) ⏳ database tests + recount of the 88 when Docker is on; Joe: import best_citation from app.citations
 
 ### Defence prep (Edwin)
-- [x] FABRICATED citation demo — scripts/demo_fabricated.py: run 2 has no fabricated citation to show (the model cites passages, our code renders citations), so a lying draft for a real question goes through the real verifier and citation table; no model call; 3 tests (branch feature/defence-fabricated-demo)
+- [x] FABRICATED citation demo — scripts/demo_fabricated.py: run 2 has no fabricated citation to show (the model cites passages, our code renders citations), so a lying draft for a real question goes through the real verifier and citation table; no model call; 3 tests (PR #77)
+- [x] Demo question list — docs/defence_demo.md: one question per part of the guide's 15-minute plan, with a backup, from run 2 at tau 0.20 ⏳ try each on the live site the day before; evaluation runs missing from the online database (admin pages)
 
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
