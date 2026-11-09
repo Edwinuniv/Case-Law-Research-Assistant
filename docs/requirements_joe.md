@@ -32,3 +32,25 @@ Only the website, login, admin and deployment requirements are listed. "Run 2" =
 | SR5 one seed script: data, test questions, admin account | `scripts/seed.py` (`--schema --corpus --citations --index --questions --admin`, or `--all`) | used to build the local databases; online: see gap 5 | done; see gap 5 |
 | NFR10, SR7 footer "This is a research aid, not legal advice." on every public page | `frontend/index.html` (outside React, so on every page) | `test_react_pages::test_disclaimer_on_every_page` | done |
 | NFR9 someone else runs an evaluation and a re-index from the admin pages alone | Evaluation page (run button), Corpus page (re-index button), overview of jobs | usability test (step 9.1) | to do (9.1) |
+
+## Gaps found while checking
+
+1. **SR37 "stored in the repository".** Questions added or edited on the admin page go into the database, not
+   straight into git. The admin downloads them with "Export" and a team member commits
+   `eval/questions.jsonl`. This is on purpose: the evaluation set is frozen (tag eval-v1) and must not change
+   without a commit. To write in SPEC section 11 as our reading of SR37.
+2. **FR20, FR21, SR40 re-index.** The code starts the regression run by itself after the re-index, but no test
+   checks that chain (only that visitors are refused), and the re-index was never run on the full corpus from
+   the admin page: embedding 72,502 passages on a CPU takes hours, so the embeddings were made on Colab
+   (Yasser, step 2.2). Next step: a test with a fake `build_index` and a fake evaluation that checks a run is
+   started after the re-index (to write ourselves, NFR17).
+3. **FR24-FR27 analytics.** The route is tested only on an empty database. A test with a few logged questions
+   (two days, one ERROR) should check the counts per day, the failure rate and the date filter.
+4. **SR2 "measured on the server".** Run 2's times were measured on our own PC, not on Railway. After the
+   online database is restored, the p95 on the online Analytics page (after the usability test) is the
+   proof for the server.
+5. **NFR5, SR1, SR5 online data.** The site is online over HTTPS, but the online database is filled with
+   `pg_restore` of Yasser's dump (same data as run 2: 2,415 decisions, 72,502 passages), not with
+   `seed --corpus`: the bulk files (52 GB) are not on the server and the embeddings were made on Colab.
+   The seed script is still used for the admin account (`seed --admin`). To write in SPEC section 11.
+   Status of the restore: Railway thread (6.3).
