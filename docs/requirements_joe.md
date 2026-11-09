@@ -1,0 +1,56 @@
+# Where each requirement is implemented - Joe's part (checked 2026-11-09)
+
+For the report's appendix (guide p.83), next to docs/requirements_edwin.md and docs/requirements_yasser.md.
+Each row was checked in the code and has a test, a saved run or a check on the live site that proves it.
+Only the website, login, admin and deployment requirements are listed. "Run 2" =
+`eval/runs/eval_run2.json` (85 questions). "Live site" = https://case-law-research-assistant-production.up.railway.app.
+
+| Requirement | Implemented in | Proved by | Status |
+|---|---|---|---|
+| FR1, SR30 type a question; text box, example questions, court and years covered | `frontend/src/pages/Chat.jsx`; `POST /api/ask` (`app/api.py`), open to visitors; examples and coverage from `GET /api/me` (`config.EXAMPLE_QUESTIONS`, `config.COVERAGE`); one question per message, earlier ones not sent | `test_api_research::test_visitor_asks_without_an_account`, `test_each_question_is_answered_on_its_own`; `test_api_auth::test_me_without_login` | done |
+| FR4, SR31 click a citation: side panel, quote highlighted, link to CourtListener | `frontend/src/components/PassagePanel.jsx`; `GET /api/passage/{chunk_id}` (`api.passage_view`: opinion around the passage, quote marked, `source_url`) | `test_api_research::test_passage_panel_highlights_the_quote`, `test_passage_without_quote_or_unknown`, `test_passage_open_to_visitors` | done |
+| FR5 retrieved passages shown next to the answer | `api.public_answer` (the 8 passages with score and opinion label); list in `Chat.jsx` | `test_api_research::test_verified_answer_with_citation_from_our_database` | done |
+| SR32 three results told apart by text and icon | `frontend/src/components/Answer.jsx`: ✓ "Verified answer", ⚠ "Low confidence", ⊘ "Not supported by the retrieved opinions" | checked in a browser (screenshots of 2026-11-06, step 5.11) | done (no automatic test) |
+| FR10 administrator logs in with email and password | `pages/Login.jsx`; `POST /api/login` -> `db.check_login`; signed session cookie (HttpOnly, Secure online, SameSite=Lax, 8 h) | `test_api_auth::test_admin_can_log_in`, `test_login_error_is_generic`, `test_session_cookie_is_httponly`, `test_logout_clears_the_session` | done |
+| FR11, SR33 two roles: visitor (no login) and administrator | `db.ROLES = ("admin",)` + CHECK in the `users` table; visitors use `/api/ask` and `/api/passage` without an account | `test_login_security::test_only_the_administrator_role_exists`, `test_existing_database_loses_the_user_accounts`; `test_api_admin::test_accounts_page_cannot_create_a_user_account` | done |
+| NFR8, SR35 role checked on every admin request; 401/403 otherwise | `app/api_admin.py`: the router itself requires `require_admin` (role read from the database at each request) and CSRF; `/admin` pages refused in `app/main.py` | `test_api_admin::test_every_admin_route_refuses_visitors`, `test_every_admin_route_refuses_a_disabled_account`, `test_react_admin_pages_are_refused_by_the_server`; `test_api_auth::test_roles_are_checked_on_the_server` | done |
+| NFR7, SR34 passwords hashed with bcrypt | `db.create_user` (`bcrypt.hashpw`); `/api/admin/users` never returns the hash | `test_admin::test_passwords_are_hashed` | done |
+| SR36 account locked 15 minutes after 5 failed logins | `db.check_login` with `config.LOCK_AFTER_FAILED_LOGINS = 5`, `LOCK_MINUTES = 15`; extra: 10 failures per IP in 15 min (`api.too_many_failures`); same message in every case | `test_login_security::test_lock_lasts_fifteen_minutes`, `test_four_failures_do_not_lock`, `test_every_login_failure_gives_the_same_message`; `test_admin::test_lock_after_five_failures`; `test_api_auth::test_too_many_failures_from_one_address` | done |
+| FR12 create and disable accounts | `admin/Users.jsx`; `POST /api/admin/users`, `POST /api/admin/users/{id}/toggle` (cannot disable yourself) | `test_api_admin::test_admin_creates_another_admin_who_can_then_log_in`, `test_disable_an_account_but_not_yourself`, `test_bad_new_accounts_are_refused`; `test_api_auth::test_disabled_account_loses_access_at_once` | done |
+| CSRF on every POST (brief, common requirements) | `api.check_csrf` on both routers (token from `/api/me`, new token at login) | `test_api_auth::test_login_without_csrf_token_is_refused`, `test_new_csrf_token_after_login`; `test_api_admin::test_every_admin_post_needs_the_csrf_token`; `test_api_research::test_ask_needs_the_csrf_token` | done |
+| FR13a-c add, edit and tag test questions | `admin/Questions.jsx`, `QuestionForm.jsx`; `POST /api/admin/questions` (tag answerable/unanswerable/adversarial, split tune/test) | `test_api_admin::test_add_change_and_export_a_test_question`, `test_bad_test_question_is_refused` | done |
+| SR37 test questions stored in the repository | `eval/questions.jsonl` (85 questions, tag `eval-v1`); `GET /api/admin/questions/export` gives the same JSONL to commit | export checked in `test_add_change_and_export_a_test_question`; tag eval-v1 | done; see gap 1 |
+| FR20, SR40 regression run after a re-index; worse metrics in red | `POST /api/admin/reindex` runs `build_index`, reloads the index, then `evaluate.run_evaluation` by itself (background job, `jobs` table); `admin/Compare.jsx` shows worse metrics in red with "▼ worse" | `test_evaluate::test_compare_flags_worse_and_lists_flips` (Edwin); re-index refused to visitors (`test_admin::test_admin_actions_refuse_visitors`) | partial; see gap 2 |
+| FR21 start a re-index | `admin/Corpus.jsx` button -> `POST /api/admin/reindex` (chunk size 150-600 words) | `test_admin::test_admin_actions_refuse_visitors` | partial; see gap 2 |
+| FR22, SR43 abstention list with passages and scores; mark "correct" / "should have answered", add to test set | `GET /api/admin/abstentions` (passages, scores, removed sentences; who asked is not sent); `POST /api/admin/abstentions/{id}/label` prefills a new test question; `admin/Abstentions.jsx` | `test_api_admin::test_abstentions_do_not_say_who_asked`, `test_label_and_add_to_the_test_set` | done |
+| FR23 change the threshold and see its effect on the test questions first | `GET /api/admin/settings/preview` (re-scores the last run, TUNE split) then `POST /api/admin/settings`; `admin/Settings.jsx` | `test_admin_tune_default::test_threshold_preview_uses_tune`; `test_api_admin::test_settings_are_saved_within_limits` | done |
+| FR24-FR27, SR42 queries per day, response time, failure rate, results, date filter; unanswered questions | `GET /api/admin/analytics` (per day: count by result, p50/p95 time, failure rate; last 50 not supported); `admin/Analytics.jsx` (chart.js, date filter) | `test_api_admin::test_admin_opens_every_page_on_an_empty_database`; checked in a browser (screenshot of 2026-11-06, step 5.10) | done; see gap 3 |
+| FR28, SR41 every question saved with time, question, result, response time, support score, removed citations | `db.log_query` (table `query_log`: `created_at`, `question`, `status`, `ms_total`, `support_score`, `removed_citations`), called by `/api/ask` | `test_api_research::test_every_question_is_saved_without_an_account` | done |
+| NFR4, SR2 95% of answers in at most 15 s | `ms_total` measured by the pipeline, saved in `query_log`; p95 shown on the Analytics page | run 2: 85 of 85 under 15 s (median 2.1 s, slowest 6.5 s) | done locally; see gap 4 |
+| NFR6, SR3 no crash on empty, very long or off-topic input | input checked before the model (`check_input`, 400 with a message); 10 questions/min per IP (429 + wait time); model failure -> ERROR, no text; index not loaded -> 503 | `test_api_research::test_question_length_is_checked`, `test_model_failure_shows_no_text`, `test_index_not_ready`; `test_ask_rate_limit` (4 tests); run 2: 0 errors on 85 questions (incl. off-topic and a prompt injection) | done |
+| NFR5, SR1 online on a public HTTPS address, with data | `Dockerfile` (React built in a Node stage, Python image serves it; `--proxy-headers`); Railway: web service + pgvector/pgvector:pg18 service; `HTTPS_ONLY=1`, `SESSION_SECRET` required online | live site: `/health` answers over HTTPS (2026-11-06) | partial; see gap 5 |
+| SR5 one seed script: data, test questions, admin account | `scripts/seed.py` (`--schema --corpus --citations --index --questions --admin`, or `--all`) | used to build the local databases; online: see gap 5 | done; see gap 5 |
+| NFR10, SR7 footer "This is a research aid, not legal advice." on every public page | `frontend/index.html` (outside React, so on every page) | `test_react_pages::test_disclaimer_on_every_page` | done |
+| NFR9 someone else runs an evaluation and a re-index from the admin pages alone | Evaluation page (run button), Corpus page (re-index button), overview of jobs | usability test (step 9.1) | to do (9.1) |
+
+## Gaps found while checking
+
+1. **SR37 "stored in the repository".** Questions added or edited on the admin page go into the database, not
+   straight into git. The admin downloads them with "Export" and a team member commits
+   `eval/questions.jsonl`. This is on purpose: the evaluation set is frozen (tag eval-v1) and must not change
+   without a commit. To write in SPEC section 11 as our reading of SR37.
+2. **FR20, FR21, SR40 re-index.** The code starts the regression run by itself after the re-index, but no test
+   checks that chain (only that visitors are refused), and the re-index was never run on the full corpus from
+   the admin page: embedding 72,502 passages on a CPU takes hours, so the embeddings were made on Colab
+   (Yasser, step 2.2). Next step: a test with a fake `build_index` and a fake evaluation that checks a run is
+   started after the re-index (to write ourselves, NFR17).
+3. **FR24-FR27 analytics.** The route is tested only on an empty database. A test with a few logged questions
+   (two days, one ERROR) should check the counts per day, the failure rate and the date filter.
+4. **SR2 "measured on the server".** Run 2's times were measured on our own PC, not on Railway. After the
+   online database is restored, the p95 on the online Analytics page (after the usability test) is the
+   proof for the server.
+5. **NFR5, SR1, SR5 online data.** The site is online over HTTPS, but the online database is filled with
+   `pg_restore` of Yasser's dump (same data as run 2: 2,415 decisions, 72,502 passages), not with
+   `seed --corpus`: the bulk files (52 GB) are not on the server and the embeddings were made on Colab.
+   The seed script is still used for the admin account (`seed --admin`). To write in SPEC section 11.
+   Status of the restore: Railway thread (6.3).
