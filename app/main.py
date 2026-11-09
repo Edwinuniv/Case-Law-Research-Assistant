@@ -1,5 +1,5 @@
 """The website: the React pages (frontend/dist) and the JSON API (app/api.py, app/api_admin.py).
-Everyone logs in (roles user and admin); the server checks the role on every /api call and every /admin page."""
+Visitors use the research page without an account; only administrators log in (step 5.11). The server checks the role on every /api/admin call and every /admin page."""
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
