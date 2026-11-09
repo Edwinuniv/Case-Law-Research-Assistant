@@ -48,6 +48,7 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.find_case "loper"
     python -m scripts.merge_duplicates         # copies of one decision (dry run; --apply merges)
     python -m scripts.fix_ligatures            # lost fi/fl letters in PDF texts (dry run; --apply repairs)
+    python -m scripts.fix_line_breaks          # words broken at a line end, page markers *490 (dry run; --apply)
     python -m scripts.check_scope              # decisions that may not be SCOTUS 2000-2024 (read-only)
     python -m scripts.remove_out_of_scope      # remove the ones listed in app/scope.py (dry run; --apply)
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
