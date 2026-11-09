@@ -3,7 +3,7 @@ unanswerable TUNE questions were answered. Written from the expected behaviour, 
 from app.config import DEFAULT_SETTINGS
 from tests.test_evaluate import res, q
 
-S = dict(DEFAULT_SETTINGS)
+S = dict(DEFAULT_SETTINGS, tau_abstain=0.55)   # these tests were written for the guide's 0.55; the live value is chosen on TUNE (EVALUATION.md)
 
 
 def tune(i, tag="answerable"):
