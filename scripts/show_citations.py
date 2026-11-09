@@ -1,7 +1,7 @@
 """WEEK 8, step 8.3 - Every citation of a saved run: the ones SHOWN with a problem (the separate checker,
 SR38: the goal is zero), the ones the verifier REMOVED, and the quotes not found, traced to their decision
 (to see the effect of the missing "fi"/"fl" letters). Reads the database only: no model call.
-Usage: python -m scripts.show_citations RUN_ID          -> TUNE split + adversarial questions (as the metrics)
+Usage: python -m scripts.show_citations RUN_ID          -> TUNE split (RUN_ID or eval/runs/<run>.json) + adversarial questions (as the metrics)
        python -m scripts.show_citations RUN_ID --test   -> TEST split, once, after tau_abstain is chosen"""
 import re
 import sys
@@ -41,11 +41,14 @@ def collect(pairs, s):
 
 
 def main(argv):
-    run_id, split = int(argv[0]), "test" if "--test" in argv else "tune"
+    run, split = argv[0], "test" if "--test" in argv else "tune"
     s = db.get_settings()
-    pairs = keep_split(evaluate.load_run(run_id), split)
+    if run.endswith(".json"):                            # a saved run file (the rechecked run 2, step 8.2)
+        pairs, status = keep_split(evaluate.load_run_file(run), split), "saved file"
+    else:
+        pairs, status = keep_split(evaluate.load_run(int(run)), split), evaluate.run_status(int(run))
     report = collect(pairs, s)
-    print(f"Run {run_id} ({evaluate.run_status(run_id)}), {split} split + adversarial: {len(pairs)} questions, "
+    print(f"Run {run} ({status}), {split} split + adversarial: {len(pairs)} questions, "
           f"tau_abstain {s['tau_abstain']}")
 
     print(f"\n== Citations SHOWN with a problem (goal: 0): {len(report['shown'])} ==")
