@@ -101,3 +101,11 @@ def test_a_judge_answer_saved_by_an_earlier_recheck_is_reused():                
     judge = reuse_judgements(saved, lambda text, passage: asked.append(text) or "no")
     assert judge("S1", "p") == "yes" and asked == []
     assert judge("S2", "p") == "no" and judge("S3", "p") == "no" and asked == ["S2", "S3"]   # an error is asked again
+
+
+def test_a_sentence_judged_two_different_ways_is_asked_again():
+    from scripts.reverify_run import reuse_judgements
+    saved = [{"question_id": q, "result": {"reverified": True, "sentences": [{"text": "S"}], "judgements": [v]}}
+             for q, v in (("a", "yes"), ("b", "no"))]
+    asked = []
+    assert reuse_judgements(saved, lambda t, p: asked.append(t) or "yes")("S", "p") == "yes" and asked == ["S"]
