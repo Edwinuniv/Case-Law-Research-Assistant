@@ -1,0 +1,282 @@
+{
+ "date": "2026-11-09T09:28:16",
+ "a": "eval/runs/eval_run1_before_text_fixes_2026-11-06.json",
+ "b": "eval/runs/eval_run2.json",
+ "split": "tune",
+ "tau_abstain": 0.2,
+ "questions": [
+  "A001",
+  "A002",
+  "A003",
+  "A004",
+  "A006",
+  "A007",
+  "A008",
+  "A009",
+  "A011",
+  "A012",
+  "A013",
+  "A014",
+  "A015",
+  "A017",
+  "A018",
+  "A020",
+  "A021",
+  "A022",
+  "A023",
+  "A024",
+  "A025",
+  "A026",
+  "A028",
+  "A029",
+  "A031",
+  "A032",
+  "A033",
+  "A034",
+  "A035",
+  "A037",
+  "A038",
+  "A039"
+ ],
+ "rows": [
+  {
+   "metric": "questions",
+   "a": 32,
+   "b": 32,
+   "worse": false
+  },
+  {
+   "metric": "answerable",
+   "a": 32,
+   "b": 32,
+   "worse": false
+  },
+  {
+   "metric": "unanswerable",
+   "a": 0,
+   "b": 0,
+   "worse": false
+  },
+  {
+   "metric": "adversarial",
+   "a": 0,
+   "b": 0,
+   "worse": false
+  },
+  {
+   "metric": "recall@1",
+   "a": 0.8438,
+   "b": 0.8438,
+   "worse": false
+  },
+  {
+   "metric": "recall@5",
+   "a": 0.9688,
+   "b": 0.9688,
+   "worse": false
+  },
+  {
+   "metric": "recall@10",
+   "a": 0.9688,
+   "b": 0.9688,
+   "worse": false
+  },
+  {
+   "metric": "mrr@10",
+   "a": 0.901,
+   "b": 0.901,
+   "worse": false
+  },
+  {
+   "metric": "abstention_precision",
+   "a": 0.0,
+   "b": 0.0,
+   "worse": false
+  },
+  {
+   "metric": "abstention_recall",
+   "a": null,
+   "b": null,
+   "worse": false
+  },
+  {
+   "metric": "answered_but_should_abstain",
+   "a": 0,
+   "b": 0,
+   "worse": false
+  },
+  {
+   "metric": "abstained_but_should_answer",
+   "a": 10,
+   "b": 8,
+   "worse": false
+  },
+  {
+   "metric": "low_confidence",
+   "a": 9,
+   "b": 11,
+   "worse": false
+  },
+  {
+   "metric": "errors",
+   "a": 0,
+   "b": 0,
+   "worse": false
+  },
+  {
+   "metric": "citations_shown",
+   "a": 28,
+   "b": 36,
+   "worse": false
+  },
+  {
+   "metric": "false_citations_shown",
+   "a": 2,
+   "b": 0,
+   "worse": false
+  },
+  {
+   "metric": "false_citation_rate",
+   "a": 0.0714,
+   "b": 0.0,
+   "worse": false
+  },
+  {
+   "metric": "fabrications_caught_by_verifier",
+   "a": 1,
+   "b": 0,
+   "worse": false
+  },
+  {
+   "metric": "groundedness_judge",
+   "a": 0.8684,
+   "b": 0.8605,
+   "worse": true
+  },
+  {
+   "metric": "groundedness_lexical",
+   "a": 0.7772,
+   "b": 0.7882,
+   "worse": false
+  },
+  {
+   "metric": "adversarial_abstention_rate",
+   "a": null,
+   "b": null,
+   "worse": false
+  },
+  {
+   "metric": "mean_ms",
+   "a": 5592.2188,
+   "b": 2895.8125,
+   "worse": false
+  }
+ ],
+ "flips": [
+  {
+   "id": "A002",
+   "question": "Did the Supreme Court overrule Roe v. Wade?",
+   "tag": "answerable",
+   "a": "NOT_SUPPORTED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A006",
+   "question": "Did the Supreme Court hold that the school district violated coach Kennedy's First Amendment rights when it disciplined him for praying on the field after games?",
+   "tag": "answerable",
+   "a": "ANSWERED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A007",
+   "question": "Is the government's acquisition of historical cell-site location records a search under the Fourth Amendment?",
+   "tag": "answerable",
+   "a": "NOT_SUPPORTED",
+   "b": "ANSWERED"
+  },
+  {
+   "id": "A011",
+   "question": "Does the Second Amendment protect an individual right to keep and bear arms, unconnected with service in a militia?",
+   "tag": "answerable",
+   "a": "ANSWERED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A012",
+   "question": "Can a city take private homes through eminent domain to give the land to private developers as part of an economic development plan?",
+   "tag": "answerable",
+   "a": "ANSWERED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A014",
+   "question": "Why did the Supreme Court stop the Florida recount in the 2000 presidential election?",
+   "tag": "answerable",
+   "a": "LOW_CONFIDENCE",
+   "b": "ANSWERED"
+  },
+  {
+   "id": "A017",
+   "question": "Is attaching a GPS tracker to a car and following its movements a search under the Fourth Amendment?",
+   "tag": "answerable",
+   "a": "NOT_SUPPORTED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A018",
+   "question": "Can a state execute a person with an intellectual disability?",
+   "tag": "answerable",
+   "a": "ANSWERED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A020",
+   "question": "Can a law require life in prison without parole for a juvenile murderer, with no chance for the judge to consider his age?",
+   "tag": "answerable",
+   "a": "LOW_CONFIDENCE",
+   "b": "ANSWERED"
+  },
+  {
+   "id": "A021",
+   "question": "Can a prosecutor use a witness's recorded police statement at trial if the defendant never had a chance to cross-examine that witness?",
+   "tag": "answerable",
+   "a": "ANSWERED",
+   "b": "NOT_SUPPORTED"
+  },
+  {
+   "id": "A024",
+   "question": "Can California ban the sale of violent video games to minors?",
+   "tag": "answerable",
+   "a": "LOW_CONFIDENCE",
+   "b": "ANSWERED"
+  },
+  {
+   "id": "A025",
+   "question": "Can the government require a closely held for-profit company to cover contraceptives that its owners object to on religious grounds?",
+   "tag": "answerable",
+   "a": "NOT_SUPPORTED",
+   "b": "LOW_CONFIDENCE"
+  },
+  {
+   "id": "A028",
+   "question": "Can Congress ban marijuana that is grown at home for personal medical use?",
+   "tag": "answerable",
+   "a": "LOW_CONFIDENCE",
+   "b": "ANSWERED"
+  },
+  {
+   "id": "A033",
+   "question": "Which constitutional right did the Court rely on in SEC v. Jarkesy?",
+   "tag": "answerable",
+   "a": "ANSWERED",
+   "b": "NOT_SUPPORTED"
+  },
+  {
+   "id": "A035",
+   "question": "What mental state must the State prove in a true-threats prosecution?",
+   "tag": "answerable",
+   "a": "LOW_CONFIDENCE",
+   "b": "ANSWERED"
+  }
+ ]
+}

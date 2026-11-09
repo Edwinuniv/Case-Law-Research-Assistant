@@ -1,0 +1,14 @@
+Run eval/runs/eval_run2_reverified.json (saved file), tune split + adversarial: 72 questions, tau_abstain 0.2
+
+== Citations SHOWN with a problem (goal: 0): 0 ==
+
+== Citations and case names REMOVED by the verifier: 1 ==
+    1  case name not in our corpus or the cited passage
+  A002 case name not in our corpus or the cited passage: Roe v. Wade
+      "The Court overruled Roe v. Wade, stating that “Roe and Casey must be overruled, and the authority to regulate abortion must be returned to the people "
+
+== Quotes not found (check 2), by decision: 6, of which 3 in decisions with missing "fi"/"fl" letters ==
+    2  303 Creative LLC v. Elenis   <- missing fi/fl letters
+    2  SEC v. Jarkesy Revisions: 6/27/24
+    1  Students for Fair Admissions, Inc. v. President and Fellows of Harvard College   <- missing fi/fl letters
+    1  Trump v. United States

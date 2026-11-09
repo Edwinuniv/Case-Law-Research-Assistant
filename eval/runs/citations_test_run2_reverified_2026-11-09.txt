@@ -1,0 +1,9 @@
+Run eval/runs/eval_run2_reverified.json (saved file), test split + adversarial: 34 questions, tau_abstain 0.2
+
+== Citations SHOWN with a problem (goal: 0): 0 ==
+
+== Citations and case names REMOVED by the verifier: 0 ==
+
+== Quotes not found (check 2), by decision: 2, of which 1 in decisions with missing "fi"/"fl" letters ==
+    1  Graham v. Florida
+    1  Counterman v. Colorado   <- missing fi/fl letters
