@@ -90,3 +90,14 @@ def test_only_the_8_passages_sent_to_the_model_must_be_the_same():              
     out = reverify_run.reverify([(q("a"), old)], S, lambda question: ([PASSAGE], [PASSAGE, third, other]), INDEX,
                                 lambda t, p: "yes", lambda r, q, i: ([[] for _ in r["sentences"]], len(r["sentences"])))
     assert out["search_changed"] == [] and out["pairs"][0][1]["n_kept"] == 1
+
+
+def test_a_judge_answer_saved_by_an_earlier_recheck_is_reused():                # the daily limit stopped the 2nd recheck
+    from scripts.reverify_run import reuse_judgements
+    saved = [{"question_id": "a", "result": {"reverified": True, "sentences": [{"text": "S1"}, {"text": "S2"}],
+                                            "judgements": ["yes", "error"]}},
+             {"question_id": "b", "result": {"sentences": [{"text": "S3"}], "judgements": ["no"]}}]     # not rechecked
+    asked = []
+    judge = reuse_judgements(saved, lambda text, passage: asked.append(text) or "no")
+    assert judge("S1", "p") == "yes" and asked == []
+    assert judge("S2", "p") == "no" and judge("S3", "p") == "no" and asked == ["S2", "S3"]   # an error is asked again
