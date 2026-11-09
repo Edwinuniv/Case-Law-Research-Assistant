@@ -599,3 +599,17 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    that mention drones; it is a 1906 case that CourtListener dates 2010, one of the 8 above. How we caught
    it: the scope check. Not edited, because eval-v1 is frozen; the question stays unanswerable and its
    expected answer is unchanged (noted in EVALUATION.md).
+2. **The quote matching fix, measured (2026-11-09).** We asked Claude for the `verify.norm` change and a script that
+   checks run 2's saved sentences again (`scripts/reverify_run.py`), tests first. Three things were wrong on the
+   way. (a) The script compared the whole ranked list of 20 decisions with run 2's, which is stricter than the
+   rule ("the same 8 passages"). A027 failed rule (1) because two passages at ranks 9-10 have the same score and
+   swap from one search to the next. Caught by searching every question 3 times: the 8 passages sent to the model
+   are the same for all 85 (only X017 can swap 2 of its 8, an opinion stored twice, and it has no draft). Fix:
+   compare the 8 passages and the best score, with a test. (b) Four planted bugs were not caught at first: "..."
+   accepted by checking each piece, the old verdict trusted instead of checking again, and a sentence judged two
+   different ways reused. Two of the four changed nothing in practice. Fix: a test for each of the other two, and
+   the realistic version of the "..." bug, which is caught. (c) Claude's first write-up of the result in
+   EVALUATION.md said three questions that should abstain were now answered, and that all three "quote a
+   dissent". The adversarial abstention rate it had just printed (0.857 -> 0.810) is one question of 21, not two.
+   Caught by listing the status changes: two questions (U022, X009). X002 got a sentence back but stayed "not
+   supported". Corrected in the next commit.
