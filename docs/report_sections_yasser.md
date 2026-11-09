@@ -48,6 +48,10 @@ keywords alone miss the same idea in other words. The weights (keywords 1.0, dis
 (`tune_search_2026-10-29T15-30-53.json`). When the question names a case of the corpus, both searches
 look only at that decision (Edwin's case filter, measured for speed: section 5).
 
+The chunk size, the search weights and the reranker were measured on 29 October, on the earlier corpus
+(105,626 chunks, before the duplicate opinions were removed and the text was fixed); they were not
+measured again on the final corpus.
+
 **BM25 in Python, as a sparse matrix.** PostgreSQL's text ranking is not BM25. Our BM25 stores the word
 counts of all passages in a SciPy sparse matrix, so scoring a question is one matrix product and the
 index stays small in memory; it is built once and saved to a cache file. One database (PostgreSQL +
@@ -63,7 +67,7 @@ setting chosen on TUNE first; TEST was never used to choose anything.
 | split | run | questions | recall@1 | recall@5 | MRR@10 | quote@8 |
 |---|---|---|---|---|---|---|
 | **TEST** | `retrieval_2026-11-08T18-22-10.json` | 8 | 0.875 | 1.0 | 0.938 | 0.25 |
-| all answerable | `retrieval_2026-11-06T20-42-11.json` | 42 | 0.857 | 0.976 | 0.913 | 0.357 |
+| all answerable | `retrieval_2026-11-06T23-17-26.json` | 42 | 0.857 | 0.976 | 0.913 | 0.357 |
 
 The right decision is in the top 5 for every TEST question and first for 7 of 8. The weak point is
 quote@8: the passage holding the gold quote is among the 8 given to the model for only 2 of the 8 TEST
@@ -83,7 +87,7 @@ changed, TUNE split, 35 questions (`tune_embeddings_2026-11-06T19-04-10.json`):
 
 bge-base gained 2 questions and lost 7, so the rule kept bge-small. A better score on general benchmarks
 did not carry over to finding legal holdings. The guide's planned improvement, a cross-encoder
-reranker, was measured earlier and did not help either: reranking the top 20 kept quote@8 at 0.455 and
+reranker, was measured earlier (29 October, on the earlier corpus) and did not help either: reranking the top 20 kept quote@8 at 0.455 and
 took 5.1 s per question (`tune_rerank_2026-10-29T15-53-59.json`); it is off.
 
 **Data fixes did not move the search.** Repairing lost "fi"/"fl" letters (7,098 words in 61 opinions),
@@ -104,10 +108,14 @@ text the model and the reader see, not for a search gain.
   returns Hall v. Florida (2014), not Atkins v. Virginia (2002), which says "mentally retarded".
 - The source has errors we can only partly detect: text extracted from PDFs, decisions with wrong dates,
   and no official citation for most decisions from 2020 on.
+- Some correct quotes fail the word-for-word check because of the text itself: words broken at a line
+  end ("mar- riage", about 4,000 passages) and page markers inside sentences ("*490", 22,235
+  passages). Found in Edwin's run 2; the matching fix comes after run 2, so the reported run uses the
+  text as it is.
 
 ---
 
-## 7. AI-assisted process (candidate entry from AI_LOG, 2026-11-06)
+## 7. AI-assisted process (candidate entry from AI_LOG, 2026-11-06; the report has room for 2 of our 3 candidates, to choose with Edwin)
 
 **A data repair rule that was too loose, twice.** Claude wrote the rule to put back the "fi"/"fl"
 letters lost in PDF texts ("frst" -> "first"). The first version would also have changed real words:
