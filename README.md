@@ -72,3 +72,4 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.export_run RUN_ID NAME "which dump"   # save a run in eval/runs (after each resume: a restore erases runs)
     python -m scripts.compare_runs eval/runs/RUN.json RUN_ID   # two runs (file or database) on the TUNE questions both answered
     python -m scripts.error_analysis RUN       # why answerable TUNE questions were 'not supported' (RUN = id or eval/runs file)
+    python -m scripts.reverify_run eval/runs/RUN.json   # a run's saved sentences checked again by a changed verifier (no new answers)

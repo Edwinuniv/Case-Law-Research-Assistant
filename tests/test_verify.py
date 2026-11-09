@@ -223,3 +223,42 @@ def test_real_case_outside_the_corpus_is_removed_but_not_called_fabricated():
     assert removed[0]["problems"] == ["case name not in our corpus or the cited passage: Roe v. Wade"]
     assert count_fabrications(removed) == 0                                  # only citations can be proved fabricated
 
+
+
+# --- Step 8.2: quote matching (EVALUATION.md rule, 2026-11-08). Real cases from run 2: 10 of 15 quotes removed as
+# "not found" were in the cited passage. Word for word stays the rule: a left-out or changed word is still removed.
+def quoted(passage_text, quote):
+    kept, removed = run_on({**PASSAGE, "text": passage_text}, "The Court said so.", quote)
+    return bool(kept)
+
+def test_non_breaking_hyphen_in_the_quote_matches_a_plain_hyphen():          # A021: "cross‑examination" (U+2011)
+    assert quoted("unless the defendant had a prior opportunity for cross-examination. Id., at 54.",
+                  "the defendant had a prior opportunity for cross‑examination")
+
+def test_word_broken_at_a_line_end_in_the_passage_matches_the_whole_word():  # A015: "mar- riage", "lawful- ly"
+    assert quoted("Held: The Fourteenth Amendment requires a State to license a mar- riage between two people "
+                  "of the same sex when their marriage was lawful- ly licensed and performed out-of-State.",
+                  "requires a State to license a marriage between two people of the same sex when their "
+                  "marriage was lawfully licensed")
+
+def test_page_marker_inside_the_passage_is_ignored():                        # A012: "authority, *490 however"
+    assert quoted("This Court's authority, *490 however, extends only to determining whether the City's proposed "
+                  "condemnations are for a public use.",
+                  "This Court's authority, however, extends only to determining whether")
+
+def test_final_full_stop_of_the_quote_is_ignored():                          # A011: passage goes on with a comma
+    assert quoted("the right to bear arms was an individual right unconnected to militia service, though subject "
+                  "to certain restrictions.",
+                  "the right to bear arms was an individual right unconnected to militia service.")
+
+def test_words_left_out_with_an_ellipsis_are_still_removed():                # A029: not word for word
+    assert not quoted("the separation of powers principles explicated in the Court's precedent necessitate at least "
+                      "a presumptive immunity from criminal prosecution",
+                      "the separation of powers principles ... necessitate at least a presumptive immunity")
+
+def test_a_dropped_word_is_still_removed_after_the_new_matching():           # A034: "the majority today upends"
+    assert not quoted("The majority today upends longstanding precedent and the established practice.",
+                      "The majority upends longstanding precedent and the established practice.")
+
+def test_a_dash_between_words_is_not_joined():                               # only a hyphen at a line break joins
+    assert not quoted("The statute - read as a whole - forbids it.", "The statute read as a whole forbids it")

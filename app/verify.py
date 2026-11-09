@@ -42,6 +42,10 @@ DECISION_YEAR = re.compile(rf"\b(?:the|its|this|that)\s+{YEAR}\s+(?:decision|rul
                            rf"|\bdecided\s+in\s+{YEAR}\b"
                            rf"|\bin\s+{YEAR},?\s+the\s+(?:supreme\s+)?court\s+(?:held|decided|ruled|found|concluded)\b",
                            re.I)
+# Quote matching (step 8.2, EVALUATION.md rule written before measuring)
+HYPHENS = re.compile(r"[‐‑‒–—―−]")
+PAGE_MARKER = re.compile(r"\*\d+\b")                     # CourtListener's page numbers, "authority, *490 however"
+LINE_BREAK_HYPHEN = re.compile(r"(?<=[a-z])- (?=[a-z])", re.I)  # "mar- riage"; "statute - read" (space before) is kept
 
 
 def separate_opinion(passage):
@@ -49,10 +53,15 @@ def separate_opinion(passage):
 
 
 def norm(text):
-    """Make text comparable: same quote marks, dashes and spaces, lower case."""
+    """Make text comparable: same quote marks, dashes and spaces, lower case. Step 8.2 (run 2: correct quotes
+    were removed): every hyphen and dash is "-" (NFKC turns the model's U+2011 into U+2010, not "-"), page markers
+    "*490" are dropped, and a word broken at a line end ("mar- riage") is joined. Same for quote and passage."""
     text = unicodedata.normalize("NFKC", text or "")
-    for a, b in (("“", '"'), ("”", '"'), ("‘", "'"), ("’", "'"), ("–", "-"), ("—", "-")):
+    for a, b in (("“", '"'), ("”", '"'), ("‘", "'"), ("’", "'")):
         text = text.replace(a, b)
+    text = HYPHENS.sub("-", text)
+    text = PAGE_MARKER.sub(" ", text)
+    text = LINE_BREAK_HYPHEN.sub("", text)
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
@@ -86,7 +95,8 @@ def check_sentence(sentence, passages, index):
     if not sources or len(cited) != len(sources):                                 # check 1
         return ["cites a passage that was not sent to the model"]
     cited_text = norm(" ".join(c["text"] for c in cited))
-    if len(quote.split()) < 5 or norm(quote) not in cited_text:                   # check 2
+    # check 2; the quote's final . , ; : is ignored (the passage may go on: "militia service, though")
+    if len(quote.split()) < 5 or norm(quote).rstrip(".,;: ") not in cited_text:
         problems.append("quote not found in the cited passage")
 
     retrieved_decisions = {p["decision_id"] for p in passages.values()}
