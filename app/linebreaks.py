@@ -10,7 +10,8 @@ word-for-word check, and the reader sees the broken text. The repair is narrow, 
   "self-incrimination": the line break fell on a real hyphen);
 - anything else stays ("pre- and post-trial" is real English);
 - a page marker is a star (or two) and a page number standing alone between spaces ("*490", "**12");
-  a footnote star after a word ("rule.*") or a star between numbers ("2*3") is not one.
+  a footnote star after a word ("rule.*") or a star between numbers ("2*3") is not one, and neither is a
+  pinpoint citation to a LEXIS or Westlaw page ("1988 WL 44736, *2", "Id., at *1": Yasser's dry run).
 The corpus itself is the dictionary: most texts spell these words on one line."""
 import re
 from collections import Counter
@@ -18,7 +19,9 @@ from collections import Counter
 MIN_GOOD, RATIO = 20, 10
 WORD = re.compile(r"[a-z]+(?:-[a-z]+)*")                 # "marriage", "self-incrimination"
 BROKEN = re.compile(r"\b([A-Za-z]+)- ([a-z]+)\b")        # "mar- riage", "Self- incrimination"
-PAGE_MARKER = re.compile(r" \*{1,2}\d{1,4}(?= )")        # " *490" before a space
+# " *490" before a space; not a pinpoint citation to a database page: "LEXIS 19296, *4", "WL 44736, *2"
+# (a number and a comma before it) or "Id., at *1" (the word "at" before it)
+PAGE_MARKER = re.compile(r"(?<!\d,)(?<!\bat) \*{1,2}\d{1,4}(?= )")
 
 
 def vocabulary(texts):
