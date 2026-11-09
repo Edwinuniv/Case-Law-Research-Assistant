@@ -38,7 +38,7 @@ Only the website, login, admin and deployment requirements are listed. "Run 2" =
 1. **SR37 "stored in the repository".** Questions added or edited on the admin page go into the database, not
    straight into git. The admin downloads them with "Export" and a team member commits
    `eval/questions.jsonl`. This is on purpose: the evaluation set is frozen (tag eval-v1) and must not change
-   without a commit. To write in SPEC section 11 as our reading of SR37.
+   without a commit. Written in SPEC section 11 as our reading of SR37.
 2. **FR20, FR21, SR40 re-index.** The code starts the regression run by itself after the re-index, but no test
    checks that chain (only that visitors are refused), and the re-index was never run on the full corpus from
    the admin page: embedding 72,502 passages on a CPU takes hours, so the embeddings were made on Colab
@@ -52,5 +52,5 @@ Only the website, login, admin and deployment requirements are listed. "Run 2" =
 5. **NFR5, SR1, SR5 online data.** The site is online over HTTPS, but the online database is filled with
    `pg_restore` of Yasser's dump (same data as run 2: 2,415 decisions, 72,502 passages), not with
    `seed --corpus`: the bulk files (52 GB) are not on the server and the embeddings were made on Colab.
-   The seed script is still used for the admin account (`seed --admin`). To write in SPEC section 11.
+   The seed script is still used for the admin account (`seed --admin`). Written in SPEC section 11.
    Status of the restore: Railway thread (6.3).
