@@ -613,3 +613,17 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    dissent". The adversarial abstention rate it had just printed (0.857 -> 0.810) is one question of 21, not two.
    Caught by listing the status changes: two questions (U022, X009). X002 got a sentence back but stayed "not
    supported". Corrected in the next commit.
+
+## 2026-11-09 — Words broken at a line end and page markers (Yasser, after Edwin's run 2 finding)
+
+1. **A page-marker rule that would have removed parts of legal citations.** What we asked: remove
+   CourtListener's star-pagination markers ("authority, *490 however") and join words broken at a line
+   end ("mar- riage"), as Edwin found in run 2. What came back: a rule removing any star and page number
+   standing alone between spaces, with tests (footnote stars and "Section 1983" kept). What was wrong:
+   Yasser's dry run on the real corpus showed "*4" in "1978 U. S. Dist. LEXIS 19296, *4 (SDNY ...)",
+   "*2" in "1988 WL 44736, *2" and "*1" in "Id., at *1": pinpoint citations to the page of a LEXIS or
+   Westlaw document, which are part of the citation and must stay. How we caught it: reading the examples
+   the dry run prints, before anything was written. Fix: a star number after "<number>," or after "at" is
+   kept, with a test made from those three real sentences; the dry run now also prints the star numbers
+   it keeps, so both sides can be checked. The word repairs in the same dry run (washington, government,
+   because, ...) and the pairs it left alone ("pre- and", "two- or") were right.
