@@ -115,7 +115,7 @@ text the model and the reader see, not for a search gain.
 
 ---
 
-## 7. AI-assisted process (candidate entry from AI_LOG, 2026-11-06; the report has room for 2 of our 3 candidates, to choose with Edwin)
+## 7. AI-assisted process (AI_LOG, 2026-11-06; chosen with Edwin on 2026-11-09: this entry for the data side, his "concurrence presented as the Court" for the AI side)
 
 **A data repair rule that was too loose, twice.** Claude wrote the rule to put back the "fi"/"fl"
 letters lost in PDF texts ("frst" -> "first"). The first version would also have changed real words:

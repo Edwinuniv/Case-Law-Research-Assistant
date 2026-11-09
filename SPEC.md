@@ -440,10 +440,17 @@ deleted (they say nothing about the system) and the run set back to paused. Ques
 Yasser's key. Run 2 finished with 85 of 85 questions and 0 errors (eval/runs/eval_run2.json). To do after the
 run: an authentication error should pause the run like the daily limit, not save an ERROR per question.
 
+2026-11-09 - Requirements check (Yasser, docs/requirements_yasser.md): three readings written down.
+(1) SR10: the court is not stored on each row; the whole corpus is one court (COURT in the config, shown in
+the coverage line). (2) SR11: the bulk files carry no licence per row; the Public Domain Mark covers the
+CourtListener data as a whole, so every row gets config.LICENCE. A row without a licence is refused by the
+loading code and by the schema (NOT NULL), now with tests (tests/test_licence.py). (3) SR16: a paragraph
+longer than 350 words (often a PDF text with no paragraph breaks) is cut at sentence ends, not at a
+paragraph end; the last chunk of an opinion can be shorter than 250 words (section 4).
+
 2026-11-09 - Verifier (Edwin, step 8.2): quote matching changed after run 2, by the rule written before measuring
 (EVALUATION.md). `verify.norm` (guide code) makes every hyphen "-" (NFKC turns the model's U+2011 into U+2010),
 drops CourtListener page markers "*490", and joins words broken at a line end ("mar- riage"). Check 2 ignores the
 quote's final . , ; :. Quotes with "..." are still refused. Measured on run 2's saved sentences
 (eval/runs/eval_run2_reverified.json), with no new model answers: all four conditions of the rule hold, so it is kept.
 The TEST split is reported with this verifier.
-
