@@ -2,7 +2,7 @@
  "run_id": 1,
  "created_at": "2026-11-08T13:12:23.436742+00:00",
  "trigger": "command line",
- "status": "paused",
+ "status": "done",
  "note": "run 2: dump 2026-11-06 21:20 UTC (text fixes #59) minus 8 out-of-scope decisions (step/1.8 script); case_filter on; fixed checker",
  "settings": {
   "top_k": 8,
@@ -33,280 +33,280 @@
   "dump": "Yasser's dump of 2026-11-06 21:20 UTC (text fixes, PR #59) minus the 8 out-of-scope decisions (step/1.8 script)"
  },
  "tune_metrics": {
-  "questions": 31,
-  "answerable": 31,
-  "unanswerable": 0,
-  "adversarial": 0,
-  "recall@1": 0.8387,
-  "recall@5": 0.9677,
-  "recall@10": 0.9677,
-  "mrr@10": 0.8978,
-  "abstention_precision": 0.0,
-  "abstention_recall": null,
+  "questions": 72,
+  "answerable": 34,
+  "unanswerable": 17,
+  "adversarial": 21,
+  "recall@1": 0.8529,
+  "recall@5": 0.9706,
+  "recall@10": 0.9706,
+  "mrr@10": 0.9069,
+  "abstention_precision": 0.5484,
+  "abstention_recall": 1.0,
   "answered_but_should_abstain": 0,
-  "abstained_but_should_answer": 13,
-  "low_confidence": 5,
+  "abstained_but_should_answer": 14,
+  "low_confidence": 6,
   "errors": 0,
-  "citations_shown": 29,
+  "citations_shown": 40,
   "false_citations_shown": 0,
   "false_citation_rate": 0.0,
   "fabrications_caught_by_verifier": 0,
-  "groundedness_judge": 0.9091,
-  "groundedness_lexical": 0.7898,
-  "adversarial_abstention_rate": null,
-  "mean_ms": 2780.2258
+  "groundedness_judge": 0.8409,
+  "groundedness_lexical": 0.7815,
+  "adversarial_abstention_rate": 0.8571,
+  "mean_ms": 2118.5139
  },
  "tune_sweep": [
   {
    "tau": 0.2,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.22,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.24,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.26,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.28,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.3,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.32,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6667,
+   "recall": 0.9412,
    "wrong_abstentions": 8,
-   "wrong_answers": 0
+   "wrong_answers": 1
   },
   {
    "tau": 0.34,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.68,
+   "recall": 1.0,
    "wrong_abstentions": 8,
    "wrong_answers": 0
   },
   {
    "tau": 0.36,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6538,
+   "recall": 1.0,
    "wrong_abstentions": 9,
    "wrong_answers": 0
   },
   {
    "tau": 0.38,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6296,
+   "recall": 1.0,
    "wrong_abstentions": 10,
    "wrong_answers": 0
   },
   {
    "tau": 0.4,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.6071,
+   "recall": 1.0,
    "wrong_abstentions": 11,
    "wrong_answers": 0
   },
   {
    "tau": 0.42,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 12,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.44,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 12,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.46,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 12,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.48,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 12,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.5,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 12,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.52,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 12,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.54,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.5667,
+   "recall": 1.0,
    "wrong_abstentions": 13,
    "wrong_answers": 0
   },
   {
-   "tau": 0.56,
-   "precision": 0.0,
-   "recall": null,
+   "tau": 0.44,
+   "precision": 0.5667,
+   "recall": 1.0,
+   "wrong_abstentions": 13,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.46,
+   "precision": 0.5667,
+   "recall": 1.0,
+   "wrong_abstentions": 13,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.48,
+   "precision": 0.5667,
+   "recall": 1.0,
+   "wrong_abstentions": 13,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.5,
+   "precision": 0.5667,
+   "recall": 1.0,
+   "wrong_abstentions": 13,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.52,
+   "precision": 0.5667,
+   "recall": 1.0,
+   "wrong_abstentions": 13,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.54,
+   "precision": 0.5484,
+   "recall": 1.0,
    "wrong_abstentions": 14,
    "wrong_answers": 0
   },
   {
-   "tau": 0.58,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 15,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.6,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 15,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.62,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 15,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.64,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 15,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.66,
-   "precision": 0.0,
-   "recall": null,
+   "tau": 0.56,
+   "precision": 0.5152,
+   "recall": 1.0,
    "wrong_abstentions": 16,
    "wrong_answers": 0
   },
   {
-   "tau": 0.68,
-   "precision": 0.0,
-   "recall": null,
+   "tau": 0.58,
+   "precision": 0.5,
+   "recall": 1.0,
    "wrong_abstentions": 17,
    "wrong_answers": 0
   },
   {
-   "tau": 0.7,
-   "precision": 0.0,
-   "recall": null,
+   "tau": 0.6,
+   "precision": 0.5,
+   "recall": 1.0,
+   "wrong_abstentions": 17,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.62,
+   "precision": 0.5,
+   "recall": 1.0,
+   "wrong_abstentions": 17,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.64,
+   "precision": 0.5,
+   "recall": 1.0,
+   "wrong_abstentions": 17,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.66,
+   "precision": 0.4857,
+   "recall": 1.0,
    "wrong_abstentions": 18,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.68,
+   "precision": 0.4722,
+   "recall": 1.0,
+   "wrong_abstentions": 19,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.7,
+   "precision": 0.4595,
+   "recall": 1.0,
+   "wrong_abstentions": 20,
    "wrong_answers": 0
   },
   {
    "tau": 0.72,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 18,
+   "precision": 0.4595,
+   "recall": 1.0,
+   "wrong_abstentions": 20,
    "wrong_answers": 0
   },
   {
    "tau": 0.74,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 21,
+   "precision": 0.425,
+   "recall": 1.0,
+   "wrong_abstentions": 23,
    "wrong_answers": 0
   },
   {
    "tau": 0.76,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 22,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.78,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 23,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.8,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 23,
-   "wrong_answers": 0
-  },
-  {
-   "tau": 0.82,
-   "precision": 0.0,
-   "recall": null,
+   "precision": 0.4146,
+   "recall": 1.0,
    "wrong_abstentions": 24,
    "wrong_answers": 0
   },
   {
-   "tau": 0.84,
-   "precision": 0.0,
-   "recall": null,
+   "tau": 0.78,
+   "precision": 0.3953,
+   "recall": 1.0,
+   "wrong_abstentions": 26,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.8,
+   "precision": 0.3953,
+   "recall": 1.0,
+   "wrong_abstentions": 26,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.82,
+   "precision": 0.3864,
+   "recall": 1.0,
    "wrong_abstentions": 27,
+   "wrong_answers": 0
+  },
+  {
+   "tau": 0.84,
+   "precision": 0.3617,
+   "recall": 1.0,
+   "wrong_abstentions": 30,
    "wrong_answers": 0
   },
   {
    "tau": 0.86,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 27,
+   "precision": 0.3617,
+   "recall": 1.0,
+   "wrong_abstentions": 30,
    "wrong_answers": 0
   },
   {
    "tau": 0.88,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 28,
+   "precision": 0.3542,
+   "recall": 1.0,
+   "wrong_abstentions": 31,
    "wrong_answers": 0
   },
   {
    "tau": 0.9,
-   "precision": 0.0,
-   "recall": null,
-   "wrong_abstentions": 30,
+   "precision": 0.34,
+   "recall": 1.0,
+   "wrong_abstentions": 33,
    "wrong_answers": 0
   }
  ],
@@ -2321,6 +2321,2023 @@
     "false_by_sentence": [
      []
     ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A039",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 4,
+    "reason": "support score between the two thresholds",
+    "removed": [
+     {
+      "text": "He warned that expanding \u2018discriminate because of sex\u2019 to cover sexual orientation or gender identity would have far\u2011reaching consequences, observing, \u201cinterpreting discrimination because of \u201csex\u201d to encompass discrimination because of sexual orientation or gender identity\u2013\u2013is virtually certain to have far\u2011reaching consequences.\u201d",
+      "quote": "interpreting discrimination because of \u201csex\u201d to encompass discrimination because of sexual orientation or gender identity\u2013\u2013is virtually certain to have far\u2011reaching consequences.",
+      "sources": [
+       "P8"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     },
+     {
+      "text": "He also pointed out that Title\u202fVII contains an exemption for religious organizations, writing, \u201cAs the Court today recognizes, Title VII contains an important exemption for religious organizations.\u201d",
+      "quote": "As the Court today recognizes, Title VII contains an important exemption for religious organizations.",
+      "sources": [
+       "P5"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     }
+    ],
+    "ms_total": 6479,
+    "n_removed": 2,
+    "sentences": [
+     {
+      "text": "Alito, dissenting, said the Court\u2019s action was legislation, writing, \u201cThere is only one word for what the Court has done today: legislation.\u201d",
+      "sources": [
+       "P6"
+      ],
+      "groundedness": 0.846
+     },
+     {
+      "text": "He also noted that Title\u202fVII\u2019s five protected categories do not include sexual orientation or gender identity, stating, \u201cNeither \u201csexual orientation\u201d nor \u201cgender identity\u201d appears on that list.\u201d",
+      "sources": [
+       "P6"
+      ],
+      "groundedness": 0.762
+     },
+     {
+      "text": "Alito further argued that the ordinary meaning of Title\u202fVII in 1964 would not have covered discrimination based on sexual orientation or gender identity, asserting, \u201cour job is to ascertain and apply the \u201cordinary meaning\u201d of the statute.\u201d",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.773
+     },
+     {
+      "text": "Kavanaugh, dissenting, emphasized that the phrase \u201cdiscriminate because of sex\u201d is shorthand for the statutory language that prohibits refusing to hire or discharge an individual because of sex, noting, \u201cthe plaintiffs do not dispute that the ordinary meaning of the statutory phrase \u201cdiscriminate\u201d because of sex is the same as the statutory phrase \u201cto fail or refuse to hire or to discharge any individual\u201d because of sex.\u201d",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.816
+     }
+    ],
+    "top_score": 0.8681,
+    "judgements": [
+     "yes",
+     "yes",
+     "yes",
+     "partly"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "LOW_CONFIDENCE",
+    "support_score": 0.5542,
+    "citations_shown": 4,
+    "ranked_decisions": [
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997
+    ],
+    "false_by_sentence": [
+     [],
+     [],
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A040",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "",
+    "removed": [],
+    "ms_total": 1784,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court struck down the coverage formula in \u00a7\u202f4(b) of the Voting Rights Act, declaring it unconstitutional.",
+      "sources": [
+       "P2"
+      ],
+      "groundedness": 0.778
+     }
+    ],
+    "top_score": 0.8203,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7622,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A041",
+   "tag": "answerable",
+   "split": "test",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 2445,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that the coverage formula is unconstitutional because it is based on decades\u2011old data and practices that no longer exist, making it irrational to continue using it for preclearance.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.438
+     },
+     {
+      "text": "The Court noted that conditions have changed dramatically since the formula was adopted, with voter turnout and registration now near parity and the discriminatory tests and devices that justified preclearance having been banned for over 40 years.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.652
+     }
+    ],
+    "top_score": 0.8202,
+    "judgements": [
+     "yes",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7226,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "A042",
+   "tag": "answerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "{ \"text\":\"The dissent maintains that an Act's limited coverage actually eases Congress's burdens, and suggests that a fortuitous relationship should suffice.\",\"sources\":[\"P6\"],\"quote\":\"the dissent maintains that an Act's limited coverage actually eases Congress's burdens, and suggests that a fortuitous relationship should suffice\"}",
+      "sources": [],
+      "problems": [
+       "not a valid sentence"
+      ]
+     }
+    ],
+    "ms_total": 2170,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The dissent argued that, in light of voting discrimination in Shelby County, the county cannot complain about the provisions that subject it to preclearance.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.929
+     }
+    ],
+    "top_score": 0.8218,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.4161,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U001",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1032,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7187,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     219734,
+     8176149,
+     9987187,
+     2144,
+     9987187,
+     145777,
+     9987187,
+     145744,
+     118457,
+     134743,
+     3217333,
+     145810,
+     8421224,
+     4895263,
+     4630085,
+     4898858,
+     149702
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U002",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1324,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7434,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9450797,
+     9450797,
+     9450797,
+     625722,
+     4403811,
+     5291995,
+     4760997,
+     4877180,
+     4766379,
+     145744,
+     4403794,
+     145817,
+     4766379,
+     6478769,
+     145874,
+     127888,
+     145874,
+     127926,
+     6238489,
+     118363
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U003",
+   "tag": "unanswerable",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 972,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7747,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     118477,
+     134728,
+     118477,
+     2680591,
+     799969,
+     118477,
+     4869841,
+     799969,
+     9987187,
+     218456,
+     145746,
+     145804,
+     127904,
+     118444,
+     118506
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U004",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1109,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6513,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9388838,
+     130158,
+     623143,
+     4883739,
+     9506541,
+     2642828,
+     2642828,
+     9302602,
+     9824344,
+     9410836,
+     4902410,
+     2808294,
+     4746633,
+     4631844,
+     145888,
+     3212620,
+     872995,
+     4376985,
+     149702
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U005",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 821,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6939,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     2675752,
+     800858,
+     9485285,
+     145742,
+     118381,
+     213505,
+     145687,
+     820895,
+     2659301,
+     4374572,
+     9971894,
+     145779,
+     9067458,
+     130146,
+     4746633,
+     145638,
+     121152
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U006",
+   "tag": "unanswerable",
+   "split": "test",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 2120,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court has held that aerial observation of a backyard from a plane does not violate a reasonable expectation of privacy, so it is not a search.",
+      "sources": [
+       "P3"
+      ],
+      "groundedness": 0.636
+     },
+     {
+      "text": "The Court further states that visual observation is not a search at all.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 0.833
+     }
+    ],
+    "top_score": 0.7665,
+    "judgements": [
+     "partly",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7711,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     137742,
+     145669,
+     118354,
+     137742,
+     118443,
+     623242,
+     145814,
+     820749,
+     622304,
+     622304,
+     148797,
+     856347,
+     622304,
+     2760668
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U007",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1173,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7503,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4631844,
+     10049657,
+     2812209,
+     9824344,
+     118323,
+     6481357,
+     1736,
+     134735,
+     931614,
+     945737,
+     4760994,
+     145832,
+     122258,
+     4591916,
+     118407,
+     932061,
+     145122,
+     2674862,
+     4403811
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U008",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1183,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7086,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9987186,
+     9987186,
+     9987186,
+     118450,
+     2784697,
+     9971894,
+     9987186,
+     9987186,
+     4766664,
+     9480639,
+     6238073
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U009",
+   "tag": "unanswerable",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1003,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7446,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4581525,
+     118432,
+     4581525,
+     118432,
+     4581525,
+     118432,
+     4581525,
+     145677,
+     127911,
+     2655498,
+     9493080,
+     2655498,
+     118415,
+     2655498,
+     127911,
+     4499694
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U010",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1267,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6842,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     118381,
+     1722,
+     815038,
+     118324,
+     4833940,
+     4748668,
+     6244456,
+     145865,
+     6444142,
+     9231241,
+     621045,
+     7686272,
+     145632
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U011",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1011,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6903,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     118488,
+     625709,
+     121155,
+     118488,
+     4760997,
+     217515,
+     2804674,
+     148483,
+     145915,
+     118361,
+     118500,
+     205713,
+     620673,
+     118362,
+     212970,
+     134921
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U012",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1167,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6464,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     6470913,
+     4853224,
+     6470913,
+     134750,
+     8247829,
+     118333,
+     625711,
+     2680590,
+     9441732,
+     9493900,
+     4397059,
+     821432,
+     2773182,
+     4760994,
+     802772,
+     5287260,
+     4591917,
+     2811849,
+     4730118
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U013",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 845,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6589,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     121151,
+     902769,
+     1087670,
+     9197951,
+     145121,
+     118339,
+     4621277,
+     9986255,
+     137732,
+     1734,
+     145629,
+     2797290,
+     218455,
+     131156,
+     2803251,
+     799988
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U014",
+   "tag": "unanswerable",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 765,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7413,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4460812,
+     145914,
+     4469101,
+     145695,
+     122253,
+     137735,
+     145714,
+     2798228,
+     145664,
+     4621279,
+     148483,
+     4499694,
+     2675750,
+     10049703,
+     9824344,
+     145664,
+     118473,
+     820895
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U015",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1112,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7589,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4499694,
+     118475,
+     149007,
+     145890,
+     145919,
+     145679,
+     118500,
+     6477853,
+     145683,
+     902267,
+     2959735,
+     145790,
+     2681318
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U016",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 930,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7357,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     6463787,
+     2808294,
+     4403811,
+     118444,
+     10049657,
+     4633471,
+     4633471,
+     6463787,
+     9506541,
+     10144816,
+     6481357
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U017",
+   "tag": "unanswerable",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1206,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7074,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4883695,
+     9506539,
+     9511765,
+     9596275,
+     4766664,
+     4605151,
+     127904,
+     4509417,
+     4631842,
+     145826,
+     145862,
+     145862,
+     4764770,
+     142876,
+     2801433
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U018",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 2419,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7305,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     145695,
+     205316,
+     205316,
+     121154,
+     121149,
+     799995,
+     142879,
+     149702,
+     134748,
+     932061,
+     4898460,
+     145851,
+     147530,
+     3170730,
+     798626
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U019",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 975,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6692,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     2620702,
+     902264,
+     799973,
+     136995,
+     4469603,
+     626055,
+     3214882,
+     145801,
+     626454,
+     10049680,
+     3216494,
+     137742,
+     134746,
+     145738,
+     4742386,
+     137732,
+     4742386,
+     2670795
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U020",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1130,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7039,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9987187,
+     821306,
+     821306,
+     5293795,
+     821306,
+     4853226,
+     5293795,
+     4512666,
+     136993,
+     118427,
+     118379,
+     182990,
+     137749,
+     4469603,
+     136993,
+     145707,
+     142898
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U021",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 856,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.682,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4957280,
+     4957280,
+     4957280,
+     4957280,
+     145663,
+     3181041,
+     9476534,
+     5063917,
+     118490,
+     1730,
+     9231224,
+     9259216,
+     118490,
+     118490,
+     148483
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "U022",
+   "tag": "unanswerable",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "However, the dissent argues that the Court\u2019s holding that reckless homicide does not qualify as an ACCA predicate means the enhanced federal penalty would not apply.",
+      "quote": "the Court today holds that those kinds of reckless offenses such as reckless assault and reckless homicide do not qualify as ACCA predicates.",
+      "sources": [
+       "P4"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2783,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The dissent points out that recklessness as to the consequences of one\u2019s actions generally suffices for criminal liability.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.727
+     }
+    ],
+    "top_score": 0.726,
+    "judgements": [
+     "no"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.3376,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4742386,
+     2670795,
+     145815,
+     4890458,
+     2157,
+     131154,
+     127927,
+     3216497,
+     127891,
+     4894912,
+     218457,
+     218457,
+     2651115,
+     218457,
+     4512666
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X001",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1363,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6903,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9986254,
+     9986254,
+     9986254,
+     9485286,
+     4746633,
+     9986254,
+     145628,
+     623144,
+     145801,
+     4861818,
+     4898456,
+     9567046,
+     10049663,
+     4748669,
+     9502725,
+     10049700,
+     10049660,
+     10049694,
+     130153
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X002",
+   "tag": "adversarial",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court interpreted the Second Amendment as protecting only the right to possess and carry weapons in case of confrontation, tying the right to militia service.",
+      "quote": "the Court limits the Amendment\u2019s protection to the right \u201cto possess and carry weapons in case of confrontation.\u201d",
+      "sources": [
+       "P7"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     },
+     {
+      "text": "Accordingly, it read the phrase \u201cto keep and bear Arms\u201d as safeguarding only a right to possess and use firearms in connection with service in a state\u2011organized militia.",
+      "quote": "the \u201cright to keep and bear Arms\u201d protects only a right to possess and use firearms in connection with service in a state\u2011organized militia.",
+      "sources": [
+       "P7"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2516,
+    "n_removed": 2,
+    "sentences": [],
+    "top_score": 0.8324,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     145777,
+     145777
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X003",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1135,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7987,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     799984,
+     799984,
+     799984,
+     799984,
+     799984,
+     799984,
+     799984,
+     799984
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X004",
+   "tag": "adversarial",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 963,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7717,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357,
+     6481357
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X005",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "The Court held that obtaining cell\u2011site location records is a \u201csearch\u201d within the meaning of the Fourth Amendment.",
+      "quote": "It decides that a \u201csearch\u201d of Carpenter occurred within the meaning of the Fourth Amendment",
+      "sources": [
+       "P5"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     }
+    ],
+    "ms_total": 2649,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "Accordingly, the government must obtain a warrant before acquiring those records.",
+      "sources": [
+       "P8"
+      ],
+      "groundedness": 0.375
+     }
+    ],
+    "top_score": 0.7773,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.2905,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666,
+     4512666
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X006",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 1963,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "Justice Kennedy argued that the central question is whether the majority may use the power of the State to enforce its moral views through criminal law.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.875
+     },
+     {
+      "text": "He emphasized that the Court\u2019s duty is to protect liberty, not to impose its own moral code on individuals.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.556
+     }
+    ],
+    "top_score": 0.8254,
+    "judgements": [
+     "no",
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7489,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     130160,
+     130160,
+     130160,
+     130160,
+     130160,
+     130160,
+     130160,
+     130160
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X007",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 2925,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that relief required manual recounts in all Florida counties where so\u2011called \u201cundervotes\u201d had not been subject to manual tabulation, thereby ordering a statewide recount.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.722
+     },
+     {
+      "text": "It found that the Florida Supreme Court\u2019s recount plan lacked uniform standards and threatened equal\u2011protection guarantees, so a uniform statewide recount was necessary to meet constitutional requirements.",
+      "sources": [
+       "P7"
+      ],
+      "groundedness": 0.526
+     }
+    ],
+    "top_score": 0.8235,
+    "judgements": [
+     "yes",
+     "partly"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.7481,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     118395,
+     118395,
+     118395,
+     118395,
+     118395,
+     118395,
+     118395,
+     118395,
+     9259216,
+     9259216
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X008",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 730,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7172,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4888668,
+     4748669,
+     145779,
+     4772304,
+     127901,
+     149006,
+     4760997,
+     149006,
+     4895709,
+     4760996,
+     118363,
+     145657,
+     149289,
+     118363,
+     149289
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X009",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 1,
+    "reason": "support score below the abstention threshold",
+    "removed": [
+     {
+      "text": "Alito warned that if the issue were left to the states, some would recognize same\u2011sex marriage while others would not, reflecting the federalist structure.",
+      "quote": "If the issue of same\u2011sex marriage had been left to the people of the States, it is likely that some States would recognize same\u2011sex marriage and others would not.",
+      "sources": [
+       "P6"
+      ],
+      "problems": [
+       "quote not found in the cited passage"
+      ]
+     }
+    ],
+    "ms_total": 2529,
+    "n_removed": 1,
+    "sentences": [
+     {
+      "text": "The dissent argued that the Constitution says nothing about a right to same\u2011sex marriage and therefore leaves the decision to the people of each State.",
+      "sources": [
+       "P1"
+      ],
+      "groundedness": 0.733
+     }
+    ],
+    "top_score": 0.8097,
+    "judgements": [
+     "yes"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.3725,
+    "citations_shown": 1,
+    "ranked_decisions": [
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209
+    ],
+    "false_by_sentence": [
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X010",
+   "tag": "adversarial",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 706,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7904,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209,
+     2812209
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X011",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 2,
+    "reason": "",
+    "removed": [],
+    "ms_total": 3852,
+    "n_removed": 0,
+    "sentences": [
+     {
+      "text": "The Court held that when the government uses a device not in general public use to explore details of a home that would previously have been unknowable without physical intrusion, the surveillance is a \u201csearch\u201d and is presumptively unreasonable without a warrant.",
+      "sources": [
+       "P5"
+      ],
+      "groundedness": 1.0
+     },
+     {
+      "text": "In contrast, the dissent argued that the infrared camera merely measured exterior heat and revealed no interior details, so it did not constitute a search.",
+      "sources": [
+       "P4"
+      ],
+      "groundedness": 0.667
+     }
+    ],
+    "top_score": 0.8132,
+    "judgements": [
+     "yes",
+     "no"
+    ],
+    "model_said": "SUPPORTED",
+    "status_raw": "ANSWERED",
+    "support_score": 0.84,
+    "citations_shown": 2,
+    "ranked_decisions": [
+     118443,
+     118443,
+     118443,
+     118443,
+     118443,
+     118443,
+     118443,
+     118443
+    ],
+    "false_by_sentence": [
+     [],
+     []
+    ],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X012",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1024,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7137,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     1741,
+     1741,
+     145726,
+     1741,
+     4512666,
+     1741,
+     150540,
+     145221,
+     131143,
+     118420,
+     2804674,
+     2620698,
+     3214882
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X013",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court held that the death penalty could not be imposed for offenses committed by juveniles, no matter how serious their crimes.",
+      "quote": "the Court held that the death penalty could not be imposed for offenses committed by juveniles, no matter how serious their crimes.",
+      "sources": [
+       "P2"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     },
+     {
+      "text": "In Roper, the Court held that the Constitution prohibits the execution of an offender who was under 18 at the time of his offense.",
+      "quote": "In Roper, the Court held that the Constitution prohibits the execution of an offender who was under 18 at the time of his offense.",
+      "sources": [
+       "P6"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     }
+    ],
+    "ms_total": 2464,
+    "n_removed": 2,
+    "sentences": [],
+    "top_score": 0.7535,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     3205872,
+     2959737,
+     3205872,
+     145807,
+     118395,
+     2959737,
+     145780,
+     2959737,
+     8425678,
+     118445,
+     4876196,
+     137749,
+     10049679,
+     118445
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X014",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 971,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7141,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     142890,
+     118381,
+     7686272,
+     4510030,
+     7686272,
+     2959747,
+     4760994,
+     2655590,
+     4748668,
+     2806207,
+     122247,
+     145777
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X015",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 863,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7267,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     10049706,
+     10049661,
+     10049698,
+     10049695,
+     10049680,
+     6448934,
+     4764769,
+     10049666,
+     145779,
+     149289,
+     4760997,
+     867645,
+     4894406,
+     145779,
+     799760,
+     4632952,
+     220342
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X016",
+   "tag": "adversarial",
+   "split": "test",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1443,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.834,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997,
+     4760997
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X017",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 968,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.717,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4879669,
+     4898858,
+     4377349,
+     4898858,
+     4738313,
+     4879669,
+     10049691,
+     4879669,
+     2959744,
+     9987187,
+     2959744,
+     118457,
+     122254
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X018",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1778,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.7479,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     4510624,
+     4510624,
+     118471,
+     4510624,
+     3191207,
+     4510624,
+     4508138,
+     145777,
+     10049702,
+     799984,
+     145639,
+     4894283,
+     9987186,
+     145960,
+     625711,
+     2672210,
+     3211607,
+     626209,
+     6461473
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X019",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 856,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.6872,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     131143,
+     145726,
+     131143,
+     4403806,
+     145960,
+     150540,
+     130159,
+     127891,
+     3205874,
+     127691,
+     118446,
+     4546142,
+     4594558,
+     145648,
+     127927,
+     2959736
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X020",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "the model said the passages do not answer this",
+    "removed": [],
+    "ms_total": 1148,
+    "n_removed": 0,
+    "sentences": [],
+    "top_score": 0.741,
+    "judgements": [],
+    "model_said": "NOT_SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     9971894,
+     4760997,
+     9971894,
+     4760997
+    ],
+    "false_by_sentence": [],
+    "fabrications_caught": 0
+   }
+  },
+  {
+   "question_id": "X021",
+   "tag": "adversarial",
+   "split": "tune",
+   "result": {
+    "n_kept": 0,
+    "reason": "every sentence failed verification",
+    "removed": [
+     {
+      "text": "The Court held that \u00a7\u202f4(b) of the Voting Rights Act was unconstitutional, striking it down as invalid.",
+      "quote": "The Court holds \u00a7 4(b) invalid on the ground that it is \"irrational to base coverage on the use of voting tests 40 years ago, when such tests have been illegal since that time.\"",
+      "sources": [
+       "P5"
+      ],
+      "problems": [
+       "dissent or concurrence presented as the Court's view"
+      ]
+     }
+    ],
+    "ms_total": 1930,
+    "n_removed": 1,
+    "sentences": [],
+    "top_score": 0.8044,
+    "judgements": [],
+    "model_said": "SUPPORTED",
+    "status_raw": "NOT_SUPPORTED",
+    "support_score": 0.0,
+    "citations_shown": 0,
+    "ranked_decisions": [
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614,
+     931614
+    ],
+    "false_by_sentence": [],
     "fabrications_caught": 0
    }
   }

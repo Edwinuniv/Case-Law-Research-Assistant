@@ -431,6 +431,14 @@ retrieved decision is kept when it is written in the cited passage itself (a pas
 cites Chevron); this is rule 3 of section 5, a wider reading of SR23's "must match an opinion we retrieved".
 NFR2 is met by rule for numbers and dates, and only approximately for other facts (quote and groundedness).
 
+2026-11-09 - Week 8 (Edwin): how run 2 was made. Questions 1-38 on 2026-11-08 with Edwin's Groq key; it paused
+at the daily limit. To finish sooner, the run was resumed on 2026-11-09 with a teammate's key (same model,
+openai/gpt-oss-120b, same settings: a key is not a setting). A first try with an incomplete key failed with
+AuthenticationError on 6 questions (A039-A042, U001, U002); the run was stopped, those 6 error rows were
+deleted (they say nothing about the system) and the run set back to paused. Questions 39-85 then ran with
+Yasser's key. Run 2 finished with 85 of 85 questions and 0 errors (eval/runs/eval_run2.json). To do after the
+run: an authentication error should pause the run like the daily limit, not save an ERROR per question.
+
 2026-11-09 - Requirements check (Yasser, docs/requirements_yasser.md): three readings written down.
 (1) SR10: the court is not stored on each row; the whole corpus is one court (COURT in the config, shown in
 the coverage line). (2) SR11: the bulk files carry no licence per row; the Public Domain Mark covers the
