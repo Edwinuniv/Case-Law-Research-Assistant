@@ -312,3 +312,14 @@ def test_an_exported_run_keeps_the_tune_metrics_and_sweep_of_its_own_settings(cl
     assert saved["tune_sweep"] == evaluate.sweep(evaluate.load_run(run_id), RUN_S, "tune")
     assert saved["tune_metrics"]["abstained_but_should_answer"] == 1          # 0.9 < 0.95: abstains
     assert "test" not in json.dumps(saved["tune_metrics"]) and not any("test" in k for k in saved)   # SR29: no TEST numbers
+
+
+# --- Step 8.2: the rechecked run lives in a file (eval/runs/eval_run2_reverified.json), not in the database ---
+def test_the_test_split_of_a_saved_run_file_is_shown_when_asked(monkeypatch, capsys):
+    run_eval = fake_run(monkeypatch)
+    pairs = [({**q("a", "answerable"), "split": "tune"}, res(0.9)), (q("b", "answerable"), res(0.2))]
+    monkeypatch.setattr(run_eval.evaluate, "load_run", lambda run_id: [])               # not in the database
+    monkeypatch.setattr(run_eval.evaluate, "load_run_file", lambda path: pairs)
+    run_eval.main(["--test", "eval/runs/eval_run2_reverified.json"], S)
+    out = capsys.readouterr().out
+    assert "== test split ==" in out and "answerable                       1" in out
