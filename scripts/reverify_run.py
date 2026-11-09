@@ -5,7 +5,8 @@ Every question is rechecked (the TEST split is needed later, with the verifier t
 split + adversarial questions are listed and measured here: TEST is reported once, with run_eval --test.
 The run kept the quote of removed sentences only, so a kept sentence gets every check again except the quote
 check: the change makes the quote and the passage alike in the same way, so it can only find more quotes.
-Usage: python -m scripts.reverify_run eval/runs/eval_run2.json   -> eval/runs/eval_run2_reverified.json"""
+Usage: python -m scripts.reverify_run eval/runs/eval_run2.json   -> eval/runs/eval_run2_reverified.json
+       ... --judgements-from eval/runs/eval_run2_reverified.json   (reuse the judge's answers of an earlier recheck)"""
 import sys
 import json
 from app import config, evaluate
@@ -78,6 +79,21 @@ def reverify(pairs, s, search, index, judge, shown):
     return out
 
 
+def reuse_judgements(saved_results, judge):
+    """The judge's answer for a sentence an earlier recheck already judged (same sentence, same passages: rule 1);
+    others, and earlier errors, are asked. Used when the provider's daily limit stopped a recheck halfway."""
+    table = {}
+    for x in saved_results:
+        if x["result"].get("reverified"):
+            for sentence, verdict in zip(x["result"]["sentences"], x["result"]["judgements"]):
+                table.setdefault(sentence["text"], set()).add(verdict)
+
+    def cached(text, passage):
+        verdicts = table.get(text, set())
+        return next(iter(verdicts)) if len(verdicts) == 1 and verdicts != {"error"} else judge(text, passage)
+    return cached
+
+
 def pipeline_search(s):
     """The pipeline's search (app/pipeline.py answer, step 1), as in scripts/error_analysis.py."""
     from app.citations import CitationIndex
@@ -98,8 +114,10 @@ def main(argv):
     saved = json.load(open(path))
     s = saved["settings"]
     search, index = pipeline_search(s)
-    out = reverify(evaluate.load_run_file(path), s, search, index,
-                   lambda text, passage: evaluate.judge_with_retry(text, passage, print), evaluate.check_shown_citations)
+    judge = lambda text, passage: evaluate.judge_with_retry(text, passage, print)
+    if "--judgements-from" in argv:
+        judge = reuse_judgements(json.load(open(argv[argv.index("--judgements-from") + 1]))["results"], judge)
+    out = reverify(evaluate.load_run_file(path), s, search, index, judge, evaluate.check_shown_citations)
     tune = [p for p in out["pairs"] if p[0]["split"] == "tune" or p[0]["tag"] == "adversarial"]
     before = evaluate.metrics(evaluate.load_run_file(path), s, "tune")
     after = evaluate.metrics(tune, s, "tune")
