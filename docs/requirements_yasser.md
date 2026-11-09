@@ -11,7 +11,7 @@ Edwin's table.
 | SR8 download courts, dockets, clusters, citations, citation map | download with resume (`aria2c -c`), file sizes in SPEC §2; read by `app/bulk.py` | SPEC §2 (sizes measured 2026-10-22); `corpus` ingestion report (rows read per file) | done |
 | SR9 opinions file streamed or resumable, filtered, then deleted | `scripts/filter_opinions.py` (stdin or file, `--delete`) | SPEC §2 (44.8 GB file read, 5,598 opinions kept); the file is not in the repo or on the server | done |
 | SR10 store id, cluster, case name, court, date, type, text | tables `decisions` and `opinions` (`app/db.py`); `opinion_label` in `app/ingest.py` | every opinion has `type`, `label`, `text` (NOT NULL); `test_opinion_sections` (labels) | done; see gap 1 |
-| FR30, SR11, NFR11 licence and load date stored, no licence = rejected | `licence TEXT NOT NULL`, `loaded_at` in `decisions` and `opinions`; `rejected_without_licence` in `ingest.py` | NOT NULL in the schema; `corpus` report: 0 rejected | done; see gap 2 |
+| FR30, SR11, NFR11 licence and load date stored, no licence = rejected | `licence TEXT NOT NULL`, `loaded_at` in `decisions` and `opinions`; `rejected_without_licence` in `ingest.py` | `test_licence` (3: stored with licence and date, rejected without, refused by the schema); `corpus` report: 0 rejected | done; see gap 2 |
 | NFR12 the 44.8 GB file is not kept | `filter_opinions.py --delete` (or streamed from stdin) | SPEC §2 | done |
 | NFR13, SR6 a newer release without code changes | `CL_RELEASE`, `COURT`, `DATE_FROM`, `DATE_TO` read from `.env` in `app/config.py` | coverage line built from them (`config.COVERAGE`) | done |
 | SR12 citation table (volume, reporter, page -> cluster) | `scripts/filter_citations.py`, `ingest.load_citations` (17,859,437 rows), `citation_map` (58,958 rows) | `citations` ingestion report; Edwin's citation tests use it | done |
@@ -24,15 +24,15 @@ Edwin's table.
 ## Gaps found while checking
 
 1. **SR10 "court".** The court is not stored on each row: the whole corpus is one court (`COURT` in the
-   config, shown in the coverage line). Storing "scotus" on 3,600 rows would add nothing. To write in SPEC
+   config, shown in the coverage line). Storing "scotus" on 3,600 rows would add nothing. Written in SPEC
    section 11 as our reading of SR10.
 2. **SR11 "a document without a licence shall be rejected".** The bulk files do not carry a licence per row;
    the Public Domain Mark applies to the CourtListener data as a whole, so every row gets `config.LICENCE`.
-   The rejection is enforced twice (`NOT NULL` in the schema, the check in `ingest.py`), but no test makes it
-   happen. A test with an empty `LICENCE` can be added; also to say in SPEC section 11.
+   The rejection is enforced twice (`NOT NULL` in the schema, the check in `ingest.py`); tests/test_licence.py
+   now makes it happen (2026-11-09). Written in SPEC section 11.
 3. **SR16 "along paragraph boundaries".** PDF texts have no paragraph breaks, and some paragraphs are longer
    than 350 words; those are split at sentence ends. The last chunk of an opinion can also be shorter than
-   250 words. SPEC §4 explains both; SR16's "about" covers the second, the first should be noted in SPEC
+   250 words. SPEC §4 explains both; SR16's "about" covers the second, the first is written in SPEC
    section 11.
 4. **SR18 the reranker.** It is implemented and was measured before and after, as SR18 asks, but it gave no
    gain, so it is off and the 8 passages are the first 8 of the fused list. The improvement reported in week
