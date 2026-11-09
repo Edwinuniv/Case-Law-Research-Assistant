@@ -246,6 +246,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 4.6 metadata search: a case named in the question limits the search to its decision (setting case_filter, off) | Edwin | step/4.6-case-filter | merged (PR #50; Searcher.search(decision_ids) in PR #52); measured on TUNE: same quote@8 and MRR@10, search 179 -> 29 ms when a case is named; on by the rule, for speed only (EVALUATION.md) |
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 | 8.2 run 2 on the fixed data; compare_runs: run 1 (saved file) against run 2 on the TUNE questions both answered | Edwin | step/8.2-run2-compare | run 2 started 2026-11-08; 3 new tests |
+| 8.2 tau_abstain 0.20 chosen on TUNE, TEST reported once (precision 1.0, recall 0.8, 0 false citations); run_eval --test and show_citations read a run file | Edwin | step/8.2-tau-and-test | 2 new tests |
 | 8.2 quote matching: verify.norm changed, run 2 rechecked (reverify_run), kept by the rule | Edwin | step/8.2-quote-matching | 7 + 9 new tests; eval/runs/eval_run2_reverified.json |
 | 8.2 error_analysis (why answerable TUNE questions abstain; gold quote in the 8 passages); requirements table for Edwin's part | Edwin | step/8.2-error-analysis | 5 new tests; 3 gaps written down (section 11) |
 | 8.2 export_run (a run saved in eval/runs with its TUNE metrics and sweep); threshold rule clarified; drafts of the final EVALUATION section and the report sections | Edwin | step/8.2-results-draft | run 2 saved after day 1 (38/85); 2 new tests |
@@ -454,3 +455,9 @@ drops CourtListener page markers "*490", and joins words broken at a line end ("
 quote's final . , ; :. Quotes with "..." are still refused. Measured on run 2's saved sentences
 (eval/runs/eval_run2_reverified.json), with no new model answers: all four conditions of the rule hold, so it is kept.
 The TEST split is reported with this verifier.
+
+2026-11-09 - Week 8 (Edwin): thresholds. tau_abstain = 0.20, chosen on the TUNE split of the rechecked run 2 by the
+threshold rule (EVALUATION.md); tau_confident stays 0.70, min_retrieval 0.35. TEST reported once with it: abstention
+precision 1.0, recall 0.8, 0 false citations of 23 shown. Set in the local settings; the default in app/config.py
+(DEFAULT_SETTINGS, Yasser's file) and the online settings (admin Settings page, Joe) still say 0.55, to change by them.
+
