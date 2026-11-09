@@ -150,7 +150,7 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 ### Defence prep (Edwin)
 - [x] FABRICATED citation demo — scripts/demo_fabricated.py: run 2 has no fabricated citation to show (the model cites passages, our code renders citations), so a lying draft for a real question goes through the real verifier and citation table; no model call; 3 tests (PR #77)
-- [x] Demo question list — docs/defence_demo.md: one question per part of the guide's 15-minute plan, with a backup, from run 2 at tau 0.20 ⏳ try each on the live site the day before; evaluation runs missing from the online database (admin pages)
+- [x] Demo question list — docs/defence_demo.md: one question per part of the guide's 15-minute plan, with a backup, from run 2 at tau 0.20 ⏳ try each on the live site the day before; evaluation runs missing from the online database: scripts/import_run.py (branch feature/import-run), Joe runs it on Railway
 
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
