@@ -46,6 +46,19 @@ def test_footnote_stars_numbers_and_arithmetic_are_not_page_markers():
         assert linebreaks.remove_page_markers(text) == (text, 0)
 
 
+def test_pinpoint_citations_to_databases_are_not_page_markers():
+    """Yasser's dry run on the real corpus: "*4" in "1978 U. S. Dist. LEXIS 19296, *4 (SDNY ...)",
+    "1988 WL 44736, *2 (CA6 1988)" and "Id., at *1" are pinpoint citations to an unpaginated database
+    (the page of the LEXIS or Westlaw document), part of a legal citation. They must stay."""
+    for text in ("1978 U. S. Dist. LEXIS 19296, *4 (SDNY, Mar. 1, 1978); accord",
+                 "No. 86-1809, 1988 WL 44736, *2 (CA6 1988) (holding that",
+                 "under §2255. Id., at *1 (internal quotation marks omitted)"):
+        assert linebreaks.remove_page_markers(text) == (text, 0)
+    # a real page marker in a sentence is still removed (after a word and a comma: tested above)
+    assert linebreaks.remove_page_markers("deviated radically *25 from the terms") == \
+        ("deviated radically from the terms", 1)
+
+
 def test_fix_opinion_does_both_and_counts_each():
     text = "The right to mar- riage, *490 which the statute consti- tutes."
     mapping = linebreaks.repairs(linebreaks.vocabulary([CLEAN, text]))
