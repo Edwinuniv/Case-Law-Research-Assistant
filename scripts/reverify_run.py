@@ -60,7 +60,10 @@ def reverify(pairs, s, search, index, judge, shown):
             out["pairs"].append((q, r))                                       # no draft to check again
             continue
         chosen, found = search(q["question"])
-        if ranked(chosen, found) != r["ranked_decisions"]:                    # rule (1): not the same input
+        # rule (1): the 8 passages sent to the model (their decisions and the best score; the run saved no chunk
+        # ids). Passages 9-20 are not compared: two with the same score can swap (A027), and the model never saw them
+        if ranked(chosen, found)[:len(chosen)] != r["ranked_decisions"][:len(chosen)] \
+                or abs(max(p["score"] for p in chosen) - r["top_score"]) > 1e-4:
             out["pairs"].append((q, r))
             out["search_changed"].append(q["id"])
             continue
