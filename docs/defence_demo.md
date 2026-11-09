@@ -48,6 +48,19 @@ Bostock question goes through the real verifier: the invented citation 599 U.S. 
 real but unretrieved Chevron citation is removed, the invented name Zorblax v. Quimby is removed, the honest
 sentence is kept. Say why the run itself has none: the model cites passages, our code writes citations.
 
+**Optional, if time allows: the verifier at work on a real answer.** "What did the Court decide in Loper Bright
+Enterprises v. Raimondo about Chevron deference?"
+- Seen on the live site (Joe, 2026-11-09): the search found the majority passage first (P1, Roberts, 0.868), but the
+  model wrote "The Court overruled Chevron" and "placing a tombstone on the doctrine" (Justice Gorsuch's words) while
+  citing a concurrence or dissent passage. Check 6 removed both sentences ("dissent or concurrence presented as the
+  Court's view"), so the answer was "not supported".
+- Say: the claim is true, but the sentence must be supported by the passage it cites, and here it puts a concurrence's
+  words in the Court's mouth. It is the same failure we found in week 7 on this question (AI_LOG, report section 7);
+  rule 5 of the prompt forbids it, the model does not always obey, and that is why the verifier exists.
+- The model does not write the same answer twice: try it the day before. If it answers correctly that day, show the
+  verified answer instead, and tell the story from AI_LOG. Do not change the prompt before the defence: the numbers
+  in the report come from run 2 with today's prompt.
+
 ## 9-12 min: admin
 - Settings: threshold preview. Show what tau_abstain 0.55 (the guide's value) vs 0.20 (chosen) changes.
 - Runs / Compare / the abstention list.
