@@ -73,3 +73,10 @@ def test_every_split_is_rechecked_but_only_tune_is_listed():                    
     out = reverify([(q("t", "test"), res(removed=[BROKEN])), (q("a"), res(removed=[BROKEN]))])
     assert [r["n_kept"] for _, r in out["pairs"]] == [1, 1]
     assert [x["id"] for x in out["newly_kept"]] == ["a"]
+
+
+def test_a_quote_the_fix_still_does_not_find_stays_removed():                  # A029: words left out with "..."
+    gap = {**BROKEN, "quote": "requires a State ... between two people of the same sex"}
+    out = reverify([(q("a"), res(removed=[gap]))])
+    (_, r), = out["pairs"]
+    assert r["n_kept"] == 0 and out["newly_kept"] == [] and "quote not found in the cited passage" in r["removed"][0]["problems"]
