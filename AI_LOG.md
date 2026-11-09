@@ -627,3 +627,11 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    kept, with a test made from those three real sentences; the dry run now also prints the star numbers
    it keeps, so both sides can be checked. The word repairs in the same dry run (washington, government,
    because, ...) and the pairs it left alone ("pre- and", "two- or") were right.
+
+## 2026-11-09 — Loading saved runs into the online database (Edwin, defence)
+
+1. **Tests that matched the defaults by chance.** We asked Claude for tests of `scripts/import_run.py` before the
+   code. Two planted bugs were not caught: importing a run with today's settings instead of its own, and forcing its
+   status to "done". The test file used the default settings (tau 0.20 since #75, the same as the database) and the
+   status "done", so both bugs gave the right answer. Same lesson as export_run (2026-11-08): test data must differ
+   from what the code could take by mistake. Fix: the test run has tau 0.37 and the status "paused" (like run 1's file).
