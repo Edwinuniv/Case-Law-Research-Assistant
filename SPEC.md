@@ -430,3 +430,11 @@ questions (the guide's evaluate.metrics). (2) SR23: a citation that is in the ci
 retrieved decision is kept when it is written in the cited passage itself (a passage of Loper Bright that
 cites Chevron); this is rule 3 of section 5, a wider reading of SR23's "must match an opinion we retrieved".
 NFR2 is met by rule for numbers and dates, and only approximately for other facts (quote and groundedness).
+
+2026-11-09 - Requirements check (Yasser, docs/requirements_yasser.md): three readings written down.
+(1) SR10: the court is not stored on each row; the whole corpus is one court (COURT in the config, shown in
+the coverage line). (2) SR11: the bulk files carry no licence per row; the Public Domain Mark covers the
+CourtListener data as a whole, so every row gets config.LICENCE. A row without a licence is refused by the
+loading code and by the schema (NOT NULL), now with tests (tests/test_licence.py). (3) SR16: a paragraph
+longer than 350 words (often a PDF text with no paragraph breaks) is cut at sentence ends, not at a
+paragraph end; the last chunk of an opinion can be shorter than 250 words (section 4).
