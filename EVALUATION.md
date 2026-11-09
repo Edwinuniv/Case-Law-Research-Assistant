@@ -377,14 +377,20 @@ with a support score between 0.20 and 0.70 is shown as "low confidence". The one
 matching above). Set in the settings (tau_confident stays 0.70) before running the TEST split.
 
 #### 3. TEST split, reported once
-`python -m scripts.run_eval --test ⟨id⟩` with tau_abstain = ⟨⟩, unchanged afterwards.
+`python -m scripts.run_eval --test eval/runs/eval_run2_reverified.json`, with tau_abstain = 0.20, unchanged
+afterwards (2026-11-09). Saved output: `eval/runs/test_split_run2_reverified_2026-11-09.txt`; TUNE row:
+`eval/runs/tune_split_run2_reverified_tau020_2026-11-09.txt`. The 21 adversarial questions are counted in both rows.
 
 | split | abstention precision | abstention recall | false-citation rate | citations shown | groundedness (judge) | recall@5 | MRR@10 | mean time |
 |---|---|---|---|---|---|---|---|---|
-| **TEST (reported)** | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
-| TUNE (used to choose) | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ |
+| **TEST (reported)**: 8 answerable, 5 unanswerable | **1.0** | **0.8** | **0 / 23** | 23 | 0.76 | 1.0 | 0.938 | 1.8 s |
+| TUNE (used to choose): 34 answerable, 17 unanswerable | 0.8 | 0.941 | 0 / 56 | 56 | 0.821 | 0.971 | 0.907 | 2.1 s |
 
-NFR3 (each >= 0.80 on TEST): ⟨met / not met, by how much⟩.
+NFR3 (each >= 0.80 on TEST): met. Precision 1.0: every TEST abstention was on an unanswerable question.
+Recall 0.8: 4 of the 5 unanswerable TEST questions abstained, 1 was answered. With 5 questions, one more wrong
+answer would put recall at 0.6. NFR1 (zero fake citations shown on the adversarial set): met, 0 false citations
+shown. 15 of the 21 adversarial questions abstained (0.714); the citations of the others all passed the separate
+checker.
 
 #### 4. False citations and the adversarial set (step 8.3)
 `python -m scripts.show_citations ⟨id⟩` (TUNE + adversarial) and `--test` once.
