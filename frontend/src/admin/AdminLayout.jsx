@@ -3,7 +3,7 @@
 // While an admin page is open, the body gets the dark background of the dashboard (admin.css).
 import { useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import logoMark from "../assets/logo-mark.svg";
+import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
 import "./admin.css";
 
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],

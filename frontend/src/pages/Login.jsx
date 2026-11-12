@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
-import logoMark from "../assets/logo-mark.svg";
+import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
 import ClipboardAnim from "../components/ClipboardAnim.jsx";
 import "./auth.css";
 
