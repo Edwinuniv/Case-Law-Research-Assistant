@@ -27,15 +27,58 @@ const STATS = [
   { value: "6", label: "checks on every sentence before you see it" },
 ];
 
+// landmark decisions of our corpus, for the moving band under the hero
+const CASES = ["Bush v. Gore (2000)", "Lawrence v. Texas (2003)", "Kelo v. City of New London (2005)",
+  "District of Columbia v. Heller (2008)", "Boumediene v. Bush (2008)", "Citizens United v. FEC (2010)",
+  "NFIB v. Sebelius (2012)", "Shelby County v. Holder (2013)", "Riley v. California (2014)", "Obergefell v. Hodges (2015)",
+  "Carpenter v. United States (2018)", "Bostock v. Clayton County (2020)", "Dobbs v. Jackson Women's Health (2022)",
+  "Students for Fair Admissions v. Harvard (2023)", "Loper Bright v. Raimondo (2024)", "Trump v. United States (2024)"];
+
+const CHECKS = [
+  ["It cites what we sent", "Each sentence must point to one of the 8 passages the model received, and only those."],
+  ["The quote is really there", "Its quote of five words or more is found word for word in the cited passage."],
+  ["The citation exists", "Every citation must be in CourtListener's table and come from a retrieved opinion."],
+  ["The case name matches", "Both parties of a case name must match the decision of the cited passage."],
+  ["Numbers and dates match", "Every number and year must appear in the passage, or be the decision's own year."],
+  ["A dissent is not the Court", "A sentence may not present a dissent or a concurrence as the Court's holding."],
+];
+
 const clamp = (x) => Math.min(1, Math.max(0, x));
+
+// counts up from 0 to the number once it is on screen ("2,415", "1.0" and "0" keep their format)
+function CountUp({ value }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(value.replace(/[0-9]/g, "0"));
+  useEffect(() => {
+    const target = parseFloat(value.replace(/,/g, ""));
+    const decimals = (value.split(".")[1] || "").length;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      const t0 = performance.now();
+      const tick = (t) => {
+        const k = clamp((t - t0) / 1400), eased = 1 - Math.pow(1 - k, 3);
+        setShown((target * eased).toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }));
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, { threshold: 0.5 });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [value]);
+  return <b ref={ref}>{shown}</b>;
+}
 
 export default function Landing({ info }) {
   const story = useRef(null);
   const [step, setStep] = useState(0);             // which of the 4 scenes is on screen
   const [p, setP] = useState(0);                   // progress inside that scene, 0 to 1
+  const [hero, setHero] = useState(0);             // how far the hero has scrolled away, 0 to 1
+  const [mouse, setMouse] = useState([0, 0]);      // mouse position over the hero, -1 to 1
 
   useEffect(() => {                                // the scroll position drives the story
     function onScroll() {
+      setHero(clamp(window.scrollY / window.innerHeight));
       const el = story.current;
       if (!el) return;
       const total = el.offsetHeight - window.innerHeight;
@@ -71,9 +114,21 @@ export default function Landing({ info }) {
         </span>
       </nav>
 
-      <section className="lp-hero">
+      <section className="lp-hero" onMouseMove={(e) => setMouse([e.clientX / window.innerWidth * 2 - 1, e.clientY / window.innerHeight * 2 - 1])}>
         <div className="lp-hero-bg" aria-hidden="true"><span>§</span><span>“</span><span>[ ]</span><span>”</span></div>
+        <div className="lp-floats" aria-hidden="true">
+          {[["lp-f1", <><span className="lp-cite-n">P1</span>Miller v. Alabama, 567 U.S. 460</>, 1.2],
+            ["lp-f2", <>✓ Verified answer</>, -0.8],
+            ["lp-f3", <>⊘ Not supported by the retrieved opinions</>, 0.9],
+            ["lp-f4", <><s>Delgado v. Oregon Fisheries Board, 597 U.S. 412</s> · removed</>, -1.1],
+            ["lp-f5", <>Majority opinion · Part II</>, 0.6]].map(([cls, body, depth]) => (
+            <span key={cls} className={`lp-float ${cls}`}
+                  style={{ transform: `translate(${mouse[0] * 18 * depth}px, ${mouse[1] * 14 * depth - hero * 220 * depth}px)` }}>{body}</span>
+          ))}
+        </div>
+        <div className="lp-hero-inner" style={{ transform: `scale(${1 - hero * 0.12})`, opacity: 1 - hero * 1.1 }}>
         <svg className="lp-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><linearGradient id="lp-vg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stopColor="#fbbf24" /><stop offset="1" stopColor="#fb923c" /></linearGradient></defs>
           <path className="lp-brackets" d="M15 15h-4v34h4M49 15h4v34h-4" />
           <path className="lp-check" d="M20 27l11 18L45 18" />
         </svg>
@@ -85,7 +140,15 @@ export default function Landing({ info }) {
           <a href="#how" className="lp-button ghost">See how it works ↓</a>
         </p>
         <p className="lp-coverage">{info.coverage}</p>
+        </div>
+        <div className="lp-scroll" aria-hidden="true"><i /></div>
       </section>
+
+      <div className="lp-marquee" aria-label="Some of the decisions in our corpus">
+        <div className="lp-track">
+          {[...CASES, ...CASES].map((c, i) => <span key={i}>{c}<em>§</em></span>)}
+        </div>
+      </div>
 
       <section className="lp-story" id="how" ref={story}>
         <div className="lp-sticky">
@@ -164,9 +227,23 @@ export default function Landing({ info }) {
         </div>
       </section>
 
+      <section className="lp-checks6 lp-reveal">
+        <span className="lp-num">INSIDE THE VERIFIER</span>
+        <h2>Six checks. Every sentence.</h2>
+        <div className="lp-grid6">
+          {CHECKS.map(([t, d], i) => (
+            <div key={t} className="lp-check6" style={{ transitionDelay: `${0.15 + i * 0.12}s` }}>
+              <span className="lp-check6-n">{i + 1}</span><b>{t}</b><p>{d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="lp-check6-foot">A sentence that fails one check is removed, with its reason recorded. A second, separate
+          checker re-reads every citation a visitor would see.</p>
+      </section>
+
       <section className="lp-stats lp-reveal">
         {STATS.map((s) => (
-          <div key={s.label}><b>{s.value}</b><span>{s.label}</span></div>
+          <div key={s.label}><CountUp value={s.value} /><span>{s.label}</span></div>
         ))}
       </section>
 
