@@ -154,6 +154,10 @@ export default function Login({ mode = "login", onLogin }) {
           {mode === "forgot" && <ForgotPanel />}
         </div>
         <p className="au-legal">This is a research aid, not legal advice.</p>
+        <nav className="au-links" aria-label="Site information">
+          <Link to="/privacy">Privacy</Link><Link to="/terms">Terms of use</Link>
+          <Link to="/sources">Sources &amp; licences</Link><Link to="/contact">Contact</Link>
+        </nav>
       </section>
     </div>
   );

@@ -120,6 +120,10 @@ export default function Proof() {
         </div>
         <Link to="/research" className="lp-button pf-button">Try a question</Link>
         <p className="pf-legal">This is a research aid, not legal advice. · Data: CourtListener (Free Law Project), public domain.</p>
+        <nav className="pf-links" aria-label="Site information">
+          <Link to="/privacy">Privacy</Link><Link to="/terms">Terms of use</Link>
+          <Link to="/sources">Sources &amp; licences</Link><Link to="/contact">Contact</Link>
+        </nav>
       </section>
     </>
   );
