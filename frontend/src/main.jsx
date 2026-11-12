@@ -2,7 +2,7 @@
 // The server checks the login and the role again on every /api call: this is only for display.
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api, me } from "./api.js";
 import Abstentions from "./admin/Abstentions.jsx";
 import AdminLayout from "./admin/AdminLayout.jsx";
@@ -30,6 +30,7 @@ import logoMark from "./assets/logo-mark.svg";       // bundled into /assets by 
 function App() {
   const [info, setInfo] = useState(null);          // answer of GET /api/me
   const path = useLocation().pathname;
+  const navigate = useNavigate();
   const landing = path === "/";                    // the landing page has its own top bar
   const authPage = ["/login", "/signup", "/forgot"].includes(path);   // the account pages have their own logo
 
@@ -39,9 +40,17 @@ function App() {
   useEffect(() => { document.body.classList.toggle("dark-page", landing || authPage); }, [landing, authPage]);
   if (!info) return <p className="muted" style={{ padding: 20 }}>Loading…</p>;
 
+  // Log out always ends in the home page, logged out. If the server refuses the first try (a stale CSRF token,
+  // e.g. after logging in from another tab), a fresh token is fetched and it tries once more.
   async function logout() {
-    await api("/logout", {});
-    await me().then(setInfo);                      // a new CSRF token for the next login
+    try {
+      await api("/logout", {});
+    } catch {
+      await me();                                  // a fresh CSRF token
+      await api("/logout", {}).catch(() => {});
+    }
+    setInfo(await me());                           // logged out, with a new CSRF token for the next login
+    navigate("/");
   }
 
   const user = info.user;
