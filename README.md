@@ -29,6 +29,10 @@ http://127.0.0.1:8000/admin. Run `npm run build` again after each `git pull` tha
 then restart uvicorn. Other administrator accounts are created on the admin page "Accounts"; there is
 no sign-up page.
 
+The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
+address in `CONTACT_EMAIL` (.env, and the Railway variables online) and has a form; messages are read and deleted on
+the admin page "Messages". The privacy page describes what the site really collects: change it if the code changes that.
+
 The research page answers one question per message (no follow-up questions, as the instructor asked). A greeting or
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
