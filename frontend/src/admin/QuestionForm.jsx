@@ -38,20 +38,22 @@ export default function QuestionForm({ user }) {
   }
 
   return (
-    <form className="card" onSubmit={save}>
-      <h2 style={{ marginTop: 0 }}>{editing ? "Edit" : "New"} test question</h2>
-      <p>ID <input required value={q.id} readOnly={!!editing} onChange={set("id")} placeholder="e.g. G061" />{" "}
-        Tag <select value={q.tag} onChange={set("tag")}>{["answerable", "unanswerable", "adversarial"].map((t) => <option key={t}>{t}</option>)}</select>{" "}
-        Split <select value={q.split} onChange={set("split")}><option>tune</option><option>test</option></select>{" "}
-        Author <input value={q.author} onChange={set("author")} /></p>
-      <p>Question<br /><textarea rows={2} required value={q.question} onChange={set("question")} /></p>
-      <p>Expected answer (answerable only)<br /><textarea rows={2} value={q.expected_answer} onChange={set("expected_answer")} /></p>
-      <p>Expected decision IDs (space separated) <input style={{ width: 300 }} value={q.gold_decision_ids} onChange={set("gold_decision_ids")} /></p>
-      <p>Gold quote (copied exactly from the opinion)<br /><textarea rows={2} value={q.gold_quote} onChange={set("gold_quote")} /></p>
-      <p>Must never appear (adversarial; separate with ;) <input style={{ width: 400 }} value={q.must_not_appear} onChange={set("must_not_appear")} /></p>
-      <p>Why unanswerable / notes<br /><textarea rows={2} value={q.why} onChange={set("why")} /></p>
+    <form className="ad-card" onSubmit={save}>
+      <h2>{editing ? "Edit" : "New"} test <em>question</em></h2>
+      <div className="ad-form">
+        <label className="ad-field">ID<input required value={q.id} readOnly={!!editing} onChange={set("id")} placeholder="e.g. G061" /></label>
+        <label className="ad-field">Tag<select value={q.tag} onChange={set("tag")}>{["answerable", "unanswerable", "adversarial"].map((t) => <option key={t}>{t}</option>)}</select></label>
+        <label className="ad-field">Split<select value={q.split} onChange={set("split")}><option>tune</option><option>test</option></select></label>
+        <label className="ad-field">Author<input value={q.author} onChange={set("author")} /></label>
+      </div>
+      <p><label className="ad-field">Question<textarea rows={2} required value={q.question} onChange={set("question")} /></label></p>
+      <p><label className="ad-field">Expected answer (answerable only)<textarea rows={2} value={q.expected_answer} onChange={set("expected_answer")} /></label></p>
+      <p><label className="ad-field">Expected decision IDs (space separated)<input value={q.gold_decision_ids} onChange={set("gold_decision_ids")} /></label></p>
+      <p><label className="ad-field">Gold quote (copied exactly from the opinion)<textarea rows={2} value={q.gold_quote} onChange={set("gold_quote")} /></label></p>
+      <p><label className="ad-field">Must never appear (adversarial; separate with ;)<input value={q.must_not_appear} onChange={set("must_not_appear")} /></label></p>
+      <p><label className="ad-field">Why unanswerable / notes<textarea rows={2} value={q.why} onChange={set("why")} /></label></p>
       {error && <p className="error" role="alert">{error}</p>}
-      <button>Save</button> <span className="muted">Then export the questions and commit eval/questions.jsonl, so the change is in the git history.</span>
+      <p><button>Save</button> <span className="muted">Then export the questions and commit eval/questions.jsonl, so the change is in the git history.</span></p>
     </form>
   );
 }
