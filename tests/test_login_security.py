@@ -39,17 +39,17 @@ def test_four_failures_do_not_lock(clean_db):
     assert user is not None
 
 
-def test_only_the_administrator_role_exists(clean_db):                              # SR33
-    """SR33: two roles, the visitor (no account at all) and the administrator. So an account is
-    always an administrator, and no 'user' account can be created."""
+def test_the_roles_are_admin_and_user(clean_db):                                  # SPEC 11 (2026-11-12)
+    """Since the visitor-accounts decision: 'admin' (seed, Accounts page) and 'user' (sign-up). An account is an
+    administrator by default; a 'user' is never an administrator; any other role is refused, by the database too."""
     clean_db.create_user("boss@example.com", PW)                     # admin by default (seed.py)
     boss, _ = clean_db.check_login("boss@example.com", PW)
     assert boss["role"] == "admin" and clean_db.user_is_active_admin(boss["id"])
-    with pytest.raises(ValueError):
-        clean_db.create_user("reader@example.com", PW, role="user")
-    with clean_db.connect() as con:                                  # the database refuses it too
+    reader_id = clean_db.create_visitor("reader@example.com", PW)
+    assert clean_db.active_role(reader_id) == "user" and not clean_db.user_is_active_admin(reader_id)
+    with clean_db.connect() as con:                                  # the database refuses another role
         with pytest.raises(Exception):
-            con.execute("INSERT INTO users (email, password_hash, role) VALUES ('r@example.com', 'x', 'user')")
+            con.execute("INSERT INTO users (email, password_hash, role) VALUES ('r@example.com', 'x', 'superuser')")
 
 
 def test_unknown_role_is_refused(clean_db):
@@ -68,20 +68,23 @@ def test_disabled_account_has_no_role(clean_db):
     assert clean_db.active_role(99999) is None                       # no such account
 
 
-def test_existing_database_loses_the_user_accounts(clean_db):
-    """A database made during steps 5.6-5.10 allows 'user' accounts (Joe's PC, maybe Railway).
-    init_db must remove them, keep their questions in the log (FR28) and keep the administrators."""
+def test_existing_database_keeps_its_accounts_and_questions(clean_db):          # SPEC 11 (2026-11-12)
+    """Until 2026-11-12 the start-up migration deleted every 'user' account (step 5.11). Now init_db keeps them,
+    with their questions, and an old database whose rule allowed 'admin' only accepts 'user' afterwards."""
     clean_db.create_user("boss@example.com", PW)
-    with clean_db.connect() as con:                                  # the database as it was in 5.6-5.10
-        con.execute("ALTER TABLE users DROP CONSTRAINT users_role_check")
-        con.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'))")
-        uid = con.execute("INSERT INTO users (email, password_hash, role) VALUES ('reader@example.com', 'x', 'user') "
-                          "RETURNING id").fetchone()["id"]
+    uid = clean_db.create_visitor("reader@example.com", PW)
+    with clean_db.connect() as con:
         con.execute("INSERT INTO query_log (question, status, user_id) VALUES ('Is it legal?', 'ANSWERED', %s)", (uid,))
     clean_db.init_db()
     with clean_db.connect() as con:
-        assert [u["email"] for u in con.execute("SELECT email FROM users").fetchall()] == ["boss@example.com"]
-        log = con.execute("SELECT question, user_id FROM query_log").fetchall()
-        assert log == [{"question": "Is it legal?", "user_id": None}]
-    with pytest.raises(ValueError):
-        clean_db.create_user("reader@example.com", PW, role="user")
+        assert sorted(u["email"] for u in con.execute("SELECT email FROM users").fetchall()) == \
+            ["boss@example.com", "reader@example.com"]
+        assert con.execute("SELECT user_id FROM query_log").fetchone()["user_id"] == uid
+        con.execute("DELETE FROM query_log")
+        con.execute("DELETE FROM users WHERE role = 'user'")
+        con.execute("ALTER TABLE users DROP CONSTRAINT users_role_check")            # a database from step 5.11
+        con.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin'))")
+    clean_db.init_db()
+    assert clean_db.create_visitor("new@example.com", PW) is not None
+
+
