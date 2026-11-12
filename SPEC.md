@@ -247,6 +247,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 | 8.2 run 2 on the fixed data; compare_runs: run 1 (saved file) against run 2 on the TUNE questions both answered | Edwin | step/8.2-run2-compare | run 2 started 2026-11-08; 3 new tests |
 | Admin pages and the answer restyled like the landing page: dark dashboard, SVG rings/dials/bars/lines from /api/admin only, status with icon and words, gold citation pills, the six checks in the working steps; the run page lists the chosen split plus adversarial | Edwin | feature/admin-answer-ui (on #84) | checked in a headless browser at 1280 and 390 px with real data; 254 tests pass |
+| Information pages (privacy, terms, sources, contact) in the footer; contact form with an admin Messages page | Edwin | feature/site-pages (on the welcome branch) | 12 new tests; checked in a headless browser at 1280 and 390 px |
 | Welcome message for greetings (status WELCOME, fixed text, no search or model); one question per message kept | Edwin | feature/welcome-message (on #86) | 13 new tests; no eval-v1 question is a greeting |
 | Defence: import_run loads saved runs into a database (the online admin pages had no run); demo_fabricated; demo question list | Edwin | feature/import-run, #77, #78 | 3 + 3 tests |
 | 8.3 final numbers: false citations 0 (TUNE + adversarial 0/56, TEST 0/23), run 1 vs run 2, error analysis; EVALUATION.md and report sections filled | Edwin | step/8.3-final-numbers | outputs in eval/runs |
@@ -483,4 +484,14 @@ what Verdicta does, its coverage and two example questions. No search, no model 
 NFR2 and SR28 are unchanged; FR8 applies to legal questions. None of the 85 eval-v1 questions is a greeting (tested),
 so the evaluation numbers stay valid. The instructor's rule is unchanged: one independent question per message, no
 follow-up questions (entry of 2026-11-06); asking him whether follow-ups may now be added is pending.
+
+2026-11-12 - Website (Edwin, team decision): information pages /privacy, /terms, /sources and /contact, linked from the
+footer on every page, and a contact form. The privacy page describes what the code really does: questions are saved in
+query_log (FR28) without name, account or IP address; the IP address is used only in memory for the limits; one
+necessary session cookie; no trackers; Groq and Railway receive data; questions and contact messages are kept with no
+fixed deletion date (team decision). The form (app/api_site.py) is open to visitors with the CSRF token, checks its
+fields, allows 3 messages per address in 10 minutes, and stores name, email and message in contact_messages; an
+administrator reads and deletes them (admin page "Messages", admin role + CSRF). The address shown comes from
+CONTACT_EMAIL. Files of others changed and told: app/db.py, app/main.py, frontend/index.html, frontend/src/main.jsx
+(Joe), app/config.py and .env.example (Yasser).
 
