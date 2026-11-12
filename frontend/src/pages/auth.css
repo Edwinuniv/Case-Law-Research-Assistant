@@ -1,7 +1,15 @@
 /* Log in / Sign up / Forgot password: the court checklist on a dark panel at the left, the form on the right. */
-.au{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:100vh;background:#0c0c0e;color:#fff}
+.au{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:100vh;background:#0c0c0e;color:#fff}
 .au-side{position:relative;overflow:hidden;padding:36px clamp(24px,4vw,56px);display:flex;flex-direction:column;
   background:radial-gradient(ellipse at 60% 40%,#3a250c 0%,#17120c 45%,#0c0c0e 80%)}
+/* back to the main page, top left of the screen */
+.au-back{position:absolute;top:26px;left:26px;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:9px 16px 9px 13px;
+  border-radius:999px;font-size:14px;font-weight:600;color:#e7e5e4;text-decoration:none;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);transition:background .2s,border-color .2s,transform .2s}
+.au-back span{font-size:16px;transition:transform .2s}
+.au-back:hover{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.55);color:#fff}
+.au-back:hover span{transform:translateX(-3px)}
+.au-side>.au-brand{align-self:center}
 .au-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;font-family:Georgia,serif;font-size:24px;font-weight:600;text-decoration:none;z-index:2}
 .au-brand img{width:34px;height:34px}
 /* the court checklist: the pen writes the six checks (components/ClipboardAnim.jsx) */
@@ -72,6 +80,8 @@
   .au{grid-template-columns:1fr}
   .au-side{display:none}
   .au-brand-small{display:inline-flex}
+  .au-back{top:16px;left:16px;padding:7px 13px 7px 10px;font-size:13px}
+  .au-main{padding-top:70px}
   .au-main{min-height:100vh;justify-content:flex-start;padding-top:40px}
 }
 @media(prefers-reduced-motion:reduce){.au *{animation:none!important;transition:none!important}}

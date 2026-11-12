@@ -120,6 +120,7 @@ export default function Login({ mode = "login", onLogin }) {
   const t = TEXT[mode];
   return (
     <div className="au">
+      <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
       <aside className="au-side" aria-hidden="true">
         <Link to="/" className="au-brand"><img src={logoMark} alt="" /> Verdicta</Link>
         <ClipboardAnim />
