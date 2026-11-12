@@ -12,7 +12,7 @@
 .au-side>.au-brand{align-self:flex-start}
 .au-top-small{display:none}
 .au-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;font-family:Georgia,serif;font-size:24px;font-weight:600;text-decoration:none;z-index:2}
-.au-brand img{width:34px;height:34px}
+.au-brand img{width:44px;height:44px}
 /* the court checklist: the pen writes the six checks (components/ClipboardAnim.jsx) */
 .clip{position:relative;width:min(100%,calc(62vh * 1122 / 1402));aspect-ratio:1122/1402;margin:18px auto 24px;
   filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));animation:au-float 7s ease-in-out infinite alternate}
