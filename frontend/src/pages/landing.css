@@ -254,3 +254,30 @@ main.bare{max-width:none;margin:0;padding:0}
   .lp-statue-wrap{height:62vh}
 }
 .lp{overflow-x:clip}
+
+/* ---- the chain of six 3D images: each floats by itself; scrolling passes THE PAGE from one to the next ---- */
+.lp-chain{background:radial-gradient(1000px 700px at 70% 50%,#2c1d0b 0%,#141418 50%,#0a0a0c 85%)}
+.lp-chain .lp-step h2{color:#fff}
+.lp-chain .lp-step p{color:#c8c4bf}
+.lp-chain .lp-dots span{background:#3a3833}
+.lp-chain .lp-copy{height:380px}
+.lp-chain .lp-step .lp-button{margin-top:22px}
+.lp-typedq{font-family:var(--serif);font-size:clamp(18px,1.7vw,22px)!important;color:#fde68a!important;margin-top:18px!important;
+  border-left:3px solid #f59e0b;padding-left:16px;min-height:3.2em}
+.lp-chain .lp-caret{background:#fbbf24}
+.lp-chain-stage{position:relative;height:min(720px,82vh);perspective:1200px}
+.lp-chain-glow{position:absolute;left:50%;top:50%;width:70%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(245,158,11,.30) 0%,rgba(245,158,11,.08) 45%,transparent 70%);filter:blur(20px)}
+.lp-chain-item{position:absolute;inset:0;display:grid;place-items:center;will-change:transform,opacity;transition:transform .12s linear}
+.lp-float3d{position:relative;width:min(100%,760px);animation:lp-float3d 7s ease-in-out infinite;transform-style:preserve-3d}
+.lp-float3d img{display:block;width:100%;height:auto;filter:drop-shadow(0 40px 60px rgba(0,0,0,.55))}
+.lp-shine{position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,236,190,.55) 50%,transparent 65%);background-size:250% 100%;
+  animation:lp-shine 5.5s ease-in-out infinite;-webkit-mask-image:var(--m);mask-image:var(--m)}
+@keyframes lp-float3d{
+  0%{transform:translateY(0) rotateX(4deg) rotateY(-8deg)}
+  50%{transform:translateY(-22px) rotateX(-3deg) rotateY(8deg)}
+  100%{transform:translateY(0) rotateX(4deg) rotateY(-8deg)}}
+@keyframes lp-shine{0%,30%{background-position:150% 0}70%,100%{background-position:-50% 0}}
+@media(max-width:820px){.lp-chain .lp-copy{height:260px}.lp-chain-stage{height:48vh}}
+.lp-chain .lp-dots span.on{background:#f59e0b}

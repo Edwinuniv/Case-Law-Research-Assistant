@@ -8,18 +8,29 @@ import "./landing.css";
 import logoMark from "../assets/logo-mark.svg";
 import Scales3D from "../components/Scales3D.jsx";
 import statue from "../assets/statue.webp";
+import chain1 from "../assets/chain1_scales.webp";
+import chain2 from "../assets/chain2_page.webp";
+import chain3 from "../assets/chain3_book.webp";
+import chain4 from "../assets/chain4_magnifier.webp";
+import chain5 from "../assets/chain5_check.webp";
+import chain6 from "../assets/chain6_gavel.webp";
 
 const QUESTION = "Can a law require life in prison without parole for a juvenile, with no chance for the judge to consider his age?";
 
+// the chain of six images (made by Yasser): THE PAGE travels from Justice's scales to the verdict
 const STEPS = [
-  { title: "Ask in plain words.",
-    text: "Type a question about a U.S. Supreme Court decision from 2000 to 2024, the way you would ask a colleague." },
-  { title: "Read the opinions, not the internet.",
-    text: "Two searches, by meaning and by keywords, run through 72,502 passages of 2,415 decisions. The best 8 passages go to the model, and only those." },
-  { title: "Every citation, checked.",
-    text: "Six checks on every sentence. A citation that is not in CourtListener's citation table, or a dissent presented as the Court, never reaches you." },
-  { title: "Verified, or it says so.",
-    text: "Each citation opens the real passage, with the quote highlighted. When the opinions do not support an answer, Verdicta says so instead of guessing." },
+  { img: chain1, title: "Every question is weighed.",
+    text: "Your question goes on the scale. Verdicta answers only from U.S. Supreme Court opinions filed from 2000 to 2024, nothing else." },
+  { img: chain2, title: "Ask in plain words.",
+    text: "Type it the way you would ask a colleague.", typed: true },
+  { img: chain3, title: "Read the opinions, not the internet.",
+    text: "Two searches, by meaning and by keywords, run through 72,502 passages of 2,415 decisions. The best 8 go to the model, and only those." },
+  { img: chain4, title: "Every quote, word for word.",
+    text: "Each sentence must quote the passage it cites, word for word. A quote that is not really there is removed." },
+  { img: chain5, title: "Every citation, verified.",
+    text: "Six checks on every sentence. A citation that is not in CourtListener's table, or a dissent presented as the Court, never reaches you." },
+  { img: chain6, title: "Verified, or it says so.",
+    text: "Each citation opens the real passage. When the opinions do not support an answer, Verdicta says so instead of guessing.", cta: true },
 ];
 
 const STATS = [
@@ -103,7 +114,7 @@ export default function Landing({ info }) {
     return () => seen.disconnect();
   }, []);
 
-  const typed = QUESTION.slice(0, Math.round(QUESTION.length * clamp(p * 1.4)));
+  const typed = QUESTION.slice(0, step === 1 ? Math.round(QUESTION.length * clamp(p * 1.6)) : step > 1 ? QUESTION.length : 0);
 
   return (
     <div className="lp">
@@ -150,79 +161,37 @@ export default function Landing({ info }) {
         </div>
       </div>
 
-      <section className="lp-story" id="how" ref={story}>
+      <section className="lp-story lp-chain" id="how" ref={story} style={{ height: `${STEPS.length * 100}vh` }}>
         <div className="lp-sticky">
           <div className="lp-copy">
             {STEPS.map((s, i) => (
               <div key={s.title} className={`lp-step ${i === step ? "on" : ""}`} aria-hidden={i !== step}>
-                <span className="lp-num">0{i + 1}</span>
+                <span className="lp-num">0{i + 1} / 0{STEPS.length}</span>
                 <h2>{s.title}</h2>
                 <p>{s.text}</p>
+                {s.typed && <p className="lp-typedq">“{typed}<i className="lp-caret" />”</p>}
+                {s.cta && <Link to="/research" className="lp-button">Try a question</Link>}
               </div>
             ))}
             <div className="lp-dots">{STEPS.map((s, i) => <span key={s.title} className={i === step ? "on" : ""} />)}</div>
           </div>
 
-          <div className="lp-stage" aria-hidden="true">
-            {/* 01: the question is typed */}
-            <div className={`lp-scene ${step === 0 ? "on" : ""}`}>
-              <div className="lp-search">
-                <span className="lp-search-icon">?</span>
-                <span className="lp-typed">{typed}<i className="lp-caret" /></span>
-              </div>
-              <div className={`lp-pill ${p > 0.75 ? "show" : ""}`}>Searching 72,502 passages…</div>
-            </div>
-
-            {/* 02: passages come out of the opinions; the best ones are kept */}
-            <div className={`lp-scene ${step === 1 ? "on" : ""}`}>
-              {["Miller v. Alabama (2012) · Majority opinion", "Miller v. Alabama (2012) · Roberts, C.J., dissenting",
-                "Graham v. Florida (2010) · Majority opinion", "Montgomery v. Louisiana (2016) · Majority opinion",
-                "Jones v. Mississippi (2021) · Majority opinion", "Roper v. Simmons (2005) · Majority opinion"].map((label, i) => {
-                const spread = step === 1 ? clamp(p * 1.6) : 0;
-                const kept = i === 0 || i === 2;
-                return (
-                  <div key={label} className={`lp-passage ${kept && p > 0.55 ? "kept" : ""}`}
-                       style={{ transform: `translate(${(i % 2 ? 1 : -1) * spread * (40 + i * 6)}px, ${(i - 2.5) * spread * 52}px) rotate(${(1 - spread) * (i - 2.5) * 3}deg)` }}>
-                    <b>P{i + 1}</b> {label}
-                    <span className="lp-lines"><i /><i /><i style={{ width: "60%" }} /></span>
+          <div className="lp-chain-stage" aria-hidden="true">
+            <div className="lp-chain-glow" />
+            {STEPS.map((s, i) => {
+              const d = step + p - i - 0.5;            // -0.5 when it arrives, 0 in the middle, +0.5 when it leaves
+              const far = Math.abs(d);
+              return (
+                <div key={s.title} className="lp-chain-item"
+                     style={{ opacity: clamp(1.25 - far * 1.6), zIndex: 10 - Math.round(far * 4),
+                              transform: `translate3d(${d * 9}vw, ${d * -26}vh, 0) rotate(${d * -9}deg) scale(${1 - far * 0.28})` }}>
+                  <div className="lp-float3d" style={{ animationDelay: `${-i * 1.3}s` }}>
+                    <img src={s.img} alt="" loading={i < 2 ? "eager" : "lazy"} />
+                    <span className="lp-shine" style={{ "--m": `url(${s.img}) center / contain no-repeat` }} />
                   </div>
-                );
-              })}
-            </div>
-
-            {/* 03: the verifier keeps the real citation and removes the invented one */}
-            <div className={`lp-scene ${step === 2 ? "on" : ""}`}>
-              <div className="lp-draft">
-                <div className="lp-sentence ok">
-                  <span className="lp-lines"><i /><i style={{ width: "80%" }} /></span>
-                  <span className={`lp-chip ${p > 0.2 ? "good" : ""}`}>Miller v. Alabama, 567 U.S. 460 {p > 0.2 && "✓"}</span>
                 </div>
-                <div className={`lp-sentence ${p > 0.45 ? "struck" : ""}`}>
-                  <span className="lp-lines"><i /><i style={{ width: "70%" }} /></span>
-                  <span className="lp-chip bad">Delgado v. Oregon Fisheries Board, 597 U.S. 412</span>
-                  <span className={`lp-stamp ${p > 0.55 ? "show" : ""}`}>Not in CourtListener · removed</span>
-                </div>
-                <ul className="lp-checks">
-                  {["cites a passage we sent", "quote found word for word", "citation is real and retrieved",
-                    "case name matches", "numbers and dates match", "not a dissent as the Court"].map((c, i) => (
-                    <li key={c} className={p > 0.1 + i * 0.12 ? "done" : ""}>{c}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* 04: the verified answer, or an honest "not supported" */}
-            <div className={`lp-scene ${step === 3 ? "on" : ""}`}>
-              <div className="lp-answer">
-                <span className="lp-badge ok">✓ Verified answer</span>
-                <span className="lp-lines"><i /><i /><i style={{ width: "55%" }} /></span>
-                <span className="lp-chip good">Miller v. Alabama, 567 U.S. 460 (2012) · Majority opinion</span>
-              </div>
-              <div className={`lp-answer small ${p > 0.4 ? "show" : ""}`}>
-                <span className="lp-badge none">⊘ Not supported by the retrieved opinions</span>
-                <span className="muted">No answer is better than a wrong one.</span>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
