@@ -247,6 +247,7 @@ Week 2 and later (1.8 was merged in PR #5):
 | 10.1-10.2 week-10 improvement: quote diagnosis, hypothesis (bge-base embeddings), measured on TUNE | Yasser | step/10.1-hypothesis, step/10.2-embedding-model | measured: bge-base worse (quote@8 0.286 vs 0.429), bge-small kept (EVALUATION.md) |
 | 8.2 run 2 on the fixed data; compare_runs: run 1 (saved file) against run 2 on the TUNE questions both answered | Edwin | step/8.2-run2-compare | run 2 started 2026-11-08; 3 new tests |
 | Admin pages and the answer restyled like the landing page: dark dashboard, SVG rings/dials/bars/lines from /api/admin only, status with icon and words, gold citation pills, the six checks in the working steps; the run page lists the chosen split plus adversarial | Edwin | feature/admin-answer-ui (on #84) | checked in a headless browser at 1280 and 390 px with real data; 254 tests pass |
+| Welcome message for greetings (status WELCOME, fixed text, no search or model); one question per message kept | Edwin | feature/welcome-message (on #86) | 13 new tests; no eval-v1 question is a greeting |
 | Defence: import_run loads saved runs into a database (the online admin pages had no run); demo_fabricated; demo question list | Edwin | feature/import-run, #77, #78 | 3 + 3 tests |
 | 8.3 final numbers: false citations 0 (TUNE + adversarial 0/56, TEST 0/23), run 1 vs run 2, error analysis; EVALUATION.md and report sections filled | Edwin | step/8.3-final-numbers | outputs in eval/runs |
 | 8.2 tau_abstain 0.20 chosen on TUNE, TEST reported once (precision 1.0, recall 0.8, 0 false citations); run_eval --test and show_citations read a run file | Edwin | step/8.2-tau-and-test | 2 new tests |
@@ -473,3 +474,13 @@ without a visible commit. (2) SR5: the online database (Railway, step 6.3) is fi
 Yasser's dump (same data as run 2: 2,415 decisions, 72,502 passages), not with `seed --corpus`: the bulk files
 (about 52 GB) are not on the server and the embeddings were made on Colab. scripts/seed.py still does every
 part on a new database, and is used online for the admin account (`seed --admin`).
+
+2026-11-12 - Research page (Edwin): a greeting or "what can you do" gets a welcome message instead of "Not supported".
+Before, "hello, what can you do" went through the search and the model and ended "not supported", which is correct
+but unhelpful. Now pipeline.answer first checks whether the WHOLE message is a greeting or a help phrase (a fixed,
+narrow list; "Hello, did the Court overrule Chevron?" is not a greeting) and returns status WELCOME with our own text:
+what Verdicta does, its coverage and two example questions. No search, no model call, no legal statement, so FR2,
+NFR2 and SR28 are unchanged; FR8 applies to legal questions. None of the 85 eval-v1 questions is a greeting (tested),
+so the evaluation numbers stay valid. The instructor's rule is unchanged: one independent question per message, no
+follow-up questions (entry of 2026-11-06); asking him whether follow-ups may now be added is pending.
+

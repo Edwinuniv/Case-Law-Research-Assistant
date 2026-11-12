@@ -97,3 +97,33 @@ def test_invented_or_mixed_name_uses_the_normal_search(monkeypatch):
         pipeline.answer(question, searcher, INDEX, dict(S, case_filter=True))
         assert searcher.decision_ids is None, question
 
+
+
+# --- A welcome message instead of "not supported" for greetings and "what can you do" (2026-11-12, Edwin) ---
+# Fixed text written by us, never by the model: no search, no model call, no legal statement (FR2, NFR2, SR28).
+# The instructor's rule stays: one independent question per message, no follow-up questions (SPEC section 11).
+class NoSearch:
+    def search(self, *a, **k): raise AssertionError("a greeting must not be searched")
+    def choose(self, *a, **k): raise AssertionError("a greeting must not be searched")
+
+@pytest.mark.parametrize("text", ["hello what can you do", "Hello!", "hi there, what can you do?", "Help",
+                                  "Who are you?", "Good morning. How does this work?", "hey", "thanks"])
+def test_a_greeting_gets_the_welcome_message_without_search_or_model(monkeypatch, text):
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: (_ for _ in ()).throw(AssertionError("no model call")))
+    r = pipeline.answer(text, NoSearch(), INDEX, S)
+    assert r["status"] == "WELCOME" and r["shown_sentences"] == [] and r["passages"] == []
+    assert "Supreme Court" in r["reason"] and "2000" in r["reason"]          # what Verdicta does and its coverage
+
+@pytest.mark.parametrize("text", ["Hello, did the Supreme Court overrule Chevron deference?",
+                                  "Hi, what did the Court hold in Bostock v. Clayton County?",
+                                  "help me find the holding of Roe v. Wade",
+                                  "What can you tell me about the Second Amendment?"])
+def test_a_legal_question_with_a_greeting_goes_through_the_pipeline(monkeypatch, text):
+    monkeypatch.setattr(llm, "ask_model", good_model)
+    assert pipeline.answer(text, FakeSearcher(0.9), INDEX, S)["status"] != "WELCOME"
+
+def test_no_test_question_is_taken_for_a_greeting():                  # the evaluation numbers stay valid
+    import json
+    from pathlib import Path
+    questions = [json.loads(l)["question"] for l in Path("eval/questions.jsonl").read_text().splitlines() if l.strip()]
+    assert len(questions) == 85 and not [q for q in questions if pipeline.is_greeting(q)]

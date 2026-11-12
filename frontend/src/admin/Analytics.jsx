@@ -33,6 +33,8 @@ export default function Analytics() {
         <Kpi label="questions" value={total} />
         {RESULTS.map(([k, label]) => <Kpi key={k} label={label} value={sum(k)}
                                           tone={k === "errors" ? (sum(k) ? "bad" : "ok") : undefined} />)}
+        {/* greetings (status WELCOME) are counted in the total but in none of the four results above */}
+        <Kpi label="greetings" value={total - RESULTS.reduce((s, [k]) => s + sum(k), 0)} sub="welcome message, no search" />
       </div>
 
       {d.days.length === 0 ? <div className="ad-card">No question in this period.</div> : (

@@ -155,6 +155,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 ### Interface (Edwin, with Joe and Yasser)
 - [x] Admin pages and the answer ("chatbot") restyled like the landing page — branch feature/admin-answer-ui (on top of #84): admin.css + charts.jsx (SVG ring, dial, stacked bars, lines; every number from /api/admin), the 11 admin pages, Answer/Working/PassagePanel with answer.css (research.css untouched); checked with a headless browser at 1280 and 390 px ⏳ Joe's PasswordRules in the Users form when it lands; merge after #84
 
+- [x] Welcome message (Edwin) — branch feature/welcome-message (on top of #86): "hello / what can you do" gets status WELCOME and our fixed text (no search, no model); 13 tests, none of the 85 questions is a greeting ⏳ follow-up questions: the instructor said no on 2026-11-06; asking him again before building anything
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
