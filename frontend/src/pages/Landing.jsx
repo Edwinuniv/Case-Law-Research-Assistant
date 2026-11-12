@@ -3,13 +3,14 @@
 // the numbers and "Try a question". It only shows; it calls no API besides /api/me (already done by App).
 // The research page itself is at /research and works exactly as before.
 // The example is A020 of our test set (Miller v. Alabama, answered in run 2); the fake citation is X001's.
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./landing.css";
 import logoMark from "../assets/logo-mark.svg";
 import Scales3D from "../components/Scales3D.jsx";
 import Story3D from "../components/Story3D.jsx";
 import Checks6 from "../components/Checks6.jsx";
+import Proof from "../components/Proof.jsx";
 import statue from "../assets/statue.webp";
 
 
@@ -29,45 +30,12 @@ const STEPS = [
     text: "Each citation opens the real passage. When the opinions do not support an answer, Verdicta says so instead of guessing.", cta: true },
 ];
 
-const STATS = [
-  { value: "0", label: "false citations shown on our test questions" },
-  { value: "1.0", label: "abstention precision on the test split" },
-  { value: "2,415", label: "Supreme Court decisions, 2000 to 2024" },
-  { value: "6", label: "checks on every sentence before you see it" },
-];
-
 // landmark decisions of our corpus, for the moving band under the hero
 const CASES = ["Bush v. Gore (2000)", "Lawrence v. Texas (2003)", "Kelo v. City of New London (2005)",
   "District of Columbia v. Heller (2008)", "Boumediene v. Bush (2008)", "Citizens United v. FEC (2010)",
   "NFIB v. Sebelius (2012)", "Shelby County v. Holder (2013)", "Riley v. California (2014)", "Obergefell v. Hodges (2015)",
   "Carpenter v. United States (2018)", "Bostock v. Clayton County (2020)", "Dobbs v. Jackson Women's Health (2022)",
   "Students for Fair Admissions v. Harvard (2023)", "Loper Bright v. Raimondo (2024)", "Trump v. United States (2024)"];
-
-const clamp = (x) => Math.min(1, Math.max(0, x));
-
-// counts up from 0 to the number once it is on screen ("2,415", "1.0" and "0" keep their format)
-function CountUp({ value }) {
-  const ref = useRef(null);
-  const [shown, setShown] = useState(value.replace(/[0-9]/g, "0"));
-  useEffect(() => {
-    const target = parseFloat(value.replace(/,/g, ""));
-    const decimals = (value.split(".")[1] || "").length;
-    const io = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) return;
-      io.disconnect();
-      const t0 = performance.now();
-      const tick = (t) => {
-        const k = clamp((t - t0) / 1400), eased = 1 - Math.pow(1 - k, 3);
-        setShown((target * eased).toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }));
-        if (k < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }, { threshold: 0.5 });
-    io.observe(ref.current);
-    return () => io.disconnect();
-  }, [value]);
-  return <b ref={ref}>{shown}</b>;
-}
 
 export default function Landing({ info }) {
   useEffect(() => {                                // sections fade in when they come into view
@@ -117,18 +85,7 @@ export default function Landing({ info }) {
 
       <Checks6 />
 
-      <section className="lp-stats lp-reveal">
-        {STATS.map((s) => (
-          <div key={s.label}><CountUp value={s.value} /><span>{s.label}</span></div>
-        ))}
-      </section>
-
-      <section className="lp-final lp-reveal">
-        <h2>The model never writes a citation.</h2>
-        <p>It points to numbered passages; Verdicta renders each citation from CourtListener's data, after the
-          sentence has passed every check.</p>
-        <Link to="/research" className="lp-button">Try a question</Link>
-      </section>
+      <Proof />
     </div>
   );
 }
