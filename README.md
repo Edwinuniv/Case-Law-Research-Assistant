@@ -61,6 +61,7 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.remove_out_of_scope      # remove the ones listed in app/scope.py (dry run; --apply)
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
+    python -m scripts.check_followups          # check eval/followups.jsonl (follow-up pairs, eval/FOLLOWUPS.md)
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
     python -m scripts.eval_retrieval "baseline"
     python -m scripts.eval_retrieval "eval-v1 baseline" --split test   # the numbers for the report
