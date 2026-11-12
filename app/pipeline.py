@@ -5,6 +5,31 @@ from app.citations import find_case_names
 from app.verify import verify, count_fabrications
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
+WELCOME = "WELCOME"
+
+# A greeting or "what can you do" gets a fixed welcome message instead of "not supported" (2026-11-12).
+# The WHOLE message must be a greeting and/or one of these phrases: a legal question that starts with
+# "Hello," is not a greeting. The text is ours, not the model's: no search, no model call, no legal statement.
+GREETING_WORDS = {"hi", "hello", "hey", "hiya", "greetings", "there", "good", "morning", "afternoon", "evening"}
+HELP_PHRASES = {"", "help", "what can you do", "what do you do", "who are you", "what are you", "what is this",
+                "what is verdicta", "how does this work", "how does it work", "how do you work", "how do i use this",
+                "thanks", "thank you"}
+
+
+def is_greeting(question):
+    words = "".join(c if c.isalpha() else " " for c in (question or "").lower()).split()
+    if not words:
+        return False
+    while words and words[0] in GREETING_WORDS:
+        words.pop(0)
+    return " ".join(words) in HELP_PHRASES
+
+
+def welcome_text():
+    examples = " or ".join(f"“{q}”" for q in config.EXAMPLE_QUESTIONS[:2])
+    return (f"I answer questions about {config.COVERAGE}, using only the text of the decisions. Every sentence I show "
+            f"cites the passage it comes from, and every citation is checked before you see it. If the decisions do not "
+            f"answer a question, I say so instead of guessing. Ask one question at a time, for example {examples}.")
 
 
 def check_input(question):
@@ -50,6 +75,9 @@ def answer(question, searcher, index, settings, skip_gate=False):
     r = {"question": question.strip(), "status": None, "reason": "", "sentences": [], "removed": [],
          "passages": [], "top_score": 0.0, "support_score": 0.0, "fabrications_caught": 0,
          "retrieved_decisions": [], "model_said": None, "ms_search": 0, "ms_model": 0, "ms_total": 0}
+
+    if is_greeting(r["question"]):                               # 0. A GREETING: our welcome text, nothing else
+        return finish(r, WELCOME, welcome_text(), t0)
 
     t = time.perf_counter()                                      # 1. SEARCH (+ optional reranker)
     r["case_filter"] = named_decisions(r["question"], index) if settings.get("case_filter") else []
