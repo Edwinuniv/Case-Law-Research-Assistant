@@ -495,3 +495,13 @@ administrator reads and deletes them (admin page "Messages", admin role + CSRF).
 CONTACT_EMAIL. Files of others changed and told: app/db.py, app/main.py, frontend/index.html, frontend/src/main.jsx
 (Joe), app/config.py and .env.example (Yasser).
 
+2026-11-12 - Instructor's answer on follow-up questions (Edwin). We wrote to Dr. Salloum that, after his answer of
+2026-11-06 (one independent question per message, no follow-up questions; entry above), we were considering follow-up
+questions: the visitor asks about an answer, and the new answer explains the passages already shown and answers the new
+question, still only from real, verified passages with the same checks, measured with a rule written first, or else we
+keep one question per message. He answered on 2026-11-12 at 20:49: "Akid" (Lebanese: "of course"). Follow-ups are
+therefore allowed on those terms; the rule is in EVALUATION.md ("Follow-up questions rule", written before any code).
+Independent questions stay as they are. Files of others that will change, with Joe's agreement: app/api.py (/api/ask
+accepts the previous answer's id, checked against the session) and frontend/src/pages/Chat.jsx (the follow-up in the
+thread).
+
