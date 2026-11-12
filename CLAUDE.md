@@ -152,6 +152,9 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] FABRICATED citation demo — scripts/demo_fabricated.py: run 2 has no fabricated citation to show (the model cites passages, our code renders citations), so a lying draft for a real question goes through the real verifier and citation table; no model call; 3 tests (PR #77)
 - [x] Demo question list — docs/defence_demo.md: one question per part of the guide's 15-minute plan, with a backup, from run 2 at tau 0.20 ⏳ try each on the live site the day before; evaluation runs missing from the online database: scripts/import_run.py (branch feature/import-run), Joe runs it on Railway
 
+### Interface (Edwin, with Joe and Yasser)
+- [x] Admin pages and the answer ("chatbot") restyled like the landing page — branch feature/admin-answer-ui (on top of #84): admin.css + charts.jsx (SVG ring, dial, stacked bars, lines; every number from /api/admin), the 11 admin pages, Answer/Working/PassagePanel with answer.css (research.css untouched); checked with a headless browser at 1280 and 390 px ⏳ Joe's PasswordRules in the Users form when it lands; merge after #84
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
