@@ -98,7 +98,7 @@ export function Lines({ data, x, keys, height = 160, maxY, marker }) {
         {[0, 0.5, 1].map((f) => (                              // grid lines with their values (0, half, top)
           <g key={f}>
             <line x1="0" y1={py(f * top)} x2={w} y2={py(f * top)} stroke="rgba(255,255,255,.07)" />
-            <text x="2" y={f === 1 ? py(top) + 10 : py(f * top) - 3} className="ad-axis">{+(f * top).toFixed(2)}</text>
+            <text x="2" y={f === 1 ? py(top) + 10 : py(f * top) - 3} className="ad-axis">{top >= 100 ? Math.round(f * top).toLocaleString() : +(f * top).toFixed(2)}</text>
           </g>
         ))}
         {isNum(marker) && data.length > 0 && (() => {           // a vertical line at one x value (the current tau)
