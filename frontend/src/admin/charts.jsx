@@ -128,6 +128,10 @@ export function Legend({ keys }) {
   );
 }
 
+// The metrics that are shares or rates from 0 to 1 (the others are counts or times): only these get bars.
+export const RATE_METRICS = new Set(["recall@1", "recall@5", "recall@10", "mrr@10", "abstention_precision", "abstention_recall",
+  "false_citation_rate", "groundedness_judge", "groundedness_lexical", "adversarial_abstention_rate"]);
+
 // Two values of the same metric side by side (before / after), as two thin bars on a 0-1 scale.
 export function PairBars({ a, b, worse }) {
   const bar = (v, cls) => <i className={cls} style={{ width: `${isNum(v) ? clamp01(v) * 100 : 0}%` }} />;
