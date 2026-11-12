@@ -46,10 +46,11 @@ export function Dial({ value, target, label }) {
 
 // One number in a card. tone: "ok" (green edge), "bad" (red edge) or nothing.
 export function Kpi({ label, value, sub, tone, children }) {
+  const shown = isNum(value) ? value.toLocaleString() : value ?? "–";
   return (
     <div className={`ad-kpi ${tone ? "ad-" + tone : ""}`}>
       {children && <div className="ad-kpi-draw">{children}</div>}
-      <b>{isNum(value) ? value.toLocaleString() : value ?? "–"}</b>
+      <b className={String(shown).length > 7 ? "ad-long" : ""}>{shown}</b>
       <span>{label}</span>
       {sub && <small>{sub}</small>}
     </div>
