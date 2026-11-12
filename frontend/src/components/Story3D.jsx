@@ -300,6 +300,8 @@ export default function Story3D({ scenes, statue, coverage }) {
   return (
     <section className={`st3d part-${part}`} ref={mount} aria-label="What Verdicta does">
       <img ref={statueImg} className="st3d-statue" src={statue} alt="" aria-hidden="true" />
+      {/* the text changes with each scene; the buttons under it stay where they are */}
+      <div className="st3d-left">
       <div className="st3d-text" key={part} aria-live="polite">
         {part === 0 ? <span className="lp-kicker">U.S. Supreme Court research, verified</span> : <span className="st3d-n">{part}.</span>}
         <h1>
@@ -309,11 +311,12 @@ export default function Story3D({ scenes, statue, coverage }) {
           ))}
         </h1>
         <p className="st3d-p">{sc.text}</p>
-        <p className="lp-cta">
-          <Link to="/research" className="lp-button">Try a question</Link>
-          <a href="#weigh" className="lp-button ghost">How it works ↓</a>
-        </p>
-        {part === 0 && <p className="lp-coverage">{coverage}</p>}
+      </div>
+      <p className="lp-cta st3d-cta">
+        <Link to="/research" className="lp-button">Try a question</Link>
+        <a href="#weigh" className="lp-button ghost">How it works ↓</a>
+      </p>
+      <p className="lp-coverage st3d-coverage">{coverage}</p>
       </div>
       <div className="st3d-bar" aria-hidden="true">
         {scenes.map((s2, k) => <i key={s2.title} className={k < part ? "done" : k === part ? "on" : ""}
