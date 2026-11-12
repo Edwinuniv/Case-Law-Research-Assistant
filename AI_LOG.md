@@ -635,3 +635,17 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    status to "done". The test file used the default settings (tau 0.20 since #75, the same as the database) and the
    status "done", so both bugs gave the right answer. Same lesson as export_run (2026-11-08): test data must differ
    from what the code could take by mistake. Fix: the test run has tau 0.37 and the status "paused" (like run 1's file).
+
+## 2026-11-12 — "13 correct sentences": a quote in the passage is not a correct answer (Edwin)
+
+1. **An overstatement in our own results.** After the quote matching change (2026-11-09), Claude wrote in EVALUATION.md
+   and in my report draft that the change "gives back 13 correct sentences". Rule (2) of our quote matching rule only
+   checked, by hand, that each of the 13 quotes is really in its cited passage, and they all are. It did not check the
+   sentences' conclusions. One is wrong: for A032 ("Can the SEC seek civil penalties for securities fraud in its own
+   in-house proceedings?", answer no, SEC v. Jarkesy) the kept sentence says the SEC can, because its passage describes
+   what the Dodd-Frank Act allowed before the Court struck it down. At tau 0.20 it is shown as low confidence.
+   How we caught it: writing a study document on my own 29 questions, I compared each final answer with the question's
+   expected answer. Fix: EVALUATION.md and the report draft now say "13 sentences whose quote is in the passage", and
+   A032 is in the error analysis and the limitations. No metric changes (A032 is answerable and answered, no false
+   citation). Lesson: our checks prove support and attribution, not that a conclusion is the holding; a hand check must
+   say exactly what it checked.
