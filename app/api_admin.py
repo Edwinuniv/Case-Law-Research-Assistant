@@ -323,15 +323,15 @@ def users():
 class NewUser(BaseModel):
     email: str
     password: str
-    role: str = "admin"              # the only role (SR33): visitors use the research page without an account
+    role: str = "admin"              # this page makes administrators only; visitors sign up themselves (SPEC 11)
 
 
 @router.post("/users")
 def user_create(body: NewUser):
     if "@" not in body.email or len(body.password) < 10:
         raise HTTPException(400, "Give an email address and a password of at least 10 characters.")
-    if body.role not in db.ROLES:
-        raise HTTPException(400, "Only administrator accounts exist: visitors do not need one.")
+    if body.role != "admin":
+        raise HTTPException(400, "This page creates administrators only: visitors make their own account on the sign-up page.")
     db.create_user(body.email, body.password, role=body.role)
     return users()
 
