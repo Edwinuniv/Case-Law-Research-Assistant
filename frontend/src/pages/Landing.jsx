@@ -54,7 +54,7 @@ export default function Landing({ info }) {
         <Link to="/" className="lp-brand"><img src={logoMark} alt="" /> Verdicta</Link>
         <span className="lp-nav-links">
           <a href="#how">How it works</a>
-          <Link to="/login" className="lp-nav-cta">Sign up</Link>
+          <Link to="/signup" className="lp-nav-cta">Sign up</Link>
         </span>
       </nav>
 
