@@ -1,5 +1,6 @@
-// Contact (Edwin, 2026-11-12): the team, the address from the settings (GET /api/site, CONTACT_EMAIL; not shown when
-// empty) and a form that sends POST /api/contact with the CSRF token (api.js). Messages are read on the admin page.
+// Contact (Edwin, 2026-11-12): the team, the addresses from the settings (GET /api/site, CONTACT_EMAIL, separated by
+// commas: the whole team receives the mail; not shown when empty) and a form that sends POST /api/contact with the
+// CSRF token (api.js). Messages from the form are read on the admin page "Messages".
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
@@ -32,9 +33,11 @@ export default function Contact() {
         Karam</strong>, students at ESIB, Université Saint-Joseph, Beirut, supervised by Georges Salloum. Questions about
         the project, a wrong answer, a problem with the site: write to us.</p>
 
-      {site?.contact_email && (
+      {site?.contact_emails?.length > 0 && (            // one message to all of us: mailto with every address
         <div className="sp-card">
-          By email: <a className="sp-mail" href={`mailto:${site.contact_email}`}>{site.contact_email}</a>
+          By email, to the whole team:{" "}
+          <a className="sp-mail" href={`mailto:${site.contact_emails.join(",")}`}>write to us</a>
+          <ul>{site.contact_emails.map((e) => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
 
