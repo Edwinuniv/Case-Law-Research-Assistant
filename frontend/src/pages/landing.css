@@ -9,8 +9,11 @@
 .lp-brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;font-weight:600;
   color:#fff;letter-spacing:.04em}
 .lp-brand img{width:34px;height:34px}
-.lp-nav-links{display:flex;gap:22px;font-size:15px}
+.lp-nav-links{display:flex;align-items:center;gap:22px;font-size:15px}
 .lp-nav-links a{color:#cfd7e6}.lp-nav-links a:hover{color:#fff}
+.lp-nav-links a.lp-nav-cta{color:#141418;font-weight:600;padding:9px 20px;border-radius:999px;
+  background:linear-gradient(90deg,#fbbf24,#fb923c);box-shadow:0 6px 20px rgba(245,158,11,.3);transition:transform .2s,box-shadow .2s}
+.lp-nav-links a.lp-nav-cta:hover{color:#141418;transform:translateY(-1px);box-shadow:0 10px 26px rgba(245,158,11,.4)}
 
 /* ---- hero ---- */
 .lp-hero{position:relative;overflow:hidden;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;
@@ -132,7 +135,6 @@ main.bare{max-width:none;margin:0;padding:0}
 
 /* phones: the text above the picture, one column */
 @media(max-width:820px){
-  .lp-nav-links a:first-child{display:none}
   .lp-sticky{grid-template-columns:1fr;grid-template-rows:auto 1fr;align-content:center;padding-top:30px}
   .lp-copy{height:230px}
   .lp-stage{height:46vh}
