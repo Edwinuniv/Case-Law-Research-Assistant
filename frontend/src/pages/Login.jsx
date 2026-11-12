@@ -120,8 +120,9 @@ export default function Login({ mode = "login", onLogin }) {
   const t = TEXT[mode];
   return (
     <div className="au">
-      <aside className="au-side" aria-hidden="true">
-        <Link to="/" className="au-brand"><img src={logoMark} alt="" /> Verdicta</Link>
+      <aside className="au-side">
+        <Link to="/" className="au-brand" aria-hidden="true" tabIndex={-1}><img src={logoMark} alt="" /> Verdicta</Link>
+        <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
         <ClipboardAnim />
         <div className="au-side-text">
           <p className="au-quote">Ask the Court. <em>Hear only what it said.</em></p>
@@ -134,7 +135,10 @@ export default function Login({ mode = "login", onLogin }) {
       </aside>
 
       <section className="au-main">
-        <Link to="/" className="au-brand au-brand-small"><img src={logoMark} alt="" /> Verdicta</Link>
+        <div className="au-top-small">
+          <Link to="/" className="au-brand au-brand-small"><img src={logoMark} alt="" /> Verdicta</Link>
+          <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
+        </div>
         <div className="au-card" key={mode}>
           {mode !== "forgot" && (
             <div className="au-tabs" role="tablist">
@@ -149,6 +153,7 @@ export default function Login({ mode = "login", onLogin }) {
           {mode === "signup" && <SignupForm />}
           {mode === "forgot" && <ForgotPanel />}
         </div>
+        <p className="au-legal">This is a research aid, not legal advice.</p>
       </section>
     </div>
   );

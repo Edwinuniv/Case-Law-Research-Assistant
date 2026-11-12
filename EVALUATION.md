@@ -288,7 +288,10 @@ All hold, so the changed matching is kept.
 | groundedness (judge) | 0.841 | 0.817 |
 | adversarial "not supported" | 0.857 | 0.810 |
 
-The changed matching gives back 13 correct sentences: 9 answerable questions change status (5 from "not
+The changed matching gives back 13 sentences whose quote is really in the cited passage (checked by hand, rule 2):
+10 on answerable questions and 3 on questions that should abstain (corrected 2026-11-12: this said "13 correct
+sentences", but a quote found in the passage does not make the sentence's conclusion right; A032's is wrong, see
+the error analysis). At tau_abstain 0.55, 9 answerable questions change status (5 from "not
 supported" to answered, 4 from low confidence to answered). Two questions that should abstain are now answered,
 both with real quotes from a dissent that the sentence names as such. U022 (unanswerable, a personal
 question about a fatal car accident) is low confidence, from Kavanaugh's dissent in an ACCA case: off topic.
@@ -422,3 +425,17 @@ model's: words left out with "..." (303 Creative x2, Students for Fair Admission
 word (Jarkesy dissent), and one page header inside a passage ("in-house 2 sec v. jarkesy syllabus"). The "missing
 fi/fl letters" flag next to three of them in the report is a coincidence: those decisions contain an "affrm" word,
 but the quotes failed on "...". One unanswerable question was answered: U022 (section on quote matching above).
+
+A wrong conclusion shown with low confidence (found 2026-11-12, reviewing my own questions). A032 asks "Can the SEC
+seek civil penalties for securities fraud in its own in-house proceedings?"; the answer is no (SEC v. Jarkesy, 2024: a
+jury trial in an Article III court is required). At tau_abstain 0.20 it is shown as low confidence (support 0.40)
+with one kept sentence: "The SEC can seek civil penalties for securities fraud in its own in-house proceedings."
+Its quote is in its passage word for word ("the SEC may now seek civil penalties in federal court, or it may impose
+them through its own in-house proceedings"), which describes what the Dodd-Frank Act allowed before the Court held it
+unconstitutional for fraud claims. So every check passes and the judge said "yes": the sentence is true of its
+passage but not of the holding. In run 2 as made, the quote failed on a non-breaking hyphen and A032 was "not
+supported"; the quote matching change brought the sentence back (it is one of the 13 above). None of the metrics
+above changes: A032 is answerable and answered (precision and recall unchanged), with no false citation. What it
+shows: the verifier checks support and attribution sentence by sentence, and nothing checks that an answer's
+conclusion is the Court's holding; our metrics measure false citations and abstentions, not correct conclusions.
+Next step, measured with a rule written first like the rest: compare the answer with the holding passages.

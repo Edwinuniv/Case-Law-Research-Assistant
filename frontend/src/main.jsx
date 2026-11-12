@@ -34,6 +34,9 @@ function App() {
   const authPage = ["/login", "/signup", "/forgot"].includes(path);   // the account pages have their own logo
 
   useEffect(() => { me().then(setInfo); }, []);
+  // the dark pages (landing, account pages) show the "not legal advice" notice inside their own design,
+  // so the light footer of index.html is hidden there (it stays on every other page: NFR10, SR7)
+  useEffect(() => { document.body.classList.toggle("dark-page", landing || authPage); }, [landing, authPage]);
   if (!info) return <p className="muted" style={{ padding: 20 }}>Loading…</p>;
 
   async function logout() {
