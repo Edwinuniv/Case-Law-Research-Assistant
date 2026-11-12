@@ -1,0 +1,51 @@
+/* "Six checks. Every sentence.": dark section, one colour per check, rings that draw themselves. */
+.c6{position:relative;padding:110px clamp(16px,5vw,72px) 96px;text-align:center;color:#fff;overflow:hidden;
+  background:radial-gradient(ellipse at 20% 0%,rgba(245,158,11,.14),transparent 55%),
+             radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.12),transparent 50%),#141418}
+.c6-kicker{font-size:12px;letter-spacing:.22em;color:#fbbf24}
+.c6 h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(34px,4.6vw,60px);margin:12px 0 14px;color:#fff}
+.c6 h2 em{background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.c6-lead{max-width:640px;margin:0 auto 50px;color:#a8a29e;font-size:16px;line-height:1.6}
+
+.c6-top{display:flex;align-items:center;justify-content:center;gap:clamp(28px,6vw,80px);flex-wrap:wrap;margin-bottom:60px}
+.c6-big{position:relative;width:260px;height:260px}
+.c6-big-label{position:absolute;inset:0;display:grid;place-content:center;gap:4px}
+.c6-big-label b{font-family:Georgia,serif;font-size:64px;font-weight:500;line-height:1;
+  background:linear-gradient(180deg,#fde68a,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.c6-big-label span{font-size:13px;color:#a8a29e;line-height:1.4}
+.c6-legend{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:12px;font-size:15px;color:#d6d3d1}
+.c6-legend li{display:flex;align-items:center;gap:10px;opacity:0;transform:translateX(14px);transition:opacity .6s,transform .6s}
+.c6-legend i{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 12px currentColor}
+.c6-legend b{font-family:Georgia,serif;font-size:20px;color:#fff;min-width:26px}
+.c6-legend .c6-zero{margin-top:6px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1);color:#34d399;font-weight:600}
+.c6.in .c6-legend li{opacity:1;transform:none}
+.c6.in .c6-legend li:nth-child(2){transition-delay:1.1s}.c6.in .c6-legend li:nth-child(3){transition-delay:1.25s}
+.c6.in .c6-legend li:nth-child(4){transition-delay:1.4s}.c6.in .c6-legend li:nth-child(5){transition-delay:1.55s}
+.c6.in .c6-legend li:nth-child(6){transition-delay:1.8s}
+
+/* an arc draws from 0 to its length when the section comes into view */
+.c6-arc{stroke-dasharray:0 calc(var(--C) * 1px);transition:stroke-dasharray 1.2s cubic-bezier(.6,0,.2,1)}
+.c6.in .c6-arc{stroke-dasharray:calc(var(--len) * 1px) calc(var(--C) * 1px)}
+
+.c6-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;max-width:1120px;margin:0 auto;text-align:left}
+.c6-card{position:relative;padding:24px 24px 20px;border-radius:20px;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);opacity:0;transform:translateY(26px);
+  transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
+.c6-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(circle at 18% 0%,color-mix(in srgb,var(--c) 22%,transparent),transparent 60%)}
+.c6.in .c6-card{opacity:1;transform:none}
+.c6-card:hover{border-color:color-mix(in srgb,var(--c) 60%,transparent);box-shadow:0 18px 50px color-mix(in srgb,var(--c) 18%,transparent);transform:translateY(-4px)}
+.c6-card-ring{margin-bottom:14px;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--c) 45%,transparent))}
+.c6-n{font-family:Georgia,serif;font-size:22px;fill:var(--c)}
+.c6-card b{display:block;font-family:Georgia,serif;font-weight:500;font-size:20px;margin-bottom:6px;color:#fff}
+.c6-card p{margin:0 0 16px;color:#a8a29e;font-size:15px;line-height:1.55}
+.c6-meter{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.c6-dots{display:flex;gap:3px}
+.c6-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12);transition:background .3s,box-shadow .3s}
+.c6.in .c6-dots i.on{background:var(--c);box-shadow:0 0 8px var(--c)}
+.c6-meter small{font-size:12px;color:#78716c;letter-spacing:.02em}
+.c6-foot{max-width:640px;margin:36px auto 0;color:#78716c;font-size:14px}
+
+@media(max-width:900px){.c6-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.c6-grid{grid-template-columns:1fr}.c6-big{transform:scale(.85)}}
+@media(prefers-reduced-motion:reduce){.c6 *{transition:none!important}}
