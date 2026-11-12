@@ -19,8 +19,9 @@ SENT_BY_IP = defaultdict(deque)              # memory only: never written to the
 
 @router.get("/site")
 def site():
-    """What the public pages need from the settings: the contact address (None when not set)."""
-    return {"contact_email": config.CONTACT_EMAIL or None, "coverage": config.COVERAGE}
+    """What the public pages need from the settings: the contact addresses (CONTACT_EMAIL, separated by commas;
+    an empty list when not set) and the coverage line."""
+    return {"contact_emails": [e.strip() for e in config.CONTACT_EMAIL.split(",") if e.strip()], "coverage": config.COVERAGE}
 
 
 class Message(BaseModel):
