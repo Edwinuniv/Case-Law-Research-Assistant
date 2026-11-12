@@ -149,6 +149,7 @@ export default function Login({ mode = "login", onLogin }) {
           {mode === "signup" && <SignupForm />}
           {mode === "forgot" && <ForgotPanel />}
         </div>
+        <p className="au-legal">This is a research aid, not legal advice.</p>
       </section>
     </div>
   );

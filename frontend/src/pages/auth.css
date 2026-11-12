@@ -65,6 +65,7 @@
 .au-steps span{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-family:Georgia,serif;color:#fbbf24;
   border:1px solid rgba(245,158,11,.5);background:rgba(245,158,11,.08)}
 .au-steps p{margin:4px 0 0;color:#d6d3d1;font-size:15px;line-height:1.5}
+.au-legal{margin:22px 0 0;font-size:12px;color:#6b6560}
 .au-muted{margin:0 0 20px;font-size:13px;color:#8a837d;line-height:1.5}
 
 @media(max-width:860px){
