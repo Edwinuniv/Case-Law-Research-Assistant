@@ -95,6 +95,41 @@ def login(request: Request, body: Login):
     return {"user": {"email": user["email"], "role": user["role"]}, "csrf": csrf_token(request)}
 
 
+# ---------------- sign-up for visitors (SPEC 11, 2026-11-12) ----------------
+# A visitor may make a 'user' account to keep their question history; nobody needs one to ask (SR33).
+# At most SIGNUP_LIMIT_PER_IP new accounts per address in SIGNUP_LIMIT_MINUTES, in memory like the limits above.
+SIGNUP_LIMIT_PER_IP, SIGNUP_LIMIT_MINUTES = 5, 60
+SIGNUPS_BY_IP = defaultdict(deque)
+MIN_PASSWORD = 10                    # the same as the Accounts page, until Joe's password policy replaces both
+
+
+def valid_email(email):
+    name, at, domain = email.strip().partition("@")
+    return bool(name and at and "." in domain.strip(".") and " " not in email.strip() and len(email) <= 254)
+
+
+@router.post("/signup")
+def signup(request: Request, body: Login):
+    ip = request.client.host if request.client else "unknown"
+    window, made = SIGNUP_LIMIT_MINUTES * 60, SIGNUPS_BY_IP[ip]
+    while made and made[0] < time.time() - window:
+        made.popleft()
+    if len(made) >= SIGNUP_LIMIT_PER_IP:
+        raise HTTPException(429, "Too many new accounts from this address. Try again later.")
+    if not valid_email(body.email):
+        raise HTTPException(400, "Give a valid email address.")
+    if len(body.password) < MIN_PASSWORD:
+        raise HTTPException(400, f"Choose a password of at least {MIN_PASSWORD} characters.")
+    user_id = db.create_visitor(body.email, body.password)       # never changes an existing account
+    if user_id is None:
+        raise HTTPException(409, "An account with this email already exists. Log in instead.")
+    made.append(time.time())
+    email = body.email.lower().strip()
+    request.session.clear()                                      # logged in at once, in a new session
+    request.session.update({"user_id": user_id, "email": email})
+    return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
+
+
 @router.post("/logout")
 def logout(request: Request):
     request.session.clear()
@@ -194,8 +229,27 @@ def ask(request: Request, body: Question):
         raise HTTPException(503, "The search index is not ready yet.")
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
     shown = public_answer(r)
-    shown["id"] = db.log_query(r, shown=shown)                  # FR28, SR41 (no account: user_id stays empty)
+    asker = request.session.get("user_id")                      # a logged-in account keeps its history (SPEC 11)
+    if asker and db.active_role(asker) is None:
+        asker = None
+    shown["id"] = db.log_query(r, user_id=asker, shown=shown)   # FR28, SR41 (no account: user_id stays empty)
     return shown
+
+
+# ---------------- the question history of a logged-in account (SPEC 11, 2026-11-12) ----------------
+@router.get("/history")
+def history(user=Depends(require_user)):
+    """Only the asking account's own questions, newest first. Not logged in: 401."""
+    return [{**q, "created_at": q["created_at"].isoformat()} for q in db.user_history(user["id"])]
+
+
+@router.get("/history/{query_id}")
+def history_item(query_id: int, user=Depends(require_user)):
+    """One of the account's own questions with the answer as it was shown; someone else's: 404."""
+    q = db.user_question(user["id"], query_id)
+    if not q:
+        raise HTTPException(404, "Not found.")
+    return {**q, "created_at": q["created_at"].isoformat()}
 
 
 def passage_view(chunk_id, quote=""):
