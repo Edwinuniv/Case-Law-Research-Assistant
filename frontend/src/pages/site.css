@@ -50,3 +50,12 @@ footer nav a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 footer nav a:hover{color:#d97706}
 body:has(.sp){background:#0c0c0e}                 /* the information pages are dark down to the footer */
 body:has(.sp) footer{border-top-color:rgba(255,255,255,.08);color:#78716c}
+/* "Back" to the main page, at the top left under the site's logo, like the account pages (Yasser, 2026-11-12) */
+.sp-hero{position:relative}
+.sp-back{position:absolute;top:18px;left:28px;z-index:2;display:inline-flex;align-items:center;gap:8px;padding:9px 16px 9px 13px;
+  border-radius:999px;font-size:14px;font-weight:600;color:#e7e5e4;text-decoration:none;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.14);transition:background .2s,border-color .2s,color .2s}
+.sp-back span{font-size:16px;transition:transform .2s}
+.sp-back:hover{color:#fff;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.55)}
+.sp-back:hover span{transform:translateX(-3px)}
+@media(max-width:700px){.sp-back{top:12px;left:16px;padding:7px 13px 7px 10px;font-size:13px}.sp-hero{padding-top:64px}}
