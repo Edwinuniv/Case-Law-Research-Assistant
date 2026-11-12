@@ -1,5 +1,6 @@
-// The landing page at / : the statue, then the idea of Verdicta told by a chain of six 3D images, each on
-// its own screen (scales -> page -> books -> magnifying glass -> check -> gavel). It only shows; it calls no API besides /api/me (already done by App).
+// The landing page at / : a film at the top that plays by itself (the statue, then the chain of six 3D
+// images: scales -> page -> books -> magnifying glass -> check -> gavel), then the 3D scale, the six checks,
+// the numbers and "Try a question". It only shows; it calls no API besides /api/me (already done by App).
 // The research page itself is at /research and works exactly as before.
 // The example is A020 of our test set (Miller v. Alabama, answered in run 2); the fake citation is X001's.
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +8,7 @@ import { Link } from "react-router-dom";
 import "./landing.css";
 import logoMark from "../assets/logo-mark.svg";
 import Scales3D from "../components/Scales3D.jsx";
+import Cinema from "../components/Cinema.jsx";
 import statue from "../assets/statue.webp";
 import chain1 from "../assets/chain1_scales.webp";
 import chain2 from "../assets/chain2_page.webp";
@@ -15,14 +17,13 @@ import chain4 from "../assets/chain4_magnifier.webp";
 import chain5 from "../assets/chain5_check.webp";
 import chain6 from "../assets/chain6_gavel.webp";
 
-const QUESTION = "Can a law require life in prison without parole for a juvenile, with no chance for the judge to consider his age?";
 
 // the chain of six images (made by Yasser): THE PAGE travels from Justice's scales to the verdict
 const STEPS = [
   { img: chain1, word: "WEIGHED", title: "Every question is weighed.",
     text: "Your question goes on the scale. Verdicta answers only from U.S. Supreme Court opinions filed from 2000 to 2024, nothing else." },
   { img: chain2, word: "ASK", title: "Ask in plain words.",
-    text: "Type it the way you would ask a colleague.", typed: true },
+    text: "Type it the way you would ask a colleague: \"Can a law require life without parole for a juvenile, with no chance for the judge to consider his age?\"" },
   { img: chain3, word: "READ", title: "Read the opinions, not the internet.",
     text: "Two searches, by meaning and by keywords, run through 72,502 passages of 2,415 decisions. The best 8 go to the model, and only those." },
   { img: chain4, word: "QUOTED", title: "Every quote, word for word.",
@@ -59,59 +60,6 @@ const CHECKS = [
 const clamp = (x) => Math.min(1, Math.max(0, x));
 
 // counts up from 0 to the number once it is on screen ("2,415", "1.0" and "0" keep their format)
-// how far a section has travelled through the screen: 0 when its top reaches the bottom of the window,
-// 0.5 when it is centred, 1 when its bottom leaves the top
-function useTravel(ref) {
-  const [r, setR] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const measure = () => {
-      raf = 0;
-      const el = ref.current; if (!el) return;
-      const box = el.getBoundingClientRect(), vh = window.innerHeight;
-      setR(clamp((vh - box.top) / (vh + box.height)));
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(measure); };
-    measure();
-    window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); cancelAnimationFrame(raf); };
-  }, [ref]);
-  return r;
-}
-
-const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
-
-// one chapter of the chain: its own full screen, its image flies in, floats, then flies out toward the next one
-function Chapter({ s, i, count }) {
-  const ref = useRef(null);
-  const r = useTravel(ref);
-  const dir = i % 2 ? -1 : 1;                        // image on the right, then on the left, and so on
-  const enter = ease((r - 0.08) / 0.36), leave = ease((r - 0.62) / 0.34);
-  const typed = s.typed ? QUESTION.slice(0, Math.round(QUESTION.length * clamp((r - 0.25) / 0.3))) : "";
-  return (
-    <section ref={ref} className={`lp-ch ${dir < 0 ? "flip" : ""}`} data-ch={i}>
-      <div className="lp-ch-word" aria-hidden="true" style={{ transform: `translateX(${(0.5 - r) * 45 * dir}vw)` }}>{s.word}</div>
-      <div className="lp-ch-text" style={{ opacity: enter * (1 - leave), transform: `translateY(${(1 - enter) * 60 - leave * 80}px)` }}>
-        <span className="lp-ch-n">{i + 1}.</span>
-        <span className="lp-num">{String(i + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}</span>
-        <h2>{s.title}</h2>
-        <p>{s.text}</p>
-        {s.typed && <p className="lp-typedq">“{typed}<i className="lp-caret" />”</p>}
-        {s.cta && <Link to="/research" className="lp-button">Try a question</Link>}
-      </div>
-      <div className="lp-ch-img" aria-hidden="true"
-           style={{ opacity: clamp(enter * 1.2) * (1 - leave * 0.85),
-                    transform: `translate3d(${dir * (1 - enter) * 38}vw, ${(1 - enter) * 14 - leave * 34}vh, 0) rotate(${dir * ((1 - enter) * 22 - leave * 12)}deg) scale(${0.72 + enter * 0.28 + leave * 0.18})` }}>
-        <div className="lp-ch-glow" />
-        <div className="lp-float3d" style={{ animationDelay: `${-i * 1.3}s` }}>
-          <img src={s.img} alt="" loading={i < 2 ? "eager" : "lazy"} />
-          <span className="lp-shine" style={{ "--m": `url(${s.img}) center / contain no-repeat` }} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function CountUp({ value }) {
   const ref = useRef(null);
   const [shown, setShown] = useState(value.replace(/[0-9]/g, "0"));
@@ -136,16 +84,6 @@ function CountUp({ value }) {
 }
 
 export default function Landing({ info }) {
-  const [hero, setHero] = useState(0);             // how far the hero has scrolled away, 0 to 1
-  const [mouse, setMouse] = useState([0, 0]);      // mouse position over the hero, -1 to 1
-
-  useEffect(() => {                                // the hero zooms and fades as it scrolls away
-    const onScroll = () => setHero(clamp(window.scrollY / window.innerHeight));
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   useEffect(() => {                                // sections fade in when they come into view
     const seen = new IntersectionObserver((entries) => entries.forEach((e) => {
       if (e.isIntersecting) e.target.classList.add("in");
@@ -154,33 +92,7 @@ export default function Landing({ info }) {
     return () => seen.disconnect();
   }, []);
 
-  // "Watch the story": scrolls through every chapter by itself, like a film; any wheel, touch or key stops it
-  const [watching, setWatching] = useState(false);
-  useEffect(() => {
-    if (!watching) return;
-    let stop = false, raf = 0, timer = 0;
-    const cancel = () => { stop = true; setWatching(false); };
-    const glide = (to, ms, done) => {
-      const from = window.scrollY, t0 = performance.now();
-      const step = (t) => {
-        if (stop) return;
-        const k = clamp((t - t0) / ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-        window.scrollTo(0, from + (to - from) * e);
-        if (k < 1) raf = requestAnimationFrame(step); else done();
-      };
-      raf = requestAnimationFrame(step);
-    };
-    const stops = [...document.querySelectorAll(".lp-ch")].map((el) => el.offsetTop);
-    let n = 0;
-    const next = () => {
-      if (stop || n >= stops.length) { setWatching(false); return; }
-      glide(stops[n++], 2200, () => { timer = setTimeout(next, 2600); });
-    };
-    next();
-    ["wheel", "touchstart", "keydown"].forEach((ev) => window.addEventListener(ev, cancel, { passive: true }));
-    return () => { stop = true; cancelAnimationFrame(raf); clearTimeout(timer);
-      ["wheel", "touchstart", "keydown"].forEach((ev) => window.removeEventListener(ev, cancel)); };
-  }, [watching]);
+
 
   return (
     <div className="lp">
@@ -193,33 +105,10 @@ export default function Landing({ info }) {
         </span>
       </nav>
 
-      <section className="lp-hero lp-hero2" onMouseMove={(e) => setMouse([e.clientX / window.innerWidth * 2 - 1, e.clientY / window.innerHeight * 2 - 1])}>
-        <div className="lp-bigword" aria-hidden="true" style={{ transform: `translateX(${-hero * 18}vw)` }}>VERIFIED</div>
-        <div className="lp-glow" aria-hidden="true" style={{ transform: `translate(${mouse[0] * 20}px, ${mouse[1] * 14}px)` }} />
-        <div className="lp-hero-text" style={{ transform: `translateY(${-hero * 60}px)`, opacity: 1 - hero * 1.3 }}>
-          <span className="lp-kicker">U.S. Supreme Court research, verified</span>
-          <h1>Ask the Court.<br /><em>Hear only what it said.</em></h1>
-          <p className="lp-lead">Verdicta answers questions about U.S. Supreme Court decisions and shows only sentences
-            whose citations and quotes were checked against the opinions themselves.</p>
-          <p className="lp-cta">
-            <Link to="/research" className="lp-button">Try a question</Link>
-            <button type="button" className="lp-button ghost" onClick={() => setWatching(true)}>▶ Watch the story</button>
-          </p>
-          <p className="lp-coverage">{info.coverage}</p>
-        </div>
-        <div className="lp-statue-wrap" style={{ transform: `translate(${mouse[0] * -10}px, ${-hero * 90}px) scale(${1 + hero * 0.22})` }}>
-          <img className="lp-statue" src={statue} alt="Bronze statue of Lady Justice holding the scales" />
-        </div>
-        <div className="lp-floats" aria-hidden="true">
-          {[["lp-f1", <><span className="lp-cite-n">P1</span>Miller v. Alabama, 567 U.S. 460</>, 1.2],
-            ["lp-f2", <>✓ Verified answer</>, -0.8],
-            ["lp-f4", <><s>Delgado v. Oregon Fisheries Board, 597 U.S. 412</s> · removed</>, -1.1]].map(([cls, body, depth]) => (
-            <span key={cls} className={`lp-float ${cls}`}
-                  style={{ transform: `translate(${mouse[0] * 18 * depth}px, ${mouse[1] * 14 * depth - hero * 220 * depth}px)` }}>{body}</span>
-          ))}
-        </div>
-        <div className="lp-scroll" aria-hidden="true"><i /></div>
-      </section>
+      <Cinema coverage={info.coverage} scenes={[
+        { img: statue, word: "VERIFIED", title: "Ask the Court. Hear only what it said.", accent: [3, 4, 5, 6],
+          text: "Verdicta answers questions about U.S. Supreme Court decisions and shows only sentences whose citations and quotes were checked against the opinions themselves." },
+        ...STEPS]} />
 
       <div className="lp-marquee" aria-label="Some of the decisions in our corpus">
         <div className="lp-track">
@@ -227,11 +116,8 @@ export default function Landing({ info }) {
         </div>
       </div>
 
-      <div id="how">
-        {STEPS.map((st, i) => <Chapter key={st.title} s={st} i={i} count={STEPS.length} />)}
-      </div>
 
-      <section className="lp-weigh">
+      <section className="lp-weigh" id="weigh">
         <div className="lp-weigh-copy lp-reveal">
           <span className="lp-num">THE VERIFIER</span>
           <h2>Weighed before it is shown.</h2>
