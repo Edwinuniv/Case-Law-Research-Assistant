@@ -102,8 +102,9 @@ decision stored twice), fixed before run 2.
 **Quote matching, measured on the saved run.** In run 2, 10 of 15 quotes removed as "not found" were in the
 passage: the model's non-breaking hyphen, words broken at a line end ("mar- riage"), page markers ("*490").
 With a rule written first, we changed the matching and checked run 2's saved sentences again, with the
-same drafts and the same passages. 13 correct sentences came back, false citations stayed at 0, and 2
-questions that should abstain were answered from a dissent they name (recall on TUNE 1.0 -> 0.94).
+same drafts and the same passages. 13 sentences whose quote is really in the passage came back (one, A032,
+true of its passage but not of the holding), false citations stayed at 0, and 2 questions that should
+abstain were answered from a dissent they name (recall on TUNE 1.0 -> 0.94).
 The change was kept; tau was then chosen on this rechecked run.
 
 **Metadata search (case-name filter).** When the question names a case of our corpus, the search looks
@@ -133,6 +134,9 @@ quote what it was not given.
   was possible, and the same question can get a different draft in another run.
 - A quote from a dissent that the sentence names as such passes every check; on an off-topic or
   false-premise question it can still produce a misleading answer (U022, X009).
+- A sentence can be true of its passage but not of the holding: for A032 the model wrote that the SEC can
+  impose penalties in-house, which the passage (the statute) allows but the Court struck down; it was shown
+  as low confidence. Checking an answer's conclusion against the holding is the next step.
 
 ---
 
