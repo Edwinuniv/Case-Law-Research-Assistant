@@ -495,3 +495,19 @@ administrator reads and deletes them (admin page "Messages", admin role + CSRF).
 CONTACT_EMAIL. Files of others changed and told: app/db.py, app/main.py, frontend/index.html, frontend/src/main.jsx
 (Joe), app/config.py and .env.example (Yasser).
 
+
+2026-11-12 - Visitor accounts (Yasser, team decision; replaces the "administrator only" part of the 2026-11-06 entry and
+step 5.11). A visitor may create an account on /signup (email + password) to keep their question history; the research
+page stays open to everyone without an account (SR33, FR1). Written before the code; the instructor is to be told
+before the defence. Rules: (1) roles are 'admin' and 'user'; sign-up only ever makes a 'user'; administrators are still
+made only by the seed script or the Accounts page; (2) sign-up never changes an existing account (an email already used
+is refused with "An account with this email already exists", unlike create_user, which resets it for FR12); (3) a
+password of at least 10 characters, as on the Accounts page, until Joe's password policy replaces both; (4) at most 5
+accounts per IP address per hour, kept in memory like the other limits; (5) after sign-up the visitor is logged in and
+sent to the research page; the login page sends a 'user' to the research page and an 'admin' to /admin; (6) a logged-in
+user's questions are saved with their user_id; GET /api/history lists ONLY their own questions and /api/history/{id}
+returns one of them, anything else is 404 (another visitor's questions stay readable only on the admin pages); (7) a
+'user' gets 403 on every /api/admin route, as before; (8) the start-up migration no longer deletes 'user' accounts,
+and the role rule allows ('admin', 'user'). No name is asked: only the email and a bcrypt hash are stored. The privacy
+page says so. Changed files of others, told: app/db.py, app/api.py, app/api_admin.py, frontend/src/pages/Chat.jsx,
+the 5.11 tests (Joe); frontend/src/pages/Privacy.jsx (Edwin).
