@@ -9,6 +9,7 @@ import "./landing.css";
 import logoMark from "../assets/logo-mark.svg";
 import Scales3D from "../components/Scales3D.jsx";
 import Story3D from "../components/Story3D.jsx";
+import Checks6 from "../components/Checks6.jsx";
 import statue from "../assets/statue.webp";
 
 
@@ -41,15 +42,6 @@ const CASES = ["Bush v. Gore (2000)", "Lawrence v. Texas (2003)", "Kelo v. City 
   "NFIB v. Sebelius (2012)", "Shelby County v. Holder (2013)", "Riley v. California (2014)", "Obergefell v. Hodges (2015)",
   "Carpenter v. United States (2018)", "Bostock v. Clayton County (2020)", "Dobbs v. Jackson Women's Health (2022)",
   "Students for Fair Admissions v. Harvard (2023)", "Loper Bright v. Raimondo (2024)", "Trump v. United States (2024)"];
-
-const CHECKS = [
-  ["It cites what we sent", "Each sentence must point to one of the 8 passages the model received, and only those."],
-  ["The quote is really there", "Its quote of five words or more is found word for word in the cited passage."],
-  ["The citation exists", "Every citation must be in CourtListener's table and come from a retrieved opinion."],
-  ["The case name matches", "Both parties of a case name must match the decision of the cited passage."],
-  ["Numbers and dates match", "Every number and year must appear in the passage, or be the decision's own year."],
-  ["A dissent is not the Court", "A sentence may not present a dissent or a concurrence as the Court's holding."],
-];
 
 const clamp = (x) => Math.min(1, Math.max(0, x));
 
@@ -123,19 +115,7 @@ export default function Landing({ info }) {
         <Scales3D />
       </section>
 
-      <section className="lp-checks6 lp-reveal">
-        <span className="lp-num">INSIDE THE VERIFIER</span>
-        <h2>Six checks. Every sentence.</h2>
-        <div className="lp-grid6">
-          {CHECKS.map(([t, d], i) => (
-            <div key={t} className="lp-check6" style={{ transitionDelay: `${0.15 + i * 0.12}s` }}>
-              <span className="lp-check6-n">{i + 1}</span><b>{t}</b><p>{d}</p>
-            </div>
-          ))}
-        </div>
-        <p className="lp-check6-foot">A sentence that fails one check is removed, with its reason recorded. A second, separate
-          checker re-reads every citation a visitor would see.</p>
-      </section>
+      <Checks6 />
 
       <section className="lp-stats lp-reveal">
         {STATS.map((s) => (
