@@ -1,0 +1,67 @@
+// Privacy policy (Edwin, 2026-11-12). Every statement here describes what the code really does:
+// query_log (app/db.py), the session cookie (app/main.py), the limits per IP address kept in memory only
+// (app/api.py, app/api_site.py), contact_messages (app/api_site.py), Groq (app/llm.py), Railway (deployment).
+// If the code changes what is collected or kept, this page must change with it.
+import { Link } from "react-router-dom";
+import SitePage from "./SitePage.jsx";
+
+export default function Privacy() {
+  return (
+    <SitePage kicker="Your data" title="Privacy" accent="policy" updated="12 November 2026">
+      <div className="sp-card sp-note">
+        <strong>In short:</strong> you do not need an account to use Verdicta. We keep the questions typed on the research
+        page and the messages sent through the contact form, but no name, no IP address and no browser information with
+        your questions. We use one necessary cookie, no trackers and no advertising. Please do not type personal
+        information in a question.
+      </div>
+
+      <h2>Who we are</h2>
+      <p>Verdicta is a student project of the École Supérieure d'Ingénieurs de Beyrouth (ESIB), Université Saint-Joseph,
+        built by Yasser Hajj Youssef, Edwin Mouawad and Joe Bou Karam. You can reach us through the <Link to="/contact">contact
+        page</Link>.</p>
+
+      <h2>What we collect</h2>
+      <ul>
+        <li><strong>Your questions.</strong> Each question typed on the research page is saved with its result: the answer
+          that was shown, the passages that were found, the status (answered, low confidence, not supported) and how long it
+          took. We use this log to measure the system, to see which questions it could not answer, and to improve it.
+          It is not linked to your name, your IP address or an account.</li>
+        <li><strong>Contact messages.</strong> If you use the contact form, we save your name, your email address and your
+          message, so that we can answer you.</li>
+        <li><strong>Administrator accounts.</strong> For the team's own accounts we keep the email address, a hashed
+          password (never the password itself) and the failed login attempts, to lock an account after repeated
+          failures.</li>
+      </ul>
+
+      <h2>What we do not collect</h2>
+      <ul>
+        <li>We do not save your IP address. The server uses it only for a short time, in memory, to limit how many
+          questions (10 a minute), logins and contact messages (3 in 10 minutes) come from one address.</li>
+        <li>We do not save your browser or device information.</li>
+        <li>We use no analytics, no advertising and no tracking, and the pages load no script or font from another website.</li>
+      </ul>
+
+      <h2>The one cookie</h2>
+      <p>The site sets a single session cookie. It holds a security token that protects every form from requests sent by
+        other websites, and, for an administrator, the login. It is signed, cannot be read by the page's scripts, is sent
+        only over HTTPS on the live site and expires after 8 hours. It is necessary for the site to work, so we do not ask
+        for consent to it.</p>
+
+      <h2>Who receives your question</h2>
+      <ul>
+        <li><strong>Groq</strong>, the provider that runs the language model: each question is sent to it, with the
+          passages of the court decisions that were found, so that the model can draft the answer. Groq's own privacy
+          policy applies to that request.</li>
+        <li><strong>Railway</strong>, which hosts the website and its database.</li>
+      </ul>
+      <p>We do not sell or share your questions or messages with anyone else.</p>
+
+      <h2>How long we keep them</h2>
+      <p>Questions and contact messages are kept with no fixed deletion date. Because your questions are not linked to
+        you, we cannot find them by your name; if you want a contact message deleted, write to us and we will delete it.</p>
+
+      <h2>Changes</h2>
+      <p>If what we collect changes, we will update this page and its date.</p>
+    </SitePage>
+  );
+}
