@@ -1,22 +1,28 @@
-// The chain as a short 3D film that plays by itself (Three.js, real moving objects, no video file):
-// a scale whose pans go up and down -> THE PAGE drops on a pan, lifts off and flies, bending in the air ->
-// it lands on an open book whose pages fan -> a magnifying glass slides across it -> a gold check rises
-// out of it -> the gavel strikes twice. Then it loops. The headline changes with each part.
-// Every object is built from simple shapes here (cylinders, boxes, a torus, an extruded check).
-// It stops drawing when off screen; for visitors who ask for less motion it shows one still frame.
+// The top of the landing page: a short 3D film that plays by itself (Three.js, real moving objects).
+// Like the coffee site, each scene shows ONE object alone, and THE PAGE travels from one to the next:
+//   1. the statue: the page comes out from behind her and flies away;
+//   2. the scale: the page lands on a pan, which sinks under it, then flies on;
+//   3. the book: the page lands on it and the book's pages fan open;
+//   4. the magnifying glass: a swirl of golden light gathers into it, and it slides across the page;
+//   5. the check: the light gathers again and a gold check rises out of the page.
+// Then it loops. The headline changes with each scene. The objects are built from simple shapes here;
+// only the statue is an image (Yasser's). It stops drawing when off screen; for visitors who ask for
+// less motion it shows one still frame.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import "./story3d.css";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import "./story3d.css";
 
-const LOOP = 21;                                         // seconds for the whole film
-const PARTS = [0, 4, 7.5, 10.5, 13.5, 16.5];             // start time of each of the 6 chapters
+const LOOP = 23;                                          // seconds for the whole film
+const PARTS = [0, 4.5, 8.8, 13.5, 18.3];                  // start time of each scene
 const clamp = (x) => Math.min(1, Math.max(0, x));
 const ease = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
-const win = (t, a, b) => ease((t - a) / (b - a));        // 0 before a, 1 after b, smooth in between
+const win = (t, a, b) => ease((t - a) / (b - a));         // 0 before a, 1 after b, smooth in between
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const bezier = (a, c, b, u) => a.clone().multiplyScalar((1 - u) * (1 - u)).add(c.clone().multiplyScalar(2 * u * (1 - u))).add(b.clone().multiplyScalar(u * u));
 
-function paperTexture() {                                // THE PAGE: cream paper, grey lines, a gold edge
+function paperTexture() {                                 // THE PAGE: cream paper, grey lines, a gold edge
   const c = document.createElement("canvas"); c.width = 512; c.height = 700;
   const g = c.getContext("2d");
   g.fillStyle = "#efe3c6"; g.fillRect(0, 0, 512, 700);
@@ -24,6 +30,14 @@ function paperTexture() {                                // THE PAGE: cream pape
   g.fillStyle = "rgba(90,80,70,.45)";
   for (let y = 80; y < 640; y += 30) g.fillRect(56, y, (y % 150 === 80 ? 260 : 400) - Math.random() * 40, 9);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+function glowTexture() {                                  // a soft round light, for the flash
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const g = c.getContext("2d"), r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  r.addColorStop(0, "rgba(255,240,200,1)"); r.addColorStop(0.3, "rgba(255,190,80,.6)"); r.addColorStop(1, "rgba(255,150,40,0)");
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
 }
 
 export default function Story3D({ scenes, statue, coverage }) {
@@ -44,7 +58,7 @@ export default function Story3D({ scenes, statue, coverage }) {
     const pmrem = new THREE.PMREMGenerator(renderer);
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-    const camBase = new THREE.Vector3(0, 2.6, 12);
+    camera.position.set(0, 2.6, 12); camera.lookAt(0, 0.6, 0);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.22));
     const key = new THREE.DirectionalLight(0xffb347, 3.4); key.position.set(4, 7, 6); scene.add(key);
@@ -56,6 +70,8 @@ export default function Story3D({ scenes, statue, coverage }) {
     const leather = new THREE.MeshStandardMaterial({ color: 0x4a2814, metalness: 0.1, roughness: 0.6 });
     const pages = new THREE.MeshStandardMaterial({ color: 0xeadcbc, roughness: 0.8 });
     const wood = new THREE.MeshStandardMaterial({ color: 0x5a2f17, metalness: 0.15, roughness: 0.4 });
+    const additive = (color, extra = {}) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, ...extra });
     const mesh = (geo, mat, parent, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
     const group = (parent = scene) => { const g = new THREE.Group(); parent.add(g); return g; };
 
@@ -70,22 +86,24 @@ export default function Story3D({ scenes, statue, coverage }) {
     const pans = [-1, 1].map((side) => {
       const h = group(beam); h.position.x = side * 1.8;
       for (let k = 0; k < 3; k++) {
-        const a = (k / 3) * Math.PI * 2, end = new THREE.Vector3(Math.cos(a) * 0.68, -1.6, Math.sin(a) * 0.68);
+        const a = (k / 3) * Math.PI * 2, end = V(Math.cos(a) * 0.68, -1.6, Math.sin(a) * 0.68);
         const c = mesh(new THREE.CylinderGeometry(0.012, 0.012, end.length(), 6), gold, h, end.x / 2, end.y / 2, end.z / 2);
-        c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.clone().normalize());
+        c.quaternion.setFromUnitVectors(V(0, 1, 0), end.clone().normalize());
       }
       const bowl = new THREE.LatheGeometry([new THREE.Vector2(0, -0.18), new THREE.Vector2(0.45, -0.15),
         new THREE.Vector2(0.66, -0.05), new THREE.Vector2(0.7, 0)], 64);
       mesh(bowl, new THREE.MeshStandardMaterial({ color: 0xc98a45, metalness: 1, roughness: 0.22, side: THREE.DoubleSide }), h, 0, -1.6, 0);
-      const anchor = new THREE.Object3D(); anchor.position.set(0, -1.62, 0); h.add(anchor);
+      const anchor = new THREE.Object3D(); anchor.position.set(0, -1.6, 0); h.add(anchor);
       return { h, anchor };
     });
 
     // ---------- THE PAGE: a bendable sheet ----------
     const paperGeo = new THREE.PlaneGeometry(1.25, 1.7, 24, 24);
     const flat = paperGeo.attributes.position.array.slice();
-    const paper = mesh(paperGeo, new THREE.MeshStandardMaterial({ map: paperTexture(), roughness: 0.85, side: THREE.DoubleSide }), scene);
-    const bend = (amount, time) => {                       // the sheet waves like paper in the air
+    const paperMat = new THREE.MeshStandardMaterial({ map: paperTexture(), roughness: 0.85, side: THREE.DoubleSide,
+      emissive: 0xffa53a, emissiveIntensity: 0 });
+    const paper = mesh(paperGeo, paperMat, scene);
+    const bend = (amount, time) => {                      // the sheet waves like paper in the air
       const p = paperGeo.attributes.position.array;
       for (let v = 0; v < p.length; v += 3) {
         const x = flat[v], y = flat[v + 1];
@@ -93,6 +111,7 @@ export default function Story3D({ scenes, statue, coverage }) {
       }
       paperGeo.attributes.position.needsUpdate = true; paperGeo.computeVertexNormals();
     };
+    const glow = mesh(new THREE.PlaneGeometry(1.0, 0.09), additive(0xffb347, { side: THREE.FrontSide }), paper, 0, 0.1, 0.02);
 
     // ---------- the open book ----------
     const book = group();
@@ -101,66 +120,61 @@ export default function Story3D({ scenes, statue, coverage }) {
       mesh(new THREE.BoxGeometry(1.9, 0.08, 2.6), leather, half, side * 0.98, 0, 0);
       mesh(new THREE.BoxGeometry(1.8, 0.32, 2.45), pages, half, side * 0.95, 0.2, 0);
     }
-    mesh(new THREE.BoxGeometry(4.1, 0.55, 2.8), leather, book, 0, -0.42, 0);   // a second, closed book under it
+    mesh(new THREE.BoxGeometry(4.1, 0.55, 2.8), leather, book, 0, -0.42, 0);    // a second, closed book under it
     mesh(new THREE.BoxGeometry(4.0, 0.03, 2.7), gold, book, 0, -0.14, 0);
     const fan = [];
-    for (let k = 0; k < 7; k++) {                          // loose pages hinged at the spine, fanning open
+    for (let k = 0; k < 7; k++) {                         // loose pages hinged at the spine, fanning open
       const hinge = group(book); hinge.position.y = 0.38;
       const sheet = mesh(new THREE.PlaneGeometry(1.75, 2.35), new THREE.MeshStandardMaterial({ color: 0xf1e6cc, roughness: 0.8, side: THREE.DoubleSide }), hinge, 0.88, 0, 0);
       sheet.rotation.x = -Math.PI / 2;
       fan.push(hinge);
     }
 
-    // ---------- the magnifying glass ----------
+    // ---------- the magnifying glass (facing us) ----------
     const glass = group();
     mesh(new THREE.TorusGeometry(0.62, 0.07, 24, 64), gold, glass);
     mesh(new THREE.CircleGeometry(0.6, 48), new THREE.MeshPhysicalMaterial({ color: 0xfff3d6, metalness: 0, roughness: 0.05,
-      transmission: 0.9, transparent: true, opacity: 0.35, thickness: 0.2 }), glass);
+      transmission: 0.9, transparent: true, opacity: 0.3, thickness: 0.2 }), glass);
     const handle = mesh(new THREE.CylinderGeometry(0.07, 0.09, 1.3, 24), wood, glass, 0.95, -0.95, 0);
     handle.rotation.z = Math.PI / 4;
     mesh(new THREE.TorusGeometry(0.085, 0.025, 12, 24), gold, glass, 0.52, -0.52, 0).rotation.y = Math.PI / 2;
-    glass.rotation.x = -Math.PI / 2.4;
-    const glow = mesh(new THREE.PlaneGeometry(1.0, 0.09), new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: 0, blending: THREE.AdditiveBlending }), paper, 0, 0.1, 0.01);
 
     // ---------- the gold check ----------
     const chk = new THREE.Shape();
     chk.moveTo(-0.55, 0.05); chk.lineTo(-0.35, 0.25); chk.lineTo(-0.12, 0.0); chk.lineTo(0.5, 0.75);
     chk.lineTo(0.68, 0.55); chk.lineTo(-0.12, -0.38); chk.closePath();
-    const check = mesh(new THREE.ExtrudeGeometry(chk, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 4 }),
-      new THREE.MeshStandardMaterial({ color: 0xf2b545, metalness: 1, roughness: 0.18, emissive: 0x6b3a00, emissiveIntensity: 0.6 }), scene);
+    const checkGeo = new THREE.ExtrudeGeometry(chk, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 4 });
+    checkGeo.center();
+    const check = mesh(checkGeo, new THREE.MeshStandardMaterial({ color: 0xf2b545, metalness: 1, roughness: 0.18,
+      emissive: 0x6b3a00, emissiveIntensity: 0.6 }), scene);
 
-    // ---------- the gavel ----------
-    const gavel = group();
-    const block = mesh(new THREE.CylinderGeometry(0.9, 1.0, 0.32, 64), wood, gavel, 0, 0.16, 0);
-    mesh(new THREE.TorusGeometry(0.95, 0.03, 12, 64), gold, block, 0, 0.1, 0).rotation.x = Math.PI / 2;
-    const arm = group(gavel); arm.position.set(1.9, 0.72, 0);                   // the pivot is at the end of the handle
-    mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.1, 24), wood, arm, -1.05, 0, 0).rotation.z = Math.PI / 2;
-    const head = mesh(new THREE.CylinderGeometry(0.34, 0.34, 1.15, 48), wood, arm, -2.0, 0, 0);
-    head.rotation.x = Math.PI / 2;                                             // the head lies across the handle
-    for (const dy of [-0.32, 0.32]) mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.12, 48), gold, head, 0, dy, 0);
-    const ring = mesh(new THREE.RingGeometry(0.9, 1.0, 64), new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: 0,
-      side: THREE.DoubleSide, blending: THREE.AdditiveBlending }), gavel, 0, 0.34, 0);
-    ring.rotation.x = -Math.PI / 2;
-
-    // ---------- sparks ----------
-    const N = 260, sparkPos = new Float32Array(N * 3), sparkVel = [];
-    for (let k = 0; k < N; k++) sparkVel.push(new THREE.Vector3((Math.random() - 0.5) * 2, Math.random() * 2.2 + 0.5, (Math.random() - 0.5) * 2));
-    const sparkGeo = new THREE.BufferGeometry(); sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPos, 3));
-    const sparkMat = new THREE.PointsMaterial({ color: 0xffc34d, size: 0.07, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-    scene.add(new THREE.Points(sparkGeo, sparkMat));
-    const sparksAt = (origin, age) => {
-      for (let k = 0; k < N; k++) {
-        const v = sparkVel[k];
-        sparkPos[k * 3] = origin.x + v.x * age; sparkPos[k * 3 + 1] = origin.y + v.y * age - 1.2 * age * age; sparkPos[k * 3 + 2] = origin.z + v.z * age;
+    // ---------- the "something beautiful": a swirl of golden light that gathers into an object ----------
+    const N = 520, swirlPos = new Float32Array(N * 3), seeds = [];
+    for (let k = 0; k < N; k++) seeds.push({ a: Math.random() * Math.PI * 2, r: 1.0 + Math.random() * 1.7,
+      h: (Math.random() - 0.5) * 2.6, s: 0.6 + Math.random() * 0.8, v: V((Math.random() - 0.5) * 2, Math.random() * 2 + 0.4, (Math.random() - 0.5) * 2) });
+    const swirlGeo = new THREE.BufferGeometry(); swirlGeo.setAttribute("position", new THREE.BufferAttribute(swirlPos, 3));
+    const swirlMat = new THREE.PointsMaterial({ color: 0xffc34d, size: 0.06, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    scene.add(new THREE.Points(swirlGeo, swirlMat));
+    const gather = (target, k, time) => {                 // k: 0 = spread around, 1 = all at the target
+      for (let i = 0; i < N; i++) {
+        const s = seeds[i], u = 1 - ease(clamp(k * s.s + (1 - s.s) * k * k)), a = s.a + k * 6 + time * 0.4;
+        swirlPos[i * 3] = target.x + Math.cos(a) * s.r * u;
+        swirlPos[i * 3 + 1] = target.y + s.h * u;
+        swirlPos[i * 3 + 2] = target.z + Math.sin(a) * s.r * u * 0.6;
       }
-      sparkGeo.attributes.position.needsUpdate = true;
+      swirlGeo.attributes.position.needsUpdate = true;
     };
-
-    // ---------- the beam of light that arrives from the statue ----------
-    // (the statue stands at the top right; the beam goes from her scales down to the 3D scale)
-    const beamLight = mesh(new THREE.CylinderGeometry(0.03, 0.3, 7, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xffc061,
-      transparent: true, opacity: 0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false }), scene, 2.6, 4.4, -1);
-    beamLight.rotation.z = -0.85;
+    const burst = (origin, age) => {                      // the same lights thrown out again, falling
+      for (let i = 0; i < N; i++) {
+        const v = seeds[i].v;
+        swirlPos[i * 3] = origin.x + v.x * age; swirlPos[i * 3 + 1] = origin.y + v.y * age - 1.2 * age * age; swirlPos[i * 3 + 2] = origin.z + v.z * age;
+      }
+      swirlGeo.attributes.position.needsUpdate = true;
+    };
+    const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(flash);
+    const ring = mesh(new THREE.RingGeometry(0.9, 0.97, 96), additive(0xffb347), scene);
 
     let width = 1, height = 1;
     const resize = () => {
@@ -175,88 +189,98 @@ export default function Story3D({ scenes, statue, coverage }) {
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.05 });
     io.observe(host);
 
-    const show = (g, a) => { g.visible = a > 0.001; g.scale.setScalar(Math.max(0.001, a)); };
-    const pt = new THREE.Vector3();
+    // an object comes in from far behind, and later leaves backwards to the left, fading
+    const stage = (obj, t, inA, outA, base) => {
+      const i = win(t, inA, inA + 0.9), o = win(t, outA, outA + 0.9), a = i * (1 - o);
+      obj.visible = a > 0.001;
+      obj.scale.setScalar(Math.max(0.001, 0.4 + 0.6 * i) * (1 - 0.6 * o));
+      obj.position.set(base.x - 4 * o, base.y, base.z - 9 * (1 - i) - 4 * o);
+      return a;
+    };
+
     const clock = new THREE.Clock();
+    const pt = new THREE.Vector3();
     let raf, lastPart = -1;
 
     const frame = () => {
       raf = requestAnimationFrame(frame);
       if (!visible) return;
       const now = window.__st3dTime ?? clock.getElapsedTime();   // __st3dTime: only set by our recording script, to film frame by frame
-      const t = still ? 15 : now % LOOP;
+      const t = still ? 20.5 : now % LOOP;
 
-      // 0. the statue appears at the top right; her beam of light goes down to the scale, then she fades
+      // 1. the statue (an image above the canvas): she appears, the page comes out from behind her, she fades
       const st = statueImg.current;
       if (st) {
-        const o = win(t, 0, 0.7) * (1 - win(t, 3.0, 4.0));
-        st.style.opacity = o; st.style.transform = `translateY(${(1 - win(t, 0, 0.9)) * 3}vh) scale(${0.92 + 0.08 * o})`;
+        const o = win(t, 0, 0.8) * (1 - win(t, 3.6, 4.6));
+        st.style.opacity = o;
+        st.style.transform = `translateX(-50%) translateX(${-6 * win(t, 3.6, 4.6)}vw) scale(${0.92 + 0.08 * win(t, 0, 1)})`;
       }
-      // 1. the scale arrives, the beam of light lands on it, its pans sway
-      const scaleIn = win(t, 0, 1.2) * (1 - win(t, 5.5, 7));
-      show(scale, scaleIn); scale.position.set(-win(t, 5.5, 7) * 1.5, -1.2 - win(t, 5.5, 7), -win(t, 5.5, 7) * 3); scale.rotation.y = Math.sin(now * 0.3) * 0.3;
-      beamLight.material.opacity = 0.32 * win(t, 0.2, 0.9) * (1 - win(t, 1.6, 2.6));
-      const weight = win(t, 2.6, 3.4) * (1 - win(t, 4.6, 5.4));                 // the page weighs the right pan down
+
+      // 2. the scale, alone: its pans sway; the page lands on the right pan, which sinks under it
+      stage(scale, t, 4.4, 8.1, V(0, -1.3, 0));
+      scale.rotation.y = Math.sin(now * 0.3) * 0.25;
+      const weight = win(t, 6.0, 6.6) * (1 - win(t, 7.6, 8.2));
       beam.rotation.z = Math.sin(now * 1.6) * 0.06 * (1 - weight) - 0.3 * weight;
       for (const p of pans) p.h.rotation.z = -beam.rotation.z;
 
-      // 2-3. THE PAGE: falls on the right pan, lifts off, flies, lands on the book
-      pans[1].anchor.getWorldPosition(pt);
-      const onPan = pt.clone().add(new THREE.Vector3(0, 0.05, 0));
-      const bookTop = new THREE.Vector3(0.2, 0.15, 0.2);
-      const fall = win(t, 1.0, 2.7), lift = win(t, 4.4, 7.2);
-      const sky = new THREE.Vector3(onPan.x + 0.5, 6.5, 0.5);
-      const mid = new THREE.Vector3(-1.5, 4.2, 2.5);
-      let pos;
-      if (t < 4.4) pos = sky.clone().lerp(onPan, fall);
-      else {                                                    // a curved flight (quadratic Bezier) from the pan to the book
-        const u = 1 - lift; pos = onPan.clone().multiplyScalar(u * u).add(mid.clone().multiplyScalar(2 * u * lift)).add(bookTop.clone().multiplyScalar(lift * lift));
-      }
-      paper.position.copy(pos);
-      const flying = (t > 0.8 && t < 2.7) || (t > 4.4 && t < 7.2);
-      const flat01 = t >= 7.2 ? 1 : t >= 2.7 && t <= 4.4 ? 1 : 0;
-      paper.rotation.set(-Math.PI / 2 + (flying ? Math.sin(now * 3) * 0.5 : 0), flying ? now * 0.8 : 0, flying ? Math.sin(now * 2.2) * 0.4 : 0);
-      bend(flying ? 0.9 : flat01 ? 0.05 : 0.3, now);
-      paper.visible = t > 0.8 && t < 20.2;
-      const paperScale = t < 7.2 ? 0.7 : 1.15;
-      paper.scale.setScalar(paperScale * (1 - win(t, 19.6, 20.2)));
-
-      // 3. the book rises in, its pages fan, then settle
-      const bookIn = win(t, 5.8, 7.2) * (1 - win(t, 19.6, 20.6));
-      show(book, bookIn); book.position.set(t > 16.5 ? 1.1 * win(t, 16.5, 17.3) : 0, -1.1, 0);
+      // 3. the book, alone: the page lands on it and its pages fan open
+      stage(book, t, 8.8, 13.4, V(0, -1.1, 0));
       book.rotation.set(0.35, -0.25 + Math.sin(now * 0.4) * 0.08, 0);
-      fan.forEach((h, k) => { const open = win(t, 6.6 + k * 0.08, 7.8 + k * 0.08) * (1 - win(t, 9.2, 10.2)); h.rotation.z = open * (0.25 + k * 0.38); });
-      if (t >= 7.2) { paper.position.set(book.position.x + 0.15, book.position.y + 0.62, 0.25); paper.rotation.set(-Math.PI / 2 + 0.35, 0, -0.25 + Math.sin(now * 0.4) * 0.08); }
+      fan.forEach((h, k) => { h.rotation.z = win(t, 10.3 + k * 0.08, 11.4 + k * 0.08) * (1 - win(t, 12.4, 13.2)) * (0.25 + k * 0.38); });
 
-      // 4. the magnifying glass slides across the page; a line lights up under it
-      const glassIn = win(t, 10.3, 11) * (1 - win(t, 13.2, 13.8));
-      show(glass, glassIn);
-      const sweep = win(t, 10.8, 13);
-      glass.position.set(paper.position.x - 0.5 + sweep * 1.0, paper.position.y + 0.9 + Math.sin(now * 2) * 0.05, 0.6);
-      glow.material.opacity = 0.9 * win(t, 11.2, 11.8) * (1 - win(t, 13.6, 14.2));
+      // THE PAGE: where it is in each part of the film
+      pans[1].anchor.getWorldPosition(pt);
+      const onPan = pt.clone().add(V(0, 0.08, 0));
+      const onBook = V(book.position.x + 0.15, book.position.y + 0.62, book.position.z + 0.25);
+      const behind = V(0.1, 1.2, -2), out = V(-2.4, 2.8, 2), floating = V(0, 1.0, 1.6);
+      let pos, rest = 0, restRot = null;
+      if (t < 1.2) pos = behind;                                                          // hidden behind the statue
+      else if (t < 3.4) pos = bezier(behind, V(-1.0, 4.2, 0.5), out, win(t, 1.2, 3.4));   // comes out and flies
+      else if (t < 6.0) pos = bezier(out, V(-0.8, 4.8, 1.5), onPan, win(t, 3.4, 6.0));    // to the scale
+      else if (t < 7.8) { pos = onPan; rest = 1; restRot = [-Math.PI / 2, 0, 0]; }        // on the pan
+      else if (t < 10.3) pos = bezier(onPan, V(3.2, 4.4, 2), onBook, win(t, 7.8, 10.3));  // to the book
+      else if (t < 13.4) { pos = onBook; rest = 1; restRot = [-Math.PI / 2 + 0.35, 0, -0.25 + Math.sin(now * 0.4) * 0.08]; }
+      else pos = bezier(onBook, V(0, 1.6, 1.2), floating, win(t, 13.4, 14.4));            // lifts and floats
+      if (t >= 14.4) pos = floating.clone().add(V(0, Math.sin(now * 1.1) * 0.06, 0));
+      paper.position.copy(pos);
+      paper.visible = t > 1.0 && t < 22.6;
+      paper.scale.setScalar((t < 13.4 ? 0.75 : 0.75 + 0.45 * win(t, 13.4, 14.4)) * (1 - win(t, 22, 22.6)));
+      const floatW = win(t, 13.4, 14.4);
+      if (rest) paper.rotation.set(...restRot);
+      else if (floatW > 0) paper.rotation.set(-0.15 * floatW + (1 - floatW) * (-Math.PI / 2 + 0.35), Math.sin(now * 0.6) * 0.15, 0);
+      else paper.rotation.set(-0.9 + Math.sin(now * 3) * 0.5, Math.sin(now * 1.3) * 0.8, Math.sin(now * 2.2) * 0.4);
+      bend(rest ? 0.04 : floatW > 0 ? 0.12 + 0.6 * (1 - floatW) : 0.9, now);
 
-      // 5. the gold check rises out of the page, with sparks
-      const rise = win(t, 13.6, 14.6) * (1 - win(t, 19.6, 20.2));
+      // 4. the magnifying glass: golden light gathers into it, then it slides across the page
+      const glassAt = V(-0.55 + 1.1 * win(t, 15.4, 17.4), 1.15 + Math.sin(now * 2) * 0.04, 2.3);
+      const gIn = win(t, 14.8, 15.3), gOut = win(t, 17.6, 18.3);
+      glass.visible = gIn > 0.001 && gOut < 0.999;
+      glass.scale.setScalar(Math.max(0.001, gIn) * (1 + 0.15 * Math.sin(Math.PI * gIn)));
+      glass.position.copy(glassAt).add(V(3 * gOut, 2.5 * gOut, 0));
+      glass.rotation.set(0, (1 - gIn) * 2.5, 0);
+      glow.material.opacity = 0.9 * win(t, 15.6, 16.1) * (1 - win(t, 17.6, 18.3));
+
+      // 5. the check: the light gathers into the page, it glows, a gold check rises out of it
+      const rise = win(t, 19.2, 20.0) * (1 - win(t, 22, 22.6));
       check.visible = rise > 0.001;
-      check.scale.set(rise * 1.1, rise * 1.1, rise * 1.1);
-      check.position.set(paper.position.x - 0.05, paper.position.y + 0.15 + rise * 0.55, 0.5);
-      check.rotation.set(-0.2, -0.35 + Math.sin(now * 0.8) * 0.15, 0);
-      const sAge = t - 13.7;
-      sparkMat.opacity = sAge > 0 && sAge < 2 ? 1 - sAge / 2 : 0;
-      if (sAge > 0 && sAge < 2) sparksAt(check.position, sAge);
+      check.scale.setScalar(Math.max(0.001, rise) * 1.15);
+      check.position.set(floating.x, floating.y + 0.1 + rise * 0.55, floating.z + 0.5);
+      check.rotation.set(0, (1 - rise) * Math.PI * 2 + Math.sin(now * 0.8) * 0.25, 0);
+      paperMat.emissiveIntensity = 0.5 * win(t, 18.6, 19.2) * (1 - win(t, 19.8, 20.8));
 
-      // 6. the gavel comes in and strikes twice; the camera shakes, a ring spreads
-      const gavelIn = win(t, 16.5, 17.3) * (1 - win(t, 19.8, 20.6));
-      show(gavel, gavelIn); gavel.position.set(-1.9, -1.25, 0.6); gavel.rotation.y = 0.5;
-      // up = how high the gavel is raised: it rises slowly, then slams down fast on each strike
-      const up = (at) => win(t, at - 0.9, at - 0.35) * (1 - win(t, at - 0.12, at));
-      arm.rotation.z = -0.8 * (t < 18.4 ? up(18.0) : up(19.0));
-      const hit = [18.0, 19.0].map((a) => t - a).find((d) => d >= 0 && d < 0.6);
-      ring.material.opacity = hit !== undefined ? 0.8 * (1 - hit / 0.6) : 0;
-      ring.scale.setScalar(hit !== undefined ? 1 + hit * 4 : 1);
-      const shake = hit !== undefined ? (1 - hit / 0.6) * 0.06 : 0;
-      camera.position.set(camBase.x + (Math.random() - 0.5) * shake, camBase.y + (Math.random() - 0.5) * shake, camBase.z);
-      camera.lookAt(0, 0.6, 0);
+      // the swirl of light: gathers for the glass (14.2-15.2), gathers for the check (18.3-19.2), then bursts
+      const target = t < 18 ? glassAt : floating;
+      if (t > 14.2 && t < 15.3) { gather(target, (t - 14.2) / 1.0, now); swirlMat.opacity = Math.min(1, (t - 14.2) * 3); }
+      else if (t > 18.3 && t < 19.2) { gather(target, (t - 18.3) / 0.9, now); swirlMat.opacity = Math.min(1, (t - 18.3) * 3); }
+      else if (t > 19.2 && t < 21.2) { burst(check.position, t - 19.2); swirlMat.opacity = 1 - (t - 19.2) / 2; }
+      else swirlMat.opacity = 0;
+      const fl = [15.2, 19.2].map((a) => t - a).find((d) => d > -0.25 && d < 0.6);   // a flash and a ring of light
+      flash.material.opacity = fl !== undefined ? Math.max(0, 1 - Math.abs(fl - 0.05) / 0.5) : 0;
+      flash.scale.setScalar(fl !== undefined ? 1.5 + (fl + 0.25) * 4 : 1);
+      flash.position.copy(target);
+      ring.material.opacity = fl !== undefined && fl > 0 ? 0.9 * (1 - fl / 0.6) : 0;
+      ring.scale.setScalar(fl !== undefined && fl > 0 ? 1 + fl * 2.6 : 1);
+      ring.position.copy(target);
 
       const p = Math.max(0, PARTS.filter((s) => t >= s).length - 1);
       if (p !== lastPart) { lastPart = p; setPart(p); }
