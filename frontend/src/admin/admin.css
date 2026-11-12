@@ -49,6 +49,7 @@ body.ad-dark main{max-width:1400px}
 .ad-kpi small{color:var(--faint);font-size:12px;line-height:1.4}
 .ad-kpi-draw{margin-bottom:6px}
 .ad-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.ad-two{margin-bottom:18px}
 .ad-two>.ad-card,.ad-two>.card{margin-bottom:0}
 .ad-row{display:flex;flex-wrap:wrap;gap:22px;align-items:center}
 .ad-gauge{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:150px}
@@ -62,6 +63,7 @@ body.ad-dark main{max-width:1400px}
 .ad-arc{stroke-dasharray:calc(var(--len) * 1px) calc(var(--C) * 1px);animation:ad-draw 1.1s cubic-bezier(.6,0,.2,1) both}
 @keyframes ad-draw{from{stroke-dasharray:0 calc(var(--C) * 1px)}}
 .ad-chart svg{width:100%;height:auto;display:block}
+.ad-axis{font-size:9px;fill:#78716c}
 .ad-legend{list-style:none;display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 0;padding:0;font-size:12.5px;color:var(--dim)}
 .ad-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 .ad-pair{display:inline-flex;flex-direction:column;gap:3px;width:90px;vertical-align:middle;margin-left:10px}

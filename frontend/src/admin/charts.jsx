@@ -95,15 +95,24 @@ export function Lines({ data, x, keys, height = 160, maxY, marker }) {
   return (
     <div className="ad-chart">
       <svg viewBox={`0 0 ${w} ${height + 4}`} role="img" aria-label={`${keys.map((k) => k[1]).join(", ")}; top ${top}`}>
-        <line x1="0" y1={height} x2={w} y2={height} stroke="rgba(255,255,255,.12)" />
+        {[0, 0.5, 1].map((f) => (                              // grid lines with their values (0, half, top)
+          <g key={f}>
+            <line x1="0" y1={py(f * top)} x2={w} y2={py(f * top)} stroke="rgba(255,255,255,.07)" />
+            <text x="2" y={f === 1 ? py(top) + 10 : py(f * top) - 3} className="ad-axis">{+(f * top).toFixed(2)}</text>
+          </g>
+        ))}
         {isNum(marker) && data.length > 0 && (() => {           // a vertical line at one x value (the current tau)
           const i = data.findIndex((d) => Math.abs(d[x] - marker) < 0.011);
           return i >= 0 ? <line x1={px(i)} y1="0" x2={px(i)} y2={height} stroke="#fff" strokeDasharray="3 3" opacity=".6" /> : null;
         })()}
         {keys.map(([k, , c]) => {
           const pts = data.map((d, i) => (isNum(d[k]) ? `${px(i)},${py(d[k])}` : null)).filter(Boolean);
-          return pts.length ? <polyline key={k} points={pts.join(" ")} fill="none" stroke={c} strokeWidth="2.2"
-                                        strokeLinejoin="round" strokeLinecap="round" /> : null;
+          return pts.length ? (
+            <g key={k}>
+              <polyline points={pts.join(" ")} fill="none" stroke={c} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
+              {data.map((d, i) => isNum(d[k]) && data.length <= 12 &&      // a dot per value when there are few
+                <circle key={i} cx={px(i)} cy={py(d[k])} r="3.5" fill={c}><title>{`${d[x]}: ${d[k]}`}</title></circle>)}
+            </g>) : null;
         })}
       </svg>
       <Legend keys={keys} />
