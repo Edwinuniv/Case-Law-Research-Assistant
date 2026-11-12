@@ -43,8 +43,8 @@ def test_a_message_needs_the_csrf_token(c, clean_db):
     assert stored(clean_db) == []
 
 
-@pytest.mark.parametrize("change", [{"email": "not-an-email"}, {"message": "   "}, {"message": "x" * 5001},
-                                    {"name": "n" * 101}, {"name": ""}])
+@pytest.mark.parametrize("change", [{"email": "not-an-email"}, {"email": "no-dot@example"}, {"email": "a b@example.com"},
+                                    {"message": "   "}, {"message": "x" * 5001}, {"name": "n" * 101}, {"name": ""}])
 def test_a_bad_message_is_refused_with_a_reason(c, clean_db, change):
     r = send(c, {**GOOD, **change})
     assert r.status_code == 400 and r.json()["detail"] and stored(clean_db) == []
