@@ -7,6 +7,7 @@ body.ad-dark main{max-width:1400px}
   --amber:#fbbf24;--orange:#fb923c;--ok:#34d399;--bad:#f87171;
   --card:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
   display:grid;grid-template-columns:232px minmax(0,1fr);gap:26px;align-items:start;color:var(--text)}
+.ad>*{min-width:0}                 /* a grid column may shrink below its content (no page wider than the phone) */
 
 /* ---- the sidebar ---- */
 .ad-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;padding:18px 12px;border-radius:20px;
@@ -15,12 +16,12 @@ body.ad-dark main{max-width:1400px}
 .ad-brand img{width:32px;height:32px}
 .ad-brand b{display:block;font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:19px;color:#fff;line-height:1.1}
 .ad-brand small{color:var(--faint);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
-.ad-side a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;color:var(--dim);text-decoration:none;
+.ad .ad-side a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;color:var(--dim);text-decoration:none;
   font-size:14.5px;transition:background .2s,color .2s}
 .ad-side a i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);flex:none;transition:background .2s,box-shadow .2s}
-.ad-side a:hover{background:rgba(255,255,255,.05);color:#fff}
-.ad-side a.active{background:rgba(251,191,36,.10);color:#fff}
-.ad-side a.active i{background:linear-gradient(135deg,var(--amber),var(--orange));box-shadow:0 0 10px rgba(251,191,36,.6)}
+.ad .ad-side a:hover{background:rgba(255,255,255,.05);color:#fff}
+.ad .ad-side a.active{background:rgba(251,191,36,.10);color:#fff}
+.ad .ad-side a.active i{background:linear-gradient(135deg,var(--amber),var(--orange));box-shadow:0 0 10px rgba(251,191,36,.6)}
 .ad-who{margin-top:14px;padding:12px 12px 0;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;word-break:break-all}
 
 /* ---- headings ---- */
@@ -42,6 +43,7 @@ body.ad-dark main{max-width:1400px}
 .ad-kpi.ad-ok::before{background:var(--ok);opacity:1}.ad-kpi.ad-bad::before{background:var(--bad);opacity:1}
 .ad-kpi b{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:30px;line-height:1.1;
   background:linear-gradient(180deg,#fde68a,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ad-kpi b.ad-long{font-size:22px}                  /* 17,859,437 fits its card */
 .ad-kpi.ad-ok b{background:none;color:var(--ok)}.ad-kpi.ad-bad b{background:none;color:var(--bad)}
 .ad-kpi span{color:var(--text);font-size:13.5px;font-weight:600;text-transform:capitalize}
 .ad-kpi small{color:var(--faint);font-size:12px;line-height:1.4}
@@ -107,12 +109,12 @@ body.ad-dark main{max-width:1400px}
 
 /* ---- phone width: the menu becomes a row that scrolls ---- */
 @media(max-width:900px){
-  .ad{grid-template-columns:1fr;gap:16px}
+  .ad{grid-template-columns:minmax(0,1fr);gap:16px}
   .ad-side{position:static;flex-direction:row;overflow-x:auto;padding:10px;border-radius:16px;gap:4px}
   .ad-brand{border:0;padding:0 8px 0 2px;margin:0}
   .ad-brand small,.ad-who{display:none}
-  .ad-side a{white-space:nowrap;padding:8px 12px}
-  .ad-two{grid-template-columns:1fr}
+  .ad .ad-side a{white-space:nowrap;padding:8px 12px}
+  .ad-two{grid-template-columns:minmax(0,1fr)}
   .ad-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){.ad *{animation:none!important;transition:none!important}}
