@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app import api, api_admin, config, db
+from app import api, api_admin, api_site, config, db
 from app.citations import CitationIndex
 from app.search import Searcher
 
@@ -38,6 +38,8 @@ app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, max_age=
                    https_only=config.HTTPS_ONLY, same_site="lax")
 app.include_router(api.router)                                       # JSON API for React (/api/...)
 app.include_router(api_admin.router)                                 # admin JSON API (/api/admin/...)
+app.include_router(api_site.router)                                  # contact form and site information (Edwin)
+app.include_router(api_site.admin)                                   # the contact messages, for the admin
 
 
 @app.get("/health")
