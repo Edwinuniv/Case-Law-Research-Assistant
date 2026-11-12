@@ -102,7 +102,7 @@ export default function Landing({ info }) {
       <Story3D statue={statue} coverage={info.coverage} scenes={[
         { title: "Ask the Court. Hear only what it said.", accent: [3, 4, 5, 6],
           text: "Verdicta answers questions about U.S. Supreme Court decisions and shows only sentences whose citations and quotes were checked against the opinions themselves." },
-        STEPS[0], STEPS[2], STEPS[3], STEPS[4], STEPS[5]]} />
+        STEPS[0], STEPS[2], STEPS[3], STEPS[4]]} />
 
       <div className="lp-marquee" aria-label="Some of the decisions in our corpus">
         <div className="lp-track">
