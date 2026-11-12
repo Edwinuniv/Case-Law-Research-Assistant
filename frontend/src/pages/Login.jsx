@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import logoMark from "../assets/logo-mark.svg";
-import statue from "../assets/statue.webp";
+import ClipboardAnim from "../components/ClipboardAnim.jsx";
 import "./auth.css";
 
 function PasswordInput({ id, value, onChange, autoComplete, placeholder }) {
@@ -122,7 +122,7 @@ export default function Login({ mode = "login", onLogin }) {
     <div className="au">
       <aside className="au-side" aria-hidden="true">
         <Link to="/" className="au-brand"><img src={logoMark} alt="" /> Verdicta</Link>
-        <img src={statue} alt="" className="au-statue" />
+        <ClipboardAnim />
         <div className="au-side-text">
           <p className="au-quote">Ask the Court. <em>Hear only what it said.</em></p>
           <ul>

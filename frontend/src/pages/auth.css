@@ -1,18 +1,25 @@
-/* Log in / Sign up / Forgot password: the statue on a dark panel at the left, the form on the right. */
+/* Log in / Sign up / Forgot password: the court checklist on a dark panel at the left, the form on the right. */
 .au{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:100vh;background:#0c0c0e;color:#fff}
 .au-side{position:relative;overflow:hidden;padding:36px clamp(24px,4vw,56px);display:flex;flex-direction:column;
   background:radial-gradient(ellipse at 60% 40%,#3a250c 0%,#17120c 45%,#0c0c0e 80%)}
 .au-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;font-family:Georgia,serif;font-size:24px;font-weight:600;text-decoration:none;z-index:2}
 .au-brand img{width:34px;height:34px}
-.au-statue{position:absolute;left:50%;bottom:-4%;height:92%;transform:translateX(-50%);filter:drop-shadow(0 0 60px rgba(251,191,36,.25));
-  animation:au-float 7s ease-in-out infinite alternate;pointer-events:none}
-@keyframes au-float{to{transform:translateX(-50%) translateY(-14px)}}
-.au-side::after{content:"";position:absolute;inset:auto 0 0 0;height:55%;background:linear-gradient(0deg,#0c0c0e 8%,transparent);pointer-events:none}
-.au-side-text{position:relative;z-index:2;margin-top:auto}
-.au-quote{font-family:Georgia,serif;font-size:clamp(26px,2.6vw,38px);line-height:1.15;margin:0 0 22px;max-width:440px}
+/* the court checklist: the pen writes the six checks (components/ClipboardAnim.jsx) */
+.clip{position:relative;width:min(100%,calc(62vh * 1122 / 1402));aspect-ratio:1122/1402;margin:18px auto 24px;
+  filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));animation:au-float 7s ease-in-out infinite alternate}
+@keyframes au-float{to{transform:translateY(-12px)}}
+.clip img{position:absolute;display:block;pointer-events:none;user-select:none}
+.clip-board{inset:0;width:100%;height:100%}
+.clip-check{height:auto;filter:drop-shadow(1px 2px 1px rgba(80,40,0,.35))}
+.clip-glow{position:absolute;border-radius:50%;opacity:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,214,120,.75),rgba(255,170,40,.25) 45%,transparent 70%);mix-blend-mode:screen}
+.clip-pen{height:auto;will-change:left,top,transform}
+.au-side-text{position:relative;z-index:2;margin-top:auto;max-width:520px;align-self:center;text-align:center}
+.au-quote{font-family:Georgia,serif;font-size:clamp(24px,2.3vw,34px);line-height:1.15;margin:0 auto 18px;max-width:460px}
 .au-quote em{background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}
-.au-side-text ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;color:#c9c6c0;font-size:15px}
-.au-side-text b{display:inline-block;min-width:54px;font-family:Georgia,serif;font-size:20px;color:#fbbf24}
+.au-side-text ul{list-style:none;margin:0;padding:0;display:flex;justify-content:center;gap:26px;color:#c9c6c0;font-size:13px}
+.au-side-text li{max-width:150px}
+.au-side-text b{display:block;font-family:Georgia,serif;font-size:24px;color:#fbbf24;margin-bottom:2px}
 
 .au-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;
   background:radial-gradient(ellipse at 80% 0%,rgba(245,158,11,.10),transparent 55%),#111114}
