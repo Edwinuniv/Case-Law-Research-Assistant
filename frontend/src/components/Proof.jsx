@@ -119,6 +119,7 @@ export default function Proof() {
           <span className="pf-demo-tag right">Verdicta shows</span>
         </div>
         <Link to="/research" className="lp-button pf-button">Try a question</Link>
+        <p className="pf-legal">This is a research aid, not legal advice. · Data: CourtListener (Free Law Project), public domain.</p>
       </section>
     </>
   );
