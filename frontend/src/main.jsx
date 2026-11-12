@@ -48,13 +48,16 @@ function App() {
   return (
     <>
       {!landing && !authPage && <header>
+        {/* only the logo, and "Log out" for a logged-in administrator (Yasser's decision, 2026-11-12):
+            the coverage line is on the research page itself, the admin menu is in the admin sidebar */}
         <Link to="/" className="brand"><img src={logoMark} alt="" /> Verdicta</Link>
-        <span className="coverage">{info.coverage}</span>
-        <Link to="/research">Research</Link>
-        {user && <span>{user.email}</span>}
-        {user?.role === "admin" && <Link to="/admin">Admin</Link>}
-        {user ? <button className="link" onClick={logout}>Log out</button>
-              : <Link to="/login">Admin login</Link>}      {/* only the administrator logs in */}
+        {user && (
+          <button className="logout" onClick={logout} title={`Log out ${user.email}`}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+              <path d="M10 17l-5-5 5-5" /><path d="M5 12h11" /></svg>
+            Log out
+          </button>
+        )}
       </header>}
       <main className={landing || authPage ? "bare" : ""}>
         <Routes>

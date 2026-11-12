@@ -93,3 +93,13 @@ a.active{font-weight:700}
 @media(max-width:850px){.admin{grid-template-columns:1fr}.side{position:static}}
 .card > h3:first-child,.card > h2:first-child{margin-top:0}   /* no empty space above a card title */
 body.dark-page>footer{display:none}
+/* the top bar: the logo on the left, "Log out" on the right (only when logged in) */
+header{justify-content:space-between}
+header .logout{display:inline-flex;align-items:center;gap:8px;padding:8px 16px 8px 13px;border-radius:999px;cursor:pointer;
+  font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#e7e5e4;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.16);transition:background .2s,border-color .2s,color .2s}
+header .logout svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .2s}
+header .logout:hover{color:#fff;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.6)}
+header .logout:hover svg{transform:translateX(-2px)}
+header .logout:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
