@@ -47,6 +47,7 @@ QUESTION_MIN_CHARS, QUESTION_MAX_CHARS = 3, 1000          # SR3
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-in-production")
 HTTPS_ONLY = os.getenv("HTTPS_ONLY", "0") == "1"          # 1 only on the deployed site
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "")          # shown on the Contact page; empty: no address shown
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "change-me")
 LOCK_AFTER_FAILED_LOGINS, LOCK_MINUTES = 5, 15            # SR36
 COVERAGE = f"U.S. Supreme Court opinions filed {DATE_FROM[:4]}–{DATE_TO[:4]} (CourtListener release {RELEASE})"
