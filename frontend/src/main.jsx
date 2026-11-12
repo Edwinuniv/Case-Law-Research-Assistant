@@ -24,7 +24,9 @@ import logoMark from "./assets/logo-mark.svg";       // bundled into /assets by 
 
 function App() {
   const [info, setInfo] = useState(null);          // answer of GET /api/me
-  const landing = useLocation().pathname === "/";  // the landing page has its own top bar
+  const path = useLocation().pathname;
+  const landing = path === "/";                    // the landing page has its own top bar
+  const loginPage = path === "/login";             // the login page shows only the logo
 
   useEffect(() => { me().then(setInfo); }, []);
   if (!info) return <p className="muted" style={{ padding: 20 }}>Loading…</p>;
@@ -40,11 +42,13 @@ function App() {
       {!landing && <header>
         <Link to="/" className="brand"><img src={logoMark} alt="" /> Verdicta</Link>
         <span className="coverage">{info.coverage}</span>
-        <Link to="/research">Research</Link>
-        {user && <span>{user.email}</span>}
-        {user?.role === "admin" && <Link to="/admin">Admin</Link>}
-        {user ? <button className="link" onClick={logout}>Log out</button>
-              : <Link to="/login">Admin login</Link>}      {/* only the administrator logs in */}
+        {!loginPage && <>
+          <Link to="/research">Research</Link>
+          {user && <span>{user.email}</span>}
+          {user?.role === "admin" && <Link to="/admin">Admin</Link>}
+          {user ? <button className="link" onClick={logout}>Log out</button>
+                : <Link to="/login">Admin login</Link>}      {/* only the administrator logs in */}
+        </>}
       </header>}
       <main className={landing ? "bare" : ""}>
         <Routes>
