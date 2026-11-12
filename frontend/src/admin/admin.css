@@ -85,7 +85,8 @@ body.ad-dark main{max-width:1400px}
 
 /* ---- tables ---- */
 .ad-table{overflow-x:auto;border-radius:16px;border:1px solid var(--line);margin-bottom:18px;background:rgba(255,255,255,.02)}
-.ad table{border:0;background:transparent;font-size:13.5px;color:var(--text);min-width:560px}
+.ad table{border:0;background:transparent;font-size:13.5px;color:var(--text)}
+.ad-table.wide table{min-width:720px}            /* wide tables scroll sideways inside their card on a phone */
 .ad th,.ad td{border-bottom:1px solid var(--line);padding:9px 12px}
 .ad th{background:rgba(255,255,255,.04);color:var(--dim);font-size:11.5px;letter-spacing:.08em}
 .ad tbody tr:hover{background:rgba(255,255,255,.03)}

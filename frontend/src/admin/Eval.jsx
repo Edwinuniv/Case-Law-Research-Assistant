@@ -61,7 +61,7 @@ export default function Eval() {
         </div>
       </div>
 
-      <div className="ad-table">
+      <div className="ad-table wide">
         <table>
           <thead><tr><th>Run</th><th>Date</th><th>Trigger</th><th>Note</th><th>Status</th><th>Recall@5</th><th>MRR@10</th>
             <th>Abst. precision</th><th>Abst. recall</th><th>False citations</th><th>Grounded</th></tr></thead>
