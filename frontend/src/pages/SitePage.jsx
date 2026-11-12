@@ -2,7 +2,7 @@
 // A dark band with the logo and the title (the accent word in italic gradient, like the landing page),
 // the text in a readable column, and links between the four pages.
 // The logo comes from assets/logo-mark.svg, the same file as the header: replace that file and every page follows.
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import logoMark from "../assets/logo-mark.svg";
 import "./site.css";
 
@@ -13,6 +13,7 @@ export default function SitePage({ kicker, title, accent, updated, children }) {
   return (
     <div className="sp">
       <section className="sp-hero">
+        <Link to="/" className="sp-back"><span aria-hidden="true">←</span> Back</Link>   {/* to the main page (Yasser) */}
         <img className="sp-logo" src={logoMark} alt="" />
         <span className="sp-kicker">{kicker}</span>
         <h1>{title} <em>{accent}</em></h1>
