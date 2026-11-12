@@ -26,11 +26,28 @@ const CHECKS = [
   { img: c5, box: [356, 911, 112, 109], path: [[368, 971], [398, 1007], [455, 923]] },
   { img: c6, box: [372, 1028, 114, 112], path: [[384, 1090], [414, 1127], [473, 1040]] },
 ];
-const LOOP = 11, START = 0.6, STEP = 1.15, MOVE = 0.45, DRAW = 0.65;
-const END = START + CHECKS.length * STEP;                  // 7.5 s: the last check is written
+const LOOP = 10;
+const GO = 0.9, BACK = 0.9;                                // flying from the rest place to box 1, and back
+const START = 0.4, WRITE = 5.2;                            // the six checks are written in one smooth stroke
+const END = START + GO + WRITE;                            // 6.5 s
+const HOP = 1.8;                                           // between two boxes the pen moves 1.8x faster
 const clamp = (x) => Math.min(1, Math.max(0, x));
 const ease = (x) => { x = clamp(x); return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
 const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+
+// the whole stroke from check 1 to check 6: writing pieces (start -> bottom -> tip) and hops (tip -> next start).
+// Each piece gets a time in proportion to its length (hops count less), so the pen never stops.
+const PIECES = [];
+CHECKS.forEach((c, k) => {
+  if (k > 0) PIECES.push({ a: CHECKS[k - 1].path[2], b: c.path[0], hop: true, k });
+  PIECES.push({ a: c.path[0], b: c.path[1], k }, { a: c.path[1], b: c.path[2], k, last: true });
+});
+const WEIGHT = PIECES.map((p) => dist(p.a, p.b) / (p.hop ? HOP : 1));
+const TOTAL = WEIGHT.reduce((s, w) => s + w, 0);
+let acc = START + GO;
+PIECES.forEach((p, i) => { p.t0 = acc; acc += (WEIGHT[i] / TOTAL) * WRITE; p.t1 = acc; });
+const DONE = CHECKS.map((_, k) => PIECES.find((p) => p.k === k && p.last).t1);   // when each check is finished
 const pct = (v, of) => `${(v / of) * 100}%`;
 
 export default function ClipboardAnim() {
@@ -46,28 +63,18 @@ export default function ClipboardAnim() {
       raf = requestAnimationFrame(frame);
       const t = still ? 9 : ((now - t0) / 1000) % LOOP;
       // where the nib is, how lifted the pen is (0 on the paper, 1 in the air), and how far each check is drawn
-      let nib = REST, lift = 0, tilt = 0;
-      const drawn = CHECKS.map(() => 0);
-      for (let k = 0; k < CHECKS.length; k++) {
-        const s = START + k * STEP, c = CHECKS[k];
-        if (t >= s + MOVE + DRAW) { drawn[k] = 1; continue; }
-        if (t < s) break;
-        const from = k === 0 ? REST : CHECKS[k - 1].path[2];
-        if (t < s + MOVE) {                                // flying to the start of the check
-          const u = ease((t - s) / MOVE);
-          nib = mix(from, c.path[0], u); lift = Math.sin(Math.PI * u);
-        } else {                                           // writing: down the short side, up the long side
-          const u = (t - s - MOVE) / DRAW;
-          nib = u < 0.35 ? mix(c.path[0], c.path[1], u / 0.35) : mix(c.path[1], c.path[2], (u - 0.35) / 0.65);
-          tilt = 1;
-          drawn[k] = clamp((nib[0] - c.box[0]) / c.box[2] + 0.06);
-        }
-        break;
+      let nib = REST, lift = 0, tilt = 0, active = -1;
+      if (t >= START && t < START + GO) {                  // from its place to the first box
+        const u = ease((t - START) / GO); nib = mix(REST, CHECKS[0].path[0], u); lift = Math.sin(Math.PI * u);
+      } else if (t >= START + GO && t < END) {
+        const p = PIECES.find((q) => t < q.t1) ?? PIECES.at(-1);
+        const u = clamp((t - p.t0) / (p.t1 - p.t0));
+        nib = mix(p.a, p.b, u);
+        if (p.hop) lift = 0.6 * Math.sin(Math.PI * u); else { tilt = 1; active = p.k; }
+      } else if (t >= END && t < END + BACK) {             // back to its place
+        const u = ease((t - END) / BACK); nib = mix(CHECKS.at(-1).path[2], REST, u); lift = Math.sin(Math.PI * u);
       }
-      if (t >= END) {                                      // back to its place
-        const u = ease((t - END) / 0.8);
-        nib = mix(CHECKS.at(-1).path[2], REST, u); lift = u < 1 ? Math.sin(Math.PI * u) : 0;
-      }
+      const drawn = CHECKS.map((c, k) => t >= DONE[k] ? 1 : k === active ? clamp((nib[0] - c.box[0]) / c.box[2] + 0.06) : 0);
       const fade = 1 - clamp((t - (LOOP - 0.8)) / 0.6);    // the six checks fade before the next round
 
       const p = penRef.current;
@@ -82,7 +89,7 @@ export default function ClipboardAnim() {
         if (el) { el.style.clipPath = `inset(0 ${(1 - d) * 100}% 0 0)`; el.style.opacity = fade; }
         const g = glowRefs.current[k];                     // a short glow when the check is finished
         if (g) {
-          const done = START + k * STEP + MOVE + DRAW, after = t - done, end = t - END - 0.9;
+          const after = t - DONE[k], end = t - END - BACK;
           const flash = after > 0 && after < 0.7 ? 1 - after / 0.7 : 0, all = end > 0 && end < 1 ? Math.sin(Math.PI * end) : 0;
           g.style.opacity = Math.max(flash, all * 0.8) * fade;
         }
