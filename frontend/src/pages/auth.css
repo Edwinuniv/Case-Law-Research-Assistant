@@ -74,6 +74,7 @@
 .au-steps span{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-family:Georgia,serif;color:#fbbf24;
   border:1px solid rgba(245,158,11,.5);background:rgba(245,158,11,.08)}
 .au-steps p{margin:4px 0 0;color:#d6d3d1;font-size:15px;line-height:1.5}
+.au-small{margin:14px 0 0;font-size:12px;color:#8a837d;text-align:center;line-height:1.5}.au-small a{color:#a8a29e}
 .au-legal{margin:22px 0 8px;font-size:12px;color:#6b6560}
 .au-links{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 18px;font-size:12px}
 .au-links a{color:#8a837d;text-decoration:none}.au-links a:hover{color:#fbbf24}
