@@ -1,0 +1,97 @@
+/* The answer (Answer.jsx), the waiting steps (Working.jsx) and the passage drawer (PassagePanel.jsx).
+   Dark cards in the style of the landing page. Own class names (an-*): pages/research.css (Joe) is not touched.
+   Each status has a colour, but always WITH its icon and its words (SR32): ✓ answered, ⚠ low confidence,
+   ⊘ not supported, ✕ error. The st-${status} classes stay on the answer. */
+.an{--c:#94a3b8;--card:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  position:relative;background:linear-gradient(160deg,#1c1c22,#141418);color:#e7e5e4;border-radius:20px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 50px rgba(10,10,12,.25)}
+.an.st-ANSWERED{--c:#34d399}.an.st-LOW_CONFIDENCE{--c:#fbbf24}.an.st-NOT_SUPPORTED{--c:#94a3b8}.an.st-ERROR{--c:#f87171}
+.an::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
+
+.an-status{display:flex;gap:14px;align-items:flex-start;padding:18px 22px 16px;border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:14.5px;color:#a8a29e;background:radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--c) 16%,transparent),transparent 65%)}
+.an-status b{color:#fff;font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:17px}
+.an-icon{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:700;
+  color:#141418;background:var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.an-reason{color:#78716c}
+
+.an-text{padding:8px 22px 4px;font-size:16.5px;line-height:1.75;color:#e7e5e4}
+.an-text p{margin:12px 0}
+/* a citation pill, like the gold "Miller v. Alabama, 567 U.S. 460" pill of the landing page */
+.an-cite{display:inline-flex;align-items:center;gap:6px;vertical-align:1px;margin:2px 3px;padding:2px 6px 2px 11px;border-radius:999px;
+  font:600 13px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;color:#141418;border:0;cursor:pointer;
+  background:linear-gradient(90deg,#fde68a,#fbbf24);box-shadow:0 0 16px rgba(251,191,36,.28);transition:box-shadow .2s,transform .2s}
+.an-cite i{font-style:normal;color:#047857}
+.an-cite:hover{background:linear-gradient(90deg,#fde68a,#fbbf24);box-shadow:0 0 22px rgba(251,191,36,.55);transform:translateY(-1px)}
+.an-cite-n{background:#141418;color:#fbbf24;border-radius:999px;font-size:10.5px;font-weight:700;padding:0 7px;line-height:1.7}
+
+.an-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 22px 18px;font-size:13px;color:#a8a29e}
+.an-meta>span{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;padding:3px 12px}
+.an-meta b{color:#fff}
+.an-support{padding-left:4px!important;color:#a8a29e}
+.an-ring{width:26px;height:26px;color:var(--c)}
+.an-toggle{margin-left:auto;background:none;color:#fbbf24;padding:3px 4px;font-size:13.5px;text-decoration:underline;text-underline-offset:3px;border:0}
+.an-toggle:hover{background:none;color:#fde68a}
+
+.an-passages{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;padding:0 22px 22px}
+.an-passage{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--card);color:#d6d3d1;
+  border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;font-size:13px;transition:border-color .2s,transform .2s}
+.an-passage:hover{background:var(--card);border-color:rgba(251,191,36,.6);transform:translateY(-2px)}
+.an-passage-top{font-family:Georgia,serif;color:#fff;font-size:14px}
+.an-passage-top b{color:#fbbf24;margin-right:4px}
+.an-passage-label{color:#78716c;font-size:12px}
+.an-passage-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#a8a29e}
+.an-score{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden}
+.an-score i{display:block;height:100%;background:linear-gradient(90deg,#fbbf24,#fb923c);border-radius:2px}
+
+/* ---- waiting: the real steps of the pipeline ---- */
+.an-working{background:linear-gradient(160deg,#1c1c22,#141418);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:18px 22px;
+  color:#78716c;box-shadow:0 18px 50px rgba(10,10,12,.2)}
+.an-working ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;font-size:15px}
+.an-working li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;transition:color .3s}
+.an-step{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;
+  border:1px solid rgba(255,255,255,.15);color:#78716c}
+.an-working li.done{color:#d6d3d1}
+.an-working li.done .an-step{background:#34d399;border-color:#34d399;color:#141418}
+.an-working li.now{color:#fff;font-weight:600}
+.an-working li.now .an-step{border-color:#fbbf24;color:#fbbf24;animation:an-pulse 1.2s ease-in-out infinite}
+.an-six{display:inline-flex;gap:5px;margin-left:4px}
+.an-six i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
+.an-working li.now .an-six i{animation:an-check 1.1s ease-in-out infinite both}
+.an-working li.done .an-six i{background:var(--c)}
+@keyframes an-check{0%,100%{background:rgba(255,255,255,.12);box-shadow:none}45%{background:var(--c);box-shadow:0 0 10px var(--c)}}
+@keyframes an-pulse{50%{box-shadow:0 0 0 5px rgba(251,191,36,.18)}}
+
+/* ---- the passage drawer ---- */
+.an-backdrop{position:fixed;inset:0;background:rgba(10,10,12,.55);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.an-backdrop.on{opacity:1;pointer-events:auto}
+.an-drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,94vw);background:#141418;color:#e7e5e4;z-index:21;overflow:auto;
+  padding:30px 32px 40px;box-sizing:border-box;transform:translateX(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  box-shadow:-20px 0 60px rgba(0,0,0,.5);border-left:3px solid #fbbf24}
+.an-drawer.on{transform:none}
+.an-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.08);color:#fff;width:36px;height:36px;border-radius:50%;
+  padding:0;font-size:22px;line-height:1;border:0}
+.an-close:hover{background:rgba(255,255,255,.16)}
+.an-kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#fbbf24}
+.an-drawer h3{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:26px;margin:6px 40px 6px 0;line-height:1.2;color:#fff}
+.an-cit{color:#a8a29e;font-size:14px;margin:0 0 14px}
+.an-cl{display:inline-block;background:linear-gradient(90deg,#fbbf24,#fb923c);color:#141418!important;font-weight:600;text-decoration:none;
+  border-radius:999px;padding:7px 16px;font-size:13.5px;margin-bottom:14px}
+.an-opinion{white-space:pre-wrap;font-family:Georgia,serif;font-size:15.5px;line-height:1.8;color:#e7e5e4;margin-top:6px}
+.an-opinion .an-dim{color:#8a837d}
+.an-opinion mark{background:#fde68a;color:#141418;padding:1px 2px;border-radius:3px;box-shadow:0 0 0 2px #fde68a}
+.an-hl{color:#fff}                                /* the passage itself: brighter than the opinion around it */
+.an-dim{color:#78716c;font-size:13px}
+.an-opinion .an-dim{font-size:inherit}
+.an-licence{margin-top:18px}
+
+@media(max-width:600px){
+  .an-status,.an-text,.an-meta{padding-left:16px;padding-right:16px}
+  .an-passages{padding:0 16px 16px}
+  .an-toggle{margin-left:0}
+  .an-drawer{padding:26px 18px 34px}
+}
+@media(prefers-reduced-motion:reduce){
+  .an *,.an-working *,.an-drawer,.an-backdrop{animation:none!important;transition:none!important}
+}

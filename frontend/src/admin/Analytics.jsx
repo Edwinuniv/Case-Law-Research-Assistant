@@ -1,18 +1,13 @@
 // Analytics (SR42): queries per day by result, response time (p50, p95), failure rate, date filter,
-// and the questions it could not answer. Charts drawn with chart.js.
-import { useEffect, useRef, useState } from "react";
+// and the questions it could not answer. Every number comes from GET /api/admin/analytics; the totals at the
+// top are sums of its per-day counts. Drawn with the small SVG charts of charts.jsx (no chart library).
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Chart from "chart.js/auto";
+import { AMBER, Kpi, Lines, OK, StackedBars } from "./charts.jsx";
 import { day, useLoad, Waiting } from "./useLoad.jsx";
 
-function ChartBox({ title, config }) {          // one chart; redrawn when its data changes
-  const canvas = useRef(null);
-  useEffect(() => {
-    const chart = new Chart(canvas.current, config);
-    return () => chart.destroy();
-  }, [config]);
-  return <div className="card"><h3>{title}</h3><canvas ref={canvas} /></div>;
-}
+const RESULTS = [["answered", "answered", OK], ["low", "low confidence", AMBER],
+  ["not_supported", "not supported", "#94a3b8"], ["errors", "error", "#f87171"]];
 
 export default function Analytics() {
   const [range, setRange] = useState({ start: "", end: "" });
@@ -21,34 +16,44 @@ export default function Analytics() {
   useEffect(() => { if (d && !range.start) setRange({ start: d.start, end: d.end }); }, [d, range.start]);
   if (!d) return <Waiting data={d} error={error} />;
 
-  const L = d.days.map((x) => x.day);
-  const series = (label, key, color) => ({ label, data: d.days.map((x) => x[key]), backgroundColor: color, borderColor: color });
-  const results = { type: "bar", data: { labels: L, datasets: [series("answered", "answered", "#2f7d3b"),
-    series("low confidence", "low", "#c58b00"), series("not supported", "not_supported", "#7a8594"),
-    series("error", "errors", "#b3342b")] }, options: { scales: { x: { stacked: true }, y: { stacked: true } } } };
-  const times = { type: "line", data: { labels: L, datasets: [series("median (p50)", "p50", "#1f3a5f"), series("p95", "p95", "#c58b00")] } };
-  const failures = { type: "line", data: { labels: L, datasets: [series("share of queries with an error", "failure_rate", "#b3342b")] },
-    options: { scales: { y: { min: 0, max: 1 } } } };
+  const sum = (k) => d.days.reduce((s, x) => s + (x[k] || 0), 0);
+  const total = sum("n");
 
   return (
     <>
       <h2>Analytics</h2>
-      <form className="card" onSubmit={(e) => { e.preventDefault(); setQuery(`?start=${range.start}&end=${range.end}`); }}>
-        From <input type="date" value={range.start} onChange={(e) => setRange({ ...range, start: e.target.value })} /> to{" "}
-        <input type="date" value={range.end} onChange={(e) => setRange({ ...range, end: e.target.value })} />{" "}
+      <p className="ad-lead">Questions asked on the website from {d.start} to {d.end}, by day.</p>
+      <form className="ad-card ad-form" onSubmit={(e) => { e.preventDefault(); setQuery(`?start=${range.start}&end=${range.end}`); }}>
+        <label className="ad-field">From<input type="date" value={range.start} onChange={(e) => setRange({ ...range, start: e.target.value })} /></label>
+        <label className="ad-field">To<input type="date" value={range.end} onChange={(e) => setRange({ ...range, end: e.target.value })} /></label>
         <button className="light">Apply</button>
       </form>
-      <div className="two">
-        <ChartBox title="Queries per day, by result" config={results} />
-        <ChartBox title="Response time (ms)" config={times} />
+
+      <div className="ad-kpis">
+        <Kpi label="questions" value={total} />
+        {RESULTS.map(([k, label]) => <Kpi key={k} label={label} value={sum(k)}
+                                          tone={k === "errors" ? (sum(k) ? "bad" : "ok") : undefined} />)}
       </div>
-      <div className="two">
-        <ChartBox title="Failure rate (errors)" config={failures} />
-        <div className="card"><h3>Questions it could not answer</h3>
-          <ul>{d.unanswered.length === 0 ? <li>None in this period.</li> : d.unanswered.map((u, i) => (
-            <li key={i}>{u.question} <span className="muted">{day(u.created_at).slice(5, 10)} · {u.reason}</span></li>))}</ul>
-          <Link to="/admin/abstentions">Review them</Link></div>
-      </div>
+
+      {d.days.length === 0 ? <div className="ad-card">No question in this period.</div> : (
+        <>
+          <div className="ad-two">
+            <div className="ad-card"><h3>Questions per day, by result</h3>
+              <StackedBars data={d.days} x="day" keys={RESULTS} />
+              <p className="muted">{d.days[0].day} to {d.days[d.days.length - 1].day}</p></div>
+            <div className="ad-card"><h3>Response time (ms)</h3>
+              <Lines data={d.days} x="day" keys={[["p50", "median (p50)", "#38bdf8"], ["p95", "p95", AMBER]]} /></div>
+          </div>
+          <div className="ad-two">
+            <div className="ad-card"><h3>Failure rate (share of questions with an error)</h3>
+              <Lines data={d.days} x="day" maxY={1} keys={[["failure_rate", "failure rate", "#f87171"]]} /></div>
+            <div className="ad-card"><h3>Questions it could not answer</h3>
+              <ul>{d.unanswered.length === 0 ? <li>None in this period.</li> : d.unanswered.map((u, i) => (
+                <li key={i}>{u.question} <span className="muted">{day(u.created_at).slice(5, 10)} · {u.reason}</span></li>))}</ul>
+              <Link to="/admin/abstentions">Review them →</Link></div>
+          </div>
+        </>
+      )}
     </>
   );
 }

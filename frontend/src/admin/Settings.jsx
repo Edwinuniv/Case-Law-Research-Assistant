@@ -1,6 +1,8 @@
 // Settings: 1. preview new thresholds on the latest run (saves nothing, FR23); 2. save.
+// The preview numbers come from GET /api/admin/settings/preview (tune split); the values from GET /api/admin/settings.
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { PairBars, RATE_METRICS } from "./charts.jsx";
 import { num, useLoad, Waiting } from "./useLoad.jsx";
 
 const FIELDS = [["tau_abstain", "Abstain below support score"], ["tau_confident", "Low confidence below"],
@@ -15,8 +17,9 @@ export default function Settings() {
   if (!form) return <Waiting data={s} error={error} />;
 
   const set = (k, v) => setForm({ ...form, [k]: v });
-  const numberInput = (k, step = "0.01", width = 80) => (
-    <input type="number" step={step} style={{ width }} value={form[k]} onChange={(e) => set(k, e.target.value)} />);
+  const numberInput = (k, label, step = "0.01", width = 110) => (
+    <label className="ad-field" key={k}>{label}
+      <input type="number" step={step} style={{ width }} value={form[k]} onChange={(e) => set(k, e.target.value)} /></label>);
 
   async function showPreview(e) {
     e.preventDefault(); setMsg("");
@@ -35,29 +38,40 @@ export default function Settings() {
 
   return (
     <>
-      <h2>Settings</h2>
-      <form className="card" onSubmit={showPreview}>
+      <h2>Settings and <em>thresholds</em></h2>
+      <p className="ad-lead">Choose thresholds on the tune split (the sweep of an evaluation run and the preview below).
+        Report the test split once, at the end, without changing them (EVALUATION.md).</p>
+
+      <form className="ad-card" onSubmit={showPreview}>
         <h3>1. Preview new thresholds on the latest evaluation run</h3>
-        {FIELDS.map(([k, label]) => <span key={k}>{label} {numberInput(k)} </span>)}
-        <button className="light">Preview</button>
+        <div className="ad-form">
+          {FIELDS.map(([k, label]) => numberInput(k, label))}
+          <button className="light">Preview</button>
+        </div>
+        <p className="muted">The preview saves nothing.</p>
         {preview && (
-          <table style={{ marginTop: 10 }}>
-            <thead><tr><th>Metric (run {preview.run}, {preview.split} split)</th><th>Current settings</th><th>New settings</th></tr></thead>
-            <tbody>{preview.rows.map((r) => (
-              <tr key={r.metric}><td>{r.metric.replaceAll("_", " ")}</td><td>{num(r.now)}</td><td>{num(r.then)}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="ad-table">
+            <table>
+              <thead><tr><th>Metric (run {preview.run}, {preview.split} split)</th><th>Current settings</th><th>New settings</th></tr></thead>
+              <tbody>{preview.rows.map((r) => (
+                <tr key={r.metric}><td>{r.metric.replaceAll("_", " ")}</td><td>{num(r.now)}</td>
+                  <td>{num(r.then)}{RATE_METRICS.has(r.metric) && <PairBars a={r.now} b={r.then} />}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
       </form>
-      <form className="card" onSubmit={save}>
-        <h3>2. Save</h3>
-        <p>{FIELDS.map(([k, label]) => <span key={k}>{label} {numberInput(k)} · </span>)}</p>
-        <p>Passages after search {numberInput("retrieve_k", "1", 60)} · Passages given to the model {numberInput("top_k", "1", 60)} ·{" "}
+
+      <form className="ad-card" onSubmit={save}>
+        <h3>2. Save (changes the live system)</h3>
+        <div className="ad-form">{FIELDS.map(([k, label]) => numberInput(k, label))}</div>
+        <div className="ad-form" style={{ marginTop: 12 }}>
+          {numberInput("retrieve_k", "Passages after search", "1", 90)}
+          {numberInput("top_k", "Passages given to the model", "1", 90)}
           <label><input type="checkbox" checked={!!form.use_reranker} onChange={(e) => set("use_reranker", e.target.checked)} />
-            {" "}Use the reranker (week-10 improvement)</label></p>
-        <button>Save settings</button> {msg && <span className="muted">{msg}</span>}
-        <p className="muted">Choose thresholds on the tune split (the sweep table of an evaluation run and this preview).
-          Report the test split once, at the end, without changing them (EVALUATION.md).</p>
+            {" "}Use the reranker (week-10 improvement)</label>
+        </div>
+        <p><button>Save settings</button> {msg && <span className="muted">{msg}</span>}</p>
       </form>
     </>
   );
