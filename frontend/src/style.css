@@ -23,7 +23,8 @@ header a,header button.link{color:#d9e0ec;text-decoration:none;background:none;b
   font-size:15px;cursor:pointer}
 header a:hover,header button.link:hover{color:#fff}
 header .brand{font-family:var(--serif);font-size:22px;font-weight:600;color:#fff;letter-spacing:.04em}
-header .brand span{color:var(--gold)}                       /* the small mark before the name */
+header .brand{display:flex;align-items:center;gap:9px}
+header .brand img{width:28px;height:28px}                    /* the logo before the name */
 header .coverage{color:#aab6ca;font-size:13px;margin-right:auto}
 main{max-width:1320px;margin:24px auto;padding:0 20px}
 footer{text-align:center;color:var(--muted);font-size:13px;padding:28px 16px;border-top:1px solid var(--line);
