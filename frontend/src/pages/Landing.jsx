@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./landing.css";
 import logoMark from "../assets/logo-mark.svg";
+import Scales3D from "../components/Scales3D.jsx";
+import statue from "../assets/statue.webp";
 
 const QUESTION = "Can a law require life in prison without parole for a juvenile, with no chance for the judge to consider his age?";
 
@@ -114,32 +116,30 @@ export default function Landing({ info }) {
         </span>
       </nav>
 
-      <section className="lp-hero" onMouseMove={(e) => setMouse([e.clientX / window.innerWidth * 2 - 1, e.clientY / window.innerHeight * 2 - 1])}>
-        <div className="lp-hero-bg" aria-hidden="true"><span>§</span><span>“</span><span>[ ]</span><span>”</span></div>
+      <section className="lp-hero lp-hero2" onMouseMove={(e) => setMouse([e.clientX / window.innerWidth * 2 - 1, e.clientY / window.innerHeight * 2 - 1])}>
+        <div className="lp-bigword" aria-hidden="true" style={{ transform: `translateX(${-hero * 18}vw)` }}>VERIFIED</div>
+        <div className="lp-glow" aria-hidden="true" style={{ transform: `translate(${mouse[0] * 20}px, ${mouse[1] * 14}px)` }} />
+        <div className="lp-hero-text" style={{ transform: `translateY(${-hero * 60}px)`, opacity: 1 - hero * 1.3 }}>
+          <span className="lp-kicker">U.S. Supreme Court research, verified</span>
+          <h1>Ask the Court.<br /><em>Hear only what it said.</em></h1>
+          <p className="lp-lead">Verdicta answers questions about U.S. Supreme Court decisions and shows only sentences
+            whose citations and quotes were checked against the opinions themselves.</p>
+          <p className="lp-cta">
+            <Link to="/research" className="lp-button">Try a question</Link>
+            <a href="#how" className="lp-button ghost">See how it works ↓</a>
+          </p>
+          <p className="lp-coverage">{info.coverage}</p>
+        </div>
+        <div className="lp-statue-wrap" style={{ transform: `translate(${mouse[0] * -10}px, ${-hero * 90}px) scale(${1 + hero * 0.22})` }}>
+          <img className="lp-statue" src={statue} alt="Bronze statue of Lady Justice holding the scales" />
+        </div>
         <div className="lp-floats" aria-hidden="true">
           {[["lp-f1", <><span className="lp-cite-n">P1</span>Miller v. Alabama, 567 U.S. 460</>, 1.2],
             ["lp-f2", <>✓ Verified answer</>, -0.8],
-            ["lp-f3", <>⊘ Not supported by the retrieved opinions</>, 0.9],
-            ["lp-f4", <><s>Delgado v. Oregon Fisheries Board, 597 U.S. 412</s> · removed</>, -1.1],
-            ["lp-f5", <>Majority opinion · Part II</>, 0.6]].map(([cls, body, depth]) => (
+            ["lp-f4", <><s>Delgado v. Oregon Fisheries Board, 597 U.S. 412</s> · removed</>, -1.1]].map(([cls, body, depth]) => (
             <span key={cls} className={`lp-float ${cls}`}
                   style={{ transform: `translate(${mouse[0] * 18 * depth}px, ${mouse[1] * 14 * depth - hero * 220 * depth}px)` }}>{body}</span>
           ))}
-        </div>
-        <div className="lp-hero-inner" style={{ transform: `scale(${1 - hero * 0.12})`, opacity: 1 - hero * 1.1 }}>
-        <svg className="lp-mark" viewBox="0 0 64 64" aria-hidden="true">
-          <defs><linearGradient id="lp-vg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stopColor="#fbbf24" /><stop offset="1" stopColor="#fb923c" /></linearGradient></defs>
-          <path className="lp-brackets" d="M15 15h-4v34h4M49 15h4v34h-4" />
-          <path className="lp-check" d="M20 27l11 18L45 18" />
-        </svg>
-        <h1>Ask the Court.<br /><em>Hear only what it said.</em></h1>
-        <p className="lp-lead">Verdicta answers questions about U.S. Supreme Court decisions and shows only sentences
-          whose citations and quotes were checked against the opinions themselves.</p>
-        <p className="lp-cta">
-          <Link to="/research" className="lp-button">Try a question</Link>
-          <a href="#how" className="lp-button ghost">See how it works ↓</a>
-        </p>
-        <p className="lp-coverage">{info.coverage}</p>
         </div>
         <div className="lp-scroll" aria-hidden="true"><i /></div>
       </section>
@@ -225,6 +225,18 @@ export default function Landing({ info }) {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="lp-weigh">
+        <div className="lp-weigh-copy lp-reveal">
+          <span className="lp-num">THE VERIFIER</span>
+          <h2>Weighed before it is shown.</h2>
+          <p>The model drafts; Verdicta weighs every sentence against the passages it cites. An invented citation has no
+            weight: it is not in CourtListener's table, so it is removed before you ever see it. What remains is what
+            the Court actually said.</p>
+          <p className="lp-weigh-hint">Drag the scale to turn it.</p>
+        </div>
+        <Scales3D />
       </section>
 
       <section className="lp-checks6 lp-reveal">
