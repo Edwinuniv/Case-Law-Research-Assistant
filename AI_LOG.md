@@ -635,3 +635,21 @@ All fixed before run 2 starts, so run 2 is checked with the fixed checker from i
    status to "done". The test file used the default settings (tau 0.20 since #75, the same as the database) and the
    status "done", so both bugs gave the right answer. Same lesson as export_run (2026-11-08): test data must differ
    from what the code could take by mistake. Fix: the test run has tau 0.37 and the status "paused" (like run 1's file).
+
+## 2026-11-12 — Admin dashboard and the answer, restyled (Edwin, feature/admin-answer-ui)
+
+We asked Claude to restyle the admin pages and the answer components in the landing page's style, every number from
+the existing /api/admin answers, checked in a browser at 1280 and 390 px. Checked with a headless browser (Playwright),
+logged in with the local admin account, screenshots of every page at both widths. What was wrong, caught that way:
+1. **Pages wider than a phone.** The first version made the phone layout one column of `1fr`; a grid column of `1fr`
+   does not shrink below its content (the jobs table), so the 390 px page was 628 px wide. Caught: the browser measured
+   the page width; a script listed the elements wider than their box. Fix: `minmax(0, 1fr)` and `min-width: 0`.
+2. **Bars on counts.** Before/after bars were drawn for every value between 0 and 1, so counts that happened to be 0 or 1
+   ("errors 0", "answered but should abstain 1") got bars. Caught on the Compare screenshot. Fix: bars only for the
+   metrics that are shares or rates (RATE_METRICS).
+3. **TEST numbers on the TUNE page.** The run page's "wrong outcomes" card counted every question, TEST included, while
+   the page said "tune split"; the old page also listed the TEST questions by default. Caught: 12 wrong did not match
+   the tune metrics (4 + 1 + 6 = 11). Fix: the list shows the chosen split plus the adversarial questions, the same
+   questions as the metrics (SR29: TEST only when asked).
+4. **A number cut off and a striped passage**: 17,859,437 did not fit its card; the passage in the drawer had a dark
+   background on each line. Both seen on screenshots and fixed.
