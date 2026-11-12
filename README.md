@@ -23,11 +23,13 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000
     npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
-The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account. Only the administrator logs
-in ("Admin login" in the header, http://127.0.0.1:8000/login); the admin pages are
-http://127.0.0.1:8000/admin. Run `npm run build` again after each `git pull` that changes frontend/,
-then restart uvicorn. Other administrator accounts are created on the admin page "Accounts"; there is
-no sign-up page.
+The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account.
+A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
+after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
+The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
+a visitor's account lands on the research page and cannot open the admin pages. Run `npm run build` again after each
+`git pull` that changes frontend/, then restart uvicorn. Administrator accounts are made with `python -m scripts.seed --admin`
+(ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
 
 The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
 addresses in `CONTACT_EMAIL`, separated by commas so the whole team receives the mail (.env, and the Railway variables online) and has a form; messages are read and deleted on
