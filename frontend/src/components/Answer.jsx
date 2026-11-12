@@ -2,6 +2,7 @@
 // Only sentences that passed the verifier arrive here; a NOT_SUPPORTED or ERROR answer has none (SR28):
 // removed sentences are never sent by the server, so they can never be shown as the answer.
 // Props from pages/Chat.jsx: a (the /api/ask answer), onOpen(chunkId, quote) (opens the passage drawer).
+// WELCOME (a greeting) shows only our fixed welcome text: there is no passage, citation or score to show.
 import { useState } from "react";
 import "./answer.css";
 
@@ -10,6 +11,7 @@ const STATUS = {
   LOW_CONFIDENCE: ["⚠", "Low confidence", "The support for this answer is partial. Check the passages before relying on it."],
   NOT_SUPPORTED: ["⊘", "Not supported by the retrieved opinions", "The opinions we searched do not answer this question, so we will not guess."],
   ERROR: ["✕", "The answer service is unavailable right now", "Please try again in a minute."],
+  WELCOME: ["✦", "Welcome to Verdicta", ""],     // a greeting: our fixed text (app/pipeline.py), no search, no model
 };
 
 // The support score of this answer (0 to 1) as a small ring; the number is written inside it.
@@ -26,6 +28,16 @@ function SupportRing({ value }) {
 
 export default function Answer({ a, onOpen }) {
   const [icon, title, text] = STATUS[a.status] || STATUS.ERROR;
+  if (a.status === "WELCOME") {
+    return (
+      <article className={`an st-${a.status}`}>
+        <div className="an-status">
+          <span className="an-icon" aria-hidden="true">{icon}</span>
+          <div><b>{title}.</b> <span>{a.reason}</span></div>
+        </div>
+      </article>
+    );
+  }
   const [showPassages, setShowPassages] = useState(a.status === "NOT_SUPPORTED");
   const best = Math.max(0.0001, ...a.passages.map((p) => p.score));
   return (
