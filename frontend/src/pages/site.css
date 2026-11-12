@@ -1,0 +1,52 @@
+/* The site's information pages (SitePage.jsx): dark like the landing page, text in a readable column. */
+main:has(.sp){max-width:none;margin:0;padding:0}
+.sp{background:#0c0c0e;color:#e7e5e4;min-height:70vh}
+.sp-hero{text-align:center;padding:56px 20px 46px;
+  background:radial-gradient(ellipse at 50% 120%,rgba(245,158,11,.18),transparent 60%),linear-gradient(180deg,#141418,#0c0c0e)}
+.sp-logo{width:46px;height:46px;margin-bottom:12px}
+.sp-kicker{display:block;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#fbbf24}
+.sp-hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(34px,5vw,56px);color:#fff;margin:10px 0 8px}
+.sp-hero h1 em{background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sp-updated{color:#78716c;font-size:13px;margin:0}
+
+.sp-body{display:grid;grid-template-columns:200px minmax(0,760px);justify-content:center;gap:40px;padding:36px 20px 70px}
+.sp-nav{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:4px}
+.sp-nav a{color:#a8a29e;text-decoration:none;padding:8px 12px;border-radius:10px;font-size:14.5px}
+.sp-nav a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.sp-nav a.active{color:#fff;background:rgba(251,191,36,.10)}
+
+.sp-text{font-size:16px;line-height:1.75;color:#d6d3d1;min-width:0}
+.sp-text h2{font-family:Georgia,serif;font-weight:500;font-size:24px;color:#fff;margin:34px 0 8px}
+.sp-text h2:first-child{margin-top:0}
+.sp-text a{color:#fbbf24}
+.sp-text ul{padding-left:22px}
+.sp-text li{margin:6px 0}
+.sp-text strong{color:#fff}
+.sp-card{padding:20px 22px;border-radius:20px;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);margin:18px 0}
+.sp-note{border-left:3px solid #fbbf24}
+
+/* the contact form */
+.sp-form{display:grid;gap:14px}
+.sp-form label{display:grid;gap:6px;font-size:13.5px;color:#a8a29e}
+.sp-form input,.sp-form textarea{background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:12px;
+  padding:11px 14px;font:inherit;width:100%;box-sizing:border-box}
+.sp-form input:focus,.sp-form textarea:focus{outline:2px solid #fbbf24;border-color:#fbbf24}
+.sp-form button{justify-self:start;background:linear-gradient(90deg,#fbbf24,#fb923c);color:#1c1917;font-weight:600;border-radius:12px;padding:11px 24px;border:0}
+.sp-form button:hover{filter:brightness(1.08);background:linear-gradient(90deg,#fbbf24,#fb923c)}
+.sp-ok{color:#34d399}
+.sp-err{color:#f87171}
+.sp-mail{font-family:Georgia,serif;font-size:20px}
+
+@media(max-width:800px){
+  .sp-body{grid-template-columns:minmax(0,1fr);gap:18px}
+  .sp-nav{position:static;flex-direction:row;flex-wrap:wrap}
+}
+.sp-small{margin:0;color:#78716c;font-size:13px;line-height:1.55}
+
+/* the links in the site footer (index.html, outside React) */
+footer nav{margin-bottom:6px}
+footer nav a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+footer nav a:hover{color:#d97706}
+body:has(.sp){background:#0c0c0e}                 /* the information pages are dark down to the footer */
+body:has(.sp) footer{border-top-color:rgba(255,255,255,.08);color:#78716c}

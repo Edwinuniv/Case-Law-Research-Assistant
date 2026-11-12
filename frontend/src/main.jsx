@@ -10,6 +10,7 @@ import Analytics from "./admin/Analytics.jsx";
 import Compare from "./admin/Compare.jsx";
 import Corpus from "./admin/Corpus.jsx";
 import Eval from "./admin/Eval.jsx";
+import Messages from "./admin/Messages.jsx";
 import EvalRun from "./admin/EvalRun.jsx";
 import AdminHome from "./admin/Home.jsx";
 import QuestionForm from "./admin/QuestionForm.jsx";
@@ -19,6 +20,10 @@ import Users from "./admin/Users.jsx";
 import Chat from "./pages/Chat.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
+import Contact from "./pages/Contact.jsx";
+import Privacy from "./pages/Privacy.jsx";
+import Sources from "./pages/Sources.jsx";
+import Terms from "./pages/Terms.jsx";
 import "./style.css";
 import logoMark from "./assets/logo-mark.svg";       // bundled into /assets by Vite
 
@@ -59,6 +64,10 @@ function App() {
           <Route path="/forgot" element={<Login mode="forgot" />} />   {/* an administrator resets the password */}
           <Route path="/" element={<Landing info={info} />} />  {/* the story of Verdicta, then "Try a question" */}
           <Route path="/research" element={<Chat info={info} />} />    {/* open to everyone, no account (SR33) */}
+          <Route path="/privacy" element={<Privacy />} />              {/* the site's information pages (Edwin) */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/sources" element={<Sources />} />
+          <Route path="/contact" element={<Contact />} />
           {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others
             <Route path="/admin" element={<AdminLayout user={user} />}>
               <Route index element={<AdminHome />} />
@@ -71,6 +80,7 @@ function App() {
               <Route path="abstentions" element={<Abstentions />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="corpus" element={<Corpus />} />
+              <Route path="messages" element={<Messages />} />
               <Route path="users" element={<Users user={user} />} />
             </Route>
           )}

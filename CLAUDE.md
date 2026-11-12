@@ -157,6 +157,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 - [x] Welcome message (Edwin) — branch feature/welcome-message (on top of #86): "hello / what can you do" gets status WELCOME and our fixed text (no search, no model); 13 tests, none of the 85 questions is a greeting ⏳ follow-up questions: the instructor said no on 2026-11-06; asking him again before building anything
 
+- [x] Information pages (Edwin) — branch feature/site-pages: /privacy, /terms, /sources, /contact in the footer; contact form (app/api_site.py, table contact_messages, 3 per address in 10 minutes) and admin Messages page; 12 tests ⏳ CONTACT_EMAIL to choose; the final logo replaces assets/logo-mark.svg, logo.svg, favicon.svg
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 

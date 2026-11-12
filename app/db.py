@@ -89,6 +89,10 @@ CREATE TABLE IF NOT EXISTS eval_results (
 CREATE TABLE IF NOT EXISTS jobs (
     id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     kind TEXT, status TEXT, message TEXT);
+
+CREATE TABLE IF NOT EXISTS contact_messages (      -- the contact form (Edwin, 2026-11-12); kept, see the privacy page
+    id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    name TEXT NOT NULL, email TEXT NOT NULL, message TEXT NOT NULL);
 """
 
 INDEXES = """

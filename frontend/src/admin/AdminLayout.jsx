@@ -8,7 +8,7 @@ import "./admin.css";
 
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],
   ["abstentions", "Abstentions"], ["analytics", "Analytics"], ["settings", "Settings"],
-  ["corpus", "Corpus & citations"], ["users", "Accounts"]];
+  ["corpus", "Corpus & citations"], ["messages", "Messages"], ["users", "Accounts"]];
 
 export default function AdminLayout({ user }) {
   useEffect(() => {

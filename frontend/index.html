@@ -9,7 +9,11 @@
   <body>
     <div id="root"></div>
     <!-- outside React: shown on every page, even before the JavaScript has loaded (SR7) -->
-    <footer>This is a research aid, not legal advice. · Data: CourtListener (Free Law Project), public domain.</footer>
+    <footer>
+      <nav aria-label="Site information"><a href="/privacy">Privacy</a> · <a href="/terms">Terms of use</a> ·
+        <a href="/sources">Sources &amp; licences</a> · <a href="/contact">Contact</a></nav>
+      This is a research aid, not legal advice. · Data: CourtListener (Free Law Project), public domain.
+    </footer>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
