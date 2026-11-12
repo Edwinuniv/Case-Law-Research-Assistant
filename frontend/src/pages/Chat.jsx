@@ -1,9 +1,11 @@
 // The research page, open to visitors (SR33). Each question is sent ALONE to /api/ask: the pipeline does
 // not use earlier questions (FR1), and the page says so.
-// "My questions" lives only in this page (React memory): visitors have no account, so nothing is kept on
-// the server for them, and reloading the page empties the list.
+// "My questions": for a visitor without an account it lives only in this page (React memory) and reloading
+// empties it; with an account (SPEC 11, 2026-11-12) it comes from GET /api/history, the account's own questions,
+// and an earlier answer is read back from /api/history/{id} as it was shown (no new model call).
 // The look changed (landing-page branch); the calls to the server are exactly the same as before.
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
@@ -20,6 +22,12 @@ export default function Chat({ info }) {
   const [open, setOpen] = useState(null);          // the passage shown in the side drawer
   const bottom = useRef(null);
   const box = useRef(null);
+
+  const account = info.user;                       // logged in: the history is kept on the server
+  useEffect(() => {
+    if (!account) { setHistory([]); return; }
+    api("/history").then((list) => setHistory(list)).catch(() => {});
+  }, [account?.email]);
 
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [turns, busy]);
 
@@ -44,14 +52,19 @@ export default function Chat({ info }) {
     if (e.key === "Enter" && !e.shiftKey) ask(e);
   }
 
-  function showEarlier(h) {                        // an earlier answer, from memory (no new model call)
-    setTurns((t) => [...t, { question: h.question, answer: h.answer, earlier: true }]);
+  async function showEarlier(h) {                  // an earlier answer: from memory, or from the account's history
+    let answer = h.answer;
+    if (!answer) {
+      try { answer = (await api(`/history/${h.id}`)).shown; } catch (err) { setError(err.message); return; }
+      if (!answer) { setError("This earlier answer was not saved."); return; }
+    }
+    setTurns((t) => [...t, { question: h.question, answer, earlier: true }]);
   }
 
   const started = turns.length > 0 || busy;
 
   return (
-    <div className={`rs ${started ? "started" : ""}`}>
+    <div className={`rs ${started ? "started" : ""} ${history.length ? "has-history" : ""}`}>
       <section className="rs-hero">
         <h1>Ask the Court.</h1>
         <p className="rs-sub">Answers come only from {info.coverage}. Every citation is checked before it is shown.</p>
@@ -60,7 +73,9 @@ export default function Chat({ info }) {
       <div className="rs-body">
         <aside className="rs-history">
           <b>My questions</b>
-          <p className="muted">Only in this page: they are gone when you reload it.</p>
+          {account
+            ? <p className="muted">Saved to your account.</p>
+            : <p className="muted">Only in this page: they are gone when you reload it. <Link to="/signup">Sign up</Link> to keep them.</p>}
           {history.length === 0 && <p className="muted">None yet.</p>}
           {history.map((h) => (
             <button key={h.id} onClick={() => showEarlier(h)} title={h.status}>
