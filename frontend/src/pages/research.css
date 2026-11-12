@@ -18,7 +18,7 @@ main:has(.rs){max-width:none;margin:0;padding:0}
 .rs.started .rs-body{margin-top:24px}
 .rs-history{align-self:start;position:sticky;top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;
   padding:16px;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s;pointer-events:none}
-.rs.started .rs-history{opacity:1;transform:none;pointer-events:auto}
+.rs.started .rs-history,.rs.has-history .rs-history{opacity:1;transform:none;pointer-events:auto}   /* has-history: an account's saved questions */
 .rs-history b{font-family:var(--serif);color:var(--navy);font-size:17px}
 .rs-history .muted{margin:4px 0 10px}
 .rs-history button{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;background:none;color:var(--navy-soft);
@@ -127,6 +127,7 @@ main:has(.rs){max-width:none;margin:0;padding:0}
 @media(max-width:900px){
   .rs-body{grid-template-columns:minmax(0,1fr)}
   .rs-history{display:none}
+  .rs.has-history .rs-history{display:block;position:static;order:2}   /* phone: the saved questions under the box */
   .rs-question{max-width:92%}
 }
 @media(prefers-reduced-motion:reduce){

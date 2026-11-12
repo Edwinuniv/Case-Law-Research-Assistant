@@ -132,12 +132,13 @@ def test_each_question_is_answered_on_its_own(c, monkeypatch):
     assert seen == ["Is the President immune from prosecution?", "And what about his private acts?"]
 
 
-def test_no_question_list_on_the_server(c):
-    """Visitors have no account, so the server cannot tell whose questions are whose: there is no
-    /api/history, and nobody can read the questions other visitors asked (only the admin pages can)."""
+def test_no_question_list_without_an_account(c):
+    """A visitor without an account has no history: the server cannot tell whose questions are whose, so
+    /api/history needs a logged-in account (SPEC 11, 2026-11-12) and nobody reads other visitors' questions
+    (only the admin pages can). Accounts and their own history: tests/test_visitor_accounts.py."""
     ask(c, "A question from another visitor")
-    assert c.get("/api/history").status_code == 404
-    assert c.get("/api/history/1").status_code == 404
+    assert c.get("/api/history").status_code == 401
+    assert c.get("/api/history/1").status_code == 401
 
 
 def test_passage_panel_highlights_the_quote(c):                                  # SR31

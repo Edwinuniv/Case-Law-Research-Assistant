@@ -61,9 +61,11 @@ function App() {
       </header>}
       <main className={landing || authPage ? "bare" : ""}>
         <Routes>
-          <Route path="/login" element={user ? <Navigate to="/admin" /> :
+          {/* already logged in: an administrator goes to /admin, a visitor's account to the research page */}
+          <Route path="/login" element={user ? <Navigate to={user.role === "admin" ? "/admin" : "/research"} /> :
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
-          <Route path="/signup" element={<Login mode="signup" />} />   {/* a design only: visitor accounts are not open (5.11) */}
+          <Route path="/signup" element={user ? <Navigate to={user.role === "admin" ? "/admin" : "/research"} /> :
+            <Login mode="signup" onLogin={(u) => setInfo({ ...info, user: u })} />} />   {/* visitor accounts (SPEC 11) */}
           <Route path="/forgot" element={<Login mode="forgot" />} />   {/* an administrator resets the password */}
           <Route path="/" element={<Landing info={info} />} />  {/* the story of Verdicta, then "Try a question" */}
           <Route path="/research" element={<Chat info={info} />} />    {/* open to everyone, no account (SR33) */}

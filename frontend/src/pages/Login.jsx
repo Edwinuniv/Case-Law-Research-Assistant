@@ -1,8 +1,8 @@
 // The account pages: /login, /signup and /forgot, one design (Yasser's decision of 2026-11-12):
 // - Log in: the administrator's login, as before (SR33): the same message for every failure (SR36), CSRF,
 //   POST /api/login. Show/hide password, a Caps Lock warning, "Forgot password?".
-// - Sign up: the form is shown, but visitor accounts are NOT open: the instructor decided that only the
-//   administrator logs in (step 5.11). Pressing "Create account" sends nothing to the server; it says so.
+// - Sign up (SPEC 11, 2026-11-12): POST /api/signup makes a 'user' account and logs it in, then the research
+//   page opens; the account keeps the visitor's question history. Only the email and a password hash are stored.
 // - Forgot password: there is no email service, so it explains that an administrator resets the password
 //   from the Accounts page (FR12: db.create_user resets the password of an existing email).
 import { useState } from "react";
@@ -42,7 +42,7 @@ function LoginForm({ onLogin }) {
     try {
       const data = await api("/login", { email, password });
       onLogin(data.user);
-      navigate("/admin");
+      navigate(data.user.role === "admin" ? "/admin" : "/research");   // an administrator, or a visitor's account
     } catch (err) {
       setError(err.message);            // "Wrong email or password." or "Too many failed logins..."
     } finally {
@@ -65,31 +65,39 @@ function LoginForm({ onLogin }) {
   );
 }
 
-function SignupForm() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [sent, setSent] = useState(false);
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
-  function submit(e) {
+function SignupForm({ onLogin }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+
+  async function submit(e) {
     e.preventDefault();
-    setSent(true);                      // nothing is sent: visitor accounts are not open (step 5.11)
-    setForm({ ...form, password: "" });
+    setBusy(true); setError("");
+    try {
+      const data = await api("/signup", { email, password });   // makes the account and logs it in
+      onLogin(data.user);
+      navigate("/research");
+    } catch (err) {
+      setError(err.message);            // a used email, a short password, or too many accounts from this address
+      setPassword("");
+    } finally {
+      setBusy(false);
+    }
   }
+
   return (
     <form onSubmit={submit} className="au-form">
-      <label htmlFor="name">Full name</label>
-      <input id="name" autoComplete="name" required value={form.name} placeholder="Your name" onChange={set("name")} />
       <label htmlFor="semail">Email</label>
-      <input id="semail" type="email" autoComplete="email" required value={form.email} placeholder="you@example.com" onChange={set("email")} />
+      <input id="semail" type="email" autoComplete="email" required value={email} placeholder="you@example.com"
+             onChange={(e) => setEmail(e.target.value)} />
       <label htmlFor="spass">Password</label>
-      <PasswordInput id="spass" value={form.password} autoComplete="new-password" placeholder="At least 12 characters"
-                     onChange={set("password")} />
-      {sent && (
-        <div className="au-note" role="status">
-          <b>Visitor accounts are not open yet.</b> Nothing was sent. You can already ask questions without an
-          account on the <Link to="/research">research page</Link>.
-        </div>
-      )}
-      <button className="au-submit">Create account</button>
+      <PasswordInput id="spass" value={password} autoComplete="new-password" placeholder="At least 10 characters"
+                     onChange={(e) => setPassword(e.target.value)} />
+      {error && <p className="au-error" role="alert">{error}</p>}
+      <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Creating" /> : "Create account"}</button>
+      <p className="au-small">We keep only your email and your questions, so you find them again. <Link to="/privacy">Privacy</Link></p>
       <p className="au-switch">Already have an account? <Link to="/login">Log in</Link></p>
     </form>
   );
@@ -112,7 +120,7 @@ function ForgotPanel() {
 
 const TEXT = {
   login: { title: "Welcome back", sub: "Log in to your Verdicta account." },
-  signup: { title: "Create your account", sub: "Save your research and come back to it." },
+  signup: { title: "Create your account", sub: "Keep your questions and their answers, and find them again." },
   forgot: { title: "Forgot your password?", sub: "An administrator resets it for you." },
 };
 
@@ -150,7 +158,7 @@ export default function Login({ mode = "login", onLogin }) {
           <h1>{t.title}</h1>
           <p className="au-sub">{t.sub}</p>
           {mode === "login" && <LoginForm onLogin={onLogin} />}
-          {mode === "signup" && <SignupForm />}
+          {mode === "signup" && <SignupForm onLogin={onLogin} />}
           {mode === "forgot" && <ForgotPanel />}
         </div>
         <p className="au-legal">This is a research aid, not legal advice.</p>

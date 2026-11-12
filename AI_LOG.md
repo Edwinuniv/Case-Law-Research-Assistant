@@ -667,3 +667,25 @@ logged in with the local admin account, screenshots of every page at both widths
    questions as the metrics (SR29: TEST only when asked).
 4. **A number cut off and a striped passage**: 17,859,437 did not fit its card; the passage in the drawer had a dark
    background on each line. Both seen on screenshots and fixed.
+
+## 2026-11-12 — Visitor accounts (Yasser, feature/visitor-accounts)
+
+We asked Claude to make the sign-up page really create accounts and open the research page, after writing the rule in
+SPEC section 11 (team decision replacing step 5.11's "administrator only"). Checked with the whole test suite on a local
+PostgreSQL and a headless browser on a local database (sign up, log out, log in, saved question, admin refused).
+What was wrong or nearly wrong, and how it was caught:
+1. **Every 'user' account would have been deleted at each start.** The 5.11 migration in app/db.py ran
+   `DELETE FROM users WHERE role <> 'admin'` at every start of the site, so sign-up would have "worked" until the next
+   deploy. Caught by reading the code before writing any; now kept and tested (test_the_start_keeps_the_user_accounts,
+   test_existing_database_keeps_its_accounts_and_questions).
+2. **Sign-up could have reset someone's password.** db.create_user updates an existing email (it is how an admin
+   resets a password, FR12); used for sign-up, anyone could take over an account by "signing up" with its email.
+   Avoided with create_visitor (insert or nothing) and checked by breaking it on purpose: with an update instead, the
+   test test_sign_up_never_changes_an_existing_account fails. The same was done for the history (a query showing
+   everyone's questions makes test_history_shows_only_your_own_questions fail).
+3. **The saved questions could not be clicked.** In the browser check, a returning user's "My questions" were listed but
+   invisible and unclickable: the research page hid that column until the first question of the visit (fine when the
+   list always started empty). Caught by the click failing in Playwright. Fix: the column shows as soon as there are
+   saved questions, on phones too.
+4. **A test asked for a page that does not exist** (`/api/admin/overview` instead of `/api/admin/home`): it got 404
+   instead of 403 and failed. A mistake in the test, not the code; fixed in the test.

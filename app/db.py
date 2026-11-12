@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin')),
+    role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'user')),
     active BOOLEAN NOT NULL DEFAULT TRUE,
     failed_logins INT NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
@@ -108,13 +108,11 @@ MIGRATIONS = """
 -- 2026-11-06 (step 5.7): who asked each question (FR28 already saves the question)
 ALTER TABLE query_log ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
 CREATE INDEX IF NOT EXISTS query_log_user ON query_log (user_id, id);
--- 2026-11-06 (step 5.11): the instructor's answer, only the administrator logs in (SR33 as written).
--- Steps 5.6-5.10 had a 'user' role: those accounts are removed (their questions stay in the log,
--- without the account), then the rule allows 'admin' only. Does nothing on a database without them.
-UPDATE query_log SET user_id = NULL WHERE user_id IN (SELECT id FROM users WHERE role <> 'admin');
-DELETE FROM users WHERE role <> 'admin';
+-- 2026-11-06 (step 5.11): only the administrator logged in, and this migration deleted every 'user' account.
+-- 2026-11-12 (team decision, SPEC section 11): visitors may sign up again, so 'user' accounts are KEPT:
+-- the delete is gone and the rule allows both roles. Safe to run at every start.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin'));
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'));
 """
 
 
@@ -149,7 +147,7 @@ def set_setting(key, value):
 
 
 # ---------------- users: administrators only (SR33; visitors have no account) ----------------
-ROLES = ("admin",)
+ROLES = ("admin", "user")       # user: a visitor who signed up to keep their history (SPEC 11, 2026-11-12)
 LOGIN_FAILED = "Wrong email or password."     # the same message in every case: it does not say which emails exist
 # a real bcrypt hash of a random text, used when the email is unknown, so that every login takes the same time
 DUMMY_HASH = bcrypt.hashpw(b"no-such-user", bcrypt.gensalt()).decode()
@@ -165,6 +163,16 @@ def create_user(email, password, role="admin"):
                     "ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, "
                     "role = EXCLUDED.role, active = TRUE",
                     (email.lower().strip(), h, role))
+
+
+def create_visitor(email, password):
+    """Sign-up (SPEC 11, 2026-11-12): a NEW 'user' account, or None if the email is already used.
+    Unlike create_user, it never changes an existing account (no password reset by signing up)."""
+    h = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    with connect() as con:
+        row = con.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, 'user') "
+                          "ON CONFLICT (email) DO NOTHING RETURNING id", (email.lower().strip(), h)).fetchone()
+    return row["id"] if row else None
 
 
 def check_login(email, password):
@@ -205,7 +213,7 @@ def user_is_active_admin(user_id):
 # ---------------- query log ----------------
 def log_query(r, user_id=None, shown=None):
     """Saves one question and its result (FR28, SR41). Returns the new row's id.
-    user_id: the account that asked (empty for visitors, who have no account; step 5.11).
+    user_id: the account that asked (empty for a visitor without an account; SPEC 11, 2026-11-12).
     shown: the answer exactly as it was shown on the page."""
     removed_citations = [p for s in r["removed"] for p in s["problems"] if "citation" in p or "case name" in p]
     details = {"removed": r["removed"],
@@ -221,6 +229,20 @@ def log_query(r, user_id=None, shown=None):
                            r["fabrications_caught"], r["ms_search"], r["ms_model"], r["ms_total"],
                            Jsonb(details), user_id)).fetchone()
     return row["id"]
+
+
+def user_history(user_id, limit=50):
+    """The questions ONE account asked, newest first (SPEC 11: a user sees only their own)."""
+    with connect() as con:
+        return con.execute("SELECT id, question, status, created_at FROM query_log WHERE user_id = %s "
+                           "ORDER BY id DESC LIMIT %s", (user_id, limit)).fetchall()
+
+
+def user_question(user_id, query_id):
+    """One of the account's own questions with the answer as it was shown, or None (also for someone else's)."""
+    with connect() as con:
+        return con.execute("SELECT id, question, status, created_at, details->'shown' AS shown FROM query_log "
+                           "WHERE id = %s AND user_id = %s", (query_id, user_id)).fetchone()
 
 
 # ---------------- jobs (re-index / evaluation in the background) ----------------
