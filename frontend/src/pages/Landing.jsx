@@ -8,29 +8,23 @@ import { Link } from "react-router-dom";
 import "./landing.css";
 import logoMark from "../assets/logo-mark.svg";
 import Scales3D from "../components/Scales3D.jsx";
-import Cinema from "../components/Cinema.jsx";
+import Story3D from "../components/Story3D.jsx";
 import statue from "../assets/statue.webp";
-import chain1 from "../assets/chain1_scales.webp";
-import chain2 from "../assets/chain2_page.webp";
-import chain3 from "../assets/chain3_book.webp";
-import chain4 from "../assets/chain4_magnifier.webp";
-import chain5 from "../assets/chain5_check.webp";
-import chain6 from "../assets/chain6_gavel.webp";
 
 
 // the chain of six images (made by Yasser): THE PAGE travels from Justice's scales to the verdict
 const STEPS = [
-  { img: chain1, word: "WEIGHED", title: "Every question is weighed.",
+  { word: "WEIGHED", title: "Every question is weighed.",
     text: "Your question goes on the scale. Verdicta answers only from U.S. Supreme Court opinions filed from 2000 to 2024, nothing else." },
-  { img: chain2, word: "ASK", title: "Ask in plain words.",
+  { word: "ASK", title: "Ask in plain words.",
     text: "Type it the way you would ask a colleague: \"Can a law require life without parole for a juvenile, with no chance for the judge to consider his age?\"" },
-  { img: chain3, word: "READ", title: "Read the opinions, not the internet.",
+  { word: "READ", title: "Read the opinions, not the internet.",
     text: "Two searches, by meaning and by keywords, run through 72,502 passages of 2,415 decisions. The best 8 go to the model, and only those." },
-  { img: chain4, word: "QUOTED", title: "Every quote, word for word.",
+  { word: "QUOTED", title: "Every quote, word for word.",
     text: "Each sentence must quote the passage it cites, word for word. A quote that is not really there is removed." },
-  { img: chain5, word: "CHECKED", title: "Every citation, verified.",
+  { word: "CHECKED", title: "Every citation, verified.",
     text: "Six checks on every sentence. A citation that is not in CourtListener's table, or a dissent presented as the Court, never reaches you." },
-  { img: chain6, word: "VERDICT", title: "Verified, or it says so.",
+  { word: "VERDICT", title: "Verified, or it says so.",
     text: "Each citation opens the real passage. When the opinions do not support an answer, Verdicta says so instead of guessing.", cta: true },
 ];
 
@@ -105,10 +99,10 @@ export default function Landing({ info }) {
         </span>
       </nav>
 
-      <Cinema coverage={info.coverage} scenes={[
-        { img: statue, word: "VERIFIED", title: "Ask the Court. Hear only what it said.", accent: [3, 4, 5, 6],
+      <Story3D statue={statue} coverage={info.coverage} scenes={[
+        { title: "Ask the Court. Hear only what it said.", accent: [3, 4, 5, 6],
           text: "Verdicta answers questions about U.S. Supreme Court decisions and shows only sentences whose citations and quotes were checked against the opinions themselves." },
-        ...STEPS]} />
+        STEPS[0], STEPS[2], STEPS[3], STEPS[4], STEPS[5]]} />
 
       <div className="lp-marquee" aria-label="Some of the decisions in our corpus">
         <div className="lp-track">
