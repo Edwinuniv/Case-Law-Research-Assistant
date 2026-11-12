@@ -126,3 +126,6 @@ body.ad-dark main{max-width:1400px}
 .ad-score{font-size:13px;color:var(--dim)}
 .ad-score b{color:#fff}
 .ad .ad-lookup{display:inline-flex;margin:14px 0 0;padding:8px 14px;border-radius:12px;font-size:14px;white-space:normal}
+.ad textarea{width:100%}
+.ad-field input:not([type=checkbox]):not([type=number]):not([type=date]){min-width:220px}
+@media(max-width:600px){.ad-field,.ad-field input,.ad-field select,.ad-field textarea{width:100%;min-width:0!important;box-sizing:border-box}}
