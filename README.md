@@ -30,7 +30,7 @@ then restart uvicorn. Other administrator accounts are created on the admin page
 no sign-up page.
 
 The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
-address in `CONTACT_EMAIL` (.env, and the Railway variables online) and has a form; messages are read and deleted on
+addresses in `CONTACT_EMAIL`, separated by commas so the whole team receives the mail (.env, and the Railway variables online) and has a form; messages are read and deleted on
 the admin page "Messages". The privacy page describes what the site really collects: change it if the code changes that.
 
 The research page answers one question per message (no follow-up questions, as the instructor asked). A greeting or
