@@ -23,7 +23,7 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run build                              # writes frontend/dist; uvicorn serves it at http://127.0.0.1:8000
     npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
-The research (chat) page is http://127.0.0.1:8000 and needs no account. Only the administrator logs
+The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account. Only the administrator logs
 in ("Admin login" in the header, http://127.0.0.1:8000/login); the admin pages are
 http://127.0.0.1:8000/admin. Run `npm run build` again after each `git pull` that changes frontend/,
 then restart uvicorn. Other administrator accounts are created on the admin page "Accounts"; there is
