@@ -28,6 +28,7 @@ function paperTexture() {                                // THE PAGE: cream pape
 
 export default function Story3D({ scenes, statue, coverage }) {
   const mount = useRef(null);
+  const statueImg = useRef(null);
   const [part, setPart] = useState(0);
 
   useEffect(() => {
@@ -185,9 +186,15 @@ export default function Story3D({ scenes, statue, coverage }) {
       const now = window.__st3dTime ?? clock.getElapsedTime();   // __st3dTime: only set by our recording script, to film frame by frame
       const t = still ? 15 : now % LOOP;
 
+      // 0. the statue appears at the top right; her beam of light goes down to the scale, then she fades
+      const st = statueImg.current;
+      if (st) {
+        const o = win(t, 0, 0.7) * (1 - win(t, 3.0, 4.0));
+        st.style.opacity = o; st.style.transform = `translateY(${(1 - win(t, 0, 0.9)) * 3}vh) scale(${0.92 + 0.08 * o})`;
+      }
       // 1. the scale arrives, the beam of light lands on it, its pans sway
       const scaleIn = win(t, 0, 1.2) * (1 - win(t, 5.5, 7));
-      show(scale, scaleIn); scale.position.set(-win(t, 5.5, 7) * 6, -1.2, 0); scale.rotation.y = Math.sin(now * 0.3) * 0.3;
+      show(scale, scaleIn); scale.position.set(-win(t, 5.5, 7) * 1.5, -1.2 - win(t, 5.5, 7), -win(t, 5.5, 7) * 3); scale.rotation.y = Math.sin(now * 0.3) * 0.3;
       beamLight.material.opacity = 0.32 * win(t, 0.2, 0.9) * (1 - win(t, 1.6, 2.6));
       const weight = win(t, 2.6, 3.4) * (1 - win(t, 4.6, 5.4));                 // the page weighs the right pan down
       beam.rotation.z = Math.sin(now * 1.6) * 0.06 * (1 - weight) - 0.3 * weight;
@@ -268,7 +275,7 @@ export default function Story3D({ scenes, statue, coverage }) {
   const words = sc.title.split(" ");
   return (
     <section className={`st3d part-${part}`} ref={mount} aria-label="What Verdicta does">
-      <img className="st3d-statue" src={statue} alt="" aria-hidden="true" />
+      <img ref={statueImg} className="st3d-statue" src={statue} alt="" aria-hidden="true" />
       <div className="st3d-text" key={part} aria-live="polite">
         {part === 0 ? <span className="lp-kicker">U.S. Supreme Court research, verified</span> : <span className="st3d-n">{part}.</span>}
         <h1>
