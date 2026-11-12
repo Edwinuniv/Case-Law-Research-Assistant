@@ -59,9 +59,15 @@ def test_at_most_three_messages_per_address_in_ten_minutes(c, clean_db):
 def test_the_site_information_gives_the_contact_email_from_the_settings(c, monkeypatch):
     from app import config
     monkeypatch.setattr(config, "CONTACT_EMAIL", "team@example.org")
-    assert c.get("/api/site").json()["contact_email"] == "team@example.org"
+    assert c.get("/api/site").json()["contact_emails"] == ["team@example.org"]
     monkeypatch.setattr(config, "CONTACT_EMAIL", "")
-    assert c.get("/api/site").json()["contact_email"] is None             # not set: the page shows no address
+    assert c.get("/api/site").json()["contact_emails"] == []              # not set: the page shows no address
+
+
+def test_several_contact_addresses_all_receive_the_mail(c, monkeypatch):   # the three of us (team decision)
+    from app import config
+    monkeypatch.setattr(config, "CONTACT_EMAIL", " a@example.org, b@example.org ,c@example.org,, ")
+    assert c.get("/api/site").json()["contact_emails"] == ["a@example.org", "b@example.org", "c@example.org"]
 
 
 def test_an_administrator_reads_the_messages_newest_first_and_deletes_one(c, clean_db):
