@@ -111,6 +111,18 @@ request showed 325 output tokens instead of 1,437 (56 hidden reasoning tokens in
 as good is what conditions (1)-(5) measure. Groq returned no cached-token count on our free key (prompt_tokens_details
 empty, even for two identical requests): caching may not be active on the free tier; the request order is kept anyway.
 
+**Chat follow-ups, part 2 (added 2026-11-13, before any code or measurement; Edwin).** Edwin's meaning of follow-ups:
+a conversation about one case ("what did the victim do?", "and the prosecutor?", "so what happened is ...?",
+"explain it more"). Three changes, for follow-ups only: (i) the search stays in the chat's case: it looks only at the
+decisions cited by the chat's shown sentences, unless the new message names another case in the corpus (then that
+case), or the chat has no cited decision, or none of their passages reaches min_retrieval (then the whole corpus, as
+before); "new" in the chat starts again. (ii) The follow-up message tells the model to check a statement of the user
+("so what happened is ...") against the passages: confirm what they support, correct what they contradict, never agree
+only because the user said it. It is added to the new follow-up message, not to the rules, so an independent question
+(what run 4 and eval-v1 measure) is sent exactly as before. (iii) In a chat, "thanks", "ok" and the like get a one-line
+reply instead of the welcome text; outside a chat nothing changes. Measured with the follow-up pairs (followups-v1),
+like the rest of the follow-ups; checked live on a scripted chat before and after.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
