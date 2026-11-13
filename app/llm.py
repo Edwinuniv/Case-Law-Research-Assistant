@@ -107,14 +107,29 @@ FOLLOW_UP_NOTE = ("This is a follow-up in the same conversation. If the question
                   "citing the passage. Never agree with something only because the user said it.")
 
 
+def cited_passages(turn):
+    """The passages of an earlier turn that its shown sentences cited: the only ones a follow-up sends again
+    (EVALUATION.md, chat follow-ups part 3: all of them made a request too large for Groq's free tier)."""
+    cited = {pid for s in turn["sentences"] for pid in s["sources"]}
+    return {pid: p for pid, p in turn["passages"] if pid in cited}
+
+
+def estimate_tokens(messages):
+    """The size of a request before sending it: 3.5 characters a token, on the safe side (a real request: about 4.5)."""
+    return int(sum(len(m["content"]) for m in messages) / 3.5)
+
+
 def build_messages(question, passages, history=None, version="v1"):
-    """The request, oldest first and rebuilt identically every time, so that Groq's automatic prompt caching reuses its
-    beginning: the rules, then each earlier turn (the passages it brought, its question, its VERIFIED sentences only),
-    then the new turn. With no history and v1 it is exactly the request of the evaluated system."""
+    """The request, oldest first: the rules, then each earlier turn (the passages its answer cited, each passage only
+    once in the request, its question, its VERIFIED sentences only), then the new turn with its new passages.
+    With no history and v1 it is exactly the request of the evaluated system."""
     messages = [{"role": "system", "content": SYSTEM_PROMPT_V2 if version == "v2" else SYSTEM_PROMPT}]
+    sent = set()
     for i, turn in enumerate(history or []):
+        own = {pid: p for pid, p in cited_passages(turn).items() if pid not in sent}
+        sent |= set(own)
         note = f"\n\n{FOLLOW_UP_NOTE}" if i else ""            # the chat's first question was sent without it
-        messages.append({"role": "user", "content": turn_text(turn["question"], dict(turn["passages"])) + note})
+        messages.append({"role": "user", "content": turn_text(turn["question"], own) + note})
         verified = [{"text": s["text"], "sources": s["sources"], "quote": s.get("quote", "")} for s in turn["sentences"]]
         messages.append({"role": "assistant", "content": json.dumps({"status": "SUPPORTED" if verified else "NOT_SUPPORTED",
                                                                      "sentences": verified})})
