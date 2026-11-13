@@ -317,7 +317,7 @@ def reindex(body: Reindex):
 def users():
     """Never the password hashes."""
     with db.connect() as con:
-        return con.execute("SELECT id, email, role, active, locked_until, created_at FROM users ORDER BY id").fetchall()
+        return con.execute("SELECT id, email, role, plan, active, locked_until, created_at FROM users ORDER BY id").fetchall()
 
 
 # ---------------- the two logs (Yasser, SPEC 11, 2026-11-13) ----------------
@@ -365,6 +365,40 @@ def user_pdf(user_id: int, admin=Depends(api.require_admin)):
     if data is None:
         raise HTTPException(404, "No such account.")
     return pdf_response(data, f"verdicta_account_{user_id}.pdf")
+
+
+# ---------------- free and paid accounts (Joe, SPEC 11, 2026-11-14) ----------------
+# No real payment: an administrator switches the plan. The admin log gets the request by the middleware (app/logs.py).
+class Plan(BaseModel):
+    plan: str
+
+
+@router.post("/users/{user_id}/plan")
+def user_plan(user_id: int, body: Plan, admin=Depends(api.require_admin)):
+    if body.plan not in db.PLANS:
+        raise HTTPException(400, "The plan must be 'free' or 'paid'.")
+    old, why = db.set_plan(user_id, body.plan)
+    if why == "not found":
+        raise HTTPException(404, "No such account.")
+    if why == "not a user":
+        raise HTTPException(400, "Only a visitor's account has a plan (administrators have no limit).")
+    logs.log_user(user_id, "plan_change", {"from": old, "to": body.plan, "by": admin["email"]})
+    return users()
+
+
+class Limits(BaseModel):
+    free_daily_questions: int
+    paid_daily_questions: int
+
+
+@router.post("/limits")
+def limits_save(body: Limits):
+    """The questions per day of each plan (whole numbers from 1 to 1000)."""
+    if not all(1 <= n <= 1000 for n in (body.free_daily_questions, body.paid_daily_questions)):
+        raise HTTPException(400, "Each limit must be between 1 and 1000 questions a day.")
+    db.set_setting("free_daily_questions", body.free_daily_questions)
+    db.set_setting("paid_daily_questions", body.paid_daily_questions)
+    return {"free_daily_questions": body.free_daily_questions, "paid_daily_questions": body.paid_daily_questions}
 
 
 class NewUser(BaseModel):
