@@ -106,6 +106,10 @@ fuller answers must not answer more questions that should abstain; (5) mean kept
 than run 2 rechecked (the point of the change). If (1) or (2) fails, the old prompt stays. If (3), (4) or (5) fails, the
 old prompt stays and the numbers are reported. Then the TEST split is reported once, with the kept prompt.
 **Tokens.** Logged per question in the run (input, cached input, output), so the effect of caching is a measured number.
+Added 2026-11-13, still before any measurement: v2 also asks gpt-oss for `reasoning_effort` "low" (a setting). One live
+request showed 325 output tokens instead of 1,437 (56 hidden reasoning tokens instead of 1,046); whether the answers stay
+as good is what conditions (1)-(5) measure. Groq returned no cached-token count on our free key (prompt_tokens_details
+empty, even for two identical requests): caching may not be active on the free tier; the request order is kept anyway.
 
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
