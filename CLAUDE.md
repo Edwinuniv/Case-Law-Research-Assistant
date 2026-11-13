@@ -159,6 +159,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 - [x] Information pages (Edwin) — branch feature/site-pages: /privacy, /terms, /sources, /contact in the footer; contact form (app/api_site.py, table contact_messages, 3 per address in 10 minutes) and admin Messages page; 12 tests ⏳ CONTACT_EMAIL to choose; the final logo replaces assets/logo-mark.svg, logo.svg, favicon.svg
 
+- [x] Saved demo answers (meeting of 13 Nov) — branch feature/demo-answers: demo_answers table, app/demo.py, scripts/make_demo_answers.py; /api/ask returns the saved answer of an example question (no model call, logged, not counted in the limit); page label "Saved answer · checked on <date>"; 7 tests, 6 planted bugs caught ⏳ make the answers when the v2 run pauses (shared Groq budget); then again after v2 is chosen or not
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
