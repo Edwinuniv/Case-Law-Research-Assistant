@@ -64,6 +64,15 @@ def p(text, style=CELL):
     return Paragraph(escape("" if text is None else str(text)), style)
 
 
+def before_logs(u, started):
+    """True if the account existed before the logs began, so 'no login' only means 'not recorded'."""
+    return started is None or (u["created_at"] is not None and u["created_at"] < started)
+
+
+def last_login_text(u, started):
+    return when(u["last_login"]) or ("not recorded" if before_logs(u, started) else "never")
+
+
 def detail_text(d):
     """{'reason': 'wrong password'} -> 'reason: wrong password'"""
     return "; ".join(f"{k}: {v}" for k, v in (d or {}).items())
@@ -82,8 +91,8 @@ def table(head, rows, widths):
 def header(title, admin_email, width):
     made = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     logo = Image(str(SEAL), width=1.6 * cm, height=1.6 * cm)
-    t = Table([[logo, [p(title, TITLE), p(f"Verdicta · made {made} by {admin_email} · confidential: for the "
-                                         f"administrators only · all times UTC", SMALL)]]], colWidths=[2 * cm, width - 2 * cm])
+    t = Table([[logo, [p(title, TITLE), p(f"Verdicta · made {made} by {admin_email} · administrators only · "
+                                         f"times in UTC", SMALL)]]], colWidths=[2 * cm, width - 2 * cm])
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LINEBELOW", (0, 0), (-1, 0), 1, GOLD),
                            ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))
     return [t, Spacer(1, 10)]
@@ -107,10 +116,11 @@ def user_pdf(user_id, admin_email):
     found = summaries(user_id)
     if not found:
         return None
-    u, width = found[0], A4[0] - 3 * cm
+    u, width, started = found[0], A4[0] - 3 * cm, logs.logs_started()
     details = [["Email", u["email"]], ["Role", u["role"]], ["Plan", u.get("plan") or "—"],
                ["Active", "yes" if u["active"] else "no (disabled)"], ["Signed up", when(u["created_at"])],
-               ["Last login", when(u["last_login"]) or "never"], ["Number of logins", u["logins"]],
+               ["Last login", last_login_text(u, started)],
+               ["Number of logins", f"{u['logins']} since the logs began" if before_logs(u, started) else u["logins"]],
                ["Last activity", when(u["last_activity"]) or "—"], ["Questions asked", u["questions"]]]
     d = Table([[p(k, HEAD), p(v)] for k, v in details], colWidths=[4.2 * cm, width - 4.2 * cm])
     d.setStyle(TableStyle([("BACKGROUND", (0, 0), (0, -1), INK), ("LINEBELOW", (0, 0), (-1, -1), 0.25, LINE),
@@ -118,8 +128,9 @@ def user_pdf(user_id, admin_email):
     story = header(f"Account: {u['email']}", admin_email, width) + [p("Details", H2), d]
 
     if u["role"] == "admin":                                         # an administrator's actions are in the admin log
-        rows = [[when(r["at"]), r["action"], r["status"] or "", detail_text(r["detail"])]
-                for r in logs.admin_log(limit=2000) if r["admin_email"] == u["email"]]
+        # a failed login on an admin's email is an attempt ON the account (by anyone), not an action by the admin
+        rows = [[when(r["at"]), "failed login attempt on this account" if r["action"] == "login_failed" else r["action"],
+                 r["status"] or "", detail_text(r["detail"])] for r in logs.admin_log(limit=5000, admin_id=user_id)]
         story += [p(f"Admin log ({len(rows)} rows, newest first)", H2),
                   table(["When", "Action", "Status", "Detail"], rows or [["", "nothing yet", "", ""]],
                         [3 * cm, 7.5 * cm, 1.5 * cm, width - 12 * cm])]
@@ -140,10 +151,12 @@ def user_pdf(user_id, admin_email):
 
 def users_pdf(admin_email):
     """The list of all accounts, one row each, on landscape pages."""
-    us, width = summaries(), landscape(A4)[0] - 3 * cm
+    us, width, started = summaries(), landscape(A4)[0] - 3 * cm, logs.logs_started()
     rows = [[u["id"], u["email"], u["role"], u.get("plan") or "—", "yes" if u["active"] else "no", when(u["created_at"]),
-             when(u["last_login"]) or "never", u["logins"], when(u["last_activity"]) or "—", u["questions"]] for u in us]
-    story = header(f"All accounts ({len(us)})", admin_email, width) + [
+             last_login_text(u, started), u["logins"], when(u["last_activity"]) or "—", u["questions"]] for u in us]
+    note = (f"Logs kept since {when(started)} UTC: logins before that are not recorded." if started
+            else "No log row yet: logins are not recorded.")
+    story = header(f"All accounts ({len(us)})", admin_email, width) + [p(note, SMALL), Spacer(1, 6),
         table(["Id", "Email", "Role", "Plan", "Active", "Signed up", "Last login", "Logins", "Last activity", "Questions"],
               rows or [["", "no account", "", "", "", "", "", "", "", ""]],
               [1.1 * cm, 6.0 * cm, 1.6 * cm, 1.6 * cm, 1.4 * cm, 3 * cm, 3 * cm, 1.5 * cm, 3 * cm, 2.2 * cm])]
