@@ -7,7 +7,7 @@ import time
 from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from app import config, db, demo
+from app import config, db, demo, logs
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import answer, check_input
 
@@ -89,9 +89,18 @@ def login(request: Request, body: Login):
     user, message = db.check_login(body.email, body.password)
     if not user:
         FAILED_BY_IP[ip].append(time.time())
+        known = db.account_for_log(body.email)     # a known account: the failure goes to its log (SPEC 11, 13 Nov)
+        if known and known["role"] == "user":
+            logs.log_user(known["id"], "login_failed", {"reason": known["reason"]})
+        elif known:
+            logs.log_admin(known["id"], known["email"], "login_failed", detail={"reason": known["reason"]})
         raise HTTPException(401, message)          # always "Wrong email or password."
     request.session.clear()                        # a new session at every login (no session fixation)
     request.session.update({"user_id": user["id"], "email": user["email"]})
+    if user["role"] == "admin":
+        logs.log_admin(user["id"], user["email"], "login")
+    else:
+        logs.log_user(user["id"], "login")
     return {"user": {"email": user["email"], "role": user["role"]}, "csrf": csrf_token(request)}
 
 
@@ -127,11 +136,18 @@ def signup(request: Request, body: Login):
     email = body.email.lower().strip()
     request.session.clear()                                      # logged in at once, in a new session
     request.session.update({"user_id": user_id, "email": email})
+    logs.log_user(user_id, "signup")
     return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
 
 
 @router.post("/logout")
 def logout(request: Request):
+    uid, email = request.session.get("user_id"), request.session.get("email", "")
+    role = db.active_role(uid) if uid else None
+    if role == "admin":
+        logs.log_admin(uid, email, "logout")
+    elif role == "user":
+        logs.log_user(uid, "logout")
     request.session.clear()
     return {"ok": True}
 
@@ -229,6 +245,9 @@ def ask(request: Request, body: Question):
         return saved
     wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
+        uid = request.session.get("user_id")
+        if uid and db.active_role(uid) == "user":                   # the refusal goes to the account's log
+            logs.log_user(uid, "refused", {"reason": "questions per minute", "wait_seconds": wait})
         raise HTTPException(429, f"Too many questions from your address: at most {ASK_LIMIT_PER_IP} questions "
                                  f"per minute. Please wait {wait} seconds and try again.",
                             headers={"Retry-After": str(wait)})
@@ -237,6 +256,8 @@ def ask(request: Request, body: Question):
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
     shown = public_answer(r)
     shown["id"] = db.log_query(r, user_id=asker, shown=shown)   # FR28, SR41 (no account: user_id stays empty)
+    if asker and db.active_role(asker) == "user":
+        logs.log_user(asker, "question", {"status": shown["status"]}, query_id=shown["id"])
     return shown
 
 

@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app import api, api_admin, api_site, config, db
+from app import api, api_admin, api_site, config, db, logs
 from app.citations import CitationIndex
 from app.search import Searcher
 
@@ -33,6 +33,9 @@ app = FastAPI(title="Verdicta", lifespan=lifespan)
 if config.HTTPS_ONLY and config.SESSION_SECRET == "change-me-in-production":
     # with the default secret anyone could sign a session cookie and log in as admin
     raise RuntimeError("Set SESSION_SECRET in the environment before running online.")
+# the admin log (Yasser, SPEC 11, 2026-11-13): every change through /api/admin and every export is written to it.
+# Added BEFORE the session middleware, so it runs inside it and can read who is logged in.
+app.middleware("http")(logs.admin_logger)
 # session cookie: signed, HttpOnly (JavaScript cannot read it), Secure when HTTPS_ONLY=1, SameSite=Lax
 app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, max_age=8 * 3600,
                    https_only=config.HTTPS_ONLY, same_site="lax")
