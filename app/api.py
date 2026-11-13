@@ -170,7 +170,8 @@ def me(request: Request):
     return {"user": user, "csrf": csrf_token(request), "coverage": config.COVERAGE,
             "examples": config.EXAMPLE_QUESTIONS,
             "free_questions_left": free_questions_left(request, request.session.get("user_id") if user else None),
-            "plan": plan_info(request.session["user_id"]) if user and user["role"] == "user" else None}
+            "plan": plan_info(request.session["user_id"]) if user and user["role"] == "user" else None,
+            "follow_ups": bool(user) and bool(db.get_settings().get("follow_ups", False))}
 
 
 # ---------------- one question for a visitor without an account (SPEC 11, 2026-11-14) ----------------

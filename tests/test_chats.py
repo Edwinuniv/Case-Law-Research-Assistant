@@ -182,3 +182,9 @@ def test_14_questions_in_a_chat_count_toward_the_daily_limit(c, reader, clean_db
     chat = ask(c).json()["chat_id"]
     assert ask(c, SECOND, chat).status_code == 200
     assert ask(c, "A third one?", chat).status_code == 429
+
+
+def test_15_me_says_whether_follow_ups_are_on(c, reader, clean_db):     # so the page says what a chat does
+    assert c.get("/api/me").json()["follow_ups"] is False
+    follow_ups(clean_db, True)
+    assert c.get("/api/me").json()["follow_ups"] is True
