@@ -683,3 +683,22 @@ decision and gold quote of A008 and A012, already verified by the team for eval-
    7 pairs, so the quote is in the decision word for word.
 Structure checked with scripts/check_followups.py's own check_lines (0 problems); the word-for-word quote check needs
 the database and is Yasser's to run.
+
+## 2026-11-13 — Joe's follow-up pairs F008-F014 (drafted with help, eval/FOLLOWUPS.md)
+
+Joe asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Joe checks and approves
+each pair before the set is tagged followups-v1. What Claude did: built the pairs on Joe's own eval-v1 questions
+(A015, A016, A019, A024, A025, A026, A028), each of the six kinds at least once (two "explain"); the test pairs
+(F009, F010) follow test questions of eval-v1 (A019, A016). F010 reuses A016's gold decision and gold quote, already
+verified by the team for eval-v1. What is not verified yet:
+1. **Two quotes written from memory.** F008 (Obergefell, the Due Process and Equal Protection sentence) and F009
+   (Justice O'Connor's dissent in Roper) were written from memory, because Claude's workspace has no corpus. They
+   must be found word for word with check_followups / find_quote on Joe's database before the set is tagged.
+   Checked on Joe's database (2026-11-14): F009 found; F008 NOT FOUND, because our text reads "couples of the
+   same-sex" (with a hyphen) where Claude wrote "same sex" from memory. Fixed by copying the sentence from
+   find_quote's output.
+2. **An invented case to confirm.** F013 says there is no Supreme Court decision "Raich v. Holder"; Joe must run
+   python -m scripts.find_case "Raich" and see only Gonzales v. Raich.
+   Checked (2026-11-14): find_case "Raich" finds only 799995 Gonzales v. Raich.
+Structure checked with scripts/check_followups.py's own check_lines (0 problems apart from the quote check, which
+needs the database).
