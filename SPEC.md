@@ -527,3 +527,12 @@ logs (the privacy page says what is kept). (5) Only administrators read the logs
 GET /api/admin/log, each also downloadable as a CSV file (?format=csv). Rows are never edited; they are deleted only
 with their account (ON DELETE CASCADE for the user log). Joe's admin pages (part 2) show them; the PDF exports
 (part 4) include them.
+
+2026-11-13 - PDF exports (part 4 of docs/PLAN_2026-11-13.md, Yasser; Dr. Salloum's request 5). Written before the code.
+(1) **One user**: GET /api/admin/users/{id}/pdf: the account's details (email, role, plan if the account has one,
+active, signed up, last login, number of logins, last activity, number of questions), its log (newest first, from
+the user log) and its questions (newest first, from query_log: date, status, question; not the answers). (2) **All
+users**: GET /api/admin/users/pdf: one table row per account with the same details. (3) Admins only (403/401 for
+anyone else), and each download is written to the admin log (the path contains /pdf). (4) The figures are counted
+from the logs and query_log at the moment of the export; the PDF says when it was made and by which admin.
+(5) Made with ReportLab (BSD licence), no external service; no IP or password in the PDF (there is none in the logs).
