@@ -17,6 +17,7 @@ import QuestionForm from "./admin/QuestionForm.jsx";
 import Questions from "./admin/Questions.jsx";
 import Settings from "./admin/Settings.jsx";
 import Users from "./admin/Users.jsx";
+import UserDetail from "./admin/UserDetail.jsx";
 import Chat from "./pages/Chat.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
@@ -96,6 +97,7 @@ function App() {
               <Route path="corpus" element={<Corpus />} />
               <Route path="messages" element={<Messages />} />
               <Route path="users" element={<Users user={user} />} />
+              <Route path="users/:id" element={<UserDetail />} />   {/* one account (SPEC 11, 2026-11-14) */}
             </Route>
           )}
           <Route path="*" element={<Navigate to="/" />} />
