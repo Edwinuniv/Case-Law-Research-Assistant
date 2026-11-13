@@ -67,6 +67,8 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
+    python -m scripts.chat                     # a chat in the terminal: follow-up questions (answer v2; "new", "quit")
+    python -m scripts.chat_scripted eval/chats/counterman_messages.txt   # the same chat before/after a change (uses the model)
     python -m scripts.make_demo_answers        # answer the chat page's example questions once and save them (uses the model)
     python -m scripts.eval_retrieval "baseline"
     python -m scripts.eval_retrieval "eval-v1 baseline" --split test   # the numbers for the report

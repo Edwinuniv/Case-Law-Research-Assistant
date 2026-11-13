@@ -72,12 +72,23 @@ def test_an_independent_question_with_the_old_prompt_is_built_exactly_as_before(
     assert msgs == [{"role": "system", "content": llm.SYSTEM_PROMPT},
                     {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages({'P1': passage(1)})}\n\nQUESTION: q"}]
 
-def test_a_follow_up_starts_with_exactly_the_first_request_so_the_cache_can_reuse_it():
-    turn1 = llm.build_messages(FIRST["question"], dict(FIRST["passages"]), None, "v2")
+def test_a_follow_up_sends_the_earlier_turn_with_only_the_passages_its_answer_cited():   # part 3 (A): Groq's 413
     turn2 = llm.build_messages("What did the dissent say?", {"P3": passage(3)}, [FIRST], "v2")
-    assert turn2[:len(turn1)] == turn1                          # same beginning, byte for byte
-    assert turn2[len(turn1)]["role"] == "assistant" and "The Court struck it down." in turn2[len(turn1)]["content"]
+    assert turn2[0]["content"] == llm.SYSTEM_PROMPT_V2 and "Did the Court strike down the law?" in turn2[1]["content"]
+    assert "Text of passage 1." in turn2[1]["content"] and "Text of passage 2." not in turn2[1]["content"]
+    assert turn2[2]["role"] == "assistant" and "The Court struck it down." in turn2[2]["content"]
     assert turn2[-1]["role"] == "user" and "What did the dissent say?" in turn2[-1]["content"]
+    assert "Text of passage 3." in turn2[-1]["content"]
+
+def test_a_passage_cited_in_two_turns_is_sent_once():
+    again = {"question": "And why?", "passages": [("P1", passage(1)), ("P2", passage(2))],
+             "sentences": [{"text": "Because.", "sources": ["P1"], "quote": "Text of passage 1."}]}
+    msgs = llm.build_messages("And then?", {}, [FIRST, again], "v2")
+    assert json.dumps(msgs).count("Text of passage 1.") == 3       # sent once; quoted in the two answers
+
+def test_the_size_of_a_request_is_estimated_on_the_safe_side():                  # part 3 (B)
+    msgs = [{"role": "user", "content": "x" * 3500}, {"role": "assistant", "content": "y" * 3500}]
+    assert llm.estimate_tokens(msgs) == 2000                            # 3.5 characters a token (real: about 4.5)
 
 def test_a_follow_up_without_new_passages_sends_only_the_question():                       # reuse, fewer tokens
     msgs = llm.build_messages("And why?", {}, [FIRST], "v2")
@@ -126,3 +137,13 @@ def test_v2_asks_for_the_reasoning_effort_of_the_setting_and_v1_sends_none(monke
     llm.ask_model("q", {}, None, "v2", reasoning_effort="low")
     llm.ask_model("q", {})                                                                  # v1: as evaluated
     assert seen[0]["reasoning_effort"] == "low" and "reasoning_effort" not in seen[1]
+
+
+# --- Chat follow-ups, part 2 (EVALUATION.md, 2026-11-13): the user's statement is checked, not agreed with ---
+def test_a_follow_up_asks_the_model_to_check_what_the_user_says():               # "so what happened is ...?"
+    msgs = llm.build_messages("So he threatened her face to face?", {}, [FIRST], "v2")
+    assert llm.FOLLOW_UP_NOTE in msgs[-1]["content"] and "never agree" in llm.FOLLOW_UP_NOTE.lower()
+    assert llm.FOLLOW_UP_NOTE not in msgs[1]["content"]                 # the chat's first question is sent as before
+
+def test_an_independent_question_is_sent_without_the_follow_up_note():          # run 4 and eval-v1 unchanged
+    assert llm.FOLLOW_UP_NOTE not in json.dumps(llm.build_messages("q", {"P1": passage(1)}, None, "v2"))
