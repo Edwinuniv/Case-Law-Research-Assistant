@@ -527,3 +527,12 @@ logs (the privacy page says what is kept). (5) Only administrators read the logs
 GET /api/admin/log, each also downloadable as a CSV file (?format=csv). Rows are never edited; they are deleted only
 with their account (ON DELETE CASCADE for the user log). Joe's admin pages (part 2) show them; the PDF exports
 (part 4) include them.
+
+2026-11-13 - The two logs, clarified after Edwin's review of PR #96 (Yasser). (a) A failed login on an
+administrator's email is written to the admin log as an ATTEMPT ON that account (detail attempt_on_account: true;
+the PDF says "failed login attempt on this account"), made by anyone who typed that email, not an action by the
+administrator; on a visitor's account it is the user log's login_failed. (b) The reason of a failed login is the
+account's state before the try: "wrong password", "locked", "disabled", or "wrong password (account now locked)" for
+the try that locked it. (c) Only the last part of an admin path decides whether a read is logged (export, log, pdf).
+(d) An administrator's own questions are kept in query_log with their user_id, not in the logs (the logs are for
+visitors' accounts and for administrative actions); to be confirmed by the team.
