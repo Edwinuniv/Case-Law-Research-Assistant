@@ -511,3 +511,19 @@ returns one of them, anything else is 404 (another visitor's questions stay read
 and the role rule allows ('admin', 'user'). No name is asked: only the email and a bcrypt hash are stored. The privacy
 page says so. Changed files of others, told: app/db.py, app/api.py, app/api_admin.py, frontend/src/pages/Chat.jsx,
 the 5.11 tests (Joe); frontend/src/pages/Privacy.jsx (Edwin).
+
+2026-11-13 - The two logs (part 3 of docs/PLAN_2026-11-13.md, Yasser; Dr. Salloum's request 6). Written before the code.
+(1) **User log** (table user_log): one row per thing an account does, with the time and a small JSON detail. Events:
+signup, login, login_failed (wrong password or locked; the attempt is on a known account), logout, question (with the
+query_log id), follow_up (with the query_log id; Joe's chats), plan_change (Joe's plans), refused (a limit or a rule
+said no: e.g. too many questions; the reason is in the detail). Visitors without an account have no user log: their
+questions stay anonymous in query_log (FR28/SR41). (2) **Admin log** (table admin_log): everything an administrator
+does: login, logout, and every change made through /api/admin (any request that is not a GET), plus the exports
+(downloading a log, a list or a PDF). Each row keeps the admin, the action, the account it concerns if any, and the
+answer's HTTP status; it is written by one middleware, so a new admin route is logged without extra code. (3) Every
+action calls one helper (app/logs.py: log_user, log_admin). A log that cannot be written never blocks the action
+(the error goes to the server output). (4) No IP address, no browser information and no password are stored in the
+logs (the privacy page says what is kept). (5) Only administrators read the logs: GET /api/admin/users/{id}/log and
+GET /api/admin/log, each also downloadable as a CSV file (?format=csv). Rows are never edited; they are deleted only
+with their account (ON DELETE CASCADE for the user log). Joe's admin pages (part 2) show them; the PDF exports
+(part 4) include them.

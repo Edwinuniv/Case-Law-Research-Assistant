@@ -30,6 +30,9 @@ The administrator logs in at http://127.0.0.1:8000/login and lands on the admin 
 a visitor's account lands on the research page and cannot open the admin pages. Run `npm run build` again after each
 `git pull` that changes frontend/, then restart uvicorn. Administrator accounts are made with `python -m scripts.seed --admin`
 (ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
+Every account has an activity log (sign-up, logins, logouts, questions, refusals) and every administrator action is
+written to the admin log; administrators read them at `/api/admin/users/{id}/log` and `/api/admin/log`, and add
+`?format=csv` to download them as a file (the admin pages show them).
 
 The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
 addresses in `CONTACT_EMAIL`, separated by commas so the whole team receives the mail (.env, and the Railway variables online) and has a form; messages are read and deleted on

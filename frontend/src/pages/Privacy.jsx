@@ -34,6 +34,10 @@ export default function Privacy() {
           a hashed password (never the password itself) and the failed login attempts, to lock an account after repeated
           failures. Signing up asks for no name. Only your own account can see your list of questions; the team's
           administrators can see every question in the log, as for visitors without an account.</li>
+        <li><strong>Activity log of an account.</strong> For each account we keep a dated list of what it did: sign-up,
+          logins and failed logins, logouts, questions, and requests refused by a limit. The team's administrators can
+          read it and download it, to run and improve the site; every action of an administrator is itself recorded in a
+          separate log. No IP address and no password are kept in these logs, and an account's log is deleted with it.</li>
       </ul>
 
       <h2>What we do not collect</h2>

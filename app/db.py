@@ -93,6 +93,18 @@ CREATE TABLE IF NOT EXISTS jobs (
 CREATE TABLE IF NOT EXISTS contact_messages (      -- the contact form (Edwin, 2026-11-12); kept, see the privacy page
     id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     name TEXT NOT NULL, email TEXT NOT NULL, message TEXT NOT NULL);
+-- the two logs (Yasser, SPEC section 11, 2026-11-13): written only through app/logs.py; no IP, no password
+CREATE TABLE IF NOT EXISTS user_log (              -- everything an account does (shown in the user's details)
+    id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event TEXT NOT NULL CHECK (event IN ('signup', 'login', 'login_failed', 'logout', 'question', 'follow_up',
+                                         'plan_change', 'refused')),
+    query_id INT REFERENCES query_log(id) ON DELETE SET NULL, detail JSONB NOT NULL DEFAULT '{}');
+CREATE TABLE IF NOT EXISTS admin_log (             -- everything an administrator does
+    id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    admin_id INT REFERENCES users(id) ON DELETE SET NULL, admin_email TEXT NOT NULL,
+    action TEXT NOT NULL, target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    status INT, detail JSONB NOT NULL DEFAULT '{}');
 """
 
 INDEXES = """
@@ -100,6 +112,8 @@ CREATE INDEX IF NOT EXISTS citations_lookup ON citations (reporter, volume, page
 CREATE INDEX IF NOT EXISTS citation_map_citing ON citation_map (citing_opinion_id);
 CREATE INDEX IF NOT EXISTS chunks_decision ON chunks (decision_id);
 CREATE INDEX IF NOT EXISTS query_log_time ON query_log (created_at);
+CREATE INDEX IF NOT EXISTS user_log_user ON user_log (user_id, at);
+CREATE INDEX IF NOT EXISTS admin_log_time ON admin_log (at);
 """
 
 # Changes to tables that already exist (CREATE TABLE IF NOT EXISTS does not change them).
@@ -196,6 +210,20 @@ def check_login(email, password):
         else:
             con.execute("UPDATE users SET failed_logins = %s WHERE id = %s", (failed, u["id"]))
         return None, LOGIN_FAILED
+
+
+def account_for_log(email):
+    """After a failed login: the account of that email (id, email, role) and why it failed, for the logs only.
+    The visitor still gets the same message for every failure (SR36). None for an unknown email."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with connect() as con:
+        u = con.execute("SELECT id, email, role, active, locked_until FROM users WHERE email = %s",
+                        (email.lower().strip(),)).fetchone()
+    if not u:
+        return None
+    reason = ("disabled" if not u["active"] else "locked" if u["locked_until"] and u["locked_until"] > now
+              else "wrong password")
+    return {"id": u["id"], "email": u["email"], "role": u["role"], "reason": reason}
 
 
 def active_role(user_id):
