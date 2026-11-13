@@ -585,3 +585,24 @@ midnight, Beirut time.", BEFORE the search and the model; it is not saved in que
 (refused, reason "daily limit"). (5) Administrators have no daily limit. (6) GET /api/me gives a logged-in 'user' its
 plan, its daily limit and the questions left today, so the page can show them. (7) GET /api/admin/users gives each
 account's plan. The admin page buttons (switch the plan, change the limits) come with the admin pages (part 2).
+
+2026-11-14 - Saved chats for logged-in accounts, and follow-ups connected (part 1 of docs/PLAN_2026-11-13.md, Joe;
+Dr. Salloum's requests 1 and 2; Edwin's pipeline.answer(history=...)). Written before the code. (1) A logged-in account
+(user or admin) keeps its chats: a table chats (id, user_id, title = the first question cut to 80 characters,
+created_at, updated_at), and each question of a chat in query_log with its chat_id. Visitors without an account have
+no chat: a chat_id sent by a visitor is refused (401 "Log in to keep a chat."). (2) POST /api/ask takes an optional
+chat_id. Without it, an account's question starts a NEW chat; with it, the question is added to that chat, which must
+be the account's own (someone else's or an unknown chat: 404, before the model). The answer gives its chat_id.
+(3) Each answer keeps, in query_log, what a follow-up needs (pipeline.turn_of: the question, every passage the model
+had, and only the VERIFIED sentences with their quotes); a greeting or an ERROR keeps nothing (turn_of gives None).
+(4) **Follow-ups are switched by a setting, follow_ups, OFF by default** (EVALUATION.md, follow-up questions rule:
+switched on only after followups-v1 meets the rule; Edwin decides). Off: every question of a chat is answered on its
+own, exactly as now (pipeline.answer without history). On: a question in an existing chat is answered with
+answer(question, ..., history=[the chat's earlier turns, oldest first, the last 10 at most; the pipeline keeps the
+last followup_max_turns]); a new chat has no history. An administrator switches it with POST /api/admin/follow-ups
+{"on": true|false}. (5) The user log writes follow_up (with the chat id) for a question added to an existing chat, and
+question for the first question of a chat. (6) GET /api/chats lists the account's own chats, newest first (id, title,
+updated_at, number of questions); GET /api/chats/{id} gives one of its own chats with every question and the answer
+as it was shown; someone else's: 404; not logged in: 401. (7) The daily limit (plans) counts every question, in a chat
+or not. (8) The research page shows "My chats" for an account (a new chat, or an earlier one continued) and keeps the
+page-only list for a visitor. /api/history stays as it is (Yasser's, 2026-11-12).

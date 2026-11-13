@@ -147,3 +147,4 @@ main:has(.rs){max-width:none;margin:0;padding:0}
 .rs-locked-btn{padding:9px 20px;border-radius:999px;border:1px solid var(--edge);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
 .rs-locked-btn.main{background:var(--gold);border-color:var(--gold);color:#1c1917}
 .rs-plan{color:var(--gold)}   /* an account's plan and questions left today (SPEC 11, 2026-11-14) */
+.rs-list button.on{background:rgba(251,191,36,.10);color:var(--ink)}   /* the open chat (SPEC 11, 2026-11-14) */

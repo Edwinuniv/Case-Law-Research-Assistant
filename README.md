@@ -29,6 +29,9 @@ after it, the page asks them to log in or sign up.
 An account is on the free plan (10 questions a day) or the paid plan (100 a day; no real payment): an administrator
 switches it (POST /api/admin/users/{id}/plan) and changes the two limits (POST /api/admin/limits). A day starts at
 midnight, Beirut time. Administrators have no daily limit.
+A logged-in account keeps its chats ("My chats" on the research page; GET /api/chats). Follow-up questions read the
+chat only when an administrator switches them on (POST /api/admin/follow-ups {"on": true}); they are off by default
+until the follow-up measurement in EVALUATION.md is done.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);

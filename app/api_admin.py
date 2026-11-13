@@ -401,6 +401,17 @@ def limits_save(body: Limits):
     return {"free_daily_questions": body.free_daily_questions, "paid_daily_questions": body.paid_daily_questions}
 
 
+class FollowUps(BaseModel):
+    on: bool
+
+
+@router.post("/follow-ups")
+def follow_ups_switch(body: FollowUps):
+    """Follow-ups in saved chats: off until followups-v1 meets the rule in EVALUATION.md (Edwin decides)."""
+    db.set_setting("follow_ups", body.on)
+    return {"follow_ups": body.on}
+
+
 class NewUser(BaseModel):
     email: str
     password: str
