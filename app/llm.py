@@ -59,14 +59,17 @@ def _client():
                   timeout=config.LLM_TIMEOUT_SECONDS, max_retries=0)
 
 
-def _ask_json(system, user, messages=None):
-    """messages: a whole conversation (answer v2); otherwise the system prompt and one user message."""
+def _ask_json(system, user, messages=None, reasoning_effort=None):
+    """messages: a whole conversation (answer v2); otherwise the system prompt and one user message.
+    reasoning_effort (v2 only): gpt-oss thinks before answering; "low" measured on 2026-11-13: 325 output tokens
+    instead of 1,437 for the same request (56 reasoning tokens instead of 1,046)."""
+    extra = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
     last_error = None
     for attempt in range(1 + config.LLM_JSON_RETRIES):       # SR20: one retry for unreadable JSON
         try:
             r = _client().chat.completions.create(
                 model=config.LLM_MODEL, temperature=0, response_format={"type": "json_object"},
-                messages=messages or [{"role": "system", "content": system}, {"role": "user", "content": user}])
+                messages=messages or [{"role": "system", "content": system}, {"role": "user", "content": user}], **extra)
             record_usage(r)
             return json.loads(r.choices[0].message.content)
         except APITimeoutError as e:                         # SR4: cancelled after 30 s, no retry
@@ -111,10 +114,10 @@ def build_messages(question, passages, history=None, version="v1"):
     return messages
 
 
-def ask_model(question, passages, history=None, version="v1"):
+def ask_model(question, passages, history=None, version="v1", reasoning_effort=None):
     if not history and version == "v1":                      # the evaluated request, unchanged
         return _ask_json(SYSTEM_PROMPT, f"PASSAGES:\n\n{format_passages(passages)}\n\nQUESTION: {question}")
-    return _ask_json(None, None, build_messages(question, passages, history, version))
+    return _ask_json(None, None, build_messages(question, passages, history, version), reasoning_effort)
 
 
 def judge_support(statement, passage_text):

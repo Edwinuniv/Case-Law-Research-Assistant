@@ -119,7 +119,7 @@ def answer(question, searcher, index, settings, skip_gate=False, history=None):
     try:
         version = settings.get("prompt_version", "v1")
         draft = llm.ask_model(r["question"], passages) if version == "v1" else \
-            llm.ask_model(r["question"], passages, None, version)
+            llm.ask_model(r["question"], passages, None, version, settings.get("reasoning_effort", "low"))
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
@@ -172,7 +172,8 @@ def answer_follow_up(question, searcher, index, settings, history):
     r["top_score"] = max((p["score"] for p in passages.values()), default=0.0)
     t = time.perf_counter()
     try:
-        draft = llm.ask_model(r["question"], new, history, settings.get("prompt_version", "v2"))
+        draft = llm.ask_model(r["question"], new, history, settings.get("prompt_version", "v2"),
+                              settings.get("reasoning_effort", "low"))
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
