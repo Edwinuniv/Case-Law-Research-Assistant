@@ -4,9 +4,9 @@ database at each request (SR35, NFR8). A route cannot be added here without that
 import datetime
 import threading
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from pydantic import BaseModel
-from app import api, db, evaluate
+from app import api, db, evaluate, logs
 
 router = APIRouter(prefix="/api/admin",
                    dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -318,6 +318,31 @@ def users():
     """Never the password hashes."""
     with db.connect() as con:
         return con.execute("SELECT id, email, role, active, locked_until, created_at FROM users ORDER BY id").fetchall()
+
+
+# ---------------- the two logs (Yasser, SPEC 11, 2026-11-13) ----------------
+# Read by Joe's admin pages (part 2) and by the PDF exports (part 4). ?format=csv downloads the same rows as a
+# file; reading a log is itself written to the admin log (app/logs.py, LOGGED_READS).
+def log_response(rows, fmt, filename):
+    if fmt == "csv":
+        return Response(logs.as_csv(rows), media_type="text/csv",
+                        headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    return logs.as_json(rows)
+
+
+@router.get("/users/{user_id}/log")
+def user_log(user_id: int, format: str = "json"):
+    """Everything this account did, newest first."""
+    with db.connect() as con:
+        if not con.execute("SELECT 1 FROM users WHERE id = %s", (user_id,)).fetchone():
+            raise HTTPException(404, "No such account.")
+    return log_response(logs.user_log(user_id), format, f"verdicta_user_{user_id}_log.csv")
+
+
+@router.get("/log")
+def admin_log(format: str = "json"):
+    """Everything the administrators did, newest first."""
+    return log_response(logs.admin_log(), format, "verdicta_admin_log.csv")
 
 
 class NewUser(BaseModel):
