@@ -1,0 +1,28 @@
+
+=== [1] Hello, what did the Court decide about true threats and the First Amendment?
+LOW_CONFIDENCE | support score between the two thresholds | support 0.25 | tokens {'input': 4067, 'cached': 0, 'output': 328}
+  new passages: P1 Counterman v. Colorado (2023) Opinion; P2 Counterman v. Colorado (2023) Opinion; P3 Counterman v. Colorado (2023) Opinion; P4 Counterman v. Colorado (2023) Opinion; P5 Counterman v. Colorado (2023) Opinion; P6 Counterman v. Colorado (2023) Opinion; P7 Counterman v. Colorado (2023) Opinion; P8 Counterman v. Colorado (2023) Opinion
+  KEPT ['P2'] The Court held that true threats are not protected by the First Amendment but that the First Amendment requires a subjective mens‑rea requirement in true‑threats prosecutions, and that recklessness is sufficient to satisfy that requirement.
+  REMOVED ['P3'] It explained that the existence of a threat depends on what the statement conveys, not on the mental state of the author, and that a recklessness standard meets the constitutional floor for true‑threat cases. | quote not found in the cited passage
+  REMOVED ['P6'] The Court further reasoned that maintaining the traditional true‑threats doctrine prevents over‑criminalization of speech and that a recklessness standard is “quite sufficient” for true‑threat prosecutions. | quote not found in the cited passage
+
+=== [2] What did the victim do?
+LOW_CONFIDENCE | support score between the two thresholds | support 0.70 | tokens {'input': 6259, 'cached': 0, 'output': 144}
+  new passages: P9 Counterman v. Colorado (2023) Opinion; P10 Counterman v. Colorado (2023) Opinion; P11 Counterman v. Colorado (2023) Opinion; P12 Counterman v. Colorado (2023) Opinion
+  KEPT ['P10'] The victim feared for her life and her daily existence was upended by the threats.
+
+=== [3] And what did the prosecutor do?
+ERROR | language model failed: APIStatusError | support 0.00 | tokens None
+  new passages: P13 Ramdass v. Angelone (2000) Majority opinion (Kennedy); P14 Parker v. Matthews (2012) Opinion (per curiam); P15 Michigan v. Bryant (2011) Opinion; P16 Brown v. Payton (2005) Majority opinion (Kennedy); P17 Bradshaw v. Stumpf (2005) Majority opinion (Connor); P18 Whatley v. Warden, Georgia Diagnostic an (2021) Opinion; P19 Hartman v. Moore (2006) Majority opinion (Souter); P20 Williams v. Illinois (2012) Concurring opinion (Breyer)
+
+=== [4] So what happened is that he threatened her face to face and was convicted for it?
+ERROR | language model failed: APIStatusError | support 0.00 | tokens None
+  new passages: P13 Giles v. California (2008) Majority opinion (Scalia); P14 Bell v. Cone (2005) Opinion (per curiam); P15 Porter v. McCollum (2009) Opinion (per curiam); P16 Crawford v. Washington (2004) Opinion; P17 Muhammad v. Close (2004) Opinion (per curiam); P18 Elmore v. Holbrook (2016) Opinion; P19 Carmell v. Texas (2000) Majority opinion (Stevens); P20 Paroline v. United States (2014) Majority opinion (Kennedy)
+
+=== [5] Explain it more
+ERROR | language model failed: APIStatusError | support 0.00 | tokens None
+  new passages: P13 Michigan v. Bryant (2011) Opinion; P14 Bell v. Cone (2005) Opinion (per curiam); P15 Paroline v. United States (2014) Dissenting opinion (Sotomayor); P16 Michigan v. Bryant (2011) Opinion; P17 Kahler v. Kansas (2020) Opinion (Kagan); P18 Paroline v. United States (2014) Majority opinion (Kennedy); P19 Dolan v. United States (2010) Opinion; P20 House v. Bell (2006) Concurring in part (Roberts)
+
+=== [6] thanks
+WELCOME | I answer questions about U.S. Supreme Court opinions filed 2000–2024 (CourtListener release 2024-12- | support 0.00 | tokens None
+  new passages: none

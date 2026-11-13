@@ -71,7 +71,10 @@ export default function Answer({ a, onOpen }) {
         <span className="an-support" title="How well the kept sentences are supported (0 to 1)">
           <SupportRing value={a.support_score} />Support <b>{a.support_score.toFixed(2)}</b></span>
         <span title="Similarity of the best passage found">Best passage <b>{a.top_score.toFixed(2)}</b></span>
-        <span>{(a.ms_total / 1000).toFixed(1)} s</span>
+        {a.demo                                          // an example question: the answer saved once (app/demo.py)
+          ? <span className="an-saved" title="Made once by the same pipeline and checks, then saved: no model call now">
+              Saved answer · checked on <b>{a.saved_at.slice(0, 10)}</b></span>
+          : <span>{(a.ms_total / 1000).toFixed(1)} s</span>}
         {a.passages.length > 0 &&
           <button className="an-toggle" onClick={() => setShowPassages(!showPassages)} aria-expanded={showPassages}>
             {showPassages ? "Hide" : "Show"} the {a.passages.length} retrieved passages
