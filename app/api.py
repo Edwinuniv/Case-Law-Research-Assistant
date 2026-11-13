@@ -86,14 +86,19 @@ def login(request: Request, body: Login):
     ip = request.client.host if request.client else "unknown"
     if too_many_failures(ip):
         raise HTTPException(429, "Too many failed logins from this address. Try again later.")
+    before = db.account_for_log(body.email)       # the account's state BEFORE this try (for the log's reason)
     user, message = db.check_login(body.email, body.password)
     if not user:
         FAILED_BY_IP[ip].append(time.time())
-        known = db.account_for_log(body.email)     # a known account: the failure goes to its log (SPEC 11, 13 Nov)
-        if known and known["role"] == "user":
-            logs.log_user(known["id"], "login_failed", {"reason": known["reason"]})
-        elif known:
-            logs.log_admin(known["id"], known["email"], "login_failed", detail={"reason": known["reason"]})
+        if before:                                 # a known account: the failure goes to its log (SPEC 11, 13 Nov)
+            reason = before["reason"]
+            if reason == "wrong password" and (db.account_for_log(body.email) or {}).get("reason") == "locked":
+                reason = "wrong password (account now locked)"     # this try was the one that locked it
+            if before["role"] == "user":
+                logs.log_user(before["id"], "login_failed", {"reason": reason})
+            else:                                  # an attempt ON an admin account, by anyone (SPEC 11)
+                logs.log_admin(before["id"], before["email"], "login_failed",
+                               detail={"reason": reason, "attempt_on_account": True})
         raise HTTPException(401, message)          # always "Wrong email or password."
     request.session.clear()                        # a new session at every login (no session fixation)
     request.session.update({"user_id": user["id"], "email": user["email"]})

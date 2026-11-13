@@ -539,6 +539,15 @@ ERROR while making them (e.g. the model's daily limit) is not saved; the answer 
 question goes through the pipeline as before, so the evaluation is not affected. Files of others changed and told:
 app/db.py (one new table) and app/api.py (the check at the start of /api/ask) (Joe).
 
+2026-11-13 - The two logs, clarified after Edwin's review of PR #96 (Yasser). (a) A failed login on an
+administrator's email is written to the admin log as an ATTEMPT ON that account (detail attempt_on_account: true;
+the PDF says "failed login attempt on this account"), made by anyone who typed that email, not an action by the
+administrator; on a visitor's account it is the user log's login_failed. (b) The reason of a failed login is the
+account's state before the try: "wrong password", "locked", "disabled", or "wrong password (account now locked)" for
+the try that locked it. (c) Only the last part of an admin path decides whether a read is logged (export, log, pdf).
+(d) An administrator's own questions are kept in query_log with their user_id, not in the logs (the logs are for
+visitors' accounts and for administrative actions); to be confirmed by the team.
+
 2026-11-13 - PDF exports (part 4 of docs/PLAN_2026-11-13.md, Yasser; Dr. Salloum's request 5). Written before the code.
 (1) **One user**: GET /api/admin/users/{id}/pdf: the account's details (email, role, plan if the account has one,
 active, signed up, last login, number of logins, last activity, number of questions), its log (newest first, from
