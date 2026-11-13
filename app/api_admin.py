@@ -315,9 +315,11 @@ def reindex(body: Reindex):
 # ---------------- accounts (FR12): an administrator creates the other administrators ----------------
 @router.get("/users")
 def users():
-    """Never the password hashes."""
+    """Every account with its details (SPEC 11, 2026-11-14), counted like the PDF exports (exports.summaries, Yasser):
+    signed up, last login, number of logins, last activity, plan, number of questions. Never the password hash."""
     with db.connect() as con:
-        return con.execute("SELECT id, email, role, plan, active, locked_until, created_at FROM users ORDER BY id").fetchall()
+        locked = {r["id"]: r["locked_until"] for r in con.execute("SELECT id, locked_until FROM users").fetchall()}
+    return [{**u, "locked_until": locked.get(u["id"])} for u in exports.summaries()]
 
 
 # ---------------- the two logs (Yasser, SPEC 11, 2026-11-13) ----------------
@@ -356,6 +358,24 @@ def pdf_response(data, filename):
 def users_pdf(admin=Depends(api.require_admin)):
     """The list of all accounts with their details."""
     return pdf_response(exports.users_pdf(admin["email"]), "verdicta_accounts.pdf")
+
+
+@router.get("/users/{user_id}")              # after /users/pdf, or "pdf" would be read as an id
+def user_details(user_id: int, admin=Depends(api.require_admin)):
+    """One account: its details, its questions (newest first), its chats and its log (the user log of a visitor's
+    account; for an administrator, the admin log rows they made). Reading it is written to the admin log."""
+    found = exports.summaries(user_id)
+    if not found:
+        raise HTTPException(404, "No such account.")
+    u = found[0]
+    with db.connect() as con:
+        u["locked_until"] = con.execute("SELECT locked_until FROM users WHERE id = %s", (user_id,)).fetchone()["locked_until"]
+        questions = con.execute("SELECT id, created_at, status, question, chat_id FROM query_log WHERE user_id = %s "
+                                "ORDER BY id DESC LIMIT 500", (user_id,)).fetchall()
+    log = logs.user_log(user_id) if u["role"] == "user" else logs.admin_log(admin_id=user_id)
+    logs.log_admin(admin["id"], admin["email"], f"GET /api/admin/users/{user_id}", target_user_id=user_id, status=200)
+    return {"user": logs.as_json([u])[0], "questions": logs.as_json(questions),
+            "chats": logs.as_json(db.list_chats(user_id)), "log": logs.as_json(log)}
 
 
 @router.get("/users/{user_id}/pdf")
