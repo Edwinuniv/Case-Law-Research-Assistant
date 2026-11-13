@@ -55,7 +55,6 @@ function LoginForm({ onLogin }) {
 
   return (
     <form onSubmit={submit} className="au-form">
-      <GoogleButton mode="login" onLogin={onLogin} />
       <label htmlFor="email">Email</label>
       <input id="email" type="email" autoComplete="username" required value={email} placeholder="you@example.com"
              onChange={(e) => setEmail(e.target.value)} />
@@ -63,6 +62,7 @@ function LoginForm({ onLogin }) {
       <PasswordInput id="password" value={password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
       {error && <p className="au-error" role="alert">{error}</p>}
       <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Checking" /> : "Log in"}</button>
+      <GoogleButton mode="login" onLogin={onLogin} />
       <p className="au-switch">Don't have an account? <Link to="/signup">Sign up</Link></p>
     </form>
   );
@@ -92,7 +92,6 @@ function SignupForm({ onLogin }) {
 
   return (
     <form onSubmit={submit} className="au-form">
-      <GoogleButton mode="signup" onLogin={onLogin} />
       <label htmlFor="semail">Email</label>
       <input id="semail" type="email" autoComplete="email" required value={email} placeholder="you@example.com"
              onChange={(e) => setEmail(e.target.value)} />
@@ -101,6 +100,7 @@ function SignupForm({ onLogin }) {
                      onChange={(e) => setPassword(e.target.value)} />
       {error && <p className="au-error" role="alert">{error}</p>}
       <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Creating" /> : "Create account"}</button>
+      <GoogleButton mode="signup" onLogin={onLogin} />
       <p className="au-small">We keep only your email and your questions, so you find them again. <Link to="/privacy">Privacy</Link></p>
       <p className="au-switch">Already have an account? <Link to="/login">Log in</Link></p>
     </form>

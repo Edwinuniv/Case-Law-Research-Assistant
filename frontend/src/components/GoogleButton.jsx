@@ -65,9 +65,9 @@ export default function GoogleButton({ mode, onLogin }) {
   if (!clientId) return null;
   return (
     <div className="au-google">
+      <div className="au-or"><span>or</span></div>
       <div ref={box} className="au-google-btn" />
       {error && <p className="au-error" role="alert">{error}</p>}
-      <div className="au-or"><span>or with your email</span></div>
     </div>
   );
 }

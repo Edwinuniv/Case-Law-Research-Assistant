@@ -91,7 +91,7 @@
 @media(prefers-reduced-motion:reduce){.au *{animation:none!important;transition:none!important}}
 
 /* Continue with Google (SPEC 11, 2026-11-13): Google draws its own button inside .au-google-btn */
-.au-google{display:flex;flex-direction:column;margin:0 0 4px}
-.au-google-btn{display:flex;justify-content:center;min-height:44px;margin:0 0 14px}
-.au-or{display:flex;align-items:center;gap:12px;margin:2px 0 18px;font-size:12px;color:#8a837d;text-transform:uppercase;letter-spacing:.08em}
+.au-google{display:flex;flex-direction:column;margin:18px 0 0}
+.au-google-btn{display:flex;justify-content:center;min-height:44px}
+.au-or{display:flex;align-items:center;gap:12px;margin:0 0 14px;font-size:12px;color:#8a837d;text-transform:uppercase;letter-spacing:.08em}
 .au-or::before,.au-or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
