@@ -83,6 +83,30 @@ current verifier removes for another reason (checks 1 and 3-6) is kept. Then tau
 with the verifier that was kept (threshold rule above), and the TEST split is reported once with it.
 Both verifiers' TUNE numbers are reported, whatever the result.
 
+## Answer v2 rule (written 2026-11-13, before any code or measurement; Edwin)
+After the meeting of 2026-11-13 (SPEC section 11): fuller answers, a fixed message for questions that are not about the
+law, follow-ups that read the whole chat, prompt caching and fewer tokens. These change the system measured in run 2,
+so they are measured again, on eval-v1, before the live site uses them.
+**What changes.** (a) The prompt asks for a fuller answer: what the Court decided, why, and what a dissent or concurrence
+said when it matters; every sentence still cites passages and copies a word-for-word quote, so the six checks are
+unchanged and a sentence that fails one is removed. (b) If the question is not about law or court decisions, the model
+returns a flag and our code shows a fixed message ("Verdicta is a case-law research assistant..."); for the metrics it
+is an abstention (status NOT_SUPPORTED), so abstention precision and recall keep their definitions. (c) A follow-up
+sends the conversation as messages, oldest first and rebuilt identically each time, so Groq's automatic prompt caching
+can reuse the beginning: the rules, then each earlier turn (its passages, its question, its verified answer), then the
+new turn. The follow-up's search runs on the earlier question and the new one together; if its best decision is
+already in the chat, at most 4 new passages are added, otherwise up to 8; only the last turns are kept. The model may
+cite any passage of the chat; earlier answers are context, never a source.
+**How it is measured.** A new run on eval-v1 with the new prompt (independent questions), all 85 questions, the same
+data, settings and thresholds (tau_abstain 0.20, chosen on run 2, is not tuned again); TUNE split + adversarial only
+while deciding. Follow-ups are measured separately on followups-v1 (Follow-up questions rule above).
+**Kept only if ALL hold on TUNE + adversarial:** (1) 0 false citations shown; (2) no must_not_appear text shown;
+(3) abstention precision and recall each at least 0.80; (4) abstention recall not lower than run 2 rechecked (0.941):
+fuller answers must not answer more questions that should abstain; (5) mean kept sentences per answered question higher
+than run 2 rechecked (the point of the change). If (1) or (2) fails, the old prompt stays. If (3), (4) or (5) fails, the
+old prompt stays and the numbers are reported. Then the TEST split is reported once, with the kept prompt.
+**Tokens.** Logged per question in the run (input, cached input, output), so the effect of caching is a measured number.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
