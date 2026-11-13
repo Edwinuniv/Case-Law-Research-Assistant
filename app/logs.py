@@ -36,6 +36,10 @@ def log_admin(admin_id, admin_email, action, target_user_id=None, status=None, d
     """One row in the admin log. action: a short text such as "login" or "POST /api/admin/settings"."""
     try:
         with db.connect() as con:
+            if target_user_id is not None and not con.execute("SELECT 1 FROM users WHERE id = %s",
+                                                              (target_user_id,)).fetchone():
+                # an action about an account that does not exist (e.g. a 404): keep the row, the id in the detail
+                detail, target_user_id = {**(detail or {}), "target_not_found": target_user_id}, None
             con.execute("INSERT INTO admin_log (admin_id, admin_email, action, target_user_id, status, detail) "
                         "VALUES (%s, %s, %s, %s, %s, %s)",
                         (admin_id, admin_email, action, target_user_id, status, Jsonb(detail or {})))
