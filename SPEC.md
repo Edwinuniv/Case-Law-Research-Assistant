@@ -511,3 +511,16 @@ returns one of them, anything else is 404 (another visitor's questions stay read
 and the role rule allows ('admin', 'user'). No name is asked: only the email and a bcrypt hash are stored. The privacy
 page says so. Changed files of others, told: app/db.py, app/api.py, app/api_admin.py, frontend/src/pages/Chat.jsx,
 the 5.11 tests (Joe); frontend/src/pages/Privacy.jsx (Edwin).
+
+2026-11-13 - Meeting with Dr. Salloum (Edwin, Yasser, Joe). He asked for: (1) follow-up questions, now required, the
+model reading the whole chat; (2) visitors without an account limited to one or two questions, their chat not saved;
+only logged-in users keep a chat; (3) admins seeing every question asked; (4) a users list with details for the admins;
+(5) PDF exports of one user or of all users; (6) a log per user (shown in the user's details) and a separate admin
+log; (7) free and paid accounts; (8) smarter, fuller answers, follow-ups reusing the passages already sent unless new
+ones are needed; (9) prompt caching and fewer tokens; (10) demo questions and their answers saved in the database for
+the jury; (11) still no invented citation, no opinion, nothing unrelated to the passages or the law: such a question
+gets a simple message that Verdicta is a case-law research assistant. Team decisions the same day: 1 question per
+browser session without an account, logged for the admins but no saved chat; free 10 questions a day, paid 100 (set by
+an admin, no real payment). This changes SR33 (accounts exist; a visitor gets one question) and FR1 (follow-ups); FR28
+stays (every question logged). Plan, split and order: docs/PLAN_2026-11-13.md.
+
