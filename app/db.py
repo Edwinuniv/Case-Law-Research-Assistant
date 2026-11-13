@@ -131,6 +131,10 @@ CREATE INDEX IF NOT EXISTS query_log_user ON query_log (user_id, id);
 -- the delete is gone and the rule allows both roles. Safe to run at every start.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user'));
+-- 2026-11-14 (Joe, SPEC section 11): free and paid accounts; every account made before is free.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free';
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_plan_check;
+ALTER TABLE users ADD CONSTRAINT users_plan_check CHECK (plan IN ('free', 'paid'));
 """
 
 
@@ -236,6 +240,39 @@ def active_role(user_id):
     with connect() as con:
         u = con.execute("SELECT active, role FROM users WHERE id = %s", (user_id,)).fetchone()
     return u["role"] if u and u["active"] else None
+
+
+# ---------------- plans and questions per day (SPEC 11, 2026-11-14) ----------------
+PLANS = ("free", "paid")
+# midnight today in Beirut, as a time PostgreSQL can compare with created_at
+BEIRUT_MIDNIGHT = "(date_trunc('day', now() AT TIME ZONE 'Asia/Beirut') AT TIME ZONE 'Asia/Beirut')"
+
+
+def questions_today(user_id):
+    """The account's real answers since midnight, Beirut time: greetings, ERRORs and saved demo answers do not count."""
+    with connect() as con:
+        return con.execute(f"""SELECT count(*) AS n FROM query_log WHERE user_id = %s
+                               AND created_at >= {BEIRUT_MIDNIGHT} AND status NOT IN ('WELCOME', 'ERROR')
+                               AND NOT coalesce((details -> 'shown' ->> 'demo')::boolean, FALSE)""",
+                           (user_id,)).fetchone()["n"]
+
+
+def user_plan(user_id):
+    with connect() as con:
+        row = con.execute("SELECT plan FROM users WHERE id = %s", (user_id,)).fetchone()
+    return row["plan"] if row else None
+
+
+def set_plan(user_id, plan):
+    """Changes a 'user' account's plan. Returns (old plan, None), or (None, why): 'not found' or 'not a user'."""
+    with connect() as con:
+        row = con.execute("SELECT role, plan FROM users WHERE id = %s FOR UPDATE", (user_id,)).fetchone()
+        if not row:
+            return None, "not found"
+        if row["role"] != "user":
+            return None, "not a user"
+        con.execute("UPDATE users SET plan = %s WHERE id = %s", (plan, user_id))
+    return row["plan"], None
 
 
 def user_is_active_admin(user_id):
