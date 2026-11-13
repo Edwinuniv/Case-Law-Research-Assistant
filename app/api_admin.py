@@ -235,6 +235,52 @@ def abstentions(status: str = "NOT_SUPPORTED"):
     return out
 
 
+# ---------------- every question asked (Joe, SPEC 11, 2026-11-14; Dr. Salloum's request 3) ----------------
+ALL_STATUSES = ("ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR", "WELCOME")
+PER_PAGE = 100
+
+
+@router.get("/all-questions")
+def all_questions(status: str = "", who: str = "", q: str = "", page: int = 1):
+    """Every question asked on the site, newest first, 100 per page, with who asked (email, or none for a visitor).
+    Filters: status; who = "visitors" or an account id; q = text in the question (case ignored)."""
+    where, args = [], []
+    if status:
+        if status not in ALL_STATUSES:
+            raise HTTPException(400, "Unknown status.")
+        where.append("q.status = %s"); args.append(status)
+    if who == "visitors":
+        where.append("q.user_id IS NULL")
+    elif who:
+        if not who.isdigit():
+            raise HTTPException(400, "who must be 'visitors' or an account id.")
+        where.append("q.user_id = %s"); args.append(int(who))
+    if q.strip():
+        where.append("q.question ILIKE %s"); args.append("%" + q.strip().replace("%", r"\%").replace("_", r"\_") + "%")
+    sql_where = ("WHERE " + " AND ".join(where)) if where else ""
+    page = max(1, page)
+    with db.connect() as con:
+        total = con.execute(f"SELECT count(*) AS n FROM query_log q {sql_where}", args).fetchone()["n"]
+        rows = con.execute(f"""SELECT q.id, q.created_at, q.status, q.question, q.user_id, u.email, q.chat_id
+                               FROM query_log q LEFT JOIN users u ON u.id = q.user_id {sql_where}
+                               ORDER BY q.id DESC LIMIT %s OFFSET %s""",
+                           args + [PER_PAGE, (page - 1) * PER_PAGE]).fetchall()
+    return {"total": total, "page": page, "per_page": PER_PAGE, "rows": logs.as_json(rows)}
+
+
+@router.get("/all-questions/{qid}")
+def one_question(qid: int):
+    """One question with its reason and the answer as it was shown."""
+    with db.connect() as con:
+        row = con.execute("""SELECT q.id, q.created_at, q.status, q.reason, q.question, q.user_id, u.email, q.chat_id,
+                                    q.details->'shown' AS shown
+                             FROM query_log q LEFT JOIN users u ON u.id = q.user_id WHERE q.id = %s""",
+                          (qid,)).fetchone()
+    if not row:
+        raise HTTPException(404, "No such question.")
+    return logs.as_json([row])[0]
+
+
 class Label(BaseModel):
     label: str
 
