@@ -126,3 +126,13 @@ def test_v2_asks_for_the_reasoning_effort_of_the_setting_and_v1_sends_none(monke
     llm.ask_model("q", {}, None, "v2", reasoning_effort="low")
     llm.ask_model("q", {})                                                                  # v1: as evaluated
     assert seen[0]["reasoning_effort"] == "low" and "reasoning_effort" not in seen[1]
+
+
+# --- Chat follow-ups, part 2 (EVALUATION.md, 2026-11-13): the user's statement is checked, not agreed with ---
+def test_a_follow_up_asks_the_model_to_check_what_the_user_says():               # "so what happened is ...?"
+    msgs = llm.build_messages("So he threatened her face to face?", {}, [FIRST], "v2")
+    assert llm.FOLLOW_UP_NOTE in msgs[-1]["content"] and "never agree" in llm.FOLLOW_UP_NOTE.lower()
+    assert llm.FOLLOW_UP_NOTE not in msgs[1]["content"]                 # the chat's first question is sent as before
+
+def test_an_independent_question_is_sent_without_the_follow_up_note():          # run 4 and eval-v1 unchanged
+    assert llm.FOLLOW_UP_NOTE not in json.dumps(llm.build_messages("q", {"P1": passage(1)}, None, "v2"))

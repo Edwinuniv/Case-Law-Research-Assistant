@@ -138,8 +138,8 @@ def chunk(n, decision, text=None):
 
 class Recorder:
     """A searcher that returns the given chunks and remembers the query it was asked."""
-    def __init__(self, chunks): self.chunks, self.queries = chunks, []
-    def search(self, q, k, **kw): self.queries.append(q); return self.chunks
+    def __init__(self, chunks): self.chunks, self.queries, self.filters = chunks, [], []
+    def search(self, q, k, **kw): self.queries.append(q); self.filters.append(kw.get("decision_ids")); return self.chunks
     def choose(self, q, found, top_k, use_reranker): return found[:top_k]
 
 FIRST_TURN = {"question": "Is the President immune?", "passages": [("P1", chunk(1, 9987186))],
@@ -229,3 +229,48 @@ def test_a_follow_up_turn_keeps_every_passage_of_the_chat_for_the_next_one(monke
     monkeypatch.setattr(llm, "ask_model", model_spy([]))
     r = pipeline.answer("And the dissent?", Recorder([chunk(2, 9987186)]), INDEX, V2, history=[FIRST_TURN])
     assert [p for p, _ in pipeline.turn_of(r)["passages"]] == ["P1", "P2"]
+
+
+
+# --- Chat follow-ups, part 2 (EVALUATION.md, 2026-11-13): stay in the chat's case, "thanks" in a chat ---
+
+def test_a_follow_up_searches_only_the_case_the_chat_is_about(monkeypatch):     # "what did the victim do?"
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    searcher = Recorder([chunk(2, 9987186)])
+    pipeline.answer("What did the victim do?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert searcher.filters == [[9987186]]                             # the decision the chat's sentence cited
+
+def test_a_follow_up_naming_another_case_searches_that_case(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    searcher = Recorder([chunk(2, 9986254)])
+    pipeline.answer("What did Loper Bright Enterprises v. Raimondo decide?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert searcher.filters == [[9986254]]
+
+def test_a_chat_with_no_cited_sentence_searches_everything(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    searcher = Recorder([chunk(2, 9987186)])
+    pipeline.answer("And the dissent?", searcher, INDEX, V2, history=[{**FIRST_TURN, "sentences": []}])
+    assert searcher.filters == [None]
+
+def test_if_the_chats_case_has_no_close_passage_the_whole_corpus_is_searched(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    class Searcher(Recorder):
+        def search(self, q, k, **kw):
+            super().search(q, k, **kw)
+            return [{**chunk(2, 9987186), "score": 0.1}] if kw.get("decision_ids") else [chunk(30, 5555)]
+    searcher = Searcher([])
+    pipeline.answer("What about the Chevron doctrine?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert searcher.filters == [[9987186], None]
+    assert [p["chunk_id"] for p in calls[0]["passages"].values()] == ["c30"]
+
+@pytest.mark.parametrize("text", ["thanks", "Thank you!", "ok", "okay, thanks", "great"])
+def test_thanks_in_a_chat_gets_one_line_without_search_or_model(monkeypatch, text):
+    calls, searcher = [], Recorder([chunk(2, 9987186)])
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    r = pipeline.answer(text, searcher, INDEX, V2, history=[FIRST_TURN])
+    assert r["status"] == "WELCOME" and r["reason"] != pipeline.welcome_text() and len(r["reason"]) < 120
+    assert searcher.queries == [] and calls == [] and pipeline.turn_of(r) is None
+
+def test_thanks_outside_a_chat_still_gets_the_welcome_text():
+    assert pipeline.answer("thanks", FakeSearcher(0.9), INDEX, S)["reason"] == pipeline.welcome_text()
