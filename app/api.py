@@ -169,13 +169,30 @@ def me(request: Request):
             request.session.clear()
     return {"user": user, "csrf": csrf_token(request), "coverage": config.COVERAGE,
             "examples": config.EXAMPLE_QUESTIONS,
-            "free_questions_left": free_questions_left(request, request.session.get("user_id") if user else None)}
+            "free_questions_left": free_questions_left(request, request.session.get("user_id") if user else None),
+            "plan": plan_info(request.session["user_id"]) if user and user["role"] == "user" else None}
 
 
 # ---------------- one question for a visitor without an account (SPEC 11, 2026-11-14) ----------------
 # Counted in the session (the browser's cookie), so nothing about the visitor is stored on the server.
 VISITOR_QUESTIONS = 1
 VISITOR_REFUSED = "You have used your free question. Log in or sign up to keep asking."
+
+
+# ---------------- free and paid accounts, questions per day (SPEC 11, 2026-11-14) ----------------
+# The two numbers are settings (an administrator changes them: POST /api/admin/limits); these are the defaults.
+DAILY_DEFAULTS = {"free": 10, "paid": 100}
+
+
+def daily_limit(plan):
+    return int(db.get_settings().get(f"{plan}_daily_questions", DAILY_DEFAULTS[plan]))
+
+
+def plan_info(user_id):
+    """A 'user' account's plan, its daily limit and the questions it may still ask today."""
+    plan = db.user_plan(user_id)
+    limit = daily_limit(plan)
+    return {"plan": plan, "daily_limit": limit, "left_today": max(0, limit - db.questions_today(user_id))}
 
 
 def free_questions_left(request, asker):
@@ -266,6 +283,13 @@ def ask(request: Request, body: Question):
         return saved
     if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
         raise HTTPException(403, VISITOR_REFUSED)
+    if asker and db.active_role(asker) == "user":            # an account's questions per day; admins: no limit
+        info = plan_info(asker)
+        if info["left_today"] == 0:                           # before the search and the model; not in query_log
+            logs.log_user(asker, "refused", {"reason": "daily limit", "plan": info["plan"],
+                                             "daily_limit": info["daily_limit"]})
+            raise HTTPException(429, f"You have used your {info['daily_limit']} questions for today "
+                                     f"({info['plan']} plan). The limit starts again at midnight, Beirut time.")
     wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
         uid = request.session.get("user_id")
