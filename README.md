@@ -26,6 +26,9 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
 The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account.
 Without an account, a visitor gets ONE question per browser session (the example questions are always answered);
 after it, the page asks them to log in or sign up.
+An account is on the free plan (10 questions a day) or the paid plan (100 a day; no real payment): an administrator
+switches it (POST /api/admin/users/{id}/plan) and changes the two limits (POST /api/admin/limits). A day starts at
+midnight, Beirut time. Administrators have no daily limit.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);

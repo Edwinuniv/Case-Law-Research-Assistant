@@ -18,11 +18,14 @@ from tests.test_visitor_accounts import sign_up
 
 
 @pytest.fixture
-def c(research_client):
-    """A logged-in account, so the visitor's one-question rule does not stop the loop."""
+def c(research_client, clean_db):
+    """A logged-in PAID account, so neither the visitor's one question nor the free plan's 10 a day (SPEC 11,
+    2026-11-14) stops the loop before the limit per minute this file tests."""
     from app import api
     api.SIGNUPS_BY_IP.clear()
     sign_up(research_client)
+    with clean_db.connect() as con:
+        con.execute("UPDATE users SET plan = 'paid'")
     return research_client
 
 
