@@ -24,6 +24,8 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
 The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account.
+Without an account, a visitor gets ONE question per browser session (the example questions are always answered);
+after it, the page asks them to log in or sign up.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
