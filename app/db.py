@@ -212,6 +212,20 @@ def check_login(email, password):
         return None, LOGIN_FAILED
 
 
+def account_for_log(email):
+    """After a failed login: the account of that email (id, email, role) and why it failed, for the logs only.
+    The visitor still gets the same message for every failure (SR36). None for an unknown email."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with connect() as con:
+        u = con.execute("SELECT id, email, role, active, locked_until FROM users WHERE email = %s",
+                        (email.lower().strip(),)).fetchone()
+    if not u:
+        return None
+    reason = ("disabled" if not u["active"] else "locked" if u["locked_until"] and u["locked_until"] > now
+              else "wrong password")
+    return {"id": u["id"], "email": u["email"], "role": u["role"], "reason": reason}
+
+
 def active_role(user_id):
     """The role of an active account ('admin'), or None if it does not exist or is disabled.
     Read from the database at every request, so a disabled account loses access at once (NFR8)."""
