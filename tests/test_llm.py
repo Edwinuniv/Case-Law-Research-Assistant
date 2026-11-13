@@ -1,4 +1,5 @@
 import pytest
+import json
 from app import llm
 from openai import APITimeoutError
 
@@ -99,3 +100,14 @@ def test_the_tokens_of_each_call_are_recorded_with_the_cached_ones(monkeypatch):
     monkeypatch.setattr(llm, "_client", lambda: Client())
     llm.ask_model("q", {})
     assert llm.LAST_USAGE == {"input": 1200, "cached": 1000, "output": 40}
+
+def test_a_removed_sentence_is_never_sent_back_to_the_model():
+    turn = {**FIRST, "removed": [{"text": "An unverified claim.", "sources": ["P2"], "quote": "x", "problems": ["quote not found"]}]}
+    assert "An unverified claim." not in json.dumps(llm.build_messages("And?", {}, [turn], "v2"))
+
+def test_with_two_earlier_turns_each_request_still_starts_like_the_one_before():         # the cache keeps working
+    second = {"question": "And the dissent?", "passages": [("P3", passage(3))],
+              "sentences": [{"text": "The dissent disagreed.", "sources": ["P3"], "quote": "Text of passage 3."}]}
+    turn2 = llm.build_messages(second["question"], dict(second["passages"]), [FIRST], "v2")
+    turn3 = llm.build_messages("Why?", {}, [FIRST, second], "v2")
+    assert turn3[:len(turn2)] == turn2

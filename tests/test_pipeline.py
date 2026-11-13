@@ -168,6 +168,7 @@ def test_same_topic_adds_at_most_4_new_passages_new_topic_up_to_8_never_twice(mo
     same = [chunk(1, 9987186)] + [chunk(n, 9987186) for n in range(2, 12)]      # c1 was already sent
     pipeline.answer("And the dissent?", Recorder(same), INDEX, V2, history=[FIRST_TURN])
     assert list(calls[-1]["passages"]) == ["P2", "P3", "P4", "P5"]                # new labels after P1, c1 not sent again
+    assert [p["chunk_id"] for p in calls[-1]["passages"].values()] == ["c2", "c3", "c4", "c5"]
     other = [chunk(n, 5555) for n in range(20, 31)]
     pipeline.answer("What about Chevron?", Recorder(other), INDEX, V2, history=[FIRST_TURN])
     assert list(calls[-1]["passages"]) == [f"P{n}" for n in range(2, 10)]          # a new topic: up to 8
