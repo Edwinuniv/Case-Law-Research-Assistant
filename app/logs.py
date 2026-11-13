@@ -16,8 +16,15 @@ from psycopg.types.json import Jsonb
 from app import db
 
 USER_EVENTS = ("signup", "login", "login_failed", "logout", "question", "follow_up", "plan_change", "refused")
-# the routes that only READ but are still logged in the admin log: downloading people's data is an action too
-LOGGED_READS = ("/export", "/log", "/pdf")
+# the routes that only READ but are still logged in the admin log: downloading people's data is an action too.
+# Compared with the LAST part of the path only, so a future /api/admin/logins or /exports-list is not an export
+# (Edwin's review of #96, point 1).
+LOGGED_READS = ("export", "log", "pdf")
+
+
+def logged_read(path):
+    """/api/admin/users/7/pdf -> True; /api/admin/logins -> False."""
+    return path.rstrip("/").split("/")[-1] in LOGGED_READS
 
 
 def log_user(user_id, event, detail=None, query_id=None):
@@ -62,7 +69,7 @@ async def admin_logger(request, call_next):
     the admin log after it ran, with its HTTP status, so a new admin route is logged without extra code."""
     response = await call_next(request)
     path = request.url.path
-    if path.startswith("/api/admin") and (request.method != "GET" or any(k in path for k in LOGGED_READS)):
+    if path.startswith("/api/admin") and (request.method != "GET" or logged_read(path)):
         session = request.scope.get("session") or {}
         admin_id = session.get("user_id")
         if admin_id and db.user_is_active_admin(admin_id):              # refused requests from non-admins: not admin acts
