@@ -28,7 +28,7 @@ async function request(method, path, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && path !== "/login") {
+  if (res.status === 401 && path !== "/login" && path !== "/auth/google") {   // a failed login stays on its page
     window.location.assign("/login");
   }
   if (!res.ok) {

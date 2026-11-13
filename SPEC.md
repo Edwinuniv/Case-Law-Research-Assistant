@@ -538,3 +538,18 @@ no model call, not counted in the limit per address, but logged in query_log lik
 ERROR while making them (e.g. the model's daily limit) is not saved; the answer saved before is kept. Any other
 question goes through the pipeline as before, so the evaluation is not affected. Files of others changed and told:
 app/db.py (one new table) and app/api.py (the check at the start of /api/ask) (Joe).
+
+2026-11-13 - Sign in with Google (Yasser's decision). Written before the code. (1) The sign-up and login pages show a
+"Continue with Google" button (Google Identity Services). The browser gets a signed ID token from Google and sends it
+to POST /api/auth/google (with the CSRF token, like every POST). (2) The server checks the token with Google's public
+keys (google-auth: signature, audience = our GOOGLE_CLIENT_ID, issuer, expiry) and accepts only an email that Google
+marks as verified. No Google password or token is stored; only the email, as for any account. (3) A new email makes a
+'user' account (the same as POST /api/signup: counted in the 5 sign-ups per address per hour; its password is a random
+secret nobody knows, so only Google opens it until an administrator sets a password). An email that already has a
+'user' account logs into that account. (4) Administrator accounts are refused (HTTP 403, "Administrators log in with
+their password"): they keep the password with the 15-minute lock (SR36), so a Google account can never open the admin
+pages. A disabled account is refused (403). A bad or expired token: 401, nothing saved. (5) Logs: user_log 'signup' or
+'login' with detail {"method": "google"}; a refused administrator goes to admin_log as login_failed. (6) The button is
+shown only when GOOGLE_CLIENT_ID is set (GET /api/me gives it; it is public, not a secret); without it the route answers
+404 and the site works as before. Files of others changed and told: app/api.py (the route and the client id in /api/me)
+(Joe).

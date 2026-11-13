@@ -47,6 +47,14 @@ The `Dockerfile` builds the website (it downloads the embedding model and the re
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
 (plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
 
+### Sign in with Google (optional)
+1. Google Cloud console > APIs & Services > OAuth consent screen: app name Verdicta, user type External, your email.
+2. Credentials > Create credentials > OAuth client ID > Web application. Authorised JavaScript origins:
+   `https://case-law-research-assistant-production.up.railway.app` and `http://localhost:8000` (no redirect URI needed).
+3. Put the client id in `GOOGLE_CLIENT_ID` (in `.env` locally, in the Railway variables online) and restart.
+   No client secret is used. Without the variable the button is hidden. Google works for user accounts only:
+   administrators always log in with their password.
+
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets
     python -m scripts.filter_clusters
