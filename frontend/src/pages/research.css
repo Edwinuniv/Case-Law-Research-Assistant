@@ -138,3 +138,11 @@ main:has(.rs){max-width:none;margin:0;padding:0}
   .hide-sm{display:none}
 }
 @media(prefers-reduced-motion:reduce){.rs *,.rs *::before{animation:none!important;transition:none!important}}
+
+/* a visitor's free question is used (SPEC 11, 2026-11-14): log in or sign up instead of the question box */
+.rs-locked{padding:18px 20px;border-radius:22px;background:var(--glass);border:1px solid rgba(251,191,36,.35);text-align:center}
+.rs-locked b{color:var(--gold);font-size:15.5px}
+.rs-locked p{margin:6px 0 12px;color:var(--dim);font-size:14px}
+.rs-locked-go{display:flex;gap:10px;justify-content:center}
+.rs-locked-btn{padding:9px 20px;border-radius:999px;border:1px solid var(--edge);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.rs-locked-btn.main{background:var(--gold);border-color:var(--gold);color:#1c1917}
