@@ -111,3 +111,18 @@ def test_with_two_earlier_turns_each_request_still_starts_like_the_one_before():
     turn2 = llm.build_messages(second["question"], dict(second["passages"]), [FIRST], "v2")
     turn3 = llm.build_messages("Why?", {}, [FIRST, second], "v2")
     assert turn3[:len(turn2)] == turn2
+
+def capture_client(seen):
+    class Completions:
+        def create(self, **kw):
+            seen.append(kw)
+            return Reply('{"status": "NOT_SUPPORTED", "sentences": []}')
+    class Client: chat = type("Chat", (), {"completions": Completions()})()
+    return lambda: Client()
+
+def test_v2_asks_for_the_reasoning_effort_of_the_setting_and_v1_sends_none(monkeypatch):    # fewer tokens
+    seen = []
+    monkeypatch.setattr(llm, "_client", capture_client(seen))
+    llm.ask_model("q", {}, None, "v2", reasoning_effort="low")
+    llm.ask_model("q", {})                                                                  # v1: as evaluated
+    assert seen[0]["reasoning_effort"] == "low" and "reasoning_effort" not in seen[1]
