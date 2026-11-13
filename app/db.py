@@ -93,6 +93,10 @@ CREATE TABLE IF NOT EXISTS jobs (
 CREATE TABLE IF NOT EXISTS contact_messages (      -- the contact form (Edwin, 2026-11-12); kept, see the privacy page
     id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     name TEXT NOT NULL, email TEXT NOT NULL, message TEXT NOT NULL);
+
+CREATE TABLE IF NOT EXISTS demo_answers (          -- saved answers to the example questions (Edwin, 2026-11-13)
+    key TEXT PRIMARY KEY, question TEXT NOT NULL, result JSONB NOT NULL, shown JSONB NOT NULL,
+    saved_at TIMESTAMPTZ NOT NULL DEFAULT now());
 """
 
 INDEXES = """
