@@ -274,3 +274,10 @@ def test_thanks_in_a_chat_gets_one_line_without_search_or_model(monkeypatch, tex
 
 def test_thanks_outside_a_chat_still_gets_the_welcome_text():
     assert pipeline.answer("thanks", FakeSearcher(0.9), INDEX, S)["reason"] == pipeline.welcome_text()
+
+@pytest.mark.parametrize("text", ["Thanks, and what did the dissent say?", "OK so what did it decide?"])
+def test_a_question_with_a_thanks_word_is_still_answered(monkeypatch, text):     # found by planting "any" for "all"
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    r = pipeline.answer(text, Recorder([chunk(2, 9987186)]), INDEX, V2, history=[FIRST_TURN])
+    assert r["status"] != "WELCOME" and len(calls) == 1
