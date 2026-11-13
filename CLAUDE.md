@@ -159,6 +159,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 - [x] Information pages (Edwin) — branch feature/site-pages: /privacy, /terms, /sources, /contact in the footer; contact form (app/api_site.py, table contact_messages, 3 per address in 10 minutes) and admin Messages page; 12 tests ⏳ CONTACT_EMAIL to choose; the final logo replaces assets/logo-mark.svg, logo.svg, favicon.svg
 
+- [x] Chat in the terminal + follow-ups part 2 (Edwin) — branch feature/chat-script (from step/ai-v2): scripts/chat.py, pipeline.turn_of; a follow-up searches the chat's cited case (or a case named, or everything), every follow-up message asks the model to check the user's statement, "thanks"/"ok" in a chat gets one line (EVALUATION.md rule first); 11 tests, 11 planted bugs caught ⏳ live chat before/after; Joe connects the website chat with turn_of
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
