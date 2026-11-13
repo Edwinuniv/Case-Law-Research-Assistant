@@ -58,3 +58,11 @@ def test_a_failed_refresh_keeps_the_answer_already_saved(c, demo, monkeypatch): 
     monkeypatch.setattr(llm, "ask_model", lambda q, p: (_ for _ in ()).throw(llm.ModelError("429 rate limit")))
     assert demo.make_all(api.STATE["searcher"], api.STATE["index"], log=lambda m: None) == 0
     assert demo.saved_answer(EXAMPLE)["status"] == "ANSWERED"
+
+
+def test_a_saved_answer_goes_to_the_users_log_like_any_question(c, demo, clean_db):   # SPEC 11, the two logs
+    c.post("/api/signup", json={"email": "reader@example.com", "password": "a-long-password"}, headers=csrf(c))
+    shown = ask(c, EXAMPLE).json()
+    with clean_db.connect() as con:
+        row = con.execute("SELECT event, query_id, detail FROM user_log ORDER BY id DESC LIMIT 1").fetchone()
+    assert row["event"] == "question" and row["query_id"] == shown["id"] and row["detail"]["status"] == "ANSWERED"
