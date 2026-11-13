@@ -32,7 +32,9 @@ a visitor's account lands on the research page and cannot open the admin pages. 
 (ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
 Every account has an activity log (sign-up, logins, logouts, questions, refusals) and every administrator action is
 written to the admin log; administrators read them at `/api/admin/users/{id}/log` and `/api/admin/log`, and add
-`?format=csv` to download them as a file (the admin pages show them).
+`?format=csv` to download them as a file (the admin pages show them). PDF exports: on the admin page "Accounts",
+"Download all accounts as PDF" (`/api/admin/users/pdf`) and a "PDF" link per account (`/api/admin/users/{id}/pdf`:
+details, log and questions). They use ReportLab, so run `pip install -r requirements.txt` again after pulling.
 
 The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
 addresses in `CONTACT_EMAIL`, separated by commas so the whole team receives the mail (.env, and the Railway variables online) and has a form; messages are read and deleted on
