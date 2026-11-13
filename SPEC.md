@@ -528,6 +528,17 @@ GET /api/admin/log, each also downloadable as a CSV file (?format=csv). Rows are
 with their account (ON DELETE CASCADE for the user log). Joe's admin pages (part 2) show them; the PDF exports
 (part 4) include them.
 
+2026-11-13 - Saved demo answers (Edwin; Dr. Salloum at the meeting of 13 Nov: the demo questions and their answers
+saved in the database, so the jury sees them with no tokens and no waiting). Not a cache of every question: only the
+example questions of the chat page (config.EXAMPLE_QUESTIONS). Each one is answered ONCE by the real pipeline, with
+every check of the verifier, by `python -m scripts.make_demo_answers`, and stored as shown (table demo_answers).
+/api/ask returns the saved answer when the question is the same one (case, spaces and the final ? ignored): no search,
+no model call, not counted in the limit per address, but logged in query_log like any question (FR28), with the reason
+"saved demo answer of <date>". The page labels it "Saved answer · checked on <date>" instead of the time taken. An
+ERROR while making them (e.g. the model's daily limit) is not saved; the answer saved before is kept. Any other
+question goes through the pipeline as before, so the evaluation is not affected. Files of others changed and told:
+app/db.py (one new table) and app/api.py (the check at the start of /api/ask) (Joe).
+
 2026-11-13 - The two logs, clarified after Edwin's review of PR #96 (Yasser). (a) A failed login on an
 administrator's email is written to the admin log as an ATTEMPT ON that account (detail attempt_on_account: true;
 the PDF says "failed login attempt on this account"), made by anyone who typed that email, not an action by the

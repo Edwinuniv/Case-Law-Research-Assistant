@@ -159,6 +159,9 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 - [x] Information pages (Edwin) — branch feature/site-pages: /privacy, /terms, /sources, /contact in the footer; contact form (app/api_site.py, table contact_messages, 3 per address in 10 minutes) and admin Messages page; 12 tests ⏳ CONTACT_EMAIL to choose; the final logo replaces assets/logo-mark.svg, logo.svg, favicon.svg
 
+- [x] Chat in the terminal + follow-ups parts 2-3 (Edwin) — merged (PR #100): scripts/chat.py, pipeline.turn_of; a follow-up searches the chat's cited case (or a case named, or everything), every follow-up message asks the model to check the user's statement, "thanks"/"ok" in a chat gets one line (EVALUATION.md rule first); part 3 after Groq 413s on a live chat: earlier turns send only their cited passages, oldest turns dropped above 6,000 estimated tokens; 22 tests, 20 planted bugs caught. Scripted Counterman chat (eval/chats): before 3 of 6 ERROR + drift to other cases, after 0 ERROR, all passages Counterman, wrong summary corrected, "thanks" one line ⏳ followups-v1 pairs to measure; Joe connects the website chat with turn_of
+- [x] Saved demo answers (meeting of 13 Nov) — branch feature/demo-answers: demo_answers table, app/demo.py, scripts/make_demo_answers.py; /api/ask returns the saved answer of an example question (no model call, logged, not counted in the limit); page label "Saved answer · checked on <date>"; 8 tests (one: saved answers in the user log), 6 planted bugs caught; merged with Yasser's logs (PR #102) ⏳ make the answers when the v2 run pauses (shared Groq budget); then again after v2 is chosen or not
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 

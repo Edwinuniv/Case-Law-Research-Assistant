@@ -111,6 +111,30 @@ request showed 325 output tokens instead of 1,437 (56 hidden reasoning tokens in
 as good is what conditions (1)-(5) measure. Groq returned no cached-token count on our free key (prompt_tokens_details
 empty, even for two identical requests): caching may not be active on the free tier; the request order is kept anyway.
 
+**Chat follow-ups, part 2 (added 2026-11-13, before any code or measurement; Edwin).** Edwin's meaning of follow-ups:
+a conversation about one case ("what did the victim do?", "and the prosecutor?", "so what happened is ...?",
+"explain it more"). Three changes, for follow-ups only: (i) the search stays in the chat's case: it looks only at the
+decisions cited by the chat's shown sentences, unless the new message names another case in the corpus (then that
+case), or the chat has no cited decision, or none of their passages reaches min_retrieval (then the whole corpus, as
+before); "new" in the chat starts again. (ii) The follow-up message tells the model to check a statement of the user
+("so what happened is ...") against the passages: confirm what they support, correct what they contradict, never agree
+only because the user said it. It is added to the new follow-up message, not to the rules, so an independent question
+(what run 4 and eval-v1 measure) is sent exactly as before. (iii) In a chat, "thanks", "ok" and the like get a one-line
+reply instead of the welcome text; outside a chat nothing changes. Measured with the follow-up pairs (followups-v1),
+like the rest of the follow-ups; checked live on a scripted chat before and after.
+
+**Chat follow-ups, part 3: the size of a request (added 2026-11-13, before any code; Edwin).** Found on a live scripted
+chat (6 messages about Counterman v. Colorado, before parts 2 and 3): messages 3 to 5 failed with Groq's 413 "Request
+too large ... tokens per minute (TPM): Limit 8000", because every earlier turn was sent again with all its passages
+(message 2 already 6,259 input tokens). Two changes, for follow-ups only: (A) an earlier turn is sent with only the
+passages its shown sentences cited, each passage once; the new message brings its new passages as before. A follow-up
+is verified against exactly what is sent (the cited passages of the chat + the new ones); new labels continue after the
+highest label of the chat, so a label is never reused. This gives up Groq's prompt caching of the earlier turns, which
+our free key does not show anyway (cached tokens empty, see the Answer v2 rule). (B) Before sending, the size of the
+request is estimated (characters / 3.5); while it is above followup_max_input_tokens (6,000 by default, leaving room for
+the answer under 8,000), the oldest turn is dropped. Independent questions are unchanged. Checked by running the same
+scripted chat again (no ERROR expected), then measured with followups-v1.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
