@@ -702,3 +702,20 @@ What was wrong, and how it was caught:
    row is kept without the link, the missing id in the detail; the part-3 test now expects it (both branches).
 2. **Mixed time zones in the PDF.** The header said UTC but the table times came out in the database's local time
    (two hours apart in the test output). Caught by reading the test output; every time in the PDFs is now UTC.
+
+## 2026-11-14 — Access and saved chats (Joe, part 1 of docs/PLAN_2026-11-13.md)
+
+We asked Claude to build part 1 in three steps (one question for a visitor, free and paid plans, saved chats), each
+rule written first in SPEC section 11, the test tables approved by Joe before the code (NFR17), the page checked in a
+headless browser.
+What was wrong, and how it was caught:
+1. **"New chat" while an answer was coming put the next question in the old chat.** The first version of the chat
+   page let the account click "New chat" while the previous question was still being answered; when the answer
+   arrived, it set the old chat back as the open one, so the next question was added to it (3 questions in one chat
+   instead of 2 + 1). The server tests could not see it (the server did what it was told). Caught in the browser check,
+   by printing what the page sent to /api/ask. Fix: "New chat" is disabled while an answer is coming.
+2. **The follow-ups would have been switched on without the measurement.** Connecting answer(history=...) directly, as
+   the plan describes, would have sent the chat's history to the model on the live site at once, but EVALUATION.md
+   (follow-up questions rule) says follow-ups stay off until followups-v1 meets the rule. Caught by reading
+   EVALUATION.md before writing the step-3 rule; the history is sent only when the setting follow_ups is on (off by
+   default; Edwin decides), and a test checks that no history is sent while it is off.
