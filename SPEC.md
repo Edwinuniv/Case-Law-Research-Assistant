@@ -569,3 +569,19 @@ them. (5) A logged-in account is not limited by this rule (its daily limit is th
 says how many free questions the session has left (1 or 0; none for an account), so the page can show "Log in to
 continue" instead of the question box. (7) Known limit, said honestly: a visitor who deletes the cookie gets a new
 session and a new question; the 10 questions a minute per address (step 5.12) still apply on top.
+
+2026-11-14 - Free and paid accounts, questions per day (part 1 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's request 7).
+Written before the code. (1) Every 'user' account has a plan, 'free' (the default, also for accounts made before) or
+'paid'. There is no real payment (a student project; the Terms page says so): an administrator switches an account
+with POST /api/admin/users/{id}/plan {"plan": "free" | "paid"}; only a 'user' account has a plan (an administrator: 400).
+Each switch is written to the account's user log (plan_change, with the old plan, the new plan and the administrator's
+email) and, by the middleware, to the admin log. (2) A free account may ask **10** questions a day, a paid account
+**100**. The two numbers are settings (free_daily_questions, paid_daily_questions), changed by an administrator with
+POST /api/admin/limits (whole numbers from 1 to 1000). (3) "A day" starts at midnight, Beirut time. The questions of the
+day are counted from query_log (the account's rows since midnight); like the visitor's question, only real answers
+count: greetings (WELCOME), ERRORs and the example questions (saved demo answers) do not. (4) The question after the
+limit is refused with HTTP 429 and "You have used your 10 questions for today (free plan). The limit starts again at
+midnight, Beirut time.", BEFORE the search and the model; it is not saved in query_log but written to the user log
+(refused, reason "daily limit"). (5) Administrators have no daily limit. (6) GET /api/me gives a logged-in 'user' its
+plan, its daily limit and the questions left today, so the page can show them. (7) GET /api/admin/users gives each
+account's plan. The admin page buttons (switch the plan, change the limits) come with the admin pages (part 2).
