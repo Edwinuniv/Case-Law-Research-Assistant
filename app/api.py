@@ -7,7 +7,8 @@ import time
 from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from app import config, db, demo, logs
+from google.auth.exceptions import GoogleAuthError
+from app import config, db, demo, google_auth, logs
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import answer, check_input
 
@@ -117,14 +118,20 @@ def valid_email(email):
     return bool(name and at and "." in domain.strip(".") and " " not in email.strip() and len(email) <= 254)
 
 
-@router.post("/signup")
-def signup(request: Request, body: Login):
+def signup_slots(request):
+    """The sign-ups of this address in the last hour, or HTTP 429 when the limit is reached (shared with Google)."""
     ip = request.client.host if request.client else "unknown"
     window, made = SIGNUP_LIMIT_MINUTES * 60, SIGNUPS_BY_IP[ip]
     while made and made[0] < time.time() - window:
         made.popleft()
     if len(made) >= SIGNUP_LIMIT_PER_IP:
         raise HTTPException(429, "Too many new accounts from this address. Try again later.")
+    return made
+
+
+@router.post("/signup")
+def signup(request: Request, body: Login):
+    made = signup_slots(request)
     if not valid_email(body.email):
         raise HTTPException(400, "Give a valid email address.")
     if len(body.password) < MIN_PASSWORD:
@@ -137,6 +144,41 @@ def signup(request: Request, body: Login):
     request.session.clear()                                      # logged in at once, in a new session
     request.session.update({"user_id": user_id, "email": email})
     logs.log_user(user_id, "signup")
+    return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
+
+
+# ---------------- Sign in with Google (Yasser, SPEC 11, 2026-11-13; app/google_auth.py) ----------------
+class GoogleLogin(BaseModel):
+    credential: str                      # the ID token Google gave the browser
+
+
+@router.post("/auth/google")
+def google_login(request: Request, body: GoogleLogin):
+    if not google_auth.enabled():
+        raise HTTPException(404, "Google sign-in is not set up on this site.")
+    try:
+        email = google_auth.verify_credential(body.credential)    # Google's signature, our client id, not expired
+    except (ValueError, GoogleAuthError):
+        raise HTTPException(401, "Google sign-in failed. Please try again.")
+    with db.connect() as con:
+        account = con.execute("SELECT id, role, active FROM users WHERE email = %s", (email,)).fetchone()
+    if account and account["role"] == "admin":   # admins keep the password and its lock (SR36): never Google
+        logs.log_admin(account["id"], email, "login_failed", detail={"reason": "Google sign-in refused for an administrator"})
+        raise HTTPException(403, "Administrators log in with their password.")
+    if account and not account["active"]:
+        raise HTTPException(403, "This account is disabled.")
+    if account:
+        user_id, event = account["id"], "login"
+    else:                                         # a new 'user' account, like /api/signup
+        made = signup_slots(request)
+        user_id = db.create_visitor(email, secrets.token_urlsafe(32))   # a random password nobody knows
+        if user_id is None:
+            raise HTTPException(409, "An account with this email already exists. Log in instead.")
+        made.append(time.time())
+        event = "signup"
+    request.session.clear()                       # a new session, as at every login
+    request.session.update({"user_id": user_id, "email": email})
+    logs.log_user(user_id, event, {"method": "google"})
     return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
 
 
@@ -163,7 +205,8 @@ def me(request: Request):
         else:
             request.session.clear()
     return {"user": user, "csrf": csrf_token(request), "coverage": config.COVERAGE,
-            "examples": config.EXAMPLE_QUESTIONS}
+            "examples": config.EXAMPLE_QUESTIONS,
+            "google_client_id": google_auth.CLIENT_ID or None}      # public; null: no Google button
 
 
 # ---------------- question limit per IP address (step 5.12) ----------------
