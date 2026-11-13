@@ -242,6 +242,8 @@ def ask(request: Request, body: Question):
     saved = demo.saved_answer(body.question)                    # an example question (Edwin, 2026-11-13): the
     if saved:                                                   # answer saved once, no model call, not counted
         saved["id"] = db.log_query(demo.saved_result(body.question), user_id=asker, shown=saved)   # FR28
+        if asker and db.active_role(asker) == "user":                   # the user log, like any question
+            logs.log_user(asker, "question", {"status": saved["status"], "demo": True}, query_id=saved["id"])
         return saved
     wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
