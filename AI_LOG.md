@@ -679,5 +679,7 @@ decision and gold quote of A008 and A012, already verified by the team for eval-
    must run.
 2. **A quote not verified yet.** F017's gold quote (Justice Sotomayor's dissent in Kennedy v. Bremerton) was written
    from memory; it must be found word for word with check_followups / find_quote before the set is tagged.
+   Checked by Yasser on his database (2026-11-13): python -m scripts.check_followups printed "no problems" for the
+   7 pairs, so the quote is in the decision word for word.
 Structure checked with scripts/check_followups.py's own check_lines (0 problems); the word-for-word quote check needs
 the database and is Yasser's to run.
