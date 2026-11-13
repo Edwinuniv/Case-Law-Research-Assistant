@@ -6,16 +6,29 @@ and use up our model credit (Groq). Expected behaviour, written before the code:
 - the limit is per address: another visitor can still ask;
 - after a minute the address may ask again;
 - a question refused by SR3 (too short or too long) does not call the model, so it does not count.
-Same fake search, fake model and TEST database as tests/test_api_research.py."""
+Same fake search, fake model and TEST database as tests/test_api_research.py.
+Since 2026-11-14 a visitor without an account has only one question (tests/test_visitor_one_question.py), so the
+tests that ask several questions do it from a logged-in account; what they check is unchanged."""
 import time
+import pytest
 from fastapi.testclient import TestClient
 from app import llm
-from tests.test_api_research import c, ask, good_model, logged   # noqa: F401 (c is the fixture)
+from tests.test_api_research import c as research_client, ask, good_model, logged   # noqa: F401
+from tests.test_visitor_accounts import sign_up
+
+
+@pytest.fixture
+def c(research_client):
+    """A logged-in account, so the visitor's one-question rule does not stop the loop."""
+    from app import api
+    api.SIGNUPS_BY_IP.clear()
+    sign_up(research_client)
+    return research_client
 
 
 def count_model_calls(monkeypatch):
     calls = []
-    monkeypatch.setattr(llm, "ask_model", lambda q, p: calls.append(q) or good_model(q, p))
+    monkeypatch.setattr(llm, "ask_model", lambda q, p, *a: calls.append(q) or good_model(q, p))
     return calls
 
 
@@ -38,6 +51,7 @@ def test_limit_is_per_address(c):
         ask(c, f"Question number {i}")
     assert ask(c, "One question too many").status_code == 429
     with TestClient(main.app, client=("203.0.113.5", 50000)) as other:     # another visitor, another address
+        sign_up(other, "other@example.com")
         assert ask(other, "Is the President immune from prosecution?").status_code == 200
 
 

@@ -556,3 +556,16 @@ users**: GET /api/admin/users/pdf: one table row per account with the same detai
 anyone else), and each download is written to the admin log (the path contains /pdf). (4) The figures are counted
 from the logs and query_log at the moment of the export; the PDF says when it was made and by which admin.
 (5) Made with ReportLab (BSD licence), no external service; no IP or password in the PDF (there is none in the logs).
+
+2026-11-14 - One question for a visitor without an account (part 1 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's
+request 2). Written before the code. (1) A visitor who is not logged in may ask **one** question per browser session
+(the session cookie). The question is answered and logged in query_log like before, with no user_id (FR28, SR41);
+nothing is saved for the visitor (no history, no chat). (2) A second question from the same session is refused with
+HTTP 403 and "You have used your free question. Log in or sign up to keep asking.", BEFORE the search and the model;
+the refusal is not saved (a visitor has no user log). (3) Only a real answer uses up the question: a question refused
+by SR3, a greeting (WELCOME) or an ERROR (e.g. the model's limit) does not count, so the visitor can try again.
+(4) The example questions (saved demo answers, 0 tokens) never count and are always answered, so the jury can click
+them. (5) A logged-in account is not limited by this rule (its daily limit is the next step: plans). (6) GET /api/me
+says how many free questions the session has left (1 or 0; none for an account), so the page can show "Log in to
+continue" instead of the question box. (7) Known limit, said honestly: a visitor who deletes the cookie gets a new
+session and a new question; the 10 questions a minute per address (step 5.12) still apply on top.
