@@ -694,7 +694,11 @@ verified by the team for eval-v1. What is not verified yet:
 1. **Two quotes written from memory.** F008 (Obergefell, the Due Process and Equal Protection sentence) and F009
    (Justice O'Connor's dissent in Roper) were written from memory, because Claude's workspace has no corpus. They
    must be found word for word with check_followups / find_quote on Joe's database before the set is tagged.
+   Checked on Joe's database (2026-11-14): F009 found; F008 NOT FOUND, because our text reads "couples of the
+   same-sex" (with a hyphen) where Claude wrote "same sex" from memory. Fixed by copying the sentence from
+   find_quote's output.
 2. **An invented case to confirm.** F013 says there is no Supreme Court decision "Raich v. Holder"; Joe must run
    python -m scripts.find_case "Raich" and see only Gonzales v. Raich.
+   Checked (2026-11-14): find_case "Raich" finds only 799995 Gonzales v. Raich.
 Structure checked with scripts/check_followups.py's own check_lines (0 problems apart from the quote check, which
 needs the database).
