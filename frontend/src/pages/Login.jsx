@@ -3,6 +3,7 @@
 //   POST /api/login. Show/hide password, a Caps Lock warning, "Forgot password?".
 // - Sign up (SPEC 11, 2026-11-12): POST /api/signup makes a 'user' account and logs it in, then the research
 //   page opens; the account keeps the visitor's question history. Only the email and a password hash are stored.
+// - Continue with Google (SPEC 11, 2026-11-13): components/GoogleButton.jsx, on both forms, user accounts only.
 // - Forgot password: there is no email service, so it explains that an administrator resets the password
 //   from the Accounts page (FR12: db.create_user resets the password of an existing email).
 import { useState } from "react";
@@ -10,6 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
 import ClipboardAnim from "../components/ClipboardAnim.jsx";
+import GoogleButton from "../components/GoogleButton.jsx";   // Sign in with Google (SPEC 11, 2026-11-13)
 import "./auth.css";
 
 function PasswordInput({ id, value, onChange, autoComplete, placeholder }) {
@@ -53,6 +55,7 @@ function LoginForm({ onLogin }) {
 
   return (
     <form onSubmit={submit} className="au-form">
+      <GoogleButton mode="login" onLogin={onLogin} />
       <label htmlFor="email">Email</label>
       <input id="email" type="email" autoComplete="username" required value={email} placeholder="you@example.com"
              onChange={(e) => setEmail(e.target.value)} />
@@ -89,6 +92,7 @@ function SignupForm({ onLogin }) {
 
   return (
     <form onSubmit={submit} className="au-form">
+      <GoogleButton mode="signup" onLogin={onLogin} />
       <label htmlFor="semail">Email</label>
       <input id="semail" type="email" autoComplete="email" required value={email} placeholder="you@example.com"
              onChange={(e) => setEmail(e.target.value)} />
