@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from app import config, db, demo, logs
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
-from app.pipeline import ERROR, WELCOME, answer, check_input
+from app.pipeline import ERROR, WELCOME, answer, check_input, turn_of
 
 # The search index and the citation index, loaded by app/main.py when the site starts.
 STATE = {"searcher": None, "index": None}
@@ -226,6 +226,7 @@ def seconds_to_wait(ip):
 # Every question is answered on its own by pipeline.answer (Edwin): earlier questions are NOT used.
 class Question(BaseModel):
     question: str
+    chat_id: int | None = None          # an account's saved chat to continue (SPEC 11, 2026-11-14); none: a new chat
 
 
 def decision_info(decision_ids):
@@ -275,12 +276,14 @@ def ask(request: Request, body: Question):
     asker = request.session.get("user_id")                      # a logged-in account keeps its history (SPEC 11)
     if asker and db.active_role(asker) is None:
         asker = None
+    if body.chat_id is not None:                                # a saved chat: only an account's own (SPEC 11)
+        if not asker:
+            raise HTTPException(401, "Log in to keep a chat.")
+        if not db.own_chat(asker, body.chat_id):
+            raise HTTPException(404, "Chat not found.")
     saved = demo.saved_answer(body.question)                    # an example question (Edwin, 2026-11-13): the
     if saved:                                                   # answer saved once, no model call, not counted
-        saved["id"] = db.log_query(demo.saved_result(body.question), user_id=asker, shown=saved)   # FR28
-        if asker and db.active_role(asker) == "user":                   # the user log, like any question
-            logs.log_user(asker, "question", {"status": saved["status"], "demo": True}, query_id=saved["id"])
-        return saved
+        return record(asker, body.chat_id, demo.saved_result(body.question), saved, {"demo": True})
     if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
         raise HTTPException(403, VISITOR_REFUSED)
     if asker and db.active_role(asker) == "user":            # an account's questions per day; admins: no limit
@@ -300,14 +303,51 @@ def ask(request: Request, body: Question):
                             headers={"Retry-After": str(wait)})
     if STATE["searcher"] is None:
         raise HTTPException(503, "The search index is not ready yet.")
-    r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
-    shown = public_answer(r)
-    shown["id"] = db.log_query(r, user_id=asker, shown=shown)   # FR28, SR41 (no account: user_id stays empty)
+    settings = db.get_settings()
+    if body.chat_id is not None and settings.get("follow_ups", False):   # off until Edwin's rule is met
+        history = db.chat_history(body.chat_id)                 # the chat's earlier turns, oldest first
+        r = answer(body.question, STATE["searcher"], STATE["index"], settings, history=history or None)
+    else:                                                       # exactly as before: the question on its own
+        r = answer(body.question, STATE["searcher"], STATE["index"], settings)
+    shown = record(asker, body.chat_id, r, public_answer(r))
     if not asker and r["status"] not in (WELCOME, ERROR):       # only a real answer uses the free question
         request.session["visitor_asked"] = request.session.get("visitor_asked", 0) + 1
-    if asker and db.active_role(asker) == "user":
-        logs.log_user(asker, "question", {"status": shown["status"]}, query_id=shown["id"])
     return shown
+
+
+def record(asker, chat_id, r, shown, extra=None):
+    """Saves an answer (FR28, SR41) and, for an account, in its chat: a new chat when chat_id is None.
+    Keeps what a follow-up needs (turn_of: verified sentences only). Writes the user log: question for the first
+    question of a chat, follow_up for the next ones (SPEC 11, 2026-11-14)."""
+    new_chat = asker and chat_id is None
+    if new_chat:
+        chat_id = db.create_chat(asker, r["question"])
+    shown["chat_id"] = chat_id if asker else None
+    shown["id"] = db.log_query(r, user_id=asker, shown=shown, chat_id=shown["chat_id"], turn=turn_of(r))
+    if asker and db.active_role(asker) == "user":
+        logs.log_user(asker, "question" if new_chat else "follow_up",
+                      {"status": shown["status"], "chat_id": chat_id, **(extra or {})}, query_id=shown["id"])
+    return shown
+
+
+# ---------------- an account's saved chats (SPEC 11, 2026-11-14) ----------------
+def iso(row):
+    return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in row.items()}
+
+
+@router.get("/chats")
+def chats(user=Depends(require_user)):
+    """Only the account's own chats, newest first. Not logged in: 401."""
+    return [iso(c) for c in db.list_chats(user["id"])]
+
+
+@router.get("/chats/{chat_id}")
+def chat(chat_id: int, user=Depends(require_user)):
+    """One of the account's own chats, every question with the answer as it was shown; someone else's: 404."""
+    c = db.chat_turns(user["id"], chat_id)
+    if not c:
+        raise HTTPException(404, "Chat not found.")
+    return {**iso({k: v for k, v in c.items() if k != "turns"}), "turns": [iso(t) for t in c["turns"]]}
 
 
 # ---------------- the question history of a logged-in account (SPEC 11, 2026-11-12) ----------------
