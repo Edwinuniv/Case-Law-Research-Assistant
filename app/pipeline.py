@@ -40,15 +40,16 @@ OFF_TOPIC_TEXT = ("Verdicta is a case-law research assistant: it answers questio
                   "from the text of the decisions, and it does not give opinions or answer questions outside the law.")
 
 
-def follow_up_passages(found, context, settings):
+def follow_up_passages(found, context, settings, last_label=None):
     """The passages a follow-up adds to the chat (EVALUATION.md, answer v2 rule): none already sent; at most
     followup_same_topic (4) when the search's best decision is already in the chat, otherwise up to
-    followup_new_topic (8). Labelled after the chat's last label (P9, P10...)."""
+    followup_new_topic (8). Labelled after the chat's highest label (last_label), so a label is never reused."""
     sent = {p["chunk_id"] for p in context.values()}
     same_topic = bool(found) and found[0]["decision_id"] in {p["decision_id"] for p in context.values()}
     limit = int(settings.get("followup_same_topic", 4) if same_topic else settings.get("followup_new_topic", 8))
     new = [p for p in found if p["chunk_id"] not in sent][:limit]
-    return {f"P{len(context) + i + 1}": p for i, p in enumerate(new)}
+    start = len(context) if last_label is None else last_label
+    return {f"P{start + i + 1}": p for i, p in enumerate(new)}
 
 
 def welcome_text():
@@ -172,12 +173,18 @@ def answer_follow_up(question, searcher, index, settings, history):
         return finish(r, WELCOME, THANKS_TEXT, t0)
     if is_greeting(r["question"]):
         return finish(r, WELCOME, welcome_text(), t0)
-    context = {pid: p for turn in history for pid, p in turn["passages"]}
+    context = {pid: p for turn in history for pid, p in llm.cited_passages(turn).items()}   # what is sent (part 3)
+    last_label = max((int(pid[1:]) for turn in history for pid, _ in turn["passages"]), default=0)
     t = time.perf_counter()
     query = f"{history[-1]['question']} {r['question']}"         # "and the dissent?" needs the earlier question
     found = chat_case_search(r["question"], query, history, searcher, index, settings)
     chosen = searcher.choose(query, found, int(settings["top_k"]), settings["use_reranker"])
-    new = follow_up_passages(chosen, context, settings)
+    new = follow_up_passages(chosen, context, settings, last_label)
+    version = settings.get("prompt_version", "v2")
+    budget = int(settings.get("followup_max_input_tokens", 6000))     # Groq free tier: 8,000 a minute (part 3)
+    while history and llm.estimate_tokens(llm.build_messages(r["question"], new, history, version)) > budget:
+        history = history[1:]                                     # the oldest turn is forgotten first
+    context = {pid: p for turn in history for pid, p in llm.cited_passages(turn).items()}
     r["ms_search"] = ms(t)
     r["retrieved_decisions"] = [p["decision_id"] for p in found]
     passages = {**context, **new}
@@ -185,8 +192,7 @@ def answer_follow_up(question, searcher, index, settings, history):
     r["top_score"] = max((p["score"] for p in passages.values()), default=0.0)
     t = time.perf_counter()
     try:
-        draft = llm.ask_model(r["question"], new, history, settings.get("prompt_version", "v2"),
-                              settings.get("reasoning_effort", "low"))
+        draft = llm.ask_model(r["question"], new, history, version, settings.get("reasoning_effort", "low"))
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
