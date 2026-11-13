@@ -620,3 +620,14 @@ is reading someone's data, so it is written to the admin log (action "GET /api/a
 like the exports. (5) The Accounts page (frontend/src/admin/Users.jsx, restyled by Edwin; changed with Joe's OK, Edwin
 told) shows the list, a Free/Paid switch for visitors' accounts, the two daily limits and the follow-ups switch; a click
 on an account opens its details page (UserDetail.jsx) with its questions, chats, log and the PDF button.
+
+2026-11-14 - Admin pages: every question asked, and the admin log (part 2 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's
+requests 3 and 6). Written before the code. (1) GET /api/admin/all-questions lists every question asked on the site
+(visitors without an account, visitors' accounts, administrators), newest first, 100 per page (?page=1, 2...; the
+answer gives the total): id, date, status, question, who (the account's email and id, or none for a visitor) and chat.
+(2) Filters, which can be combined: ?status= one of the statuses (ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR,
+WELCOME); ?who=visitors (no account) or ?who=<account id>; ?q= a piece of text in the question (case ignored). An
+unknown status or a bad who: 400. (3) GET /api/admin/all-questions/{id}: one question with its reason and the answer
+as it was shown (details.shown); unknown: 404. (4) The admin log page shows GET /api/admin/log (Yasser) with its CSV
+download. (5) Administrators only (a 'user': 403; not logged in: 401). Reading these lists is not written to the admin
+log (they are the site's own questions, like the Abstentions page); one account's details and the exports still are.
