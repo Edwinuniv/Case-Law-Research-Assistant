@@ -4,6 +4,9 @@
 // empties it; with an account (SPEC 11, 2026-11-12) it comes from GET /api/history, the account's own questions,
 // and an earlier answer is read back from /api/history/{id} as it was shown (no new model call).
 // Redesigned 2026-11-12 (Yasser): dark like the landing page; the calls to the server are the same as before.
+// A visitor without an account has ONE question per browser session (SPEC 11, 2026-11-14); the server counts it and
+// refuses the next one. After it, the page shows "Log in or sign up" instead of the question box. The example
+// questions (saved answers) stay open: clicking one sends it at once.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
@@ -39,6 +42,9 @@ export default function Chat({ info }) {
   const box = useRef(null);
 
   const account = info.user;                       // logged in: the history is kept on the server
+  const [left, setLeft] = useState(info.free_questions_left);   // a visitor's free questions; null with an account
+  useEffect(() => { setLeft(info.free_questions_left); }, [account?.email]);
+  const locked = !account && left === 0;           // the free question is used: no question box
   useEffect(() => {
     if (!account) { setHistory([]); return; }
     api("/history").then((list) => setHistory(list)).catch(() => {});
@@ -53,18 +59,20 @@ export default function Chat({ info }) {
     t.style.height = `${Math.min(t.scrollHeight, 6 * 26 + 16)}px`;
   }, [question]);
 
-  async function ask(e) {
+  async function ask(e, text) {
     e?.preventDefault();
-    if (!question.trim() || busy) return;
-    const q = question;
+    const q = text ?? question;
+    if (!q.trim() || busy) return;
     setBusy(true); setError(""); setPending(q); setQuestion("");
     try {
       const a = await api("/ask", { question: q });
       setTurns((t) => [...t, { question: a.question, answer: a }]);
       setHistory((h) => [{ id: a.id, question: a.question, status: a.status, answer: a }, ...h]);
+      if (!account && !a.demo && !["WELCOME", "ERROR"].includes(a.status)) setLeft(0);   // as the server counts
     } catch (err) {
-      setError(err.message);                       // e.g. the SR3 length message, or the 429 wait
-      setQuestion(q);                              // give the question back so it can be sent again
+      if (!account && err.message.startsWith("You have used your free question")) setLeft(0);
+      else setError(err.message);                  // e.g. the SR3 length message, or the 429 wait
+      if (text === undefined) setQuestion(q);      // give the question back so it can be sent again
     } finally {
       setBusy(false);
     }
@@ -146,6 +154,19 @@ export default function Chat({ info }) {
           <div ref={bottom} />
         </div>
 
+        {locked ? (
+          <div className="rs-ask">
+            <div className="rs-locked" role="status">
+              <b>You have used your free question.</b>
+              <p>Log in or create a free account to keep asking and to keep your questions.
+                The example questions stay open.</p>
+              <div className="rs-locked-go">
+                <Link to="/login" className="rs-locked-btn">Log in</Link>
+                <Link to="/signup" className="rs-locked-btn main">Sign up</Link>
+              </div>
+            </div>
+          </div>
+        ) : (
         <form className="rs-ask" onSubmit={ask}>
           <div className="rs-box" onClick={() => box.current?.focus()}>
             <textarea ref={box} rows={1} maxLength={MAX} required value={question} aria-label="Your question"
@@ -161,14 +182,16 @@ export default function Chat({ info }) {
             </div>
           </div>
           {error && <p className="rs-error" role="alert">{error}</p>}
-          {!started && <p className="rs-hint">Enter to send · Shift+Enter for a new line · earlier questions are not used</p>}
+          {!started && <p className="rs-hint">Enter to send · Shift+Enter for a new line · earlier questions are not used
+            {!account && " · without an account: one question"}</p>}
         </form>
+        )}
 
         {!started && (
           <>
             <div className="rs-examples">
               {info.examples.map((ex, k) => (                     // SR30
-                <button type="button" key={ex} className="rs-example" onClick={() => { setQuestion(ex); box.current?.focus(); }}
+                <button type="button" key={ex} className="rs-example" onClick={() => { if (locked) ask(null, ex); else { setQuestion(ex); box.current?.focus(); } }}
                         style={{ animationDelay: `${0.25 + k * 0.08}s` }}>
                   <span className="rs-example-n">Example {k + 1}</span>
                   <span className="rs-example-q">{ex}</span>
