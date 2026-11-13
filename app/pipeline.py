@@ -25,6 +25,17 @@ def is_greeting(question):
     return " ".join(words) in HELP_PHRASES
 
 
+# In a chat (2026-11-13), "thanks" or "ok" gets one line instead of the whole welcome text. Also ours, no model call.
+THANKS_WORDS = {"thanks", "thank", "you", "ok", "okay", "great", "got", "it", "cool", "perfect", "nice", "alright",
+                "understood", "very", "much"}
+THANKS_TEXT = "You're welcome. Ask another question about this case, or start a new chat for another one."
+
+
+def is_thanks(question):
+    words = "".join(c if c.isalpha() else " " for c in (question or "").lower()).split()
+    return bool(words) and all(w in THANKS_WORDS for w in words)
+
+
 OFF_TOPIC_TEXT = ("Verdicta is a case-law research assistant: it answers questions about U.S. Supreme Court decisions "
                   "from the text of the decisions, and it does not give opinions or answer questions outside the law.")
 
@@ -157,12 +168,14 @@ def answer_follow_up(question, searcher, index, settings, history):
     r = {"question": question.strip(), "status": None, "reason": "", "sentences": [], "removed": [], "passages": [],
          "top_score": 0.0, "support_score": 0.0, "fabrications_caught": 0, "retrieved_decisions": [], "model_said": None,
          "ms_search": 0, "ms_model": 0, "ms_total": 0, "follow_up": True, "off_topic": False}
+    if is_thanks(r["question"]):                                 # "thanks", "ok": one line, not the welcome text
+        return finish(r, WELCOME, THANKS_TEXT, t0)
     if is_greeting(r["question"]):
         return finish(r, WELCOME, welcome_text(), t0)
     context = {pid: p for turn in history for pid, p in turn["passages"]}
     t = time.perf_counter()
     query = f"{history[-1]['question']} {r['question']}"         # "and the dissent?" needs the earlier question
-    found = searcher.search(query, k=int(settings["retrieve_k"]))
+    found = chat_case_search(r["question"], query, history, searcher, index, settings)
     chosen = searcher.choose(query, found, int(settings["top_k"]), settings["use_reranker"])
     new = follow_up_passages(chosen, context, settings)
     r["ms_search"] = ms(t)
@@ -187,6 +200,21 @@ def turn_of(r):
     if r["status"] in (WELCOME, ERROR):
         return None
     return {"question": r["question"], "passages": r["passages"], "sentences": r["shown_sentences"]}
+
+
+def chat_case_search(question, query, history, searcher, index, settings):
+    """The search of a follow-up stays in the case the chat is about ("what did the victim do?"): the decisions cited
+    by the chat's shown sentences. A case named in the new message is searched instead. With no cited decision, or no
+    passage of them reaching min_retrieval, the whole corpus is searched, as before (EVALUATION.md, 2026-11-13)."""
+    k = int(settings["retrieve_k"])
+    cited = sorted({dict(turn["passages"])[pid]["decision_id"] for turn in history
+                    for s in turn["sentences"] for pid in s["sources"] if pid in dict(turn["passages"])})
+    decisions = named_decisions(question, index) or cited
+    if decisions:
+        found = searcher.search(query, k=k, decision_ids=decisions)
+        if found and max(p["score"] for p in found) >= settings["min_retrieval"]:
+            return found
+    return searcher.search(query, k=k)
 
 
 def finish(r, status, reason, t0):
