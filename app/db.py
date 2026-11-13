@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value JSONB NOT NULL);
 
+CREATE TABLE IF NOT EXISTS chats (                 -- an account's saved chats (Joe, SPEC 11, 2026-11-14)
+    id SERIAL PRIMARY KEY, user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+
 CREATE TABLE IF NOT EXISTS decisions (
     decision_id INT PRIMARY KEY,            -- the cluster id we keep
     all_cluster_ids INT[] NOT NULL,         -- duplicates merged into this decision
@@ -135,6 +139,9 @@ ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'user
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free';
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_plan_check;
 ALTER TABLE users ADD CONSTRAINT users_plan_check CHECK (plan IN ('free', 'paid'));
+-- 2026-11-14 (Joe, SPEC section 11): each question of a saved chat; a deleted chat keeps its questions (FR28)
+ALTER TABLE query_log ADD COLUMN IF NOT EXISTS chat_id INT REFERENCES chats(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS query_log_chat ON query_log (chat_id, id);
 """
 
 
@@ -280,24 +287,73 @@ def user_is_active_admin(user_id):
 
 
 # ---------------- query log ----------------
-def log_query(r, user_id=None, shown=None):
+def log_query(r, user_id=None, shown=None, chat_id=None, turn=None):
     """Saves one question and its result (FR28, SR41). Returns the new row's id.
     user_id: the account that asked (empty for a visitor without an account; SPEC 11, 2026-11-12).
-    shown: the answer exactly as it was shown on the page."""
+    shown: the answer exactly as it was shown on the page.
+    chat_id, turn: the account's chat, and what a follow-up needs of this answer (pipeline.turn_of; SPEC 11, 2026-11-14)."""
     removed_citations = [p for s in r["removed"] for p in s["problems"] if "citation" in p or "case name" in p]
     details = {"removed": r["removed"],
                "passages": [(pid, p["chunk_id"], p["score"]) for pid, p in r["passages"]]}
     if shown is not None:
         details["shown"] = shown
+    if turn is not None:
+        details["turn"] = turn
     with connect() as con:
         row = con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
             n_sentences, n_removed, removed_citations, fabrications_caught, ms_search, ms_model,
-            ms_total, details, user_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            ms_total, details, user_id, chat_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
                           (r["question"], r["status"], r["reason"], r["support_score"], r["top_score"],
                            len(r["shown_sentences"]), len(r["removed"]), Jsonb(removed_citations),
                            r["fabrications_caught"], r["ms_search"], r["ms_model"], r["ms_total"],
-                           Jsonb(details), user_id)).fetchone()
+                           Jsonb(details), user_id, chat_id)).fetchone()
+        if chat_id is not None:
+            con.execute("UPDATE chats SET updated_at = now() WHERE id = %s", (chat_id,))
     return row["id"]
+
+
+# ---------------- saved chats (Joe, SPEC 11, 2026-11-14) ----------------
+def create_chat(user_id, first_question):
+    """A new chat for this account, named after its first question (cut to 80 characters)."""
+    title = " ".join(first_question.split())[:80]
+    with connect() as con:
+        return con.execute("INSERT INTO chats (user_id, title) VALUES (%s, %s) RETURNING id",
+                           (user_id, title)).fetchone()["id"]
+
+
+def own_chat(user_id, chat_id):
+    """True only if this chat exists AND belongs to this account."""
+    with connect() as con:
+        return con.execute("SELECT 1 FROM chats WHERE id = %s AND user_id = %s", (chat_id, user_id)).fetchone() is not None
+
+
+def chat_history(chat_id, limit=10):
+    """The chat's earlier turns for a follow-up, oldest first: only answers that kept a turn (not a greeting or an
+    ERROR), the last `limit` of them."""
+    with connect() as con:
+        rows = con.execute("SELECT details->'turn' AS turn FROM query_log WHERE chat_id = %s "
+                           "AND details ? 'turn' ORDER BY id DESC LIMIT %s", (chat_id, limit)).fetchall()
+    return [r["turn"] for r in reversed(rows)]
+
+
+def list_chats(user_id):
+    """The account's own chats, newest first, with their number of questions."""
+    with connect() as con:
+        return con.execute("""SELECT c.id, c.title, c.created_at, c.updated_at, count(q.id) AS questions
+                              FROM chats c LEFT JOIN query_log q ON q.chat_id = c.id WHERE c.user_id = %s
+                              GROUP BY c.id ORDER BY c.updated_at DESC, c.id DESC""", (user_id,)).fetchall()
+
+
+def chat_turns(user_id, chat_id):
+    """One of the account's own chats with every question and the answer as it was shown; None for someone else's."""
+    with connect() as con:
+        chat = con.execute("SELECT id, title, created_at, updated_at FROM chats WHERE id = %s AND user_id = %s",
+                           (chat_id, user_id)).fetchone()
+        if not chat:
+            return None
+        chat["turns"] = con.execute("SELECT id, question, status, created_at, details->'shown' AS shown "
+                                    "FROM query_log WHERE chat_id = %s ORDER BY id", (chat_id,)).fetchall()
+    return chat
 
 
 def user_history(user_id, limit=50):
