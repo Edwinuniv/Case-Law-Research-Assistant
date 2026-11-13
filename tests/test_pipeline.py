@@ -281,3 +281,30 @@ def test_a_question_with_a_thanks_word_is_still_answered(monkeypatch, text):    
     monkeypatch.setattr(llm, "ask_model", model_spy(calls))
     r = pipeline.answer(text, Recorder([chunk(2, 9987186)]), INDEX, V2, history=[FIRST_TURN])
     assert r["status"] != "WELCOME" and len(calls) == 1
+
+
+
+# --- Chat follow-ups, part 3 (EVALUATION.md, 2026-11-13): the size of a request (Groq's 413 on a live chat) ---
+TWO_PASSAGE_TURN = {**FIRST_TURN, "passages": [("P1", chunk(1, 9987186)), ("P2", chunk(2, 9987186))]}   # P2 not cited
+
+def test_a_follow_up_is_verified_only_against_the_passages_that_were_sent(monkeypatch):
+    bad = {"status": "SUPPORTED", "sentences": [{"text": "It is immune.", "sources": ["P2"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", model_spy([], bad))
+    r = pipeline.answer("And why?", Recorder([]), INDEX, V2, history=[TWO_PASSAGE_TURN])
+    assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]   # P2 was not sent again
+
+def test_new_labels_continue_after_the_highest_label_of_the_chat(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    pipeline.answer("And the dissent?", Recorder([chunk(5, 9987186)]), INDEX, V2, history=[TWO_PASSAGE_TURN])
+    assert list(calls[0]["passages"]) == ["P3"]                        # not P2 again, even though P2 is not sent
+
+def test_the_oldest_turns_are_dropped_until_the_request_fits(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    monkeypatch.setattr(llm, "estimate_tokens", lambda msgs: 1000 * len(msgs))   # 1,000 a message
+    turns = [{**FIRST_TURN, "question": f"Question {n}?"} for n in range(3)]
+    pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=4000), history=turns)
+    assert [t["question"] for t in calls[0]["history"]] == ["Question 2?"]   # system + 1 turn (2) + new = 4 messages
+    pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=100000), history=turns)
+    assert len(calls[1]["history"]) == 3

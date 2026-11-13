@@ -72,12 +72,23 @@ def test_an_independent_question_with_the_old_prompt_is_built_exactly_as_before(
     assert msgs == [{"role": "system", "content": llm.SYSTEM_PROMPT},
                     {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages({'P1': passage(1)})}\n\nQUESTION: q"}]
 
-def test_a_follow_up_starts_with_exactly_the_first_request_so_the_cache_can_reuse_it():
-    turn1 = llm.build_messages(FIRST["question"], dict(FIRST["passages"]), None, "v2")
+def test_a_follow_up_sends_the_earlier_turn_with_only_the_passages_its_answer_cited():   # part 3 (A): Groq's 413
     turn2 = llm.build_messages("What did the dissent say?", {"P3": passage(3)}, [FIRST], "v2")
-    assert turn2[:len(turn1)] == turn1                          # same beginning, byte for byte
-    assert turn2[len(turn1)]["role"] == "assistant" and "The Court struck it down." in turn2[len(turn1)]["content"]
+    assert turn2[0]["content"] == llm.SYSTEM_PROMPT_V2 and "Did the Court strike down the law?" in turn2[1]["content"]
+    assert "Text of passage 1." in turn2[1]["content"] and "Text of passage 2." not in turn2[1]["content"]
+    assert turn2[2]["role"] == "assistant" and "The Court struck it down." in turn2[2]["content"]
     assert turn2[-1]["role"] == "user" and "What did the dissent say?" in turn2[-1]["content"]
+    assert "Text of passage 3." in turn2[-1]["content"]
+
+def test_a_passage_cited_in_two_turns_is_sent_once():
+    again = {"question": "And why?", "passages": [("P1", passage(1)), ("P2", passage(2))],
+             "sentences": [{"text": "Because.", "sources": ["P1"], "quote": "Text of passage 1."}]}
+    msgs = llm.build_messages("And then?", {}, [FIRST, again], "v2")
+    assert json.dumps(msgs).count("Text of passage 1.") == 3       # sent once; quoted in the two answers
+
+def test_the_size_of_a_request_is_estimated_on_the_safe_side():                  # part 3 (B)
+    msgs = [{"role": "user", "content": "x" * 3500}, {"role": "assistant", "content": "y" * 3500}]
+    assert llm.estimate_tokens(msgs) == 2000                            # 3.5 characters a token (real: about 4.5)
 
 def test_a_follow_up_without_new_passages_sends_only_the_question():                       # reuse, fewer tokens
     msgs = llm.build_messages("And why?", {}, [FIRST], "v2")
