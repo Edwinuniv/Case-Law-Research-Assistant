@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from app import config, db, demo, logs
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
-from app.pipeline import answer, check_input
+from app.pipeline import ERROR, WELCOME, answer, check_input
 
 # The search index and the citation index, loaded by app/main.py when the site starts.
 STATE = {"searcher": None, "index": None}
@@ -168,7 +168,21 @@ def me(request: Request):
         else:
             request.session.clear()
     return {"user": user, "csrf": csrf_token(request), "coverage": config.COVERAGE,
-            "examples": config.EXAMPLE_QUESTIONS}
+            "examples": config.EXAMPLE_QUESTIONS,
+            "free_questions_left": free_questions_left(request, request.session.get("user_id") if user else None)}
+
+
+# ---------------- one question for a visitor without an account (SPEC 11, 2026-11-14) ----------------
+# Counted in the session (the browser's cookie), so nothing about the visitor is stored on the server.
+VISITOR_QUESTIONS = 1
+VISITOR_REFUSED = "You have used your free question. Log in or sign up to keep asking."
+
+
+def free_questions_left(request, asker):
+    """How many questions this visitor may still ask; None for a logged-in account (the rule does not apply)."""
+    if asker:
+        return None
+    return max(0, VISITOR_QUESTIONS - request.session.get("visitor_asked", 0))
 
 
 # ---------------- question limit per IP address (step 5.12) ----------------
@@ -250,6 +264,8 @@ def ask(request: Request, body: Question):
         if asker and db.active_role(asker) == "user":                   # the user log, like any question
             logs.log_user(asker, "question", {"status": saved["status"], "demo": True}, query_id=saved["id"])
         return saved
+    if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
+        raise HTTPException(403, VISITOR_REFUSED)
     wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
         uid = request.session.get("user_id")
@@ -263,6 +279,8 @@ def ask(request: Request, body: Question):
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
     shown = public_answer(r)
     shown["id"] = db.log_query(r, user_id=asker, shown=shown)   # FR28, SR41 (no account: user_id stays empty)
+    if not asker and r["status"] not in (WELCOME, ERROR):       # only a real answer uses the free question
+        request.session["visitor_asked"] = request.session.get("visitor_asked", 0) + 1
     if asker and db.active_role(asker) == "user":
         logs.log_user(asker, "question", {"status": shown["status"]}, query_id=shown["id"])
     return shown
