@@ -180,6 +180,15 @@ def answer_follow_up(question, searcher, index, settings, history):
     return check_draft(r, draft, passages, index, settings, t, t0)
 
 
+def turn_of(r):
+    """What a chat keeps of an answer for the next follow-up: the question, every passage the model had, and only
+    the sentences shown (none when NOT_SUPPORTED), so a removed sentence is never sent back to the model.
+    A greeting or an error is not a turn (None): nothing was searched or answered."""
+    if r["status"] in (WELCOME, ERROR):
+        return None
+    return {"question": r["question"], "passages": r["passages"], "sentences": r["shown_sentences"]}
+
+
 def finish(r, status, reason, t0):
     r["status"], r["reason"] = status, reason
     if status in (NOT_SUPPORTED, ERROR):
