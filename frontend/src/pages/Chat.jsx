@@ -44,7 +44,9 @@ export default function Chat({ info }) {
   const account = info.user;                       // logged in: the history is kept on the server
   const [left, setLeft] = useState(info.free_questions_left);   // a visitor's free questions; null with an account
   useEffect(() => { setLeft(info.free_questions_left); }, [account?.email]);
-  const locked = !account && left === 0;           // the free question is used: no question box
+  const locked = !account && left === 0;
+  const [plan, setPlan] = useState(info.plan);    // a 'user' account: {plan, daily_limit, left_today} (SPEC 11)
+  useEffect(() => { setPlan(info.plan); }, [account?.email]);           // the free question is used: no question box
   useEffect(() => {
     if (!account) { setHistory([]); return; }
     api("/history").then((list) => setHistory(list)).catch(() => {});
@@ -69,6 +71,7 @@ export default function Chat({ info }) {
       setTurns((t) => [...t, { question: a.question, answer: a }]);
       setHistory((h) => [{ id: a.id, question: a.question, status: a.status, answer: a }, ...h]);
       if (!account && !a.demo && !["WELCOME", "ERROR"].includes(a.status)) setLeft(0);   // as the server counts
+      if (plan) api("/me").then((m) => setPlan(m.plan)).catch(() => {});               // the questions left today
     } catch (err) {
       if (!account && err.message.startsWith("You have used your free question")) setLeft(0);
       else setError(err.message);                  // e.g. the SR3 length message, or the 429 wait
@@ -110,7 +113,8 @@ export default function Chat({ info }) {
           <span className="rs-count">{history.length}</span>
         </div>
         <p className="rs-side-note">
-          {account ? "Saved to your account." : <>Only in this page: they are gone when you reload it. <Link to="/signup">Sign up</Link> to keep them.</>}
+          {account ? <>Saved to your account.{plan && <><br /><span className="rs-plan">{plan.plan === "paid" ? "Paid" : "Free"} plan
+            · {plan.left_today} of {plan.daily_limit} questions left today</span></>}</> : <>Only in this page: they are gone when you reload it. <Link to="/signup">Sign up</Link> to keep them.</>}
         </p>
         <div className="rs-list">
           {history.length === 0 && <p className="rs-empty">Your questions will appear here.</p>}
