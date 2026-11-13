@@ -88,3 +88,33 @@ def test_an_administrators_pdf_shows_their_admin_log(c, clean_db):          # ru
     boss = clean_db.check_login("boss@example.com", PW)[0]["id"]
     t = text_of(c.get(f"/api/admin/users/{boss}/pdf"))
     assert "Admin log" in t and "login" in t and "Number of logins 1" in t
+
+
+def test_an_account_older_than_the_logs_shows_not_recorded(c, clean_db):    # Edwin's review of #99, point 2
+    old = clean_db.create_visitor("old@example.com", PW)               # made before any log row
+    with clean_db.connect() as con:                                     # ... a day before the logs began
+        con.execute("UPDATE users SET created_at = now() - interval '1 day' WHERE id = %s", (old,))
+    post(c, "/api/signup", {"email": "new@example.com", "password": PW})      # the first log row
+    post(c, "/api/logout")
+    clean_db.create_visitor("quiet@example.com", PW)                    # after the logs began, never logged in
+    post(c, "/api/login", {"email": "boss@example.com", "password": PW})
+    t = text_of(c.get("/api/admin/users/pdf"))
+    assert "Logs kept since" in t
+    assert "old@example.com" in t and "not recorded" in t and "never" in t   # old: not recorded; quiet: never
+    one = text_of(c.get(f"/api/admin/users/{old}/pdf"))
+    assert "Last login not recorded" in one and "0 since the logs began" in one
+
+
+def test_an_administrators_pdf_has_only_their_own_rows(c, clean_db):        # Edwin's review of #99, point 3
+    clean_db.create_user("second@example.com", PW)
+    post(c, "/api/login", {"email": "boss@example.com", "password": PW})
+    post(c, "/api/logout")
+    for _ in range(3):                                                  # the other admin is more recent
+        post(c, "/api/login", {"email": "second@example.com", "password": PW})
+        post(c, "/api/logout")
+    post(c, "/api/login", {"email": "boss@example.com", "password": "a-wrong-password"})   # an attempt ON boss
+    boss = clean_db.check_login("boss@example.com", PW)[0]["id"]
+    post(c, "/api/login", {"email": "second@example.com", "password": PW})
+    t = text_of(c.get(f"/api/admin/users/{boss}/pdf"))
+    assert "Admin log (3 rows" in t                                     # boss: login, logout, the failed attempt
+    assert "failed login attempt on this account" in t
