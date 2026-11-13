@@ -25,6 +25,21 @@ def is_greeting(question):
     return " ".join(words) in HELP_PHRASES
 
 
+OFF_TOPIC_TEXT = ("Verdicta is a case-law research assistant: it answers questions about U.S. Supreme Court decisions "
+                  "from the text of the decisions, and it does not give opinions or answer questions outside the law.")
+
+
+def follow_up_passages(found, context, settings):
+    """The passages a follow-up adds to the chat (EVALUATION.md, answer v2 rule): none already sent; at most
+    followup_same_topic (4) when the search's best decision is already in the chat, otherwise up to
+    followup_new_topic (8). Labelled after the chat's last label (P9, P10...)."""
+    sent = {p["chunk_id"] for p in context.values()}
+    same_topic = bool(found) and found[0]["decision_id"] in {p["decision_id"] for p in context.values()}
+    limit = int(settings.get("followup_same_topic", 4) if same_topic else settings.get("followup_new_topic", 8))
+    new = [p for p in found if p["chunk_id"] not in sent][:limit]
+    return {f"P{len(context) + i + 1}": p for i, p in enumerate(new)}
+
+
 def welcome_text():
     examples = " or ".join(f"“{q}”" for q in config.EXAMPLE_QUESTIONS[:2])
     return (f"I answer questions about {config.COVERAGE}, using only the text of the decisions. Every sentence I show "
@@ -68,13 +83,18 @@ def named_decisions(question, index):
     return sorted({d for name in find_case_names(question) for d in index.decisions_named(name)})
 
 
-def answer(question, searcher, index, settings, skip_gate=False):
+def answer(question, searcher, index, settings, skip_gate=False, history=None):
     """skip_gate=True is used by the evaluation: the model is always called, so any threshold
-    can be tested later without calling the model again."""
+    can be tested later without calling the model again.
+    history (answer v2, a follow-up): the earlier turns of the chat, oldest first, each {question, passages,
+    sentences (verified only)}. With no history, everything below runs exactly as in the evaluated system."""
+    if history:
+        return answer_follow_up(question, searcher, index, settings, history)
     t0 = time.perf_counter()
     r = {"question": question.strip(), "status": None, "reason": "", "sentences": [], "removed": [],
          "passages": [], "top_score": 0.0, "support_score": 0.0, "fabrications_caught": 0,
-         "retrieved_decisions": [], "model_said": None, "ms_search": 0, "ms_model": 0, "ms_total": 0}
+         "retrieved_decisions": [], "model_said": None, "ms_search": 0, "ms_model": 0, "ms_total": 0,
+         "off_topic": False}
 
     if is_greeting(r["question"]):                               # 0. A GREETING: our welcome text, nothing else
         return finish(r, WELCOME, welcome_text(), t0)
@@ -97,12 +117,23 @@ def answer(question, searcher, index, settings, skip_gate=False):
 
     t = time.perf_counter()                                      # 3. ASK THE MODEL
     try:
-        draft = llm.ask_model(r["question"], passages)
+        version = settings.get("prompt_version", "v1")
+        draft = llm.ask_model(r["question"], passages) if version == "v1" else \
+            llm.ask_model(r["question"], passages, None, version, settings.get("reasoning_effort", "low"))
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
+    return check_draft(r, draft, passages, index, settings, t, t0)
+
+
+def check_draft(r, draft, passages, index, settings, t, t0):
+    """Steps 4 and 5, the same for a first question and a follow-up: verify every sentence, score, decide."""
     r["ms_model"] = ms(t)
+    r["tokens"] = dict(llm.LAST_USAGE)                            # input, cached, output (answer v2 rule: measured)
     r["model_said"] = draft.get("status") if isinstance(draft, dict) else None
+    if r["model_said"] == "OFF_TOPIC":                           # not about the law: our fixed message, an abstention
+        r["off_topic"] = True
+        return finish(r, NOT_SUPPORTED, OFF_TOPIC_TEXT, t0)
     if r["model_said"] != "SUPPORTED" or not draft.get("sentences"):
         return finish(r, NOT_SUPPORTED, "the model said the passages do not answer this", t0)
 
@@ -115,6 +146,38 @@ def answer(question, searcher, index, settings, skip_gate=False):
               else "every sentence failed verification",
               LOW_CONFIDENCE: "support score between the two thresholds", ANSWERED: ""}[status]
     return finish(r, status, reason, t0)
+
+
+def answer_follow_up(question, searcher, index, settings, history):
+    """A follow-up (answer v2): the model reads the last turns of the chat; the search runs on the earlier question and
+    the new one together; only the passages the chat does not have yet are added (follow_up_passages). Every sentence
+    is verified against ALL the passages of the chat, which are the passages the model received."""
+    t0 = time.perf_counter()
+    history = history[-int(settings.get("followup_max_turns", 4)):]
+    r = {"question": question.strip(), "status": None, "reason": "", "sentences": [], "removed": [], "passages": [],
+         "top_score": 0.0, "support_score": 0.0, "fabrications_caught": 0, "retrieved_decisions": [], "model_said": None,
+         "ms_search": 0, "ms_model": 0, "ms_total": 0, "follow_up": True, "off_topic": False}
+    if is_greeting(r["question"]):
+        return finish(r, WELCOME, welcome_text(), t0)
+    context = {pid: p for turn in history for pid, p in turn["passages"]}
+    t = time.perf_counter()
+    query = f"{history[-1]['question']} {r['question']}"         # "and the dissent?" needs the earlier question
+    found = searcher.search(query, k=int(settings["retrieve_k"]))
+    chosen = searcher.choose(query, found, int(settings["top_k"]), settings["use_reranker"])
+    new = follow_up_passages(chosen, context, settings)
+    r["ms_search"] = ms(t)
+    r["retrieved_decisions"] = [p["decision_id"] for p in found]
+    passages = {**context, **new}
+    r["passages"], r["new_passages"] = list(passages.items()), list(new)
+    r["top_score"] = max((p["score"] for p in passages.values()), default=0.0)
+    t = time.perf_counter()
+    try:
+        draft = llm.ask_model(r["question"], new, history, settings.get("prompt_version", "v2"),
+                              settings.get("reasoning_effort", "low"))
+    except llm.ModelError as e:
+        r["ms_model"] = ms(t)
+        return finish(r, ERROR, f"language model failed: {e}", t0)
+    return check_draft(r, draft, passages, index, settings, t, t0)
 
 
 def finish(r, status, reason, t0):

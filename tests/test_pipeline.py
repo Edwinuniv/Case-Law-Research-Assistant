@@ -127,3 +127,74 @@ def test_no_test_question_is_taken_for_a_greeting():                  # the eval
     from pathlib import Path
     questions = [json.loads(l)["question"] for l in Path("eval/questions.jsonl").read_text().splitlines() if l.strip()]
     assert len(questions) == 85 and not [q for q in questions if pipeline.is_greeting(q)]
+
+
+# --- Answer v2 (EVALUATION.md "Answer v2 rule", 2026-11-13): follow-ups that read the chat, "not about the law" ---
+V2 = dict(S, prompt_version="v2")
+
+def chunk(n, decision, text=None):
+    return {**PASSAGE, "chunk_id": f"c{n}", "decision_id": decision, "score": 0.9, "text": text or PASSAGE["text"],
+            "opinion_label": "Majority opinion", "section": "Part I", "date_filed": "2024-07-01"}
+
+class Recorder:
+    """A searcher that returns the given chunks and remembers the query it was asked."""
+    def __init__(self, chunks): self.chunks, self.queries = chunks, []
+    def search(self, q, k, **kw): self.queries.append(q); return self.chunks
+    def choose(self, q, found, top_k, use_reranker): return found[:top_k]
+
+FIRST_TURN = {"question": "Is the President immune?", "passages": [("P1", chunk(1, 9987186))],
+              "sentences": [{"text": "The President has absolute immunity for conclusive and preclusive actions.",
+                             "sources": ["P1"], "quote": QUOTE}]}
+
+def model_spy(calls, reply=None):
+    def ask(q, passages, history=None, version="v1", reasoning_effort=None):
+        calls.append({"question": q, "passages": dict(passages), "history": history, "version": version,
+                      "reasoning_effort": reasoning_effort})
+        return reply or {"status": "SUPPORTED", "sentences": [{"text": "The President has absolute immunity for conclusive actions.",
+                                                               "sources": ["P1"], "quote": QUOTE}]}
+    return ask
+
+def test_a_follow_up_reads_the_chat_and_searches_with_the_earlier_question(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    searcher = Recorder([chunk(2, 9987186)])
+    r = pipeline.answer("And for unofficial acts?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert "Is the President immune?" in searcher.queries[0] and "And for unofficial acts?" in searcher.queries[0]
+    assert calls[0]["history"] == [FIRST_TURN] and calls[0]["version"] == "v2" and calls[0]["reasoning_effort"] == "low"
+    assert r["status"] in ("ANSWERED", "LOW_CONFIDENCE")             # it cites P1, a passage of the earlier turn
+
+def test_same_topic_adds_at_most_4_new_passages_new_topic_up_to_8_never_twice(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    same = [chunk(1, 9987186)] + [chunk(n, 9987186) for n in range(2, 12)]      # c1 was already sent
+    pipeline.answer("And the dissent?", Recorder(same), INDEX, V2, history=[FIRST_TURN])
+    assert list(calls[-1]["passages"]) == ["P2", "P3", "P4", "P5"]                # new labels after P1, c1 not sent again
+    assert [p["chunk_id"] for p in calls[-1]["passages"].values()] == ["c2", "c3", "c4", "c5"]
+    other = [chunk(n, 5555) for n in range(20, 31)]
+    pipeline.answer("What about Chevron?", Recorder(other), INDEX, V2, history=[FIRST_TURN])
+    assert list(calls[-1]["passages"]) == [f"P{n}" for n in range(2, 10)]          # a new topic: up to 8
+
+def test_a_sentence_may_cite_an_earlier_passage_but_not_a_label_that_was_never_sent(monkeypatch):
+    bad = {"status": "SUPPORTED", "sentences": [{"text": "It is immune.", "sources": ["P9"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", model_spy([], bad))
+    r = pipeline.answer("And why?", Recorder([]), INDEX, V2, history=[FIRST_TURN])
+    assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]
+
+def test_only_the_last_turns_are_kept(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    turns = [{**FIRST_TURN, "question": f"Question {n}?"} for n in range(10)]
+    pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_turns=3), history=turns)
+    assert [t["question"] for t in calls[0]["history"]] == ["Question 7?", "Question 8?", "Question 9?"]
+
+def test_a_question_not_about_the_law_gets_the_assistant_message(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([], {"status": "OFF_TOPIC", "sentences": []}))
+    r = pipeline.answer("Which football team is the best?", FakeSearcher(0.9), INDEX, V2)
+    assert r["status"] == "NOT_SUPPORTED" and r["off_topic"] and "case-law research assistant" in r["reason"]
+    assert r["shown_sentences"] == []                                   # counted as an abstention, nothing generated
+
+def test_an_independent_question_with_the_old_prompt_calls_the_model_as_before(monkeypatch):    # rule (4)
+    seen = []
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: seen.append((q, list(p))) or good_model(q, p))
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)       # no history, prompt v1
+    assert r["status"] == "ANSWERED" and seen == [("Is the President immune?", ["P1"])]
