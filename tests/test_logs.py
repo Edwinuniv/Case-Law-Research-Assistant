@@ -119,8 +119,9 @@ def test_only_admins_read_the_logs_as_json_or_csv(c, clean_db):            # rul
     assert f.headers["content-type"].startswith("text/csv") and "attachment" in f.headers["content-disposition"]
     assert f.text.splitlines()[0].startswith("id,at,event") and len(f.text.splitlines()) == 3
     assert c.get("/api/admin/users/99999/log").status_code == 404
-    admin = c.get("/api/admin/log").json()
-    assert admin[0]["action"] == f"GET /api/admin/users/{uid}/log"       # reading a log is itself logged
+    admin = c.get("/api/admin/log").json()                               # reading a log is itself logged, newest first
+    assert admin[0]["action"] == "GET /api/admin/users/99999/log" and admin[0]["detail"] == {"target_not_found": 99999}
+    assert admin[1]["action"] == f"GET /api/admin/users/{uid}/log" and admin[1]["target_user_id"] == uid
 
 
 def test_the_user_log_goes_with_its_account(clean_db):                     # rule 5
