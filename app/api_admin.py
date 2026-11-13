@@ -6,7 +6,7 @@ import threading
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse, Response
 from pydantic import BaseModel
-from app import api, db, evaluate, logs
+from app import api, db, evaluate, exports, logs
 
 router = APIRouter(prefix="/api/admin",
                    dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -343,6 +343,28 @@ def user_log(user_id: int, format: str = "json"):
 def admin_log(format: str = "json"):
     """Everything the administrators did, newest first."""
     return log_response(logs.admin_log(), format, "verdicta_admin_log.csv")
+
+
+# ---------------- PDF exports (Yasser, SPEC 11, 2026-11-13; part 4) ----------------
+# Each download is written to the admin log by app/logs.py (the path contains /pdf).
+def pdf_response(data, filename):
+    return Response(data, media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@router.get("/users/pdf")
+def users_pdf(admin=Depends(api.require_admin)):
+    """The list of all accounts with their details."""
+    return pdf_response(exports.users_pdf(admin["email"]), "verdicta_accounts.pdf")
+
+
+@router.get("/users/{user_id}/pdf")
+def user_pdf(user_id: int, admin=Depends(api.require_admin)):
+    """One account: details, log and questions."""
+    data = exports.user_pdf(user_id, admin["email"])
+    if data is None:
+        raise HTTPException(404, "No such account.")
+    return pdf_response(data, f"verdicta_account_{user_id}.pdf")
 
 
 class NewUser(BaseModel):

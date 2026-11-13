@@ -689,3 +689,16 @@ What was wrong or nearly wrong, and how it was caught:
    saved questions, on phones too.
 4. **A test asked for a page that does not exist** (`/api/admin/overview` instead of `/api/admin/home`): it got 404
    instead of 403 and failed. A mistake in the test, not the code; fixed in the test.
+
+## 2026-11-13 — Logs and PDF exports (Yasser, parts 3 and 4 of docs/PLAN_2026-11-13.md)
+
+We asked Claude to build the user log and admin log (part 3), then the PDF exports (part 4), rules written first in
+SPEC section 11, tests from the rules, whole suite on a local PostgreSQL, the downloads checked in a headless browser.
+What was wrong, and how it was caught:
+1. **The admin log silently lost some admin actions.** An admin request about an account that does not exist (e.g.
+   GET /api/admin/users/99999/log, a 404) produced an admin_log row pointing to a missing account; the database
+   refused it, the error went to the server output and the action was not logged. Part 3's test still passed, because
+   it never looked for that row. Caught by a part-4 test that expected the 404 PDF download in the admin log. Fix: the
+   row is kept without the link, the missing id in the detail; the part-3 test now expects it (both branches).
+2. **Mixed time zones in the PDF.** The header said UTC but the table times came out in the database's local time
+   (two hours apart in the test output). Caught by reading the test output; every time in the PDFs is now UTC.
