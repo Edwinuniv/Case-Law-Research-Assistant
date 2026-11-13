@@ -667,3 +667,19 @@ logged in with the local admin account, screenshots of every page at both widths
    questions as the metrics (SR29: TEST only when asked).
 4. **A number cut off and a striped passage**: 17,859,437 did not fit its card; the passage in the drawer had a dark
    background on each line. Both seen on screenshots and fixed.
+
+## 2026-11-13 — Yasser's follow-up pairs F015-F021 (drafted with help, eval/FOLLOWUPS.md)
+
+Yasser asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Yasser checks and
+approves each pair before the set is tagged followups-v1. What Claude did: built the pairs on Yasser's own eval-v1
+questions (A006, A007, A008, A009, A012), one of each of the six kinds (two "explain"); F015 and F016 reuse the gold
+decision and gold quote of A008 and A012, already verified by the team for eval-v1. What was wrong or unverified:
+1. **An unchecked claim.** The first draft of F020's "why" said "checked: find_case finds nothing", but no check had
+   been run (Claude's workspace has no corpus). Caught by Claude before committing; replaced by the command Yasser
+   must run.
+2. **A quote not verified yet.** F017's gold quote (Justice Sotomayor's dissent in Kennedy v. Bremerton) was written
+   from memory; it must be found word for word with check_followups / find_quote before the set is tagged.
+   Checked by Yasser on his database (2026-11-13): python -m scripts.check_followups printed "no problems" for the
+   7 pairs, so the quote is in the decision word for word.
+Structure checked with scripts/check_followups.py's own check_lines (0 problems); the word-for-word quote check needs
+the database and is Yasser's to run.
