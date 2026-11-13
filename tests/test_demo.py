@@ -50,7 +50,7 @@ def test_refreshing_replaces_the_saved_answers(c, demo, monkeypatch):
     monkeypatch.setattr(llm, "ask_model", lambda q, p: {"status": "NOT_SUPPORTED", "sentences": []})
     demo.make_all(api.STATE["searcher"], api.STATE["index"], log=lambda m: None)
     again = demo.saved_answer(EXAMPLE)
-    assert again["status"] == "NOT_SUPPORTED" and again["saved_at"] >= first and len(demo.all_saved()) == 1
+    assert again["status"] == "NOT_SUPPORTED" and again["saved_at"] > first and len(demo.all_saved()) == 1
 
 
 def test_a_failed_refresh_keeps_the_answer_already_saved(c, demo, monkeypatch):    # e.g. Groq's daily limit
