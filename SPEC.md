@@ -606,3 +606,17 @@ updated_at, number of questions); GET /api/chats/{id} gives one of its own chats
 as it was shown; someone else's: 404; not logged in: 401. (7) The daily limit (plans) counts every question, in a chat
 or not. (8) The research page shows "My chats" for an account (a new chat, or an earlier one continued) and keeps the
 page-only list for a visitor. /api/history stays as it is (Yasser's, 2026-11-12).
+
+2026-11-14 - Admin pages: the accounts and one account's details (part 2 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's
+request 4). Written before the code. (1) GET /api/admin/users lists EVERY account (administrators and visitors'
+accounts), each with: email, role, plan, active, locked until, signed up (created_at), last login, number of logins,
+last activity, number of questions; never the password hash. The figures are counted the same way as Yasser's PDF
+exports (app/exports.py summaries: the user log for a visitor's account, the admin log for an administrator, query_log
+for the questions), so the page and the PDF always agree. (2) GET /api/admin/users/{id} gives one account: the same
+details, its questions (newest first: id, date, status, question, chat), its chats (as GET /api/chats gives them) and
+its log (the user log for a visitor's account; for an administrator, the admin log rows that administrator made).
+Unknown account: 404. (3) Administrators only (a 'user': 403; not logged in: 401). (4) Reading one account's details
+is reading someone's data, so it is written to the admin log (action "GET /api/admin/users/{id}", with the account),
+like the exports. (5) The Accounts page (frontend/src/admin/Users.jsx, restyled by Edwin; changed with Joe's OK, Edwin
+told) shows the list, a Free/Paid switch for visitors' accounts, the two daily limits and the follow-ups switch; a click
+on an account opens its details page (UserDetail.jsx) with its questions, chats, log and the PDF button.
