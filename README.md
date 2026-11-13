@@ -35,6 +35,8 @@ until the follow-up measurement in EVALUATION.md is done.
 The admin page "Accounts" (http://127.0.0.1:8000/admin/users) lists every account with its details (sign-up, last
 login, logins, last activity, plan, questions), switches plans, sets the daily limits and the follow-ups; a click on an
 account opens its questions, chats and log.
+"All questions" (http://127.0.0.1:8000/admin/all-questions) lists every question asked on the site, with filters;
+"Admin log" (http://127.0.0.1:8000/admin/log) shows everything the administrators did, downloadable as CSV.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
