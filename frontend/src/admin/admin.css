@@ -129,3 +129,9 @@ body.ad-dark main{max-width:1400px}
 .ad textarea{width:100%}
 .ad-field input:not([type=checkbox]):not([type=number]):not([type=date]){min-width:220px}
 @media(max-width:600px){.ad-field,.ad-field input,.ad-field select,.ad-field textarea{width:100%;min-width:0!important;box-sizing:border-box}}
+/* PDF export buttons on the Accounts page (Yasser, part 4) */
+.ad-pdf{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;
+  color:#141418;text-decoration:none;background:linear-gradient(90deg,#fbbf24,#fb923c)}
+.ad-pdf::before{content:"⤓";font-size:15px}
+.ad-pdf.small{padding:4px 11px;font-size:12px}
+.ad-pdf:hover{filter:brightness(1.08)}

@@ -28,13 +28,16 @@ export default function Users({ user }) {
       <h2>Administrator <em>accounts</em></h2>
       <p className="ad-lead">{shown.length} account(s), {shown.filter((u) => u.active).length} active. Visitors use the research page
         without an account; there is no sign-up page.</p>
+      {/* PDF exports (Yasser, part 4): the server makes the file; each download is written to the admin log */}
+      <p><a className="ad-pdf" href="/api/admin/users/pdf" download>Download all accounts as PDF</a></p>
       <div className="ad-table">
-        <table><thead><tr><th>Email</th><th>Role</th><th>Active</th><th>Locked until</th><th>Created</th><th></th></tr></thead>
+        <table><thead><tr><th>Email</th><th>Role</th><th>Active</th><th>Locked until</th><th>Created</th><th></th><th></th></tr></thead>
           <tbody>{shown.map((u) => (
             <tr key={u.id}><td><b>{u.email}</b></td><td>{u.role}</td><td>{u.active ? "✓ yes" : "✕ no"}</td>
               <td>{u.locked_until ? day(u.locked_until).slice(11) : ""}</td><td>{day(u.created_at).slice(0, 10)}</td>
               <td>{u.email !== user.email &&
-                <button className="light" onClick={() => toggle(u.id)}>{u.active ? "Disable" : "Enable"}</button>}</td></tr>
+                <button className="light" onClick={() => toggle(u.id)}>{u.active ? "Disable" : "Enable"}</button>}</td>
+              <td><a className="ad-pdf small" href={`/api/admin/users/${u.id}/pdf`} download>PDF</a></td></tr>
           ))}</tbody></table>
       </div>
       <form className="ad-card" onSubmit={create}>
