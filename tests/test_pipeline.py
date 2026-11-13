@@ -308,3 +308,19 @@ def test_the_oldest_turns_are_dropped_until_the_request_fits(monkeypatch):
     assert [t["question"] for t in calls[0]["history"]] == ["Question 2?"]   # system + 1 turn (2) + new = 4 messages
     pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=100000), history=turns)
     assert len(calls[1]["history"]) == 3
+
+def test_a_passage_not_sent_again_can_come_back_when_the_search_finds_it(monkeypatch):   # found by planting
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    pipeline.answer("And the dissent?", Recorder([chunk(2, 9987186)]), INDEX, V2, history=[TWO_PASSAGE_TURN])
+    assert [p["chunk_id"] for p in calls[0]["passages"].values()] == ["c2"]      # c2 was not cited, so not sent
+
+def test_a_passage_of_a_dropped_turn_cannot_be_cited(monkeypatch):                         # found by planting
+    cites_p1 = {"status": "SUPPORTED", "sentences": [{"text": "It is immune.", "sources": ["P1"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", model_spy([], cites_p1))
+    monkeypatch.setattr(llm, "estimate_tokens", lambda msgs: 1000 * len(msgs))
+    later = {"question": "And why?", "passages": [("P2", chunk(2, 9987186))],
+             "sentences": [{"text": "Because.", "sources": ["P2"], "quote": QUOTE}]}
+    r = pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=4000),
+                        history=[FIRST_TURN, later])                        # FIRST_TURN (P1) is dropped
+    assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]
