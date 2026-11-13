@@ -198,3 +198,34 @@ def test_an_independent_question_with_the_old_prompt_calls_the_model_as_before(m
     monkeypatch.setattr(llm, "ask_model", lambda q, p: seen.append((q, list(p))) or good_model(q, p))
     r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)       # no history, prompt v1
     assert r["status"] == "ANSWERED" and seen == [("Is the President immune?", ["P1"])]
+
+
+# --- turn_of: what a chat keeps of an answer for the next follow-up (scripts/chat.py; the website later) ---
+
+def test_a_turn_keeps_the_question_the_passages_and_only_the_sentences_shown(monkeypatch):
+    def half_fabricated(q, p, *a):
+        return {"status": "SUPPORTED", "sentences": [good_model(q, p)["sentences"][0],
+                {"text": "See Fake v. Case, 999 U.S. 9999.", "sources": ["P1"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", half_fabricated)
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)
+    turn = pipeline.turn_of(r)
+    assert turn["question"] == "Is the President immune?" and [p for p, _ in turn["passages"]] == ["P1"]
+    assert turn["sentences"] == r["shown_sentences"]                   # the fabricated sentence is never sent back
+
+def test_a_not_supported_turn_keeps_its_question_but_no_sentence(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: {"status": "SUPPORTED", "sentences": [
+        {"text": "See Fake v. Case, 999 U.S. 9999.", "sources": ["P1"], "quote": QUOTE}]})
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)
+    assert r["status"] == "NOT_SUPPORTED" and pipeline.turn_of(r)["sentences"] == []
+    assert pipeline.turn_of(r)["question"] == "Is the President immune?"
+
+def test_a_greeting_or_an_error_is_not_a_turn(monkeypatch):
+    assert pipeline.turn_of(pipeline.answer("hello", FakeSearcher(0.9), INDEX, S)) is None
+    def broken(q, p): raise llm.ModelError("rate limit")
+    monkeypatch.setattr(llm, "ask_model", broken)
+    assert pipeline.turn_of(pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)) is None
+
+def test_a_follow_up_turn_keeps_every_passage_of_the_chat_for_the_next_one(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    r = pipeline.answer("And the dissent?", Recorder([chunk(2, 9987186)]), INDEX, V2, history=[FIRST_TURN])
+    assert [p for p, _ in pipeline.turn_of(r)["passages"]] == ["P1", "P2"]
