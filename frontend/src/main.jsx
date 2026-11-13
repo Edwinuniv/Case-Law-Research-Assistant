@@ -18,6 +18,8 @@ import Questions from "./admin/Questions.jsx";
 import Settings from "./admin/Settings.jsx";
 import Users from "./admin/Users.jsx";
 import UserDetail from "./admin/UserDetail.jsx";
+import AllQuestions from "./admin/AllQuestions.jsx";
+import AdminLog from "./admin/AdminLog.jsx";
 import Chat from "./pages/Chat.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
@@ -98,6 +100,8 @@ function App() {
               <Route path="messages" element={<Messages />} />
               <Route path="users" element={<Users user={user} />} />
               <Route path="users/:id" element={<UserDetail />} />   {/* one account (SPEC 11, 2026-11-14) */}
+              <Route path="all-questions" element={<AllQuestions />} />   {/* every question (SPEC 11, 2026-11-14) */}
+              <Route path="log" element={<AdminLog />} />
             </Route>
           )}
           <Route path="*" element={<Navigate to="/" />} />
