@@ -12,6 +12,8 @@ import os
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
+from app import config  # noqa: F401  (loads .env, so GOOGLE_CLIENT_ID is read even when this file is imported first)
+
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()     # empty: no Google button, the route answers 404
 _transport = google_requests.Request()                         # downloads and caches Google's public keys
 
