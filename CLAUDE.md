@@ -163,7 +163,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] Saved demo answers (meeting of 13 Nov) — branch feature/demo-answers: demo_answers table, app/demo.py, scripts/make_demo_answers.py; /api/ask returns the saved answer of an example question (no model call, logged, not counted in the limit); page label "Saved answer · checked on <date>"; 8 tests (one: saved answers in the user log), 6 planted bugs caught; merged with Yasser's logs (PR #102) ⏳ make the answers when the v2 run pauses (shared Groq budget); then again after v2 is chosen or not
 
 ### Access and admin pages (Joe; docs/PLAN_2026-11-13.md parts 1-2, after the meeting of 13 Nov)
-- [x] Visitor = one question (Joe) — branch step/1-visitor-one-question: one question per browser session without an account (counted in the session; SR3 refusals, greetings, ERRORs and example questions do not count), then 403 and "Log in or sign up" on the page; /api/me free_questions_left; 11 tests (Joe's table) ⏳ plans and daily limits, saved chats, admin user pages
+- [x] Visitor = one question (Joe) — branch step/1-visitor-one-question: one question per browser session without an account (counted in the session; SR3 refusals, greetings, ERRORs and example questions do not count), then 403 and "Log in or sign up" on the page; /api/me free_questions_left; 11 tests (Joe's table) (PR #105)
+- [x] Free and paid accounts (Joe) — branch step/2-plans-daily-limits: users.plan (free/paid), 10 or 100 questions a day since midnight Beirut (settings free_daily_questions, paid_daily_questions), 429 before the model + refused in the user log, POST /api/admin/users/{id}/plan (plan_change), POST /api/admin/limits, plan on the research page; 14 tests (Joe's table) ⏳ admin buttons (step 4); Edwin: a line on the Terms page (no real payment); saved chats, admin user pages
 
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
