@@ -56,3 +56,46 @@ def test_daily_limit_is_named_in_the_error(monkeypatch):     # the evaluation pa
     with pytest.raises(llm.ModelError, match="rate limit reached per day, retry after 1320 s"):
         llm.ask_model("q", {})
 
+
+
+# --- Answer v2 (EVALUATION.md "Answer v2 rule", 2026-11-13): the conversation as messages, prompt caching, tokens ---
+def passage(n):
+    return {"case_name": f"Case {n} v. State", "date_filed": "2020-01-01", "opinion_label": "Opinion of the Court",
+            "section": "", "text": f"Text of passage {n}."}
+
+FIRST = {"question": "Did the Court strike down the law?", "passages": [("P1", passage(1)), ("P2", passage(2))],
+         "sentences": [{"text": "The Court struck it down.", "sources": ["P1"], "quote": "Text of passage 1."}]}
+
+def test_an_independent_question_with_the_old_prompt_is_built_exactly_as_before():       # rule (4)
+    msgs = llm.build_messages("q", {"P1": passage(1)}, None, "v1")
+    assert msgs == [{"role": "system", "content": llm.SYSTEM_PROMPT},
+                    {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages({'P1': passage(1)})}\n\nQUESTION: q"}]
+
+def test_a_follow_up_starts_with_exactly_the_first_request_so_the_cache_can_reuse_it():
+    turn1 = llm.build_messages(FIRST["question"], dict(FIRST["passages"]), None, "v2")
+    turn2 = llm.build_messages("What did the dissent say?", {"P3": passage(3)}, [FIRST], "v2")
+    assert turn2[:len(turn1)] == turn1                          # same beginning, byte for byte
+    assert turn2[len(turn1)]["role"] == "assistant" and "The Court struck it down." in turn2[len(turn1)]["content"]
+    assert turn2[-1]["role"] == "user" and "What did the dissent say?" in turn2[-1]["content"]
+
+def test_a_follow_up_without_new_passages_sends_only_the_question():                       # reuse, fewer tokens
+    msgs = llm.build_messages("And why?", {}, [FIRST], "v2")
+    assert "PASSAGES" not in msgs[-1]["content"] and "And why?" in msgs[-1]["content"]
+
+def test_the_new_prompt_forbids_answers_outside_the_law_and_keeps_the_quote_rule():
+    assert "OFF_TOPIC" in llm.SYSTEM_PROMPT_V2 and "quote" in llm.SYSTEM_PROMPT_V2
+    assert llm.build_messages("q", {}, None, "v2")[0]["content"] == llm.SYSTEM_PROMPT_V2
+
+class UsageReply(Reply):
+    def __init__(self, content, prompt, cached, completion):
+        super().__init__(content)
+        details = type("D", (), {"cached_tokens": cached})()
+        self.usage = type("U", (), {"prompt_tokens": prompt, "completion_tokens": completion, "prompt_tokens_details": details})()
+
+def test_the_tokens_of_each_call_are_recorded_with_the_cached_ones(monkeypatch):
+    class Completions:
+        def create(self, **kw): return UsageReply('{"status": "NOT_SUPPORTED", "sentences": []}', 1200, 1000, 40)
+    class Client: chat = type("Chat", (), {"completions": Completions()})()
+    monkeypatch.setattr(llm, "_client", lambda: Client())
+    llm.ask_model("q", {})
+    assert llm.LAST_USAGE == {"input": 1200, "cached": 1000, "output": 40}
