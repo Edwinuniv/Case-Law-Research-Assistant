@@ -105,6 +105,10 @@ CREATE TABLE IF NOT EXISTS admin_log (             -- everything an administrato
     admin_id INT REFERENCES users(id) ON DELETE SET NULL, admin_email TEXT NOT NULL,
     action TEXT NOT NULL, target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
     status INT, detail JSONB NOT NULL DEFAULT '{}');
+
+CREATE TABLE IF NOT EXISTS demo_answers (          -- saved answers to the example questions (Edwin, 2026-11-13)
+    key TEXT PRIMARY KEY, question TEXT NOT NULL, result JSONB NOT NULL, shown JSONB NOT NULL,
+    saved_at TIMESTAMPTZ NOT NULL DEFAULT now());
 """
 
 INDEXES = """

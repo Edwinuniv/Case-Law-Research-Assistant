@@ -7,7 +7,7 @@ import time
 from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from app import config, db, logs
+from app import config, db, demo, logs
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import answer, check_input
 
@@ -236,6 +236,15 @@ def ask(request: Request, body: Question):
     error = check_input(body.question)                                         # SR3
     if error:
         raise HTTPException(400, error)
+    asker = request.session.get("user_id")                      # a logged-in account keeps its history (SPEC 11)
+    if asker and db.active_role(asker) is None:
+        asker = None
+    saved = demo.saved_answer(body.question)                    # an example question (Edwin, 2026-11-13): the
+    if saved:                                                   # answer saved once, no model call, not counted
+        saved["id"] = db.log_query(demo.saved_result(body.question), user_id=asker, shown=saved)   # FR28
+        if asker and db.active_role(asker) == "user":                   # the user log, like any question
+            logs.log_user(asker, "question", {"status": saved["status"], "demo": True}, query_id=saved["id"])
+        return saved
     wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
         uid = request.session.get("user_id")
@@ -248,9 +257,6 @@ def ask(request: Request, body: Question):
         raise HTTPException(503, "The search index is not ready yet.")
     r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
     shown = public_answer(r)
-    asker = request.session.get("user_id")                      # a logged-in account keeps its history (SPEC 11)
-    if asker and db.active_role(asker) is None:
-        asker = None
     shown["id"] = db.log_query(r, user_id=asker, shown=shown)   # FR28, SR41 (no account: user_id stays empty)
     if asker and db.active_role(asker) == "user":
         logs.log_user(asker, "question", {"status": shown["status"]}, query_id=shown["id"])
