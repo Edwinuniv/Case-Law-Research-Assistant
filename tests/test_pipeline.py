@@ -147,8 +147,9 @@ FIRST_TURN = {"question": "Is the President immune?", "passages": [("P1", chunk(
                              "sources": ["P1"], "quote": QUOTE}]}
 
 def model_spy(calls, reply=None):
-    def ask(q, passages, history=None, version="v1"):
-        calls.append({"question": q, "passages": dict(passages), "history": history, "version": version})
+    def ask(q, passages, history=None, version="v1", reasoning_effort=None):
+        calls.append({"question": q, "passages": dict(passages), "history": history, "version": version,
+                      "reasoning_effort": reasoning_effort})
         return reply or {"status": "SUPPORTED", "sentences": [{"text": "The President has absolute immunity for conclusive actions.",
                                                                "sources": ["P1"], "quote": QUOTE}]}
     return ask
@@ -159,7 +160,7 @@ def test_a_follow_up_reads_the_chat_and_searches_with_the_earlier_question(monke
     searcher = Recorder([chunk(2, 9987186)])
     r = pipeline.answer("And for unofficial acts?", searcher, INDEX, V2, history=[FIRST_TURN])
     assert "Is the President immune?" in searcher.queries[0] and "And for unofficial acts?" in searcher.queries[0]
-    assert calls[0]["history"] == [FIRST_TURN] and calls[0]["version"] == "v2"
+    assert calls[0]["history"] == [FIRST_TURN] and calls[0]["version"] == "v2" and calls[0]["reasoning_effort"] == "low"
     assert r["status"] in ("ANSWERED", "LOW_CONFIDENCE")             # it cites P1, a passage of the earlier turn
 
 def test_same_topic_adds_at_most_4_new_passages_new_topic_up_to_8_never_twice(monkeypatch):
