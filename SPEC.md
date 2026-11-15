@@ -631,3 +631,28 @@ unknown status or a bad who: 400. (3) GET /api/admin/all-questions/{id}: one que
 as it was shown (details.shown); unknown: 404. (4) The admin log page shows GET /api/admin/log (Yasser) with its CSV
 download. (5) Administrators only (a 'user': 403; not logged in: 401). Reading these lists is not written to the admin
 log (they are the site's own questions, like the Abstentions page); one account's details and the exports still are.
+
+2026-11-15 - Paying for the paid plan, in Stripe TEST mode (Edwin; Edwin's decision, after Joe's free/paid plans of
+14 Nov). Written before the code. Replaces "no real payment, an administrator switches an account to paid" as the only
+way: the administrator's switch stays. (1) **Test mode only**: no real money moves. The server accepts only a Stripe
+test key (sk_test_...); a live key (sk_live_...) is refused at start-up and payments stay off. Stripe's test card
+4242 4242 4242 4242 pays. (2) **Off unless set up**: STRIPE_SECRET_KEY and STRIPE_PRICE_ID (a monthly price made in
+the Stripe dashboard) in the environment; without them the /api/billing routes answer 404 and the pricing page says
+payments are not set up. STRIPE_WEBHOOK_SECRET is optional (see 5). (3) **Choosing the plan**: a public page /pricing
+compares Free and Paid (the daily limits come from the settings, the price label from PAID_PRICE_LABEL). A visitor is
+sent to sign up first; an administrator has no plan (no limit); a 'user' account on the free plan gets "Upgrade".
+(4) **Paying**: POST /api/billing/checkout (a logged-in 'user' on the free plan, CSRF) creates a Stripe Checkout
+session (subscription, our price, the account id as client_reference_id) and returns its address; the browser goes
+to Stripe's own page, so card numbers never reach our server and nothing about the card is stored. Back on
+/pricing?session_id=..., POST /api/billing/confirm asks Stripe for that session: only if it is complete and paid AND
+was made for the account that is logged in, the account becomes paid. An administrator account, a paid account, or
+another account's session: refused (400/403), nothing changes. (5) **Webhook** (when STRIPE_WEBHOOK_SECRET is set):
+POST /api/billing/webhook checks Stripe's signature (a bad or missing signature: 400, nothing changes);
+checkout.session.completed does the same as (4); customer.subscription.deleted makes the account free again. The same
+event twice changes nothing the second time. (6) **Cancelling**: POST /api/billing/cancel (the paid account itself)
+cancels the subscription at Stripe and makes the account free at once. (7) **Kept**: only Stripe's customer id and
+subscription id on the account (users.stripe_customer_id, users.stripe_subscription_id), to cancel later; no card
+data, no amount. Every change is a plan_change row in the user log, with "by": "stripe" (or the administrator's
+email, as before). (8) An administrator switching an account back to free does not cancel its Stripe subscription
+(test mode: no money); the Accounts page shows the switch as before. Terms and Privacy say all of this. Files of
+others changed, told: app/api.py, app/db.py (two columns), frontend router and pages (Joe).
