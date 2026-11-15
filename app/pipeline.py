@@ -29,7 +29,7 @@ def is_greeting(question):
 
 # In a chat (2026-11-13), "thanks" or "ok" gets one line instead of the whole welcome text. Also ours, no model call.
 THANKS_WORDS = {"thanks", "thank", "you", "ok", "okay", "great", "got", "it", "cool", "perfect", "nice", "alright",
-                "understood", "very", "much"}
+                "understood", "very", "much", "verdicta"}
 THANKS_TEXT = "You're welcome. Ask another question about this case, or start a new chat for another one."
 
 
