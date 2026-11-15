@@ -275,7 +275,7 @@ def test_if_the_chats_case_has_no_close_passage_the_whole_corpus_is_searched(mon
     assert searcher.filters == [[9987186], None]
     assert [p["chunk_id"] for p in calls[0]["passages"].values()] == ["c30"]
 
-@pytest.mark.parametrize("text", ["thanks", "Thank you!", "ok", "okay, thanks", "great"])
+@pytest.mark.parametrize("text", ["thanks", "Thank you!", "ok", "okay, thanks", "great", "thanks verdicta"])
 def test_thanks_in_a_chat_gets_one_line_without_search_or_model(monkeypatch, text):
     calls, searcher = [], Recorder([chunk(2, 9987186)])
     monkeypatch.setattr(llm, "ask_model", model_spy(calls))
