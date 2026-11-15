@@ -10,7 +10,9 @@ WELCOME = "WELCOME"
 # A greeting or "what can you do" gets a fixed welcome message instead of "not supported" (2026-11-12).
 # The WHOLE message must be a greeting and/or one of these phrases: a legal question that starts with
 # "Hello," is not a greeting. The text is ours, not the model's: no search, no model call, no legal statement.
-GREETING_WORDS = {"hi", "hello", "hey", "hiya", "greetings", "there", "good", "morning", "afternoon", "evening"}
+# "verdicta" too: people greet the assistant by its name ("hello verdicta" got "Not supported" live, 2026-11-15)
+GREETING_WORDS = {"hi", "hello", "hey", "hiya", "greetings", "there", "good", "morning", "afternoon", "evening",
+                  "verdicta"}
 HELP_PHRASES = {"", "help", "what can you do", "what do you do", "who are you", "what are you", "what is this",
                 "what is verdicta", "how does this work", "how does it work", "how do you work", "how do i use this",
                 "thanks", "thank you"}
