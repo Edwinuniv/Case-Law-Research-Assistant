@@ -171,7 +171,8 @@ def me(request: Request):
             "examples": config.EXAMPLE_QUESTIONS,
             "free_questions_left": free_questions_left(request, request.session.get("user_id") if user else None),
             "plan": plan_info(request.session["user_id"]) if user and user["role"] == "user" else None,
-            "follow_ups": bool(user) and bool(db.get_settings().get("follow_ups", False))}
+            "follow_ups": bool(user) and bool(db.get_settings().get("follow_ups", False)),
+            "unlimited": bool(user) and user["role"] == "admin"}      # administrators: no plan and no limit
 
 
 # ---------------- one question for a visitor without an account (SPEC 11, 2026-11-14) ----------------
@@ -294,7 +295,8 @@ def ask(request: Request, body: Question):
                                              "daily_limit": info["daily_limit"]})
             raise HTTPException(429, f"You have used your {info['daily_limit']} questions for today "
                                      f"({info['plan']} plan). The limit starts again at midnight, Beirut time.")
-    wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
+    is_admin = bool(asker) and db.active_role(asker) == "admin"   # administrators: no limit at all (2026-11-15)
+    wait = 0 if is_admin else seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
         uid = request.session.get("user_id")
         if uid and db.active_role(uid) == "user":                   # the refusal goes to the account's log
