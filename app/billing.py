@@ -36,8 +36,9 @@ def create_checkout(user_id, email, base_url):
 
 
 def fetch_session(session_id):
-    """The Checkout session as Stripe has it (never as the browser says it is)."""
-    return stripe.checkout.Session.retrieve(session_id, api_key=SECRET_KEY)
+    """The Checkout session as Stripe has it (never as the browser says it is), as a plain dict: since stripe 17 a
+    StripeObject is not a dict (no .get), found by tests/test_billing.py."""
+    return stripe.checkout.Session.retrieve(session_id, api_key=SECRET_KEY).to_dict()
 
 
 def cancel_subscription(subscription_id):
@@ -46,7 +47,7 @@ def cancel_subscription(subscription_id):
 
 def parse_event(payload, signature):
     """A webhook event, only if Stripe's signature matches our secret; otherwise ValueError or SignatureVerificationError."""
-    return stripe.Webhook.construct_event(payload, signature, WEBHOOK_SECRET)
+    return stripe.Webhook.construct_event(payload, signature, WEBHOOK_SECRET).to_dict()     # a plain dict, as above
 
 
 # ---------------- what a payment changes ----------------
