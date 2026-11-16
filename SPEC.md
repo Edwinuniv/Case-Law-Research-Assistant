@@ -649,7 +649,9 @@ log (they are the site's own questions, like the Abstentions page); one account'
 2026-11-15 - Paying for the paid plan, in Stripe TEST mode (Edwin; Edwin's decision, after Joe's free/paid plans of
 14 Nov). Written before the code. Replaces "no real payment, an administrator switches an account to paid" as the only
 way: the administrator's switch stays. (1) **Test mode only**: no real money moves. The server accepts only a Stripe
-test key (sk_test_...); a live key (sk_live_...) is refused at start-up and payments stay off. Stripe's test card
+test key: a secret key sk_test_... or a restricted key rk_test_... (added 2026-11-16, before the code: Edwin's key is a
+restricted one, which can only do what it is allowed); a live key (sk_live_... or rk_live_...) is refused at start-up
+and payments stay off. Stripe's test card
 4242 4242 4242 4242 pays. (2) **Off unless set up**: STRIPE_SECRET_KEY and STRIPE_PRICE_ID (a monthly price made in
 the Stripe dashboard) in the environment; without them the /api/billing routes answer 404 and the pricing page says
 payments are not set up. STRIPE_WEBHOOK_SECRET is optional (see 5). (3) **Choosing the plan**: a public page /pricing
