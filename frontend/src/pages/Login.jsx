@@ -3,6 +3,7 @@
 //   POST /api/login. Show/hide password, a Caps Lock warning, "Forgot password?".
 // - Sign up (SPEC 11, 2026-11-12): POST /api/signup makes a 'user' account and logs it in, then the research
 //   page opens; the account keeps the visitor's question history. Only the email and a password hash are stored.
+// - Continue with Google (SPEC 11, 2026-11-13): components/GoogleButton.jsx, on both forms, user accounts only.
 // - Forgot password: there is no email service, so it explains that an administrator resets the password
 //   from the Accounts page (FR12: db.create_user resets the password of an existing email).
 import { useState } from "react";
@@ -10,6 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
 import ClipboardAnim from "../components/ClipboardAnim.jsx";
+import GoogleButton from "../components/GoogleButton.jsx";   // Sign in with Google (SPEC 11, 2026-11-13)
 import "./auth.css";
 
 function PasswordInput({ id, value, onChange, autoComplete, placeholder }) {
@@ -60,6 +62,7 @@ function LoginForm({ onLogin }) {
       <PasswordInput id="password" value={password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
       {error && <p className="au-error" role="alert">{error}</p>}
       <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Checking" /> : "Log in"}</button>
+      <GoogleButton mode="login" onLogin={onLogin} />
       <p className="au-switch">Don't have an account? <Link to="/signup">Sign up</Link></p>
     </form>
   );
@@ -97,6 +100,7 @@ function SignupForm({ onLogin }) {
                      onChange={(e) => setPassword(e.target.value)} />
       {error && <p className="au-error" role="alert">{error}</p>}
       <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Creating" /> : "Create account"}</button>
+      <GoogleButton mode="signup" onLogin={onLogin} />
       <p className="au-small">We keep only your email and your questions, so you find them again. <Link to="/privacy">Privacy</Link></p>
       <p className="au-switch">Already have an account? <Link to="/login">Log in</Link></p>
     </form>
