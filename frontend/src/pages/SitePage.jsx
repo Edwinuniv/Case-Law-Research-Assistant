@@ -7,7 +7,7 @@ import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser,
 import "./site.css";
 
 export const SITE_PAGES = [["/privacy", "Privacy"], ["/terms", "Terms of use"], ["/sources", "Sources & licences"],
-  ["/contact", "Contact"]];
+  ["/contact", "Contact"], ["/pricing", "Plans"]];
 
 export default function SitePage({ kicker, title, accent, updated, children }) {
   return (
