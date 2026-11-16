@@ -169,6 +169,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 - [x] Admin accounts pages (Joe) — branch step/4-admin-users: GET /api/admin/users = every account with details (exports.summaries, same figures as the PDFs), GET /api/admin/users/{id} (questions, chats, log; in the admin log); Accounts page with Free/Paid, limits, follow-ups switch; UserDetail page; 7 tests (Joe's table) (PR #109)
 - [x] All questions + admin log pages (Joe) — branch step/5-admin-questions-log: GET /api/admin/all-questions (status, who, text filters; 100 per page), /api/admin/all-questions/{id} (answer as shown); AllQuestions.jsx and AdminLog.jsx in the admin menu; 6 tests (Joe's table). Parts 1-2 of the plan done ⏳ Edwin: ad-pdf text colour, Terms line, follow_ups switch (notes/admin-users/message-pour-edwin.md)
 
+- [x] Paid plan with Stripe, TEST mode (Edwin, 2026-11-15/16) — branch feature/stripe-test-payments: SPEC 11 rule first; app/billing.py + app/api_billing.py (checkout, confirm asks Stripe, cancel, signed webhook; sk_test_ only), users.stripe_customer_id/subscription_id, /pricing page, Privacy; 19 tests, 6 planted bugs caught; stripe 17 objects are not dicts (AI_LOG) ⏳ Stripe test keys in .env for a live test payment; Terms after #111
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 
