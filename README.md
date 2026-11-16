@@ -66,9 +66,12 @@ keys are accepted. To switch it on:
    Checkout Sessions and Subscriptions set to Write (safer: it can do nothing else).
 4. In `.env` (and the Railway variables online): `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, optionally `PAID_PRICE_LABEL`.
    Run `pip install -r requirements.txt` again (stripe), then restart uvicorn.
-5. Pay with the test card 4242 4242 4242 4242, any future date, any CVC. Back on /pricing the server asks Stripe
+5. Stripe chooses the payment methods its page shows (it showed Cash App Pay and US bank for a US account). To offer
+   only the card: Settings > Payment methods (in test mode) and turn the others off. The code cannot do this: Stripe
+   refuses `payment_method_types` now.
+6. Pay with the test card 4242 4242 4242 4242, any future date, any CVC. Back on /pricing the server asks Stripe
    whether the payment is complete, then the account is paid.
-6. Optional, online: Developers > Webhooks > add the endpoint `https://<site>/api/billing/webhook` with the events
+7. Optional, online: Developers > Webhooks > add the endpoint `https://<site>/api/billing/webhook` with the events
    `checkout.session.completed` and `customer.subscription.deleted`, and put its signing secret in
    `STRIPE_WEBHOOK_SECRET`. Locally the webhook is not needed.
 
