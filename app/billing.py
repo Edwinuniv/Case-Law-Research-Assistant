@@ -27,10 +27,11 @@ def enabled():
 
 # ---------------- the calls to Stripe ----------------
 def create_checkout(user_id, email, base_url):
-    """A Stripe Checkout session for the monthly subscription; returns the address of Stripe's payment page."""
+    """A Stripe Checkout session for the monthly subscription; returns the address of Stripe's payment page.
+    Which payment methods the page offers (card only, no Cash App) is set in the Stripe dashboard, not here:
+    Stripe refuses payment_method_types since its newer API (README; AI_LOG 2026-11-16)."""
     s = stripe.checkout.Session.create(
         api_key=SECRET_KEY, mode="subscription", line_items=[{"price": PRICE_ID, "quantity": 1}],
-        payment_method_types=["card"],             # only the card: Stripe's US extras (Cash App, bank) confused users
         client_reference_id=str(user_id), customer_email=email,
         success_url=f"{base_url}/pricing?session_id={{CHECKOUT_SESSION_ID}}",   # Stripe fills in the session id
         cancel_url=f"{base_url}/pricing?cancelled=1")

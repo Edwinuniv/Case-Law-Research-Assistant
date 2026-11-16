@@ -191,12 +191,3 @@ def test_a_free_account_has_nothing_to_cancel(c, reader, stripe_on):
     assert post(c, "/api/billing/cancel").status_code == 400
     assert stripe_on["cancel"] == []
 
-
-def test_stripes_page_offers_only_the_card(monkeypatch):          # 2026-11-16: Cash App Pay does not exist in Lebanon
-    from app import billing
-    asked = {}
-    monkeypatch.setattr(billing.stripe.checkout.Session, "create",
-                        lambda **kw: asked.update(kw) or type("S", (), {"url": "https://checkout.stripe.com/x"})())
-    billing.create_checkout(7, "a@example.com", "http://site")
-    assert asked["payment_method_types"] == ["card"] and asked["client_reference_id"] == "7"
-    assert asked["success_url"].startswith("http://site/pricing?session_id=")
