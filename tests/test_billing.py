@@ -71,11 +71,19 @@ def test_payments_are_off_without_the_keys(c, reader):
     assert post(c, "/api/billing/checkout").status_code == 404
 
 
-def test_a_live_key_is_refused(c, reader, stripe_on, monkeypatch):
+@pytest.mark.parametrize("key", ["sk_live_123", "rk_live_123"])
+def test_a_live_key_is_refused(c, reader, stripe_on, monkeypatch, key):
     from app import billing
-    monkeypatch.setattr(billing, "SECRET_KEY", "sk_live_123")
+    monkeypatch.setattr(billing, "SECRET_KEY", key)
     assert c.get("/api/billing").json()["enabled"] is False
     assert post(c, "/api/billing/checkout").status_code == 404
+
+
+def test_a_restricted_test_key_is_accepted(c, reader, stripe_on, monkeypatch):     # Edwin's key (2026-11-16)
+    from app import billing
+    monkeypatch.setattr(billing, "SECRET_KEY", "rk_test_123")
+    assert c.get("/api/billing").json()["enabled"] is True
+    assert post(c, "/api/billing/checkout").status_code == 200
 
 
 def test_the_pricing_page_gets_the_limits_and_the_price(c, stripe_on):
