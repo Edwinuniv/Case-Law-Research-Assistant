@@ -66,7 +66,10 @@ def event(kind, obj, eid="evt_1"):
 
 
 # ---- (1)-(2) test mode only, off unless set up ----
-def test_payments_are_off_without_the_keys(c, reader):
+def test_payments_are_off_without_the_keys(c, reader, monkeypatch):
+    from app import billing
+    monkeypatch.setattr(billing, "SECRET_KEY", "")          # whatever the developer's .env holds
+    monkeypatch.setattr(billing, "PRICE_ID", "")
     assert c.get("/api/billing").json()["enabled"] is False
     assert post(c, "/api/billing/checkout").status_code == 404
 
