@@ -12,7 +12,7 @@ import stripe
 
 from app import config, db, logs  # noqa: F401  (config loads .env before the keys below are read)
 
-SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()       # sk_test_... only (a live key turns payments off)
+SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()       # sk_test_ or rk_test_ only (a live key: payments off)
 PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "").strip()           # the monthly price made in the Stripe dashboard
 WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()   # optional: whsec_...
 PRICE_LABEL = os.environ.get("PAID_PRICE_LABEL", "").strip() or "$5 a month"
@@ -20,8 +20,9 @@ SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")      # where Strip
 
 
 def enabled():
-    """Payments are on only with a TEST key and a price (SPEC 11: test mode only, no real money)."""
-    return SECRET_KEY.startswith("sk_test_") and bool(PRICE_ID)
+    """Payments are on only with a TEST key, secret (sk_test_) or restricted (rk_test_), and a price
+    (SPEC 11: test mode only, no real money)."""
+    return SECRET_KEY.startswith(("sk_test_", "rk_test_")) and bool(PRICE_ID)
 
 
 # ---------------- the calls to Stripe ----------------
