@@ -50,7 +50,9 @@ export default function Privacy() {
           questions (10 a minute), logins, new accounts (5 an hour) and contact messages (3 in 10 minutes) come from one
           address.</li>
         <li>We do not save your browser or device information.</li>
-        <li>We use no analytics, no advertising and no tracking, and the pages load no script or font from another website.</li>
+        <li>We use no analytics, no advertising and no tracking. The pages load no script or font from another website,
+          except the login and sign-up pages, which load Google's sign-in button when "Continue with Google" is
+          offered.</li>
       </ul>
 
       <h2>The one cookie</h2>
@@ -65,6 +67,9 @@ export default function Privacy() {
           passages of the court decisions that were found, so that the model can draft the answer. Groq's own privacy
           policy applies to that request.</li>
         <li><strong>Railway</strong>, which hosts the website and its database.</li>
+        <li><strong>Google</strong>, only on the login and sign-up pages: its sign-in button is loaded from Google, so
+          Google sees that visit. If you continue with Google, Google gives us your email address and nothing else is
+          kept (no Google password or token).</li>
         <li><strong>Stripe</strong>, only if you choose the paid plan: it receives your email address and what you type on
           its payment page. Stripe's own privacy policy applies to that payment.</li>
       </ul>
