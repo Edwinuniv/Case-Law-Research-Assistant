@@ -24,6 +24,19 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
 The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account.
+Without an account, a visitor gets ONE question per browser session (the example questions are always answered);
+after it, the page asks them to log in or sign up.
+An account is on the free plan (10 questions a day) or the paid plan (100 a day; no real payment): an administrator
+switches it (POST /api/admin/users/{id}/plan) and changes the two limits (POST /api/admin/limits). A day starts at
+midnight, Beirut time. Administrators have no daily limit.
+A logged-in account keeps its chats ("My chats" on the research page; GET /api/chats). Follow-up questions read the
+chat only when an administrator switches them on (POST /api/admin/follow-ups {"on": true}); they are off by default
+until the follow-up measurement in EVALUATION.md is done.
+The admin page "Accounts" (http://127.0.0.1:8000/admin/users) lists every account with its details (sign-up, last
+login, logins, last activity, plan, questions), switches plans, sets the daily limits and the follow-ups; a click on an
+account opens its questions, chats and log.
+"All questions" (http://127.0.0.1:8000/admin/all-questions) lists every question asked on the site, with filters;
+"Admin log" (http://127.0.0.1:8000/admin/log) shows everything the administrators did, downloadable as CSV.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
@@ -32,7 +45,9 @@ a visitor's account lands on the research page and cannot open the admin pages. 
 (ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
 Every account has an activity log (sign-up, logins, logouts, questions, refusals) and every administrator action is
 written to the admin log; administrators read them at `/api/admin/users/{id}/log` and `/api/admin/log`, and add
-`?format=csv` to download them as a file (the admin pages show them).
+`?format=csv` to download them as a file (the admin pages show them). PDF exports: on the admin page "Accounts",
+"Download all accounts as PDF" (`/api/admin/users/pdf`) and a "PDF" link per account (`/api/admin/users/{id}/pdf`:
+details, log and questions). They use ReportLab, so run `pip install -r requirements.txt` again after pulling.
 
 The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
 addresses in `CONTACT_EMAIL`, separated by commas so the whole team receives the mail (.env, and the Railway variables online) and has a form; messages are read and deleted on

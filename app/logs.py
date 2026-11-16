@@ -16,8 +16,15 @@ from psycopg.types.json import Jsonb
 from app import db
 
 USER_EVENTS = ("signup", "login", "login_failed", "logout", "question", "follow_up", "plan_change", "refused")
-# the routes that only READ but are still logged in the admin log: downloading people's data is an action too
-LOGGED_READS = ("/export", "/log", "/pdf")
+# the routes that only READ but are still logged in the admin log: downloading people's data is an action too.
+# Compared with the LAST part of the path only, so a future /api/admin/logins or /exports-list is not an export
+# (Edwin's review of #96, point 1).
+LOGGED_READS = ("export", "log", "pdf")
+
+
+def logged_read(path):
+    """/api/admin/users/7/pdf -> True; /api/admin/logins -> False."""
+    return path.rstrip("/").split("/")[-1] in LOGGED_READS
 
 
 def log_user(user_id, event, detail=None, query_id=None):
@@ -62,7 +69,7 @@ async def admin_logger(request, call_next):
     the admin log after it ran, with its HTTP status, so a new admin route is logged without extra code."""
     response = await call_next(request)
     path = request.url.path
-    if path.startswith("/api/admin") and (request.method != "GET" or any(k in path for k in LOGGED_READS)):
+    if path.startswith("/api/admin") and (request.method != "GET" or logged_read(path)):
         session = request.scope.get("session") or {}
         admin_id = session.get("user_id")
         if admin_id and db.user_is_active_admin(admin_id):              # refused requests from non-admins: not admin acts
@@ -80,11 +87,20 @@ def user_log(user_id, limit=500):
                            "ORDER BY id DESC LIMIT %s", (user_id, limit)).fetchall()
 
 
-def admin_log(limit=500):
-    """The admin log, newest first."""
+def admin_log(limit=500, admin_id=None):
+    """The admin log, newest first; with admin_id, only that administrator's rows."""
+    where, args = ("WHERE admin_id = %s ", (admin_id, limit)) if admin_id is not None else ("", (limit,))
     with db.connect() as con:
         return con.execute("SELECT id, at, admin_email, action, target_user_id, status, detail FROM admin_log "
-                           "ORDER BY id DESC LIMIT %s", (limit,)).fetchall()
+                           + where + "ORDER BY id DESC LIMIT %s", args).fetchall()
+
+
+def logs_started():
+    """When the first log row was written (the logs began with the 2026-11-13 deploy), or None if both are empty.
+    An account created before that has no recorded sign-up or logins: the PDFs say "not recorded", not "never"."""
+    with db.connect() as con:
+        return con.execute("SELECT LEAST((SELECT min(at) FROM user_log), (SELECT min(at) FROM admin_log)) AS t"
+                           ).fetchone()["t"]
 
 
 def as_json(rows):

@@ -139,3 +139,31 @@ def test_a_log_that_cannot_be_written_never_blocks_the_action(clean_db, capsys):
     assert "could not write login" in capsys.readouterr().err
     with pytest.raises(ValueError):                                       # an unknown event is a programming mistake
         logs.log_user(1, "danced")
+
+
+# ---- after Edwin's review of #96 (SPEC 11, the clarification of 2026-11-13) ----
+def test_only_the_last_part_of_the_path_makes_a_logged_read():              # (c)
+    from app import logs
+    assert logs.logged_read("/api/admin/users/7/pdf") and logs.logged_read("/api/admin/log")
+    assert logs.logged_read("/api/admin/questions/export/")
+    assert not logs.logged_read("/api/admin/logins") and not logs.logged_read("/api/admin/exports-list")
+    assert not logs.logged_read("/api/admin/log/summary")
+
+
+def test_the_try_that_locks_the_account_says_so(c, clean_db):               # (b)
+    post(c, "/api/signup", {"email": "reader@example.com", "password": PW})
+    post(c, "/api/logout")
+    for _ in range(6):                                                    # 5 wrong tries lock it (SR36), then a 6th
+        log_in(c, "reader@example.com", "a-wrong-password")
+    with clean_db.connect() as con:
+        reasons = [r["detail"]["reason"] for r in con.execute(
+            "SELECT detail FROM user_log WHERE event = 'login_failed' ORDER BY id")]
+    assert reasons == ["wrong password"] * 4 + ["wrong password (account now locked)", "locked"]
+
+
+def test_a_failed_login_on_an_admin_email_is_an_attempt_on_the_account(c, clean_db):   # (a)
+    log_in(c, "boss@example.com", "a-wrong-password")                   # by anyone who knows the email
+    with clean_db.connect() as con:
+        r = con.execute("SELECT action, detail FROM admin_log").fetchone()
+    assert r["action"] == "login_failed"
+    assert r["detail"] == {"reason": "wrong password", "attempt_on_account": True}
