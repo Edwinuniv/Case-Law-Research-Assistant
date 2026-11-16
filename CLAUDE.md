@@ -171,6 +171,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 - [x] Paid plan with Stripe, TEST mode (Edwin, 2026-11-15/16) — branch feature/stripe-test-payments: SPEC 11 rule first; app/billing.py + app/api_billing.py (checkout, confirm asks Stripe, cancel, signed webhook; sk_test_ only), users.stripe_customer_id/subscription_id, /pricing page, Privacy; 19 tests, 6 planted bugs caught; stripe 17 objects are not dicts (AI_LOG) ⏳ Stripe test keys in .env for a live test payment; Terms after #111
 
+- [x] Plans panel in the chat (Edwin, 2026-11-16) — branch feature/plans-dialog: components/Plans.jsx (one copy for /pricing and the panel: usage bar, Free/Paid cards, Upgrade/Cancel) + PlansDialog.jsx; 'Plans' in the chat opens it; fix: the plan line was missing right after sign-up/login until a reload; checked in a headless browser at 1280 and 390 px ⏳ Joe's account menu opens <PlansDialog />
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta
 

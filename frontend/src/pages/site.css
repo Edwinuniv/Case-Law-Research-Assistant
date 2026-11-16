@@ -59,10 +59,3 @@ body:has(.sp) footer{border-top-color:rgba(255,255,255,.08);color:#78716c}
 .sp-back:hover{color:#fff;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.55)}
 .sp-back:hover span{transform:translateX(-3px)}
 @media(max-width:700px){.sp-back{top:12px;left:16px;padding:7px 13px 7px 10px;font-size:13px}.sp-hero{padding-top:64px}}
-
-/* the pricing page (Pricing.jsx, 2026-11-15): two plan cards side by side, one under the other on a phone */
-.pr-plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.pr-plan h2{margin-top:0}
-.pr-price{font-family:Georgia,serif;font-size:28px;color:#fff;margin:0 0 6px}
-.pr-mine{border-color:rgba(251,191,36,.6);box-shadow:0 0 0 1px rgba(251,191,36,.35)}
-@media(max-width:600px){.pr-plans{grid-template-columns:minmax(0,1fr)}}

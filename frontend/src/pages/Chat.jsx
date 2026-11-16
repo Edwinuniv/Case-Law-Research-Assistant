@@ -12,10 +12,11 @@
 // server's setting follow_ups (off until Edwin's measurement); the page only says which.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api.js";
+import { api, me } from "../api.js";
 import seal from "../assets/logo-seal.webp";
 import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
+import PlansDialog from "../components/PlansDialog.jsx";   // the plans panel (Edwin, 2026-11-16)
 import Working from "../components/Working.jsx";
 import "./research.css";
 
@@ -49,8 +50,12 @@ export default function Chat({ info }) {
   const [left, setLeft] = useState(info.free_questions_left);   // a visitor's free questions; null with an account
   useEffect(() => { setLeft(info.free_questions_left); }, [account?.email]);
   const locked = !account && left === 0;
-  const [plan, setPlan] = useState(info.plan);    // a 'user' account: {plan, daily_limit, left_today} (SPEC 11)
-  useEffect(() => { setPlan(info.plan); }, [account?.email]);           // the free question is used: no question box
+  const [plan, setPlan] = useState(info.plan);
+  const [plansOpen, setPlansOpen] = useState(false);       // the plans panel over the chat    // a 'user' account: {plan, daily_limit, left_today} (SPEC 11)
+  useEffect(() => {                               // asked again at each login: info.plan was loaded before it (Edwin)
+    if (account) me().then((m) => setPlan(m.plan)).catch(() => setPlan(info.plan));
+    else setPlan(null);
+  }, [account?.email]);           // the free question is used: no question box
   const loadChats = () => api("/chats").then((list) => setHistory(list)).catch(() => {});
   useEffect(() => {
     setChatId(null);
@@ -126,7 +131,7 @@ export default function Chat({ info }) {
         </div>
         <p className="rs-side-note">
           {account ? <>Saved to your account.{plan && <><br /><span className="rs-plan">{plan.plan === "paid" ? "Paid" : "Free"} plan
-            · {plan.left_today} of {plan.daily_limit} questions left today · <Link to="/pricing">Plans</Link></span></>}
+            · {plan.left_today} of {plan.daily_limit} questions left today · <button className="pl-link" onClick={() => setPlansOpen(true)}>Plans</button></span></>}
             {info.unlimited && <><br /><span className="rs-plan">Administrator · no limit</span></>}</> : <>Only in this page: they are gone when you reload it. <Link to="/signup">Sign up</Link> to keep them.</>}
         </p>
         <div className="rs-list">
@@ -244,6 +249,7 @@ export default function Chat({ info }) {
       </section>
 
       <PassagePanel open={open} onClose={() => setOpen(null)} />
+      <PlansDialog open={plansOpen} onClose={() => setPlansOpen(false)} onChange={(m) => setPlan(m.plan)} />
     </div>
   );
 }
