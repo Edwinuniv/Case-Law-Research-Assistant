@@ -730,3 +730,10 @@ section 11, tests from the rule before the code. What was wrong, and how it was 
    dict), but the webhook tests sign real events and go through the real `stripe.Webhook.construct_event`, so three of
    them failed. On the live site a payment would have crashed when the person came back from Stripe. Fix: the session
    and the event are converted with `.to_dict()` where they come in.
+2. **A Stripe parameter that no longer exists.** Stripe's page offered Cash App Pay and US bank payments, which Edwin
+   cannot use in Lebanon. Claude added `payment_method_types=["card"]` with a test that faked Stripe; the test passed,
+   because the fake accepted any parameter. A real call to Stripe's test mode refused it: "The payment_method_types
+   parameter is no longer supported ... Payment methods are now managed from your Dashboard settings". Upgrade would
+   have failed for everyone. Caught by calling Stripe for real before pushing; the parameter and its test were removed,
+   and the README says where to switch the other methods off. Lesson: a test with a fake only proves what the fake
+   knows; a live call to the test mode is needed for anything Stripe decides.
