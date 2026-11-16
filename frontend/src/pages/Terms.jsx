@@ -33,8 +33,9 @@ export default function Terms() {
       <ul>
         <li>Without an account, one question per browser session. With an account, by default 10 questions a day on the
           free plan and 100 on the paid plan; the day starts again at midnight, Beirut time.</li>
-        <li>The free and paid plans involve no real payment: Verdicta is a student project, and an administrator
-          switches an account to the paid plan.</li>
+        <li>Paying for the paid plan runs in Stripe's test mode: no real money moves, because Verdicta is a student
+          project. You upgrade or cancel on the <Link to="/pricing">plans page</Link>, and an administrator can also switch
+          an account's plan.</li>
         <li>Up to 10 questions a minute from one address, and 3 contact messages in 10 minutes.</li>
         <li>Do not send automated or repeated requests, try to get around the limits or the security of the site, or use
           it to harm others.</li>

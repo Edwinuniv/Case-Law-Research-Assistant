@@ -57,6 +57,24 @@ The research page answers one question per message (no follow-up questions, as t
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
 
+### Paid plan with Stripe (test mode, no real money)
+The page /pricing compares Free and Paid; a free account upgrades on Stripe's own payment page. Only Stripe **test**
+keys are accepted. To switch it on:
+1. Create a free account at stripe.com and stay in **Test mode**.
+2. Products > Add product "Verdicta Paid" with a monthly price; copy its price id (`price_...`).
+3. Developers > API keys: copy the secret key (`sk_test_...`), or create a restricted key (`rk_test_...`) with
+   Checkout Sessions and Subscriptions set to Write (safer: it can do nothing else).
+4. In `.env` (and the Railway variables online): `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, optionally `PAID_PRICE_LABEL`.
+   Run `pip install -r requirements.txt` again (stripe), then restart uvicorn.
+5. Stripe chooses the payment methods its page shows (it showed Cash App Pay and US bank for a US account). To offer
+   only the card: Settings > Payment methods (in test mode) and turn the others off. The code cannot do this: Stripe
+   refuses `payment_method_types` now.
+6. Pay with the test card 4242 4242 4242 4242, any future date, any CVC. Back on /pricing the server asks Stripe
+   whether the payment is complete, then the account is paid.
+7. Optional, online: Developers > Webhooks > add the endpoint `https://<site>/api/billing/webhook` with the events
+   `checkout.session.completed` and `customer.subscription.deleted`, and put its signing secret in
+   `STRIPE_WEBHOOK_SECRET`. Locally the webhook is not needed.
+
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
