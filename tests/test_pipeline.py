@@ -122,6 +122,17 @@ def test_a_legal_question_with_a_greeting_goes_through_the_pipeline(monkeypatch,
     monkeypatch.setattr(llm, "ask_model", good_model)
     assert pipeline.answer(text, FakeSearcher(0.9), INDEX, S)["status"] != "WELCOME"
 
+@pytest.mark.parametrize("text", ["hello verdicta", "Hi Verdicta!", "hey verdicta, what can you do?", "Verdicta?",
+                                  "good evening, Verdicta"])
+def test_a_greeting_that_names_verdicta_gets_the_welcome_message(monkeypatch, text):   # seen live on 2026-11-15
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: (_ for _ in ()).throw(AssertionError("no model call")))
+    assert pipeline.answer(text, NoSearch(), INDEX, S)["status"] == "WELCOME"
+
+def test_a_legal_question_to_verdicta_is_still_answered(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", good_model)
+    r = pipeline.answer("Verdicta, what did the Court hold in Bostock v. Clayton County?", FakeSearcher(0.9), INDEX, S)
+    assert r["status"] != "WELCOME"
+
 def test_no_test_question_is_taken_for_a_greeting():                  # the evaluation numbers stay valid
     import json
     from pathlib import Path
@@ -264,7 +275,7 @@ def test_if_the_chats_case_has_no_close_passage_the_whole_corpus_is_searched(mon
     assert searcher.filters == [[9987186], None]
     assert [p["chunk_id"] for p in calls[0]["passages"].values()] == ["c30"]
 
-@pytest.mark.parametrize("text", ["thanks", "Thank you!", "ok", "okay, thanks", "great"])
+@pytest.mark.parametrize("text", ["thanks", "Thank you!", "ok", "okay, thanks", "great", "thanks verdicta"])
 def test_thanks_in_a_chat_gets_one_line_without_search_or_model(monkeypatch, text):
     calls, searcher = [], Recorder([chunk(2, 9987186)])
     monkeypatch.setattr(llm, "ask_model", model_spy(calls))

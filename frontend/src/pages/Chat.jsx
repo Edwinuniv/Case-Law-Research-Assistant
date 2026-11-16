@@ -126,7 +126,8 @@ export default function Chat({ info }) {
         </div>
         <p className="rs-side-note">
           {account ? <>Saved to your account.{plan && <><br /><span className="rs-plan">{plan.plan === "paid" ? "Paid" : "Free"} plan
-            · {plan.left_today} of {plan.daily_limit} questions left today · <Link to="/pricing">Plans</Link></span></>}</> : <>Only in this page: they are gone when you reload it. <Link to="/signup">Sign up</Link> to keep them.</>}
+            · {plan.left_today} of {plan.daily_limit} questions left today · <Link to="/pricing">Plans</Link></span></>}
+            {info.unlimited && <><br /><span className="rs-plan">Administrator · no limit</span></>}</> : <>Only in this page: they are gone when you reload it. <Link to="/signup">Sign up</Link> to keep them.</>}
         </p>
         <div className="rs-list">
           {history.length === 0 && <p className="rs-empty">{account ? "Your chats" : "Your questions"} will appear here.</p>}
