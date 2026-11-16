@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app import api, api_admin, api_site, config, db, logs
+from app import api, api_admin, api_billing, api_site, config, db, logs
 from app.citations import CitationIndex
 from app.search import Searcher
 
@@ -43,6 +43,7 @@ app.include_router(api.router)                                       # JSON API 
 app.include_router(api_admin.router)                                 # admin JSON API (/api/admin/...)
 app.include_router(api_site.router)                                  # contact form and site information (Edwin)
 app.include_router(api_site.admin)                                   # the contact messages, for the admin
+app.include_router(api_billing.router)                                # paid plan, Stripe test mode (Edwin)
 
 
 @app.get("/health")
