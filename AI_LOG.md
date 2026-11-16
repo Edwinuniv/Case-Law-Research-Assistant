@@ -719,3 +719,14 @@ What was wrong, and how it was caught:
    (follow-up questions rule) says follow-ups stay off until followups-v1 meets the rule. Caught by reading
    EVALUATION.md before writing the step-3 rule; the history is sent only when the setting follow_ups is on (off by
    default; Edwin decides), and a test checks that no history is sent while it is off.
+
+## 2026-11-16 — Stripe test-mode payments (Edwin)
+
+We asked Claude to build paying for the paid plan with Stripe in test mode (Edwin's decision), rule first in SPEC
+section 11, tests from the rule before the code. What was wrong, and how it was caught:
+1. **Stripe's objects treated as dictionaries.** app/billing.py read the Checkout session and the webhook event with
+   `.get(...)`, as older versions of the stripe library allowed. In stripe 17.0.0 a StripeObject is not a dict:
+   "'get' is a dict method, but a StripeObject is not a dict". The confirm tests did not see it (their fake returns a
+   dict), but the webhook tests sign real events and go through the real `stripe.Webhook.construct_event`, so three of
+   them failed. On the live site a payment would have crashed when the person came back from Stripe. Fix: the session
+   and the event are converted with `.to_dict()` where they come in.
