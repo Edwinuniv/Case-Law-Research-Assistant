@@ -62,7 +62,8 @@ The page /pricing compares Free and Paid; a free account upgrades on Stripe's ow
 keys are accepted. To switch it on:
 1. Create a free account at stripe.com and stay in **Test mode**.
 2. Products > Add product "Verdicta Paid" with a monthly price; copy its price id (`price_...`).
-3. Developers > API keys: copy the secret key (`sk_test_...`).
+3. Developers > API keys: copy the secret key (`sk_test_...`), or create a restricted key (`rk_test_...`) with
+   Checkout Sessions and Subscriptions set to Write (safer: it can do nothing else).
 4. In `.env` (and the Railway variables online): `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, optionally `PAID_PRICE_LABEL`.
    Run `pip install -r requirements.txt` again (stripe), then restart uvicorn.
 5. Pay with the test card 4242 4242 4242 4242, any future date, any CVC. Back on /pricing the server asks Stripe
