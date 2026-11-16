@@ -39,7 +39,7 @@
 .pl-dialog h2{margin:4px 0 2px;font-family:Georgia,serif;font-weight:500;font-size:28px;color:#fff}
 .pl-dialog h2 em{background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}
 .pl-kicker{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:#fbbf24}
-.pl-close{position:absolute;top:14px;right:16px;width:34px;height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.14);
+.pl-close{position:absolute;top:14px;right:16px;width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:999px;border:1px solid rgba(255,255,255,.14);
   background:rgba(255,255,255,.05);color:#e7e5e4;font-size:20px;line-height:1;cursor:pointer}
 .pl-close:hover{background:rgba(251,191,36,.14)}
 
