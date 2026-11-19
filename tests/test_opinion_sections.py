@@ -106,8 +106,8 @@ def test_join_as_to_a_list_of_parts_with_commas_is_labelled():
 
 
 def test_a_list_of_parts_never_swallows_the_next_sentence():
-    """The 'as to' list stops at the end of the heading: a later sentence that happens to say 'dissenting.'
-    must not become part of the label."""
-    head = ("JUSTICE SCALIA, with whom JUSTICE THOMAS joins as to Parts I and II. The Court errs. "
-            "Some judges were dissenting.")
+    """The 'as to' list stops at the end of the heading: a later sentence that happens to say ', dissenting.'
+    must not become part of the label. The comma before 'dissenting' matters: without it a pattern that reads
+    past the full stop finds no role either, and the test would pass for the wrong reason (Edwin's review)."""
+    head = "JUSTICE SCALIA, with whom JUSTICE THOMAS joins as to Parts I and II. The Court errs, dissenting. x"
     assert opinion_start(head) is None
