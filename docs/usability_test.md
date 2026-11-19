@@ -12,12 +12,28 @@ pages alone."
   settings are not touched. The task counts as done when the job has started; we may stop it after that.
 - **Groq budget:** on the test day, no other run (v2 run, demo answers) uses the key.
 - **Login:** an admin account made for the test, disabled afterwards.
+- **Order:** tasks 2, 3, 4, 5, 7 first, then 1 and 6 (the two that start a job). The test site runs without a
+  Groq key, so the evaluation of task 1 finishes with every question in ERROR, and the threshold preview (task 3)
+  and the admin overview use the latest finished run: done after task 1, task 3 would preview a broken run.
+  Found in a dry run on 2026-11-19 (run 5 on the copy, removed).
+
+## Test day: start and reset
+
+```bash
+# once: the copy of the database and the test admin (password chosen at that moment, written on paper)
+docker exec case_law_research_assistant-db-1 psql -U verdicta -d postgres -c "CREATE DATABASE verdicta_stranger TEMPLATE verdicta"
+DATABASE_URL=postgresql://verdicta:verdicta@localhost:5432/verdicta_stranger ADMIN_EMAIL=tester@verdicta.test ADMIN_PASSWORD=... python -m scripts.seed --admin
+# the test site, on the copy, with no Groq key: http://127.0.0.1:8001/admin
+DATABASE_URL=postgresql://verdicta:verdicta@localhost:5432/verdicta_stranger LLM_API_KEY= uvicorn app.main:app --port 8001
+# afterwards: stop uvicorn, then remove the copy
+docker exec case_law_research_assistant-db-1 psql -U verdicta -d postgres -c "DROP DATABASE verdicta_stranger"
+```
 - **Rules for us:** read each task aloud, then say nothing. No hints, no pointing. If they ask, answer
   "what would you try?". Stop a task after 5 minutes and write "not done".
 - **What we write:** the time, every hesitation (where they look, what they click first, what they say), and
   whether the task was done. Their own words in quotes.
 
-## The tasks (read exactly these)
+## The tasks (read exactly these, in the order above: 2, 3, 4, 5, 7, 1, 6)
 
 | # | Task read to the classmate | Done when |
 |---|---|---|
