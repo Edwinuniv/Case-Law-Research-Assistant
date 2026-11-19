@@ -125,7 +125,7 @@
 :root[data-theme="light"] .ad .ad-side a:hover{background:var(--l-soft);color:var(--l-head)}
 :root[data-theme="light"] .ad .ad-side a.active{color:var(--l-head)}
 :root[data-theme="light"] .ad-side a i{background:var(--l-edge)}
-:root[data-theme="light"] .ad a:not(.ad-pdf){color:var(--l-gold)}
+:root[data-theme="light"] .ad>section a:not(.ad-pdf){color:var(--l-gold)}   /* links in the pages, not the menu */
 :root[data-theme="light"] .ad th{background:var(--l-bg)}
 :root[data-theme="light"] .ad tbody tr:hover{background:var(--l-bg)}
 :root[data-theme="light"] .ad-kpi b{background:var(--l-num);-webkit-background-clip:text;background-clip:text}
