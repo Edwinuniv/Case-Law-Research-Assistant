@@ -12,7 +12,7 @@ function loadGoogle() {
   if (!gisLoading) {
     gisLoading = new Promise((resolve, reject) => {
       const s = document.createElement("script");
-      s.src = "https://accounts.google.com/gsi/client";
+      s.src = "https://accounts.google.com/gsi/client?hl=en";   // hl=en: Google's window in English, whatever the browser language
       s.async = true;
       s.onload = resolve;
       s.onerror = () => { gisLoading = null; reject(new Error("Google could not be reached. Use your email instead.")); };
@@ -57,6 +57,7 @@ export default function GoogleButton({ mode, onLogin }) {
         type: "standard", theme: "filled_black", size: "large", shape: "pill", logo_alignment: "center",
         text: mode === "signup" ? "signup_with" : "continue_with",
         width: Math.min(box.current.offsetWidth || 360, 400),
+        locale: "en",                                  // the button text in English (Google uses the browser language otherwise)
       });
     }).catch(() => live && setClientId(null));     // Google unreachable (blocked, offline): the email form only
     return () => { live = false; };
