@@ -737,3 +737,21 @@ section 11, tests from the rule before the code. What was wrong, and how it was 
    have failed for everyone. Caught by calling Stripe for real before pushing; the parameter and its test were removed,
    and the README says where to switch the other methods off. Lesson: a test with a fake only proves what the fake
    knows; a live call to the test mode is needed for anything Stripe decides.
+
+## 2026-11-19 — Forgot password, error pages, new logo, loading screen (branch feature/new-look-and-reset)
+
+Edwin asked Claude for a forgot-password function, error pages that reveal nothing, a loading screen and the new
+logo, and more white on the site, on a branch for Yasser's opinion. SPEC 11 rule first, then the tests from the
+rule, then the code. What was wrong, and how it was caught:
+1. **The new log event was refused by the database, silently.** The first code wrote "password_reset" to the user
+   log, but the user_log table has a CHECK listing the allowed events; the row was refused and logs.py only printed
+   a line in the console. Caught by the test "a reset unlocks the account and is logged". Fixed: the event added to
+   the table, plus a migration (drop and re-add the check), because CREATE TABLE IF NOT EXISTS does not change the
+   existing databases (Edwin's, Railway). Migration tried on a copy of the real database.
+2. **A planted bug got through the first tests.** Keeping the account's other reset links after a reset (an older
+   emailed link would still work) passed all 14 tests: each test made only one link. Caught by planting 11 bugs on
+   purpose (10 caught). Fixed: a test with two links.
+3. **The 404 page sat inside the page frame**, with a white border around it. Caught on a screenshot of the
+   headless browser; fixed in errors.css.
+Checked in a headless browser on a copy of the database: sign up, forgot, the printed link, new password, log in;
+the used link refused; the token gone from the address bar; 404 and no-server pages; 1280 and 390 px wide.
