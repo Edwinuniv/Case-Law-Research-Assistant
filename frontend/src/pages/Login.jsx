@@ -4,12 +4,15 @@
 // - Sign up (SPEC 11, 2026-11-12): POST /api/signup makes a 'user' account and logs it in, then the research
 //   page opens; the account keeps the visitor's question history. Only the email and a password hash are stored.
 // - Continue with Google (SPEC 11, 2026-11-13): components/GoogleButton.jsx, on both forms, user accounts only.
-// - Forgot password: there is no email service, so it explains that an administrator resets the password
-//   from the Accounts page (FR12: db.create_user resets the password of an existing email).
-import { useState } from "react";
+// - Forgot password (Edwin, SPEC 11, 2026-11-19): POST /api/password/forgot emails a link to /reset; the page
+//   shows the same message for every email, so nobody learns who has an account. Administrators are still
+//   reset by another administrator (Accounts page, FR12).
+// - Reset (/reset?token=...): the token is taken out of the address bar at once and no Referer is sent;
+//   POST /api/password/reset sets the new password.
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
-import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import ClipboardAnim from "../components/ClipboardAnim.jsx";
 import GoogleButton from "../components/GoogleButton.jsx";   // Sign in with Google (SPEC 11, 2026-11-13)
 import "./auth.css";
@@ -107,25 +110,112 @@ function SignupForm({ onLogin }) {
   );
 }
 
-function ForgotPanel() {
-  return (
-    <div className="au-form">
-      <div className="au-steps">
-        <div><span>1</span><p>Contact your Verdicta administrator.</p></div>
-        <div><span>2</span><p>They set a new password for your email on the <b>Accounts</b> page.</p></div>
-        <div><span>3</span><p>Log in with it, then keep it private.</p></div>
+function ForgotForm() {
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true); setError("");
+    try {
+      setDone((await api("/password/forgot", { email })).message);   // the same message for every email
+    } catch (err) {
+      setError(err.message);            // too many requests from this address
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="au-form">
+        <div className="au-sent" role="status"><span aria-hidden="true">✓</span><p>{done}</p></div>
+        <p className="au-muted">Administrator accounts are not reset by email: another administrator sets a new
+          password on the Accounts page.</p>
+        <Link to="/login" className="au-submit au-as-button">Back to log in</Link>
       </div>
-      <p className="au-muted">For your security, passwords are never sent by email, and nobody can read them:
-        they are stored only as a bcrypt hash.</p>
-      <Link to="/login" className="au-submit au-as-button">Back to log in</Link>
-    </div>
+    );
+  }
+  return (
+    <form onSubmit={submit} className="au-form">
+      <label htmlFor="femail">Email</label>
+      <input id="femail" type="email" autoComplete="email" required value={email} placeholder="you@example.com"
+             onChange={(e) => setEmail(e.target.value)} />
+      {error && <p className="au-error" role="alert">{error}</p>}
+      <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Sending" /> : "Send me a link"}</button>
+      <p className="au-switch">Remembered it? <Link to="/login">Log in</Link></p>
+    </form>
+  );
+}
+
+function ResetForm() {
+  const [token] = useState(() => new URLSearchParams(window.location.search).get("token") || "");
+  const [password, setPassword] = useState("");
+  const [again, setAgain] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    window.history.replaceState(null, "", "/reset");          // the token leaves the address bar and the history
+    const meta = document.createElement("meta");              // and no page sends it on as a Referer
+    meta.name = "referrer"; meta.content = "no-referrer";
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, []);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (password !== again) { setError("The two passwords are not the same."); return; }
+    setBusy(true); setError("");
+    try {
+      await api("/password/reset", { token, password });
+      setDone(true);
+    } catch (err) {
+      setError(err.message);            // a short password, or "This link is not valid any more..."
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="au-form">
+        <div className="au-sent" role="status"><span aria-hidden="true">✓</span><p>Your password has been changed.
+          You can log in with it now.</p></div>
+        <Link to="/login" className="au-submit au-as-button">Log in</Link>
+      </div>
+    );
+  }
+  if (!token) {
+    return (
+      <div className="au-form">
+        <p className="au-error" role="alert">This link is not valid any more. Ask for a new one.</p>
+        <Link to="/forgot" className="au-submit au-as-button">Ask for a new link</Link>
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={submit} className="au-form">
+      <label htmlFor="npass">New password</label>
+      <PasswordInput id="npass" value={password} autoComplete="new-password" placeholder="At least 10 characters"
+                     onChange={(e) => setPassword(e.target.value)} />
+      <label htmlFor="npass2">The same password again</label>
+      <PasswordInput id="npass2" value={again} autoComplete="new-password" onChange={(e) => setAgain(e.target.value)} />
+      {error && <p className="au-error" role="alert">{error}</p>}
+      {error.startsWith("This link") && <Link to="/forgot" className="au-link">Ask for a new link</Link>}
+      <button className="au-submit" disabled={busy}>{busy ? <span className="au-spin" aria-label="Saving" /> : "Save the new password"}</button>
+    </form>
   );
 }
 
 const TEXT = {
   login: { title: "Welcome back", sub: "Log in to your Verdicta account." },
   signup: { title: "Create your account", sub: "Keep your questions and their answers, and find them again." },
-  forgot: { title: "Forgot your password?", sub: "An administrator resets it for you." },
+  forgot: { title: "Forgot your password?", sub: "Give your email and we send you a link to choose a new one." },
+  reset: { title: "Choose a new password", sub: "Then log in with it. The link works once, for 30 minutes." },
 };
 
 export default function Login({ mode = "login", onLogin }) {
@@ -133,7 +223,7 @@ export default function Login({ mode = "login", onLogin }) {
   return (
     <div className="au">
       <aside className="au-side">
-        <Link to="/" className="au-brand" aria-hidden="true" tabIndex={-1}><img src={logoMark} alt="" /> Verdicta</Link>
+        <Link to="/" className="au-brand" aria-hidden="true" tabIndex={-1}><Logo /> Verdicta</Link>
         <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
         <ClipboardAnim />
         <div className="au-side-text">
@@ -148,11 +238,11 @@ export default function Login({ mode = "login", onLogin }) {
 
       <section className="au-main">
         <div className="au-top-small">
-          <Link to="/" className="au-brand au-brand-small"><img src={logoMark} alt="" /> Verdicta</Link>
+          <Link to="/" className="au-brand au-brand-small"><Logo /> Verdicta</Link>
           <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
         </div>
         <div className="au-card" key={mode}>
-          {mode !== "forgot" && (
+          {(mode === "login" || mode === "signup") && (
             <div className="au-tabs" role="tablist">
               <Link to="/login" role="tab" aria-selected={mode === "login"} className={mode === "login" ? "on" : ""}>Log in</Link>
               <Link to="/signup" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "on" : ""}>Sign up</Link>
@@ -163,7 +253,8 @@ export default function Login({ mode = "login", onLogin }) {
           <p className="au-sub">{t.sub}</p>
           {mode === "login" && <LoginForm onLogin={onLogin} />}
           {mode === "signup" && <SignupForm onLogin={onLogin} />}
-          {mode === "forgot" && <ForgotPanel />}
+          {mode === "forgot" && <ForgotForm />}
+          {mode === "reset" && <ResetForm />}
         </div>
         <p className="au-legal">This is a research aid, not legal advice.</p>
         <nav className="au-links" aria-label="Site information">

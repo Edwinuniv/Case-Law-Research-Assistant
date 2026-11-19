@@ -2,8 +2,8 @@
 // the server refuses /admin (401/403) and every /api/admin call.
 // While an admin page is open, the body gets the dark background of the dashboard (admin.css).
 import { useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
+import { Link, NavLink, Outlet } from "react-router-dom";
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import "./admin.css";
 
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],
@@ -19,10 +19,12 @@ export default function AdminLayout({ user }) {
   return (
     <div className="ad">
       <nav className="ad-side" aria-label="Administration">
-        <div className="ad-brand"><img src={logoMark} alt="" /><div><b>Verdicta</b><small>Administration</small></div></div>
+        <div className="ad-brand"><Logo /><div><b>Verdicta</b><small>Administration</small></div></div>
         {PAGES.map(([path, name]) => (
           <NavLink key={path} end={path === ""} to={"/admin/" + path}><i aria-hidden="true" />{name}</NavLink>
         ))}
+        {/* straight to the chat as the visitor sees it (Edwin, 2026-11-19); the chat links back for administrators */}
+        <Link to="/research" className="ad-to-chat">Open the chat <span aria-hidden="true">→</span></Link>
         <span className="ad-who">{user.email}</span>
       </nav>
       <section><Outlet /></section>

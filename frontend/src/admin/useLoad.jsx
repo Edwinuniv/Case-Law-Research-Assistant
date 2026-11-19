@@ -2,6 +2,7 @@
 // Used by every admin page so that each page only describes what it shows.
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api.js";
+import Loader from "../components/Loader.jsx";   // the animated logo while a page loads (Edwin)
 
 export function useLoad(path) {
   const [data, setData] = useState(null);
@@ -14,10 +15,10 @@ export function useLoad(path) {
   return [data, error, reload];
 }
 
-// Shows the error, or "Loading…", or nothing when the data is there.
+// Shows the error, or the loading animation, or nothing when the data is there.
 export function Waiting({ data, error }) {
   if (error) return <p className="error" role="alert">{error}</p>;
-  if (!data) return <p className="muted">Loading…</p>;
+  if (!data) return <Loader />;
   return null;
 }
 

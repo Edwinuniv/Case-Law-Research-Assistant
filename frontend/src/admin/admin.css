@@ -13,7 +13,7 @@ body.ad-dark main{max-width:1400px}
 .ad-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;padding:18px 12px;border-radius:20px;
   background:var(--card);border:1px solid var(--line)}
 .ad-brand{display:flex;align-items:center;gap:10px;padding:2px 10px 16px;margin-bottom:8px;border-bottom:1px solid var(--line)}
-.ad-brand img{width:40px;height:40px}
+.ad-brand img{height:40px;width:auto}
 .ad-brand b{display:block;font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:19px;color:#fff;line-height:1.1}
 .ad-brand small{color:var(--faint);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 .ad .ad-side a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;color:var(--dim);text-decoration:none;
@@ -22,6 +22,10 @@ body.ad-dark main{max-width:1400px}
 .ad .ad-side a:hover{background:rgba(255,255,255,.05);color:#fff}
 .ad .ad-side a.active{background:rgba(251,191,36,.10);color:#fff}
 .ad .ad-side a.active i{background:linear-gradient(135deg,var(--amber),var(--orange));box-shadow:0 0 10px rgba(251,191,36,.6)}
+/* "Open the chat" under the menu (Edwin, 2026-11-19); !important: .ad a (amber links) would win */
+.ad .ad-side a.ad-to-chat{justify-content:space-between;margin-top:12px;font-weight:600;color:#141418!important;
+  background:linear-gradient(90deg,var(--amber),var(--orange))}
+.ad .ad-side a.ad-to-chat:hover{filter:brightness(1.06)}
 .ad-who{margin-top:14px;padding:12px 12px 0;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;word-break:break-all}
 
 /* ---- headings ---- */
@@ -117,6 +121,7 @@ body.ad-dark main{max-width:1400px}
   .ad-brand{border:0;padding:0 8px 0 2px;margin:0}
   .ad-brand small,.ad-who{display:none}
   .ad .ad-side a{white-space:nowrap;padding:8px 12px}
+  .ad .ad-side a.ad-to-chat{margin:0 0 0 6px}
   .ad-two{grid-template-columns:minmax(0,1fr)}
   .ad-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }

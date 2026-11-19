@@ -1,0 +1,45 @@
+/* More life on the dark pages (Edwin, 2026-11-19, to show Yasser before it is kept): white used as LIGHT,
+   not as a background. One file, loaded last, so it can be removed in one line (main.jsx) if the team says no.
+   Nothing here changes a page's layout; it only adds light and slow movement. */
+
+/* 1. a soft white light drifting slowly over the page, and a few faint specks floating up */
+body::after{content:"";position:fixed;inset:-20%;pointer-events:none;z-index:30;mix-blend-mode:screen;
+  background:radial-gradient(38% 30% at 28% 18%,rgba(255,255,255,.07),transparent 70%),
+             radial-gradient(34% 28% at 78% 72%,rgba(255,240,214,.05),transparent 70%);
+  animation:lf-drift 24s ease-in-out infinite alternate}
+@keyframes lf-drift{0%{transform:translate(0,0)}50%{transform:translate(4%,3%)}100%{transform:translate(-3%,5%)}}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:30;opacity:.55;
+  background-image:radial-gradient(1.2px 1.2px at 12% 22%,rgba(255,255,255,.55),transparent),
+    radial-gradient(1px 1px at 68% 34%,rgba(255,255,255,.45),transparent),
+    radial-gradient(1.4px 1.4px at 38% 76%,rgba(255,255,255,.4),transparent),
+    radial-gradient(1px 1px at 86% 88%,rgba(255,255,255,.5),transparent),
+    radial-gradient(1.2px 1.2px at 52% 8%,rgba(255,255,255,.35),transparent);
+  background-size:420px 420px;animation:lf-float 70s linear infinite}
+@keyframes lf-float{from{background-position:0 0}to{background-position:0 -420px}}
+
+/* 2. (the white card edges are gone: theme.css makes the sections themselves white) */
+
+/* 3. the big titles glow a little, like a lit page */
+.rs-hero h1,.au-card h1,.sp-hero h1,.lp-hero h1,.ad-title,.er h1{text-shadow:0 0 42px rgba(255,255,255,.16)}
+
+/* 4. a white light runs along the gold line under the header now and then */
+header{position:relative;overflow-x:clip}   /* the light leaves on the right: never a sideways scroll */
+header::after{content:"";position:absolute;left:0;bottom:-3px;width:160px;height:3px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+  animation:lf-sheen 9s ease-in-out 2s infinite;transform:translateX(-200px)}
+@keyframes lf-sheen{0%{transform:translateX(-200px)}35%,100%{transform:translateX(calc(100vw + 40px))}}
+
+/* 5. the gold buttons shine white when the mouse is on them */
+.au-submit,.rs-new,.pl-btn{position:relative;overflow:hidden}
+.au-submit::after,.rs-new::after,.pl-btn::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:45%;
+  pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:skewX(-18deg);transition:left .6s ease}
+.au-submit:hover::after,.rs-new:hover::after,.pl-btn:hover::after{left:120%}
+
+/* the two light layers lie OVER the pages (most pages paint their own dark background), faint enough to read
+   through, and pointer-events:none lets every click through; the loading screen (z-index 1000) stays above them */
+
+@media (prefers-reduced-motion: reduce){
+  body::after,body::before,header::after{animation:none}
+  header::after{display:none}
+}

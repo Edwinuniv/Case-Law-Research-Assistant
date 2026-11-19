@@ -694,3 +694,29 @@ data, no amount. Every change is a plan_change row in the user log, with "by": "
 email, as before). (8) An administrator switching an account back to free does not cancel its Stripe subscription
 (test mode: no money); the Accounts page shows the switch as before. Terms and Privacy say all of this. Files of
 others changed, told: app/api.py, app/db.py (two columns), frontend router and pages (Joe).
+
+2026-11-19 - Forgot password by email, and error messages that reveal nothing (Edwin; on a branch for Yasser's
+opinion first). Written before the code. Replaces "an administrator resets it for you" on /forgot for 'user'
+accounts. (1) **Asking**: POST /api/password/forgot {email} (CSRF) ALWAYS answers the same text, whether the email
+has an account or not ("If an account exists for this email, we have sent a link..."), so nobody can learn who has
+an account. The email goes out in the background, so the answer takes the same time either way. A link is sent only
+for an active 'user' account; administrators keep their reset by another administrator (Accounts page, FR12) and
+get no email. At most 5 asks per address (IP) in 15 minutes (then 429), and at most one email per account in
+2 minutes (the extra asks are silently ignored: no mail bombing). (2) **The link**: PUBLIC_URL/reset?token=... with a
+random token (32 bytes); the database keeps only its SHA-256 hash (table password_resets), so a stolen database
+gives no working link. Valid 30 minutes, once. The link uses PUBLIC_URL from the environment, never the Host header
+of the request (an attacker could otherwise make us email a link to their own site). (3) **Resetting**:
+POST /api/password/reset {token, password} (CSRF): the same password rule as sign-up (10 characters); a wrong,
+used or expired token, or a disabled account, gives ONE message ("This link is not valid any more. Ask for a new
+one."). On success: the new bcrypt hash, the account unlocked (failed logins 0), every reset token of the account
+deleted, a password_reset row in the user log; the user then logs in. The reset page removes the token from the
+address bar and sends no Referer. (4) **Email**: through Resend's HTTPS API when RESEND_API_KEY and MAIL_FROM are
+set (Railway blocks SMTP). Without them, locally, the link is printed in the server's console (for testing); with
+HTTPS_ONLY=1 (online) it is never printed, only "email not set up". (5) **Error messages**: no answer of the server
+shows a stack trace, an SQL error, a file path or the values that were sent: an unexpected error gives HTTP 500 and
+"Something went wrong on our side. Please try again."; a badly formed request gives 422 and "Some fields are missing
+or not valid." (FastAPI's default 422 echoes the values sent back, a password included). Known limit: logging in on
+another device is not ended by a reset (the session is a signed cookie, kept up to 8 hours). (6) **Pages**: the
+React app shows its own "page not found" page (not a jump to the home page) and a "something went wrong" page if a
+page crashes, with no technical detail. Files of others changed, told: app/api.py, app/main.py, app/db.py (one
+table), frontend router and Login.jsx (Joe).

@@ -28,21 +28,42 @@ import Pricing from "./pages/Pricing.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
+import ErrorPage, { ErrorBoundary } from "./components/ErrorPage.jsx";   // error pages that reveal nothing (Edwin)
 import "./style.css";
-import logoMark from "./assets/logo-seal.webp";     // the Verdicta seal, bundled into /assets by Vite
+import "./life.css";                              // white light on the dark pages (Edwin; for Yasser's opinion)
+import "./theme.css";                             // dark pages with white sections, or the reverse (Edwin)
+import Logo from "./components/Logo.jsx";        // the Verdicta logo, white or black V for the theme (Edwin, 2026-11-19)
+import ThemeSwitch from "./components/ThemeSwitch.jsx";   // Settings: the appearance (Edwin, 2026-11-19)
+
+// The loading screen of index.html (Edwin, 2026-11-19): it fades out once the page is ready. On the first visit
+// of this tab it stays until its animation has played once (about 2.1 s since the page started loading).
+function hideSplash() {
+  const el = document.getElementById("splash");
+  if (!el) return;
+  let first = true;
+  try { first = !sessionStorage.getItem("splash-seen"); sessionStorage.setItem("splash-seen", "1"); } catch { /* private mode */ }
+  setTimeout(() => {
+    el.classList.add("out");
+    setTimeout(() => el.remove(), 600);
+  }, first ? Math.max(0, 2100 - performance.now()) : 0);
+}
 
 function App() {
   const [info, setInfo] = useState(null);          // answer of GET /api/me
   const path = useLocation().pathname;
   const navigate = useNavigate();
   const landing = path === "/";                    // the landing page has its own top bar
-  const authPage = ["/login", "/signup", "/forgot"].includes(path);   // the account pages have their own logo
+  const authPage = ["/login", "/signup", "/forgot", "/reset"].includes(path);   // the account pages have their own logo
 
-  useEffect(() => { me().then(setInfo); }, []);
+  useEffect(() => {
+    me().then(setInfo, () => setInfo({ failed: true }))   // no answer from the server: say so, not "Loading…" forever
+      .finally(hideSplash);
+  }, []);
   // the dark pages (landing, account pages, research page) show the "not legal advice" notice inside their own design,
   // so the light footer of index.html is hidden there (it stays on every other page: NFR10, SR7)
   useEffect(() => { document.body.classList.toggle("dark-page", landing || authPage || path === "/research"); }, [landing, authPage, path]);
-  if (!info) return <p className="muted" style={{ padding: 20 }}>Loading…</p>;
+  if (!info) return null;                          // the loading screen of index.html is still shown
+  if (info.failed) return <ErrorPage kind="offline" />;
 
   // Log out always ends in the home page, logged out. If the server refuses the first try (a stale CSRF token,
   // e.g. after logging in from another tab), a fresh token is fetched and it tries once more.
@@ -63,7 +84,7 @@ function App() {
       {!landing && !authPage && <header>
         {/* only the logo, and "Log out" for a logged-in administrator (Yasser's decision, 2026-11-12):
             the coverage line is on the research page itself, the admin menu is in the admin sidebar */}
-        <Link to="/" className="brand"><img src={logoMark} alt="" /> Verdicta</Link>
+        <Link to="/" className="brand"><Logo /> Verdicta</Link>
         {user && (
           <button className="logout" onClick={logout} title={`Log out ${user.email}`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
@@ -79,7 +100,8 @@ function App() {
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
           <Route path="/signup" element={user ? <Navigate to={user.role === "admin" ? "/admin" : "/research"} /> :
             <Login mode="signup" onLogin={(u) => setInfo({ ...info, user: u })} />} />   {/* visitor accounts (SPEC 11) */}
-          <Route path="/forgot" element={<Login mode="forgot" />} />   {/* an administrator resets the password */}
+          <Route path="/forgot" element={<Login mode="forgot" />} />   {/* a link by email (Edwin, SPEC 11) */}
+          <Route path="/reset" element={<Login mode="reset" />} />     {/* the page the emailed link opens */}
           <Route path="/" element={<Landing info={info} />} />  {/* the story of Verdicta, then "Try a question" */}
           <Route path="/research" element={<Chat info={info} />} />    {/* open to everyone, no account (SR33) */}
           <Route path="/privacy" element={<Privacy />} />              {/* the site's information pages (Edwin) */}
@@ -106,13 +128,14 @@ function App() {
               <Route path="log" element={<AdminLog />} />
             </Route>
           )}
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<ErrorPage kind="notFound" inApp />} />   {/* not a silent jump to the home page */}
         </Routes>
       </main>
+      <ThemeSwitch />   {/* Settings, on every page */}
     </>
   );
 }
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode><BrowserRouter><App /></BrowserRouter></StrictMode>
+  <StrictMode><ErrorBoundary><BrowserRouter><App /></BrowserRouter></ErrorBoundary></StrictMode>
 );

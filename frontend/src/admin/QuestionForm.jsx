@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
+import Loader from "../components/Loader.jsx";   // the animated logo while a page loads (Edwin)
 
 const EMPTY = { id: "", tag: "answerable", split: "tune", question: "", expected_answer: "", gold_decision_ids: "",
   gold_quote: "", must_not_appear: "", why: "", author: "" };
@@ -26,7 +27,7 @@ export default function QuestionForm({ user }) {
   }, [editing, p, user.email]);
 
   if (error) return <p className="error">{error}</p>;
-  if (!q) return <p className="muted">Loading…</p>;
+  if (!q) return <Loader />;
   const set = (k) => (e) => setQ({ ...q, [k]: e.target.value });
 
   async function save(e) {

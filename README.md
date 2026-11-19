@@ -40,7 +40,8 @@ account opens its questions, chats and log.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
-a visitor's account lands on the research page and cannot open the admin pages. Run `npm run build` again after each
+a visitor's account lands on the research page and cannot open the admin pages. An administrator moves between the two with
+"Open the chat" (under the admin menu) and "Admin pages" (in the chat's sidebar). Run `npm run build` again after each
 `git pull` that changes frontend/, then restart uvicorn. Administrator accounts are made with `python -m scripts.seed --admin`
 (ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
 Every account has an activity log (sign-up, logins, logouts, questions, refusals) and every administrator action is
@@ -56,6 +57,10 @@ the admin page "Messages". The privacy page describes what the site really colle
 The research page answers one question per message (no follow-up questions, as the instructor asked). A greeting or
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
+
+Appearance: the round Settings button at the bottom left of every page switches the whole site between dark (the
+default, as designed) and light. The choice is kept in the browser (localStorage) and applies to every page;
+nothing is sent to the server.
 
 ### Paid plan with Stripe (test mode, no real money)
 The page /pricing compares Free and Paid; a free account upgrades on Stripe's own payment page. Only Stripe **test**
@@ -87,6 +92,16 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
 3. Put the client id in `GOOGLE_CLIENT_ID` (in `.env` locally, in the Railway variables online) and restart.
    No client secret is used. Without the variable the button is hidden. Google works for user accounts only:
    administrators always log in with their password.
+
+### Forgot password by email (optional)
+"Forgot password?" on the login page emails a link to choose a new password (user accounts only;
+administrators are reset by another administrator on the Accounts page). The link works once, for 30 minutes.
+1. Set `PUBLIC_URL` to the site's own address (`https://case-law-research-assistant-production.up.railway.app`
+   online); the link is built from it, never from the request.
+2. To really send the emails: a free Resend account, a domain verified in Resend, then `RESEND_API_KEY` and
+   `MAIL_FROM` (e.g. `Verdicta <no-reply@your-domain>`). Railway blocks SMTP, which is why Gmail is not used.
+3. Without `RESEND_API_KEY`, on your own computer the email (with the link) is printed in the uvicorn console, to
+   test; online (`HTTPS_ONLY=1`) it is never printed.
 
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets

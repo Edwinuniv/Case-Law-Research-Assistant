@@ -22,6 +22,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value JSONB NOT NULL);
 
+CREATE TABLE IF NOT EXISTS password_resets (       -- forgot password (Edwin, SPEC 11, 2026-11-19)
+    token_hash TEXT PRIMARY KEY,                  -- SHA-256 of the emailed token: the token itself is never stored
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL);
+
 CREATE TABLE IF NOT EXISTS chats (                 -- an account's saved chats (Joe, SPEC 11, 2026-11-14)
     id SERIAL PRIMARY KEY, user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
@@ -102,7 +108,7 @@ CREATE TABLE IF NOT EXISTS user_log (              -- everything an account does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     event TEXT NOT NULL CHECK (event IN ('signup', 'login', 'login_failed', 'logout', 'question', 'follow_up',
-                                         'plan_change', 'refused')),
+                                         'plan_change', 'refused', 'password_reset')),
     query_id INT REFERENCES query_log(id) ON DELETE SET NULL, detail JSONB NOT NULL DEFAULT '{}');
 CREATE TABLE IF NOT EXISTS admin_log (             -- everything an administrator does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -145,6 +151,10 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 -- 2026-11-14 (Joe, SPEC section 11): each question of a saved chat; a deleted chat keeps its questions (FR28)
 ALTER TABLE query_log ADD COLUMN IF NOT EXISTS chat_id INT REFERENCES chats(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS query_log_chat ON query_log (chat_id, id);
+-- 2026-11-19 (Edwin, SPEC section 11): forgot password, a new event in the user log
+ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
+ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
+    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset'));
 """
 
 

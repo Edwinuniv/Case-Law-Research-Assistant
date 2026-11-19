@@ -1,0 +1,21 @@
+/* The error pages (components/ErrorPage.jsx): the dark site, with a white light behind the big code. */
+.er{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 16px;text-align:center;overflow:hidden;background:#0d0d10;color:#f4f1ea}
+.er-in-app{position:fixed;inset:64px 0 0;min-height:0;z-index:5}   /* fills the space under the site header */
+.er-glow{position:absolute;top:18%;left:50%;width:min(620px,120vw);aspect-ratio:1;transform:translateX(-50%);
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,255,255,.13) 0,rgba(255,236,200,.06) 35%,transparent 65%)}
+.er-brand{position:absolute;top:24px;left:28px;display:flex;align-items:center;gap:10px;color:#fff;
+  text-decoration:none;font:700 22px Georgia,serif}
+.er-brand img{height:38px;width:auto}
+.er-code{position:relative;margin:0;font:400 clamp(84px,18vw,150px)/1 Georgia,serif;letter-spacing:.02em;
+  background:linear-gradient(180deg,#ffffff 0,#f6e7c4 55%,#d4a84a 100%);-webkit-background-clip:text;background-clip:text;
+  color:transparent;filter:drop-shadow(0 10px 40px rgba(255,255,255,.12))}
+.er h1{position:relative;margin:18px 0 10px;font:400 clamp(24px,4vw,32px)/1.25 Georgia,serif;color:#fff}
+.er-text{position:relative;max-width:460px;margin:0 0 28px;color:#b9b4aa;line-height:1.6}
+.er-actions{position:relative;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center}
+.er-btn{border:0;border-radius:999px;padding:13px 26px;font:700 15px system-ui,sans-serif;cursor:pointer;
+  text-decoration:none;color:#16171b;background:#fff;box-shadow:0 8px 30px rgba(255,255,255,.14)}
+.er-btn:hover{background:#f6e7c4}
+.er-link{color:#f1c86b;text-decoration:none;font-weight:600}
+.er-link:hover{text-decoration:underline}

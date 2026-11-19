@@ -174,6 +174,8 @@ Step numbers and names below match the guide's headings exactly. Status as of 20
 
 - [x] Plans panel in the chat (Edwin, 2026-11-16) — branch feature/plans-dialog: components/Plans.jsx (one copy for /pricing and the panel: usage bar, Free/Paid cards, Upgrade/Cancel) + PlansDialog.jsx; 'Plans' in the chat opens it; fix: the plan line was missing right after sign-up/login until a reload; checked in a headless browser at 1280 and 390 px ⏳ Joe's account menu opens <PlansDialog />
 
+- [x] Forgot password, error pages, new logo, loading screen, more white (Edwin, 2026-11-19) — branch feature/new-look-and-reset (for Yasser's opinion first): SPEC 11 rule first; /api/password/forgot and /reset (same answer for every email, token hashed, 30 min, once, PUBLIC_URL, Resend or printed locally); 422/500 answers reveal nothing; 404, crash and no-server pages; new logo (cut out, white-V for dark pages, favicon); loading screen with the logo in four animated layers; life.css; 15 tests, 11 planted bugs (10 caught, test added) ⏳ Yasser's opinion; a domain + Resend account to really send emails; then Settings > Appearance on every page: dark (default, as designed) or light (every page light, landing included); theme.css, Logo.jsx, ThemeSwitch.jsx; checked in both on 9 pages + the 6 landing sections
+
 ### Week 9 — Usability test
 - [ ] 9.1 Give the admin login to a classmate who has never seen Verdicta — sheet ready: docs/usability_test.md (PR #118: the 7 tasks, jobs last, run on a local copy with no Groq key; dry run done) ⏳ the classmate's test, then one commit per fix
 

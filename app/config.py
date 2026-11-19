@@ -49,6 +49,11 @@ HTTPS_ONLY = os.getenv("HTTPS_ONLY", "0") == "1"          # 1 only on the deploy
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "")          # Contact page addresses, separated by commas; empty: none shown
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "change-me")
+# Forgot password (Edwin, SPEC 11, 2026-11-19): the site's own address for the links (never the request's Host),
+# and Resend's HTTPS API for the emails (Railway blocks SMTP). Without a key, the link is printed locally only.
+PUBLIC_URL = os.getenv("PUBLIC_URL", "http://127.0.0.1:8000")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+MAIL_FROM = os.getenv("MAIL_FROM", "")                    # e.g. "Verdicta <no-reply@your-domain>"
 LOCK_AFTER_FAILED_LOGINS, LOCK_MINUTES = 5, 15            # SR36
 COVERAGE = f"U.S. Supreme Court opinions filed {DATE_FROM[:4]}–{DATE_TO[:4]} (CourtListener release {RELEASE})"
 EXAMPLE_QUESTIONS = [

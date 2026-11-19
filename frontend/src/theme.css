@@ -1,0 +1,241 @@
+/* Appearance (Edwin, 2026-11-19), chosen in Settings (components/ThemeSwitch.jsx), kept in this browser.
+   - dark (the default): the site as it was designed; nothing in this file changes it, except the Settings button.
+   - light: every page light, with white sections and dark text, the landing page included.
+   Each page's own file keeps its layout; this file only recolours, under :root[data-theme="light"], and is
+   loaded after them (main.jsx). Colours: --l-* below. */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --l-bg:#f7f5f0;--l-bg2:#efece5;--l-card:#fff;--l-input:#fbfaf8;
+  --l-ink:#2b2b31;--l-head:#121216;--l-dim:#5f5b55;--l-faint:#8a847c;
+  --l-edge:rgba(20,20,24,.10);--l-soft:rgba(20,20,24,.05);--l-shadow:0 14px 40px rgba(20,20,24,.08);
+  --l-gold:#b45309;--l-ok:#047857;--l-bad:#b91c1c;--l-grey:#475569;--l-info:#0369a1;
+  --l-num:linear-gradient(180deg,#d97706,#92400e);
+  --l-glow:radial-gradient(ellipse at 68% 45%,#fbe7c2 0%,#f7f0e3 40%,#f7f5f0 75%);
+}
+
+/* ---------- the logo: white V on the dark site, black V on the light one (components/Logo.jsx) ---------- */
+.logo-on-light{display:none}
+:root[data-theme="light"] .logo-on-dark{display:none}
+:root[data-theme="light"] .logo-on-light{display:inline-block}
+
+/* ---------- the page itself, the header and the footer ---------- */
+:root[data-theme="light"] body,:root[data-theme="light"] body.ad-dark,:root[data-theme="light"] body:has(.sp){background:var(--l-bg)}
+:root[data-theme="light"] header{background:#fff;box-shadow:0 1px 0 var(--l-edge)}
+:root[data-theme="light"] header .brand{color:var(--l-head)}
+:root[data-theme="light"] header .logout{color:var(--l-ink);background:var(--l-soft);border-color:var(--l-edge)}
+:root[data-theme="light"] header .logout:hover{color:var(--l-head)}
+:root[data-theme="light"] body:has(.sp) footer{border-top-color:var(--l-edge);color:var(--l-faint)}
+
+/* ---------- research page (pages/research.css) and the answer (components/answer.css) ---------- */
+:root[data-theme="light"] .rs{--ink:var(--l-ink);--dim:var(--l-dim);--faint:var(--l-faint);--edge:var(--l-edge);
+  --glass:var(--l-card);background:var(--l-bg)}
+:root[data-theme="light"] .rs-bg{background:radial-gradient(900px 520px at 62% -8%,rgba(245,158,11,.14),transparent 62%)}
+:root[data-theme="light"] .rs-bg::after{display:none}
+:root[data-theme="light"] .rs-side{background:rgba(255,255,255,.75)}
+:root[data-theme="light"] :is(.rs-side-head b,.rs-bar-title,.rs-hero h1,.rs-question,.rs-example-q,.rs-how-step b){color:var(--l-head)}
+:root[data-theme="light"] :is(.rs-kicker,.rs-question span,.rs-side-note a,.rs-plan,.rs-example-n,.rs-example-go,.rs-how-n,.rs-locked b){color:var(--l-gold)}
+:root[data-theme="light"] .rs-list button{color:var(--l-dim)}
+:root[data-theme="light"] .rs-list button:hover{background:var(--l-soft);color:var(--l-head)}
+:root[data-theme="light"] .rs.started .rs-bar{background:rgba(247,245,240,.92)}
+:root[data-theme="light"] .rs.started .rs-ask{background:linear-gradient(0deg,var(--l-bg) 70%,transparent)}
+:root[data-theme="light"] :is(.rs-box,.rs-example,.rs-how,.rs-locked){background:var(--l-card);border-color:var(--l-edge);box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .rs-example:hover{background:var(--l-card)}     /* style.css's button:hover would paint it grey */
+:root[data-theme="light"] .rs-box textarea{color:var(--l-head)}
+:root[data-theme="light"] .rs-box textarea::placeholder{color:var(--l-faint)}
+:root[data-theme="light"] .rs-chip{color:var(--l-dim);background:var(--l-bg);border-color:var(--l-edge)}
+:root[data-theme="light"] .rs-question{background:linear-gradient(135deg,#fdecc8,#fde3c4);border-color:rgba(217,119,6,.35)}
+:root[data-theme="light"] .rs-locked-btn.main{color:#1c1917}
+:root[data-theme="light"] .rs-foot a{color:var(--l-faint)}
+@media(max-width:900px){:root[data-theme="light"] .rs-side{background:var(--l-bg2)}}
+
+:root[data-theme="light"] :is(.an,.an-working,.an-drawer){background:var(--l-card);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.an,.an-working){box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .an-status{color:var(--l-dim);border-bottom-color:var(--l-edge)}
+:root[data-theme="light"] :is(.an.st-WELCOME .an-status,.an-text,.an-opinion,.an-working li.done){color:var(--l-ink)}
+:root[data-theme="light"] :is(.an-status b,.an-meta b,.an-passage-top,.an-drawer h3,.an-hl,.an-working li.now){color:var(--l-head)}
+:root[data-theme="light"] :is(.an-reason,.an-passage-label,.an-dim,.an-opinion .an-dim,.an-working){color:var(--l-faint)}
+:root[data-theme="light"] :is(.an-meta,.an-support,.an-passage-text,.an-cit){color:var(--l-dim)}
+:root[data-theme="light"] .an-meta>span{background:var(--l-bg);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.an-meta>.an-saved,.an-toggle,.an-passage-top b,.an-kicker){color:var(--l-gold)}
+:root[data-theme="light"] .an-toggle:hover{color:var(--l-head)}
+:root[data-theme="light"] :is(.an-passage,.an-passage:hover){background:var(--l-bg);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.an-score,.an-six i){background:var(--l-edge)}
+:root[data-theme="light"] .an-step{border-color:var(--l-edge);color:var(--l-faint)}
+:root[data-theme="light"] .an-close{background:var(--l-bg);color:var(--l-head)}
+:root[data-theme="light"] .an-close:hover{background:var(--l-edge)}
+:root[data-theme="light"] .an-backdrop{background:rgba(20,20,24,.25)}
+
+/* ---------- log in, sign up, forgot password (pages/auth.css) ---------- */
+:root[data-theme="light"] .au{background:var(--l-bg);color:var(--l-head)}
+:root[data-theme="light"] .au-side{background:var(--l-glow)}
+:root[data-theme="light"] .au-main{background:radial-gradient(ellipse at 80% 0%,rgba(245,158,11,.10),transparent 55%),var(--l-bg2)}
+:root[data-theme="light"] .au-brand{color:var(--l-head)}
+:root[data-theme="light"] :is(.au-back,.sp-back){color:var(--l-ink);background:rgba(255,255,255,.7);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.au-back,.sp-back):hover{color:var(--l-head)}
+:root[data-theme="light"] .au-side-text ul{color:var(--l-dim)}
+:root[data-theme="light"] .au-side-text b{color:var(--l-gold)}
+:root[data-theme="light"] :is(.au-legal,.au-links a){color:var(--l-faint)}
+:root[data-theme="light"] .au-card{background:var(--l-card);border-color:var(--l-edge);box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .au-card h1{color:var(--l-head)}
+:root[data-theme="light"] :is(.au-sub,.au-switch,.au-tabs a,.au-small a){color:var(--l-dim)}
+:root[data-theme="light"] .au-tabs{background:var(--l-bg)}
+:root[data-theme="light"] .au-tabs a.on{color:#141418}
+:root[data-theme="light"] :is(.au-form label,.au-note,.au-sent p){color:var(--l-ink)}
+:root[data-theme="light"] .au-form input{color:var(--l-head);background:var(--l-input);border-color:var(--l-edge)}
+:root[data-theme="light"] .au-form input::placeholder{color:var(--l-faint)}
+:root[data-theme="light"] .au-eye{background:var(--l-bg);color:var(--l-dim)}
+:root[data-theme="light"] :is(.au-link,.au-caps,.au-switch a){color:var(--l-gold)}
+:root[data-theme="light"] :is(.au-small,.au-muted){color:var(--l-faint)}
+:root[data-theme="light"] .au-error{color:var(--l-bad);background:#fff1f2}
+:root[data-theme="light"] .au-note b{color:var(--l-head)}
+:root[data-theme="light"] .au-note a{color:var(--l-info)}
+:root[data-theme="light"] .au-sent{background:var(--l-bg);border-color:var(--l-edge)}
+:root[data-theme="light"] .au-sent span{background:var(--l-head);color:#fff}
+
+/* ---------- the information pages, the pricing page and the plans (pages/site.css, components/plans.css) ---------- */
+:root[data-theme="light"] .sp{background:var(--l-bg);color:var(--l-ink)}
+:root[data-theme="light"] .sp-hero{background:radial-gradient(ellipse at 50% 120%,rgba(245,158,11,.16),transparent 60%),linear-gradient(180deg,#fff,var(--l-bg))}
+:root[data-theme="light"] :is(.sp-hero h1,.sp-text h2,.sp-text strong){color:var(--l-head)}
+:root[data-theme="light"] :is(.sp-kicker,.sp-text a){color:var(--l-gold)}
+:root[data-theme="light"] :is(.sp-updated,.sp-small){color:var(--l-faint)}
+:root[data-theme="light"] .sp-nav a{color:var(--l-dim)}
+:root[data-theme="light"] :is(.sp-nav a:hover,.sp-nav a.active){color:var(--l-head);background:var(--l-soft)}
+:root[data-theme="light"] .sp-text{color:var(--l-ink)}
+:root[data-theme="light"] .sp-card{background:var(--l-card);border-color:var(--l-edge);box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .sp-form label{color:var(--l-dim)}
+:root[data-theme="light"] :is(.sp-form input,.sp-form textarea){background:var(--l-card);color:var(--l-head);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.sp-ok,.pl-ok){color:var(--l-ok)}
+:root[data-theme="light"] :is(.sp-err,.pl-err){color:var(--l-bad)}
+:root[data-theme="light"] :is(.pl-card,.pl-usage){background:var(--l-card);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.pl-card h3,.pl-card b,.pl-price,.pl-usage-top b,.pl-dialog h2){color:var(--l-head)}
+:root[data-theme="light"] .pl-bar{background:var(--l-edge)}
+:root[data-theme="light"] :is(.pl-dim,.pl-note){color:var(--l-faint)}
+:root[data-theme="light"] :is(.pl-admin,.pl-kicker){color:var(--l-gold)}
+:root[data-theme="light"] .pl-quiet{color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] .pl-quiet:hover{background:var(--l-soft)}
+:root[data-theme="light"] .pl-dialog{background:var(--l-card);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] .pl-close{background:var(--l-bg);color:var(--l-head);border-color:var(--l-edge)}
+:root[data-theme="light"] .pl-backdrop{background:rgba(20,20,24,.3)}
+
+/* ---------- the admin pages (admin/admin.css; most colours are its own variables) ---------- */
+:root[data-theme="light"] .ad{--line:var(--l-edge);--text:var(--l-ink);--dim:var(--l-dim);--faint:var(--l-faint);
+  --ok:var(--l-ok);--bad:var(--l-bad);--card:var(--l-card)}
+:root[data-theme="light"] :is(.ad h2,.ad h3,.ad-brand b,.ad td b,.ad-score b){color:var(--l-head)}
+:root[data-theme="light"] :is(.ad-side,.ad-card,.ad .card,.ad-kpi,.ad-table){background:var(--l-card);box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .ad .ad-side a:hover{background:var(--l-soft);color:var(--l-head)}
+:root[data-theme="light"] .ad .ad-side a.active{color:var(--l-head)}
+:root[data-theme="light"] .ad-side a i{background:var(--l-edge)}
+:root[data-theme="light"] .ad>section a:not(.ad-pdf){color:var(--l-gold)}   /* links in the pages, not the menu */
+:root[data-theme="light"] .ad th{background:var(--l-bg)}
+:root[data-theme="light"] .ad tbody tr:hover{background:var(--l-bg)}
+:root[data-theme="light"] .ad-kpi b{background:var(--l-num);-webkit-background-clip:text;background-clip:text}
+:root[data-theme="light"] .ad-status.st-LOW_CONFIDENCE{color:var(--l-gold)}
+:root[data-theme="light"] .ad-status.st-NOT_SUPPORTED{color:var(--l-grey)}
+:root[data-theme="light"] .ad .status{background:var(--l-bg)}
+:root[data-theme="light"] :is(.ad input,.ad select,.ad textarea){background:var(--l-input);color:var(--l-head);border-color:var(--l-edge)}
+:root[data-theme="light"] .ad select option{background:#fff}
+:root[data-theme="light"] :is(.ad button.light,.ad .chip){background:var(--l-card);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] :is(.ad button.light,.ad .chip):hover{background:var(--l-bg)}
+/* the charts draw fixed white lines and text (charts.jsx): CSS wins over those SVG attributes */
+:root[data-theme="light"] :is(.ad-ring-v,.ad-dial-v){fill:var(--l-head)}
+:root[data-theme="light"] .ad-axis{fill:var(--l-faint)}
+:root[data-theme="light"] .ad svg [stroke="rgba(255,255,255,.08)"]{stroke:var(--l-edge)}
+:root[data-theme="light"] .ad svg line[stroke="#fff"]{stroke:var(--l-head)}
+:root[data-theme="light"] :is(.ad-pair-a,.ad-bar){background:var(--l-edge)}
+
+/* ---------- error pages (components/errors.css) ---------- */
+:root[data-theme="light"] .er{background:var(--l-bg);color:var(--l-ink)}
+:root[data-theme="light"] :is(.er h1,.er-brand){color:var(--l-head)}
+:root[data-theme="light"] .er-text{color:var(--l-dim)}
+:root[data-theme="light"] .er-code{background:linear-gradient(180deg,#121216 0,#5b3a0c 60%,#b45309 100%);-webkit-background-clip:text;background-clip:text}
+:root[data-theme="light"] .er-btn{background:var(--l-head);color:#fff}
+:root[data-theme="light"] .er-btn:hover{background:var(--l-dim)}
+:root[data-theme="light"] .er-link{color:var(--l-gold)}
+
+/* ---------- the landing page (pages/landing.css and its components): the same scenes, in daylight ---------- */
+:root[data-theme="light"] .lp-brand{color:var(--l-head)}
+:root[data-theme="light"] .lp-nav-links a:not(.lp-nav-cta){color:var(--l-dim)}
+:root[data-theme="light"] .lp-nav-links a:not(.lp-nav-cta):hover{color:var(--l-head)}
+:root[data-theme="light"] .st3d{background:var(--l-glow);color:var(--l-head)}
+:root[data-theme="light"] .st3d-text h1{color:var(--l-head)}
+:root[data-theme="light"] .st3d-n{color:var(--l-gold)}
+:root[data-theme="light"] .st3d-p{color:var(--l-dim)}
+:root[data-theme="light"] .st3d-bar i{background:var(--l-edge)}
+:root[data-theme="light"] .lp-coverage{color:var(--l-faint)}
+:root[data-theme="light"] .lp-button.ghost{color:var(--l-head);border-color:rgba(20,20,24,.3)}
+:root[data-theme="light"] .lp-marquee{background:var(--l-bg2)}
+:root[data-theme="light"] .lp-track span{color:#3a3530}
+:root[data-theme="light"] .lp-weigh{background:radial-gradient(900px 500px at 70% 60%,#fbe7c2 0%,#f7f0e3 45%,var(--l-bg) 100%);color:var(--l-dim)}
+:root[data-theme="light"] .lp-weigh h2{color:var(--l-head)}
+:root[data-theme="light"] .lp-weigh p{color:var(--l-dim)}
+:root[data-theme="light"] .lp-weigh-hint{color:var(--l-faint)!important}
+:root[data-theme="light"] .s3d-label.good{background:rgba(255,255,255,.88);color:#92400e}
+:root[data-theme="light"] .s3d-label.bad{background:rgba(255,255,255,.88);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] .c6{color:var(--l-head);background:radial-gradient(ellipse at 20% 0%,rgba(245,158,11,.12),transparent 55%),
+  radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.10),transparent 50%),#fff}
+:root[data-theme="light"] :is(.c6 h2,.c6-legend b,.c6-card b){color:var(--l-head)}
+:root[data-theme="light"] .c6-kicker{color:var(--l-gold)}
+:root[data-theme="light"] :is(.c6-lead,.c6-big-label span,.c6-card p){color:var(--l-dim)}
+:root[data-theme="light"] .c6-legend{color:var(--l-ink)}
+:root[data-theme="light"] .c6-legend .c6-zero{color:var(--l-ok);border-top-color:var(--l-edge)}
+:root[data-theme="light"] .c6-big-label b{background:var(--l-num);-webkit-background-clip:text;background-clip:text}
+:root[data-theme="light"] .c6-card{background:var(--l-bg);border-color:var(--l-edge)}
+:root[data-theme="light"] .c6-dots i{background:var(--l-edge)}
+:root[data-theme="light"] :is(.c6-meter small,.c6-foot){color:var(--l-faint)}
+:root[data-theme="light"] .c6 svg [stroke="rgba(255,255,255,.08)"]{stroke:var(--l-edge)}
+:root[data-theme="light"] .pf{background:var(--l-bg)}
+:root[data-theme="light"] .pf-card{background:var(--l-card);color:var(--l-head);border-color:var(--l-edge);box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .pf-num{background:var(--l-num);-webkit-background-clip:text;background-clip:text}
+:root[data-theme="light"] .pf-label{color:var(--l-ink)}
+:root[data-theme="light"] :is(.pf-sub,.pf-final .pf-legal,.pf-links a){color:var(--l-faint)}
+:root[data-theme="light"] :is(.pf-dots23 i,.pf-ticks i){background:var(--l-edge)}
+:root[data-theme="light"] .pf.in .pf-dots23 i{background:#34d399}
+:root[data-theme="light"] .pf.in .pf-ticks i{background:linear-gradient(180deg,#f59e0b,#b45309)}
+:root[data-theme="light"] .pf-years-l{color:var(--l-dim)}
+:root[data-theme="light"] .pf svg [stroke="rgba(255,255,255,.08)"]{stroke:var(--l-edge)}
+:root[data-theme="light"] .pf svg [stroke="#fff"]{stroke:var(--l-head)}
+:root[data-theme="light"] .pf-final{color:var(--l-head);background:radial-gradient(ellipse at 50% 110%,rgba(245,158,11,.18),transparent 60%),linear-gradient(180deg,#fff,var(--l-bg))}
+:root[data-theme="light"] .pf-final h2{color:var(--l-head)}
+:root[data-theme="light"] .pf-final>p{color:var(--l-dim)}
+:root[data-theme="light"] .pf-demo{background:#fff;border-color:var(--l-edge);box-shadow:var(--l-shadow)}
+:root[data-theme="light"] .pf-demo-tag{background:var(--l-bg);color:var(--l-dim);border-color:var(--l-edge)}
+:root[data-theme="light"] .pf-demo-line{color:var(--l-ink)}
+:root[data-theme="light"] .pf-p3{color:var(--l-gold)}
+
+/* ---------- Settings: the round button at the bottom left of every page, and its panel ---------- */
+.ts{position:fixed;left:16px;bottom:16px;z-index:50}
+.ts-btn{display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;cursor:pointer;
+  color:#e7e5e4;background:#1c1c22;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 28px rgba(0,0,0,.35);transition:transform .3s}
+.ts-btn:hover{background:#26262d;transform:rotate(45deg)}
+.ts-btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ts-panel{position:absolute;left:0;bottom:56px;width:min(300px,calc(100vw - 32px));box-sizing:border-box;padding:16px;
+  border-radius:18px;background:#141418;color:#e7e5e4;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.5);
+  animation:ts-in .2s ease-out}
+@keyframes ts-in{from{opacity:0;transform:translateY(8px)}}
+.ts-panel h2{margin:0 0 2px;font:500 19px Georgia,serif;color:#fff}
+.ts-panel p{margin:0 0 12px;font-size:12.5px;color:#8a837d}
+.ts-label{display:block;margin-bottom:8px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24}
+.ts-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ts-option{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:14px;cursor:pointer;text-align:left;
+  background:rgba(255,255,255,.05);color:#e7e5e4;border:2px solid transparent;font:600 13px system-ui,sans-serif}
+.ts-option:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.14)}
+.ts-option[aria-checked="true"]{border-color:#f59e0b}
+.ts-option small{display:block;font-weight:400;color:#8a837d;font-size:11.5px}
+/* a small picture of each appearance */
+.ts-pic{display:block;height:54px;border-radius:9px;padding:9px;box-sizing:border-box}
+.ts-pic i{display:block;height:100%;border-radius:6px}
+.ts-pic-dark{background:#0c0c0e;border:1px solid rgba(255,255,255,.1)}.ts-pic-dark i{background:#1f1f25}
+.ts-pic-light{background:#f7f5f0;border:1px solid rgba(20,20,24,.1)}.ts-pic-light i{background:#fff;box-shadow:0 2px 6px rgba(20,20,24,.12)}
+:root[data-theme="light"] .ts-btn{color:var(--l-head);background:#fff;border-color:var(--l-edge);box-shadow:0 10px 28px rgba(20,20,24,.14)}
+:root[data-theme="light"] .ts-btn:hover{background:#fff}
+:root[data-theme="light"] .ts-panel{background:#fff;color:var(--l-ink);border-color:var(--l-edge);box-shadow:0 24px 60px rgba(20,20,24,.18)}
+:root[data-theme="light"] .ts-panel h2{color:var(--l-head)}
+:root[data-theme="light"] :is(.ts-panel p,.ts-option small){color:var(--l-faint)}
+:root[data-theme="light"] .ts-label{color:var(--l-gold)}
+:root[data-theme="light"] .ts-option{background:var(--l-bg);color:var(--l-ink)}
+:root[data-theme="light"] .ts-option:hover{background:var(--l-bg2);border-color:var(--l-edge)}
+@media(max-width:900px){body:has(.rs.started) .ts{bottom:150px}}
+/* the admin sidebar reaches the bottom left ("Open the chat"): there, Settings sits at the bottom right */
+body.ad-dark .ts{left:auto;right:16px}
+body.ad-dark .ts-panel{left:auto;right:0}
+@media(prefers-reduced-motion:reduce){.ts-btn,.ts-panel{transition:none;animation:none}}

@@ -6,7 +6,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./landing.css";
-import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the appearance (Edwin, 2026-11-19; was the seal)
 import Scales3D from "../components/Scales3D.jsx";
 import Story3D from "../components/Story3D.jsx";
 import Checks6 from "../components/Checks6.jsx";
@@ -51,7 +51,7 @@ export default function Landing({ info }) {
   return (
     <div className="lp">
       <nav className="lp-nav">
-        <Link to="/" className="lp-brand"><img src={logoMark} alt="" /> Verdicta</Link>
+        <Link to="/" className="lp-brand"><Logo /> Verdicta</Link>
         <span className="lp-nav-links">
           <a href="#how">How it works</a>
           <Link to="/signup" className="lp-nav-cta">Sign up</Link>

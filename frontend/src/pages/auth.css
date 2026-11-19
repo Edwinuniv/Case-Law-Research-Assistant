@@ -12,7 +12,7 @@
 .au-side>.au-brand{align-self:flex-start}
 .au-top-small{display:none}
 .au-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;font-family:Georgia,serif;font-size:24px;font-weight:600;text-decoration:none;z-index:2}
-.au-brand img{width:44px;height:44px}
+.au-brand img{height:44px;width:auto}
 /* the court checklist: the pen writes the six checks (components/ClipboardAnim.jsx) */
 .clip{position:relative;width:min(100%,calc(62vh * 1122 / 1402));aspect-ratio:1122/1402;margin:18px auto 24px;
   filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));animation:au-float 7s ease-in-out infinite alternate}
@@ -69,11 +69,12 @@
 @keyframes au-rot{to{transform:rotate(360deg)}}
 .au-switch{margin:20px 0 0;text-align:center;font-size:14px;color:#a8a29e}
 .au-switch a{color:#fbbf24;font-weight:600;text-decoration:none}
-.au-steps{display:grid;gap:14px;margin-bottom:18px}
-.au-steps div{display:flex;gap:14px;align-items:flex-start}
-.au-steps span{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-family:Georgia,serif;color:#fbbf24;
-  border:1px solid rgba(245,158,11,.5);background:rgba(245,158,11,.08)}
-.au-steps p{margin:4px 0 0;color:#d6d3d1;font-size:15px;line-height:1.5}
+/* forgot password: the "sent" and "changed" message (Edwin, 2026-11-19) */
+.au-sent{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;padding:16px;border-radius:14px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+.au-sent span{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;color:#16171b;
+  background:#fff;font-weight:700}
+.au-sent p{margin:4px 0 0;color:#ece8e1;font-size:15px;line-height:1.5}
 .au-small{margin:14px 0 0;font-size:12px;color:#8a837d;text-align:center;line-height:1.5}.au-small a{color:#a8a29e}
 .au-legal{margin:22px 0 8px;font-size:12px;color:#6b6560}
 .au-links{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 18px;font-size:12px}

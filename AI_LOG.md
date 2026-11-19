@@ -831,3 +831,26 @@ database) and to fix it, test first. What was wrong, and how it was caught:
    change in 15 opinions; 149 passages in 8 decisions go from the Court to a separate opinion; none goes the other
    way. The other 236 fix the author: e.g. 34 passages of Thomas's dissent in Sessions v. Dimaya (2018) were labelled
    as Roberts's dissent, because the heading of the next dissent was not recognised and the previous label went on.
+
+## 2026-11-19 — Forgot password, error pages, new logo, loading screen (branch feature/new-look-and-reset)
+
+Edwin asked Claude for a forgot-password function, error pages that reveal nothing, a loading screen and the new
+logo, and more white on the site, on a branch for Yasser's opinion. SPEC 11 rule first, then the tests from the
+rule, then the code. What was wrong, and how it was caught:
+1. **The new log event was refused by the database, silently.** The first code wrote "password_reset" to the user
+   log, but the user_log table has a CHECK listing the allowed events; the row was refused and logs.py only printed
+   a line in the console. Caught by the test "a reset unlocks the account and is logged". Fixed: the event added to
+   the table, plus a migration (drop and re-add the check), because CREATE TABLE IF NOT EXISTS does not change the
+   existing databases (Edwin's, Railway). Migration tried on a copy of the real database.
+2. **A planted bug got through the first tests.** Keeping the account's other reset links after a reset (an older
+   emailed link would still work) passed all 14 tests: each test made only one link. Caught by planting 11 bugs on
+   purpose (10 caught). Fixed: a test with two links.
+3. **The 404 page sat inside the page frame**, with a white border around it. Caught on a screenshot of the
+   headless browser; fixed in errors.css.
+Checked in a headless browser on a copy of the database: sign up, forgot, the printed link, new password, log in;
+the used link refused; the token gone from the address bar; 404 and no-server pages; 1280 and 390 px wide.
+4. **Every page with the site header scrolled sideways.** The white light that runs along the header's gold line
+   (life.css) travelled past the right edge of the screen, and the browser made the page wider for it (1,280 px
+   screen: up to 1,326 px; phone: 523 instead of 390). The screenshots were all taken at the top left, so they never
+   showed it. Caught by Edwin, who could slide the page to the right. Fixed: the header clips what leaves it on the
+   sides (overflow-x: clip); measured on 10 pages at 1,280 and 390 px: no page wider than the screen.

@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, me } from "../api.js";
-import seal from "../assets/logo-seal.webp";
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
 import PlansDialog from "../components/PlansDialog.jsx";   // the plans panel (Edwin, 2026-11-16)
@@ -125,6 +125,9 @@ export default function Chat({ info }) {
 
       <aside className={`rs-side ${panel ? "open" : ""}`} aria-label="My questions">
         <button className="rs-new" onClick={newQuestion} disabled={busy}><span aria-hidden="true">+</span> {account ? "New chat" : "New question"}</button>
+        {account?.role === "admin" && (   /* back to the admin pages (Edwin, 2026-11-19); the server checks the role */
+          <Link to="/admin" className="rs-to-admin"><span aria-hidden="true">←</span> Admin pages</Link>
+        )}
         <div className="rs-side-head">
           <b>{account ? "My chats" : "My questions"}</b>
           <span className="rs-count">{history.length}</span>
@@ -162,7 +165,7 @@ export default function Chat({ info }) {
 
         {!started && (
           <div className="rs-hero">
-            <img src={seal} alt="" className="rs-seal" />
+            <Logo className="rs-seal" />
             <span className="rs-kicker">Verified case-law research</span>
             <h1>Ask the <em>Court.</em></h1>
             <p className="rs-sub">Answers come only from {info.coverage}. Every citation and every quote is checked against

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, me } from "../api.js";
 import "./plans.css";
+import Loader from "./Loader.jsx";   // the animated logo while the plan loads (Edwin)
 
 export function usePlans() {
   const [info, setInfo] = useState(null);        // enabled, price_label, free_daily, paid_daily
@@ -74,7 +75,7 @@ export function PlanCards({ info, account }) {
 
 export function PlanAction({ p, onNavigate }) {
   const { info, account, busy } = p;
-  if (!info || !account) return <p className="pl-dim">Loading…</p>;
+  if (!info || !account) return <Loader small />;
   if (!account.user) return <p><Link to="/signup" onClick={onNavigate}>Sign up</Link> (free) to keep your questions;
     you can upgrade after.</p>;
   if (account.unlimited) return null;
