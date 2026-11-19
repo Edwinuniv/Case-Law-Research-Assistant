@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" href="./src/assets/favicon.png" />
     <link rel="apple-touch-icon" href="./src/assets/apple-touch-icon.png" />
     <link rel="stylesheet" href="./src/splash.css" />
+    <!-- the appearance chosen in Settings (components/ThemeSwitch.jsx), set before the page is drawn: no flash -->
+    <script>try{document.documentElement.dataset.theme=localStorage.getItem("verdicta-theme")==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
   </head>
   <body>
     <!-- the loading screen (Edwin): shown at once, removed by main.jsx when the page is ready -->
