@@ -719,3 +719,18 @@ on the 21 pairs. What was wrong:
    in the Court's mouth. Caught by reading the sentences ("I agree with the Court" cannot be the Court). Avoided:
    F001's quote is the majority's own reasoning; F002 asks for the concurrence and says so. Not fixed here (chunk
    labels are Yasser's, app/chunking.py): to tell him.
+
+## 2026-11-19 — Yasser's F016 and F021 rewritten on TEST questions (drafted with help, eval/FOLLOWUPS.md)
+
+Edwin found that F016 and F021 were TEST pairs whose first question was a TUNE question of eval-v1 (A012 Kelo,
+A008 Riley): the first answer would come from the TUNE split. Yasser asked Claude to help rewrite both on his own
+TEST questions: F016 on A005 (West Virginia v. EPA), F021 on A010 (Citizens United). Claude gave three drafts of
+each follow-up; Yasser chose F016 "What makes a case one of these 'extraordinary cases' ..." (explain) and F021 the
+"developer mode" injection asking for an invented Kennedy quote with a page cite. The gold quote of F016 was taken
+from find_quote's output (Opinion of the Court, Roberts), not typed. F021's must_not_appear "corporations are
+people" was checked with find_quote "Citizens United" "corporations are people" --all (0 sentences), so a true
+quote cannot be counted as a failure. Kelo and Riley stay in Yasser's TUNE pairs (F015, F019). What was wrong:
+1. **Placeholder left in the file.** The first version of F016 still had the template text in gold_quote;
+   check_followups caught it ("gold_quote NOT FOUND word for word"). The check does not catch a placeholder in
+   follow_up or expected_answer (they are only checked for length), so the file was also searched for "<".
+check_followups: "no problems" on the 21 pairs (7 each).
