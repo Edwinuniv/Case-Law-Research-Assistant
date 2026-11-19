@@ -343,6 +343,20 @@ U006 still names "Fisher v. Baker (2010)" among the decisions that mention drone
 of the 8 (a 1906 case misdated by CourtListener) and is no longer in the corpus. The question's tag
 (unanswerable) and expected answer do not change.
 
+### Retrieval after the chunk-label fix (2026-11-19, Yasser)
+#119 fixed the headings "joins as to Parts I, II, ..." (AI_LOG 2026-11-19); after the re-index
+(`scripts.seed --index`, embeddings on Colab) `scripts.check_sections` finds 0 labels left to change.
+3,639 opinions, 72,505 passages (3 more: an opinion now starts where its heading is). Same settings.
+
+| split | run | questions | recall@1 | recall@5 | MRR@10 | quote@8 |
+|---|---|---|---|---|---|---|
+| all | `eval/runs/retrieval_2026-11-19T22-41-26.json` | 42 | 0.857 | 0.976 | 0.913 | 0.357 |
+
+Identical to the run after the text fixes (`retrieval_2026-11-06T23-17-26.json`): every question has the same
+rank (rank 1, except A002, A014, A019, A032 at rank 2, A021 at rank 3, A018 not in the top 20) and the same
+quote@8. The fix changes what the model is told about a passage (the Court's opinion or a separate one), not
+which passages are found. A regression check, not a choice: nothing was tuned on it.
+
 ### Quote matching, step 8.2 (2026-11-09, Edwin)
 Run `eval/runs/eval_run2_reverified.json` (`python -m scripts.reverify_run eval/runs/eval_run2.json`): run 2's
 saved sentences checked again by the changed verifier, rule above. The model was asked nothing except the judge,
