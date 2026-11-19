@@ -7,7 +7,7 @@ import SitePage from "./SitePage.jsx";
 
 export default function Privacy() {
   return (
-    <SitePage kicker="Your data" title="Privacy" accent="policy" updated="12 November 2026">
+    <SitePage kicker="Your data" title="Privacy" accent="policy" updated="19 November 2026">
       <div className="sp-card sp-note">
         <strong>In short:</strong> you do not need an account to use Verdicta. We keep the questions typed on the research
         page and the messages sent through the contact form, but no name, no IP address and no browser information with
@@ -42,6 +42,9 @@ export default function Privacy() {
           ours. We keep only the two identifiers Stripe gives us (your customer record and your subscription), so that the
           subscription can be cancelled: no card number and no amount. Payments run in Stripe's test mode: no real money
           moves.</li>
+        <li><strong>Forgot password.</strong> If you ask for a new password, we keep a scrambled copy (a hash) of the
+          link we email you, for 30 minutes at most, and delete it once it is used. The page says the same thing whether
+          an account exists or not.</li>
       </ul>
 
       <h2>What we do not collect</h2>
@@ -72,6 +75,8 @@ export default function Privacy() {
           kept (no Google password or token).</li>
         <li><strong>Stripe</strong>, only if you choose the paid plan: it receives your email address and what you type on
           its payment page. Stripe's own privacy policy applies to that payment.</li>
+        <li><strong>Resend</strong>, only if you ask for a new password: it delivers that one email, so it receives your
+          email address and the link.</li>
       </ul>
       <p>We do not sell or share your questions or messages with anyone else.</p>
 
