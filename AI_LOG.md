@@ -702,3 +702,20 @@ verified by the team for eval-v1. What is not verified yet:
    Checked (2026-11-14): find_case "Raich" finds only 799995 Gonzales v. Raich.
 Structure checked with scripts/check_followups.py's own check_lines (0 problems apart from the quote check, which
 needs the database).
+
+## 2026-11-19 — Edwin's follow-up pairs F001-F007 (drafted with help, eval/FOLLOWUPS.md)
+
+Edwin asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Edwin checked and
+approved each pair (2026-11-19). What Claude did: built the pairs on Edwin's own eval-v1 questions (A029, A035, A036,
+A037, A038, A040, A042), each of the six kinds at least once (two "separate_opinion"); one test pair only (F001, on
+A036, a TEST question of eval-v1), because Joe's and Yasser's 4 test pairs plus 2 would give 6 of 21 (29%), far from
+80/20. Unlike the earlier drafts, every quote and trap was checked on Edwin's database before the draft was shown:
+gold quotes copied from find_quote's output, find_case "Clinton" (no United States v. Clinton), find_quote "Bostock"
+"back pay" --all (0 sentences), "We issue no holding on § 5 itself" (Shelby County). check_followups: "no problems"
+on the 21 pairs. What was wrong:
+1. **Wrong opinion labels in find_quote.** With --all, sentences of Justice Sotomayor's concurrence in Counterman
+   ("I agree with the Court that precedent ...") are labelled "Opinion of the Court (Kagan)", and Justice Thomas's
+   concurrence in Shelby County is labelled "Opening". A gold quote taken on the label alone could put a concurrence
+   in the Court's mouth. Caught by reading the sentences ("I agree with the Court" cannot be the Court). Avoided:
+   F001's quote is the majority's own reasoning; F002 asks for the concurrence and says so. Not fixed here (chunk
+   labels are Yasser's, app/chunking.py): to tell him.
