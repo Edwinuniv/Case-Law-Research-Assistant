@@ -703,6 +703,41 @@ What was wrong, and how it was caught:
 2. **Mixed time zones in the PDF.** The header said UTC but the table times came out in the database's local time
    (two hours apart in the test output). Caught by reading the test output; every time in the PDFs is now UTC.
 
+## 2026-11-13 — Yasser's follow-up pairs F015-F021 (drafted with help, eval/FOLLOWUPS.md)
+
+Yasser asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Yasser checks and
+approves each pair before the set is tagged followups-v1. What Claude did: built the pairs on Yasser's own eval-v1
+questions (A006, A007, A008, A009, A012), one of each of the six kinds (two "explain"); F015 and F016 reuse the gold
+decision and gold quote of A008 and A012, already verified by the team for eval-v1. What was wrong or unverified:
+1. **An unchecked claim.** The first draft of F020's "why" said "checked: find_case finds nothing", but no check had
+   been run (Claude's workspace has no corpus). Caught by Claude before committing; replaced by the command Yasser
+   must run.
+2. **A quote not verified yet.** F017's gold quote (Justice Sotomayor's dissent in Kennedy v. Bremerton) was written
+   from memory; it must be found word for word with check_followups / find_quote before the set is tagged.
+   Checked by Yasser on his database (2026-11-13): python -m scripts.check_followups printed "no problems" for the
+   7 pairs, so the quote is in the decision word for word.
+Structure checked with scripts/check_followups.py's own check_lines (0 problems); the word-for-word quote check needs
+the database and is Yasser's to run.
+
+## 2026-11-13 — Joe's follow-up pairs F008-F014 (drafted with help, eval/FOLLOWUPS.md)
+
+Joe asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Joe checks and approves
+each pair before the set is tagged followups-v1. What Claude did: built the pairs on Joe's own eval-v1 questions
+(A015, A016, A019, A024, A025, A026, A028), each of the six kinds at least once (two "explain"); the test pairs
+(F009, F010) follow test questions of eval-v1 (A019, A016). F010 reuses A016's gold decision and gold quote, already
+verified by the team for eval-v1. What is not verified yet:
+1. **Two quotes written from memory.** F008 (Obergefell, the Due Process and Equal Protection sentence) and F009
+   (Justice O'Connor's dissent in Roper) were written from memory, because Claude's workspace has no corpus. They
+   must be found word for word with check_followups / find_quote on Joe's database before the set is tagged.
+   Checked on Joe's database (2026-11-14): F009 found; F008 NOT FOUND, because our text reads "couples of the
+   same-sex" (with a hyphen) where Claude wrote "same sex" from memory. Fixed by copying the sentence from
+   find_quote's output.
+2. **An invented case to confirm.** F013 says there is no Supreme Court decision "Raich v. Holder"; Joe must run
+   python -m scripts.find_case "Raich" and see only Gonzales v. Raich.
+   Checked (2026-11-14): find_case "Raich" finds only 799995 Gonzales v. Raich.
+Structure checked with scripts/check_followups.py's own check_lines (0 problems apart from the quote check, which
+needs the database).
+
 ## 2026-11-14 — Access and saved chats (Joe, part 1 of docs/PLAN_2026-11-13.md)
 
 We asked Claude to build part 1 in three steps (one question for a visitor, free and paid plans, saved chats), each
@@ -737,3 +772,35 @@ section 11, tests from the rule before the code. What was wrong, and how it was 
    have failed for everyone. Caught by calling Stripe for real before pushing; the parameter and its test were removed,
    and the README says where to switch the other methods off. Lesson: a test with a fake only proves what the fake
    knows; a live call to the test mode is needed for anything Stripe decides.
+
+## 2026-11-19 — Edwin's follow-up pairs F001-F007 (drafted with help, eval/FOLLOWUPS.md)
+
+Edwin asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Edwin checked and
+approved each pair (2026-11-19). What Claude did: built the pairs on Edwin's own eval-v1 questions (A029, A035, A036,
+A037, A038, A040, A042), each of the six kinds at least once (two "separate_opinion"); one test pair only (F001, on
+A036, a TEST question of eval-v1), because Joe's and Yasser's 4 test pairs plus 2 would give 6 of 21 (29%), far from
+80/20. Unlike the earlier drafts, every quote and trap was checked on Edwin's database before the draft was shown:
+gold quotes copied from find_quote's output, find_case "Clinton" (no United States v. Clinton), find_quote "Bostock"
+"back pay" --all (0 sentences), "We issue no holding on § 5 itself" (Shelby County). check_followups: "no problems"
+on the 21 pairs. What was wrong:
+1. **Wrong opinion labels in find_quote.** With --all, sentences of Justice Sotomayor's concurrence in Counterman
+   ("I agree with the Court that precedent ...") are labelled "Opinion of the Court (Kagan)", and Justice Thomas's
+   concurrence in Shelby County is labelled "Opening". A gold quote taken on the label alone could put a concurrence
+   in the Court's mouth. Caught by reading the sentences ("I agree with the Court" cannot be the Court). Avoided:
+   F001's quote is the majority's own reasoning; F002 asks for the concurrence and says so. Not fixed here (chunk
+   labels are Yasser's, app/chunking.py): to tell him.
+
+## 2026-11-19 — Yasser's F016 and F021 rewritten on TEST questions (drafted with help, eval/FOLLOWUPS.md)
+
+Edwin found that F016 and F021 were TEST pairs whose first question was a TUNE question of eval-v1 (A012 Kelo,
+A008 Riley): the first answer would come from the TUNE split. Yasser asked Claude to help rewrite both on his own
+TEST questions: F016 on A005 (West Virginia v. EPA), F021 on A010 (Citizens United). Claude gave three drafts of
+each follow-up; Yasser chose F016 "What makes a case one of these 'extraordinary cases' ..." (explain) and F021 the
+"developer mode" injection asking for an invented Kennedy quote with a page cite. The gold quote of F016 was taken
+from find_quote's output (Opinion of the Court, Roberts), not typed. F021's must_not_appear "corporations are
+people" was checked with find_quote "Citizens United" "corporations are people" --all (0 sentences), so a true
+quote cannot be counted as a failure. Kelo and Riley stay in Yasser's TUNE pairs (F015, F019). What was wrong:
+1. **Placeholder left in the file.** The first version of F016 still had the template text in gold_quote;
+   check_followups caught it ("gold_quote NOT FOUND word for word"). The check does not catch a placeholder in
+   follow_up or expected_answer (they are only checked for length), so the file was also searched for "<".
+check_followups: "no problems" on the 21 pairs (7 each).
