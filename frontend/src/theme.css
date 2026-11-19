@@ -235,4 +235,7 @@
 :root[data-theme="light"] .ts-option{background:var(--l-bg);color:var(--l-ink)}
 :root[data-theme="light"] .ts-option:hover{background:var(--l-bg2);border-color:var(--l-edge)}
 @media(max-width:900px){body:has(.rs.started) .ts{bottom:150px}}
+/* the admin sidebar reaches the bottom left ("Open the chat"): there, Settings sits at the bottom right */
+body.ad-dark .ts{left:auto;right:16px}
+body.ad-dark .ts-panel{left:auto;right:0}
 @media(prefers-reduced-motion:reduce){.ts-btn,.ts-panel{transition:none;animation:none}}
