@@ -6,8 +6,25 @@
     <title>Verdicta</title>
     <link rel="icon" type="image/png" href="./src/assets/favicon.png" />
     <link rel="apple-touch-icon" href="./src/assets/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./src/splash.css" />
   </head>
   <body>
+    <!-- the loading screen (Edwin): shown at once, removed by main.jsx when the page is ready -->
+    <div id="splash" role="status" aria-label="Loading Verdicta">
+      <div class="sl-wrap">
+        <div class="sl-stage" aria-hidden="true">
+          <i class="sl-halo"></i>
+          <img class="sl-v" src="./src/assets/splash/v.webp" alt="" />
+          <img class="sl-vgold" src="./src/assets/splash/v-gold.webp" alt="" />
+          <img class="sl-scales" src="./src/assets/splash/scales.webp" alt="" />
+          <img class="sl-net" src="./src/assets/splash/network.webp" alt="" />
+          <i class="sl-shine"></i>
+        </div>
+        <p class="sl-name" aria-hidden="true"><span>V</span><span>E</span><span>R</span><span>D</span><span>I</span><span>C</span><span>T</span><span>A</span></p>
+        <p class="sl-tag">Verified case-law research</p>
+        <div class="sl-bar"><i></i></div>
+      </div>
+    </div>
     <div id="root"></div>
     <!-- outside React: shown on every page, even before the JavaScript has loaded (SR7) -->
     <footer>
