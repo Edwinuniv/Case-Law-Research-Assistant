@@ -822,3 +822,12 @@ database) and to fix it, test first. What was wrong, and how it was caught:
    Harvard XML text does not contain "JUSTICE THOMAS, concurring.", so its section is "Opening"; the model still sees
    the stored label "Concurring opinion (Thomas)" and check 6 still catches it. `find_quote` printed only the section;
    it now prints the label too.
+3. **A test that passed for the wrong reason** (Edwin's review of #119). The "never swallows the next sentence" test
+   used "... Parts I and II. The Court errs. Some judges were dissenting.": with no comma before "dissenting", a
+   too-wide pattern that reads past the full stop finds no role either, so it passed that test too. Edwin caught it by
+   putting a too-wide pattern in and seeing every test still pass. The example is now "... Parts I and II. The Court
+   errs, dissenting. x": our pattern gives no label, the too-wide one gives "Scalia, J., dissenting" (checked both).
+4. **What the re-index fixes** (check_sections on Yasser's and Edwin's databases, same numbers): 385 stored labels
+   change in 15 opinions; 149 passages in 8 decisions go from the Court to a separate opinion; none goes the other
+   way. The other 236 fix the author: e.g. 34 passages of Thomas's dissent in Sessions v. Dimaya (2018) were labelled
+   as Roberts's dissent, because the heading of the next dissent was not recognised and the previous label went on.
