@@ -1,9 +1,9 @@
 // The layout of the site's information pages: privacy, terms, sources, contact (Edwin, 2026-11-12).
 // A dark band with the logo and the title (the accent word in italic gradient, like the landing page),
 // the text in a readable column, and links between the four pages.
-// The logo comes from assets/logo-light.webp, the same file as the header and every other page.
+// The logo comes from components/Logo.jsx, the same file as the header and every other page.
 import { Link, NavLink } from "react-router-dom";
-import logoMark from "../assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import "./site.css";
 
 export const SITE_PAGES = [["/privacy", "Privacy"], ["/terms", "Terms of use"], ["/sources", "Sources & licences"],
@@ -14,7 +14,7 @@ export default function SitePage({ kicker, title, accent, updated, children }) {
     <div className="sp">
       <section className="sp-hero">
         <Link to="/" className="sp-back"><span aria-hidden="true">←</span> Back</Link>   {/* to the main page (Yasser) */}
-        <img className="sp-logo" src={logoMark} alt="" />
+        <Logo className="sp-logo" />
         <span className="sp-kicker">{kicker}</span>
         <h1>{title} <em>{accent}</em></h1>
         {updated && <p className="sp-updated">Last updated {updated}</p>}

@@ -31,7 +31,9 @@ import Terms from "./pages/Terms.jsx";
 import ErrorPage, { ErrorBoundary } from "./components/ErrorPage.jsx";   // error pages that reveal nothing (Edwin)
 import "./style.css";
 import "./life.css";                              // white light on the dark pages (Edwin; for Yasser's opinion)
-import logoMark from "./assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
+import "./theme.css";                             // dark pages with white sections, or the reverse (Edwin)
+import Logo from "./components/Logo.jsx";        // the Verdicta logo, white or black V for the theme (Edwin, 2026-11-19)
+import ThemeSwitch from "./components/ThemeSwitch.jsx";   // Settings: the appearance (Edwin, 2026-11-19)
 
 // The loading screen of index.html (Edwin, 2026-11-19): it fades out once the page is ready. On the first visit
 // of this tab it stays until its animation has played once (about 2.1 s since the page started loading).
@@ -82,7 +84,7 @@ function App() {
       {!landing && !authPage && <header>
         {/* only the logo, and "Log out" for a logged-in administrator (Yasser's decision, 2026-11-12):
             the coverage line is on the research page itself, the admin menu is in the admin sidebar */}
-        <Link to="/" className="brand"><img src={logoMark} alt="" /> Verdicta</Link>
+        <Link to="/" className="brand"><Logo /> Verdicta</Link>
         {user && (
           <button className="logout" onClick={logout} title={`Log out ${user.email}`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
@@ -129,6 +131,7 @@ function App() {
           <Route path="*" element={<ErrorPage kind="notFound" inApp />} />   {/* not a silent jump to the home page */}
         </Routes>
       </main>
+      {!landing && <ThemeSwitch />}   {/* the landing page keeps its dark scenes in both themes */}
     </>
   );
 }

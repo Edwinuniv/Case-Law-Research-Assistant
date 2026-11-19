@@ -2,7 +2,7 @@
 // that does not answer. Plain words only: never the technical error, a file name or what the server said,
 // so the page tells an attacker nothing. The real error is in the browser console (crash) or the server's log.
 import { Component } from "react";
-import logoMark from "../assets/logo-light.webp";
+import Logo from "./Logo.jsx";
 import "./errors.css";
 
 const KINDS = {
@@ -20,7 +20,7 @@ export default function ErrorPage({ kind = "notFound", inApp = false }) {   // i
   return (
     <div className={inApp ? "er er-in-app" : "er"} role={kind === "notFound" ? undefined : "alert"}>
       <div className="er-glow" aria-hidden="true" />
-      {!inApp && <a href="/" className="er-brand"><img src={logoMark} alt="" /> Verdicta</a>}
+      {!inApp && <a href="/" className="er-brand"><Logo /> Verdicta</a>}
       <p className="er-code" aria-hidden="true">{k.code}</p>
       <h1>{k.title}</h1>
       <p className="er-text">{k.text}</p>

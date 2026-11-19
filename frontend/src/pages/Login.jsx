@@ -12,7 +12,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
-import logoMark from "../assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import ClipboardAnim from "../components/ClipboardAnim.jsx";
 import GoogleButton from "../components/GoogleButton.jsx";   // Sign in with Google (SPEC 11, 2026-11-13)
 import "./auth.css";
@@ -223,7 +223,7 @@ export default function Login({ mode = "login", onLogin }) {
   return (
     <div className="au">
       <aside className="au-side">
-        <Link to="/" className="au-brand" aria-hidden="true" tabIndex={-1}><img src={logoMark} alt="" /> Verdicta</Link>
+        <Link to="/" className="au-brand" aria-hidden="true" tabIndex={-1}><Logo /> Verdicta</Link>
         <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
         <ClipboardAnim />
         <div className="au-side-text">
@@ -238,7 +238,7 @@ export default function Login({ mode = "login", onLogin }) {
 
       <section className="au-main">
         <div className="au-top-small">
-          <Link to="/" className="au-brand au-brand-small"><img src={logoMark} alt="" /> Verdicta</Link>
+          <Link to="/" className="au-brand au-brand-small"><Logo /> Verdicta</Link>
           <Link to="/" className="au-back"><span aria-hidden="true">←</span> Back</Link>
         </div>
         <div className="au-card" key={mode}>

@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, me } from "../api.js";
-import seal from "../assets/logo-light.webp";   // the Verdicta logo (Edwin, 2026-11-19; was the seal)
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
 import PlansDialog from "../components/PlansDialog.jsx";   // the plans panel (Edwin, 2026-11-16)
@@ -162,7 +162,7 @@ export default function Chat({ info }) {
 
         {!started && (
           <div className="rs-hero">
-            <img src={seal} alt="" className="rs-seal" />
+            <Logo className="rs-seal" />
             <span className="rs-kicker">Verified case-law research</span>
             <h1>Ask the <em>Court.</em></h1>
             <p className="rs-sub">Answers come only from {info.coverage}. Every citation and every quote is checked against

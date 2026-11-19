@@ -3,7 +3,7 @@
 // While an admin page is open, the body gets the dark background of the dashboard (admin.css).
 import { useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import logoMark from "../assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
+import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme (Edwin, 2026-11-19; was the seal)
 import "./admin.css";
 
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],
@@ -19,7 +19,7 @@ export default function AdminLayout({ user }) {
   return (
     <div className="ad">
       <nav className="ad-side" aria-label="Administration">
-        <div className="ad-brand"><img src={logoMark} alt="" /><div><b>Verdicta</b><small>Administration</small></div></div>
+        <div className="ad-brand"><Logo /><div><b>Verdicta</b><small>Administration</small></div></div>
         {PAGES.map(([path, name]) => (
           <NavLink key={path} end={path === ""} to={"/admin/" + path}><i aria-hidden="true" />{name}</NavLink>
         ))}
