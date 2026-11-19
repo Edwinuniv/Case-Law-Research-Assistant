@@ -6,7 +6,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./landing.css";
-import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
+import logoMark from "../assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
 import Scales3D from "../components/Scales3D.jsx";
 import Story3D from "../components/Story3D.jsx";
 import Checks6 from "../components/Checks6.jsx";

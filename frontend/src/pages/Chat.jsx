@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, me } from "../api.js";
-import seal from "../assets/logo-seal.webp";
+import seal from "../assets/logo-light.webp";   // the Verdicta logo (Edwin, 2026-11-19; was the seal)
 import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
 import PlansDialog from "../components/PlansDialog.jsx";   // the plans panel (Edwin, 2026-11-16)

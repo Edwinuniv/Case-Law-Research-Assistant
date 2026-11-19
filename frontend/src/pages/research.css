@@ -49,7 +49,7 @@ main:has(.rs){max-width:none;margin:0;padding:0}
 .rs-panel-btn{display:none}
 
 .rs-hero{text-align:center;padding:clamp(24px,6vh,64px) 0 26px;animation:rs-up .7s ease-out both}
-.rs-seal{width:76px;height:76px;filter:drop-shadow(0 10px 30px rgba(245,158,11,.3))}
+.rs-seal{height:84px;width:auto;filter:drop-shadow(0 10px 30px rgba(245,158,11,.3))}
 .rs-kicker{display:block;margin-top:16px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
 .rs-hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(42px,6vw,72px);line-height:1.05;margin:12px 0 14px;color:#fff}
 .rs-hero h1 em{background:linear-gradient(90deg,var(--gold),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}

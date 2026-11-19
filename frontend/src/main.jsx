@@ -29,7 +29,7 @@ import Privacy from "./pages/Privacy.jsx";
 import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
 import "./style.css";
-import logoMark from "./assets/logo-seal.webp";     // the Verdicta seal, bundled into /assets by Vite
+import logoMark from "./assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
 
 function App() {
   const [info, setInfo] = useState(null);          // answer of GET /api/me

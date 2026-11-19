@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
-import logoMark from "../assets/logo-seal.webp";   // the Verdicta seal (Yasser, 2026-11-12)
+import logoMark from "../assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
 import ClipboardAnim from "../components/ClipboardAnim.jsx";
 import GoogleButton from "../components/GoogleButton.jsx";   // Sign in with Google (SPEC 11, 2026-11-13)
 import "./auth.css";
