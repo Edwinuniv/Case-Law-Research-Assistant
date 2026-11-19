@@ -737,3 +737,21 @@ section 11, tests from the rule before the code. What was wrong, and how it was 
    have failed for everyone. Caught by calling Stripe for real before pushing; the parameter and its test were removed,
    and the README says where to switch the other methods off. Lesson: a test with a fake only proves what the fake
    knows; a live call to the test mode is needed for anything Stripe decides.
+
+## 2026-11-19 — Concurrence labelled as the Court in a combined text (Yasser)
+
+Edwin found with `find_quote --all` that Sotomayor's concurrence in Counterman v. Colorado (2023) was labelled
+"Opinion of the Court (Kagan)". We asked Claude to find the cause from the real text (a read-only query on Yasser's
+database) and to fix it, test first. What was wrong, and how it was caught:
+1. **The "as to Parts ..." pattern stopped at the first comma.** The heading pattern written with Claude on 2026-11-06
+   (for "joins as to Parts II and III") read the list of parts with `[^,.]`, so "joins as to Parts I, II, III-A, and
+   III-B, concurring ..." was not recognised. Counterman is stored as ONE combined text labelled "Opinion", so every
+   paragraph of the concurrence kept the majority's label, and nothing in the passage header said "concurring": the
+   model and check 6 of the verifier would take it for the Court's view. The 2026-11-06 tests only had lists without
+   commas, so they passed. Caught by Edwin reading the labels of real passages. Fix: the list is read up to the comma
+   before the role, never past a full stop; a test with the real line, and one showing that the list does not swallow
+   a later sentence. `scripts/check_sections.py` counts, before a re-index, the passages whose label would change.
+2. **Not a bug, but misleading: "Opening".** Thomas's concurrence in Shelby County (2013) is a separate opinion whose
+   Harvard XML text does not contain "JUSTICE THOMAS, concurring.", so its section is "Opening"; the model still sees
+   the stored label "Concurring opinion (Thomas)" and check 6 still catches it. `find_quote` printed only the section;
+   it now prints the label too.
