@@ -124,7 +124,9 @@ def test_every_question_is_saved_without_an_account(c, clean_db):              #
 
 
 def test_each_question_is_answered_on_its_own(c, monkeypatch):
-    """The chat must not pretend to remember: the model only gets the current question."""
+    """The chat must not pretend to remember: the model only gets the current question.
+    Two questions need an account since 2026-11-14 (a visitor has one, SPEC 11)."""
+    c.post("/api/signup", json={"email": "reader@example.com", "password": "a-long-password"}, headers=csrf(c))
     seen = []
     monkeypatch.setattr(llm, "ask_model", lambda q, p: seen.append(q) or good_model(q, p))
     ask(c, "Is the President immune from prosecution?")

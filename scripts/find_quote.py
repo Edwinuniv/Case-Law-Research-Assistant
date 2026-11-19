@@ -29,5 +29,7 @@ for o in rows:
         for s in re.split(r"(?<=[.?!])\s+", c["text"]):
             if words.lower() in s.lower() and 3 <= len(s.split()) <= 60:
                 found += 1
-                print(f"decision {o['decision_id']} | {o['case_name'][:50]} ({o['date_filed'].year}) | {c['section']}\n  {s}\n")
+                # the stored label too: a separate opinion's text may not name its author (Thomas in Shelby County)
+                print(f"decision {o['decision_id']} | {o['case_name'][:50]} ({o['date_filed'].year}) | "
+                      f"{o['label']} - {c['section']}\n  {s}\n")
 print(f"{found} sentence(s)." + ("" if found or show_all else " Nothing in the Court's opinion: try other words, or --all."))

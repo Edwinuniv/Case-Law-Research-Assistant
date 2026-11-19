@@ -689,3 +689,145 @@ What was wrong or nearly wrong, and how it was caught:
    saved questions, on phones too.
 4. **A test asked for a page that does not exist** (`/api/admin/overview` instead of `/api/admin/home`): it got 404
    instead of 403 and failed. A mistake in the test, not the code; fixed in the test.
+
+## 2026-11-13 — Logs and PDF exports (Yasser, parts 3 and 4 of docs/PLAN_2026-11-13.md)
+
+We asked Claude to build the user log and admin log (part 3), then the PDF exports (part 4), rules written first in
+SPEC section 11, tests from the rules, whole suite on a local PostgreSQL, the downloads checked in a headless browser.
+What was wrong, and how it was caught:
+1. **The admin log silently lost some admin actions.** An admin request about an account that does not exist (e.g.
+   GET /api/admin/users/99999/log, a 404) produced an admin_log row pointing to a missing account; the database
+   refused it, the error went to the server output and the action was not logged. Part 3's test still passed, because
+   it never looked for that row. Caught by a part-4 test that expected the 404 PDF download in the admin log. Fix: the
+   row is kept without the link, the missing id in the detail; the part-3 test now expects it (both branches).
+2. **Mixed time zones in the PDF.** The header said UTC but the table times came out in the database's local time
+   (two hours apart in the test output). Caught by reading the test output; every time in the PDFs is now UTC.
+
+## 2026-11-13 — Yasser's follow-up pairs F015-F021 (drafted with help, eval/FOLLOWUPS.md)
+
+Yasser asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Yasser checks and
+approves each pair before the set is tagged followups-v1. What Claude did: built the pairs on Yasser's own eval-v1
+questions (A006, A007, A008, A009, A012), one of each of the six kinds (two "explain"); F015 and F016 reuse the gold
+decision and gold quote of A008 and A012, already verified by the team for eval-v1. What was wrong or unverified:
+1. **An unchecked claim.** The first draft of F020's "why" said "checked: find_case finds nothing", but no check had
+   been run (Claude's workspace has no corpus). Caught by Claude before committing; replaced by the command Yasser
+   must run.
+2. **A quote not verified yet.** F017's gold quote (Justice Sotomayor's dissent in Kennedy v. Bremerton) was written
+   from memory; it must be found word for word with check_followups / find_quote before the set is tagged.
+   Checked by Yasser on his database (2026-11-13): python -m scripts.check_followups printed "no problems" for the
+   7 pairs, so the quote is in the decision word for word.
+Structure checked with scripts/check_followups.py's own check_lines (0 problems); the word-for-word quote check needs
+the database and is Yasser's to run.
+
+## 2026-11-13 — Joe's follow-up pairs F008-F014 (drafted with help, eval/FOLLOWUPS.md)
+
+Joe asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Joe checks and approves
+each pair before the set is tagged followups-v1. What Claude did: built the pairs on Joe's own eval-v1 questions
+(A015, A016, A019, A024, A025, A026, A028), each of the six kinds at least once (two "explain"); the test pairs
+(F009, F010) follow test questions of eval-v1 (A019, A016). F010 reuses A016's gold decision and gold quote, already
+verified by the team for eval-v1. What is not verified yet:
+1. **Two quotes written from memory.** F008 (Obergefell, the Due Process and Equal Protection sentence) and F009
+   (Justice O'Connor's dissent in Roper) were written from memory, because Claude's workspace has no corpus. They
+   must be found word for word with check_followups / find_quote on Joe's database before the set is tagged.
+   Checked on Joe's database (2026-11-14): F009 found; F008 NOT FOUND, because our text reads "couples of the
+   same-sex" (with a hyphen) where Claude wrote "same sex" from memory. Fixed by copying the sentence from
+   find_quote's output.
+2. **An invented case to confirm.** F013 says there is no Supreme Court decision "Raich v. Holder"; Joe must run
+   python -m scripts.find_case "Raich" and see only Gonzales v. Raich.
+   Checked (2026-11-14): find_case "Raich" finds only 799995 Gonzales v. Raich.
+Structure checked with scripts/check_followups.py's own check_lines (0 problems apart from the quote check, which
+needs the database).
+
+## 2026-11-14 — Access and saved chats (Joe, part 1 of docs/PLAN_2026-11-13.md)
+
+We asked Claude to build part 1 in three steps (one question for a visitor, free and paid plans, saved chats), each
+rule written first in SPEC section 11, the test tables approved by Joe before the code (NFR17), the page checked in a
+headless browser.
+What was wrong, and how it was caught:
+1. **"New chat" while an answer was coming put the next question in the old chat.** The first version of the chat
+   page let the account click "New chat" while the previous question was still being answered; when the answer
+   arrived, it set the old chat back as the open one, so the next question was added to it (3 questions in one chat
+   instead of 2 + 1). The server tests could not see it (the server did what it was told). Caught in the browser check,
+   by printing what the page sent to /api/ask. Fix: "New chat" is disabled while an answer is coming.
+2. **The follow-ups would have been switched on without the measurement.** Connecting answer(history=...) directly, as
+   the plan describes, would have sent the chat's history to the model on the live site at once, but EVALUATION.md
+   (follow-up questions rule) says follow-ups stay off until followups-v1 meets the rule. Caught by reading
+   EVALUATION.md before writing the step-3 rule; the history is sent only when the setting follow_ups is on (off by
+   default; Edwin decides), and a test checks that no history is sent while it is off.
+
+## 2026-11-16 — Stripe test-mode payments (Edwin)
+
+We asked Claude to build paying for the paid plan with Stripe in test mode (Edwin's decision), rule first in SPEC
+section 11, tests from the rule before the code. What was wrong, and how it was caught:
+1. **Stripe's objects treated as dictionaries.** app/billing.py read the Checkout session and the webhook event with
+   `.get(...)`, as older versions of the stripe library allowed. In stripe 17.0.0 a StripeObject is not a dict:
+   "'get' is a dict method, but a StripeObject is not a dict". The confirm tests did not see it (their fake returns a
+   dict), but the webhook tests sign real events and go through the real `stripe.Webhook.construct_event`, so three of
+   them failed. On the live site a payment would have crashed when the person came back from Stripe. Fix: the session
+   and the event are converted with `.to_dict()` where they come in.
+2. **A Stripe parameter that no longer exists.** Stripe's page offered Cash App Pay and US bank payments, which Edwin
+   cannot use in Lebanon. Claude added `payment_method_types=["card"]` with a test that faked Stripe; the test passed,
+   because the fake accepted any parameter. A real call to Stripe's test mode refused it: "The payment_method_types
+   parameter is no longer supported ... Payment methods are now managed from your Dashboard settings". Upgrade would
+   have failed for everyone. Caught by calling Stripe for real before pushing; the parameter and its test were removed,
+   and the README says where to switch the other methods off. Lesson: a test with a fake only proves what the fake
+   knows; a live call to the test mode is needed for anything Stripe decides.
+
+## 2026-11-19 — Edwin's follow-up pairs F001-F007 (drafted with help, eval/FOLLOWUPS.md)
+
+Edwin asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Edwin checked and
+approved each pair (2026-11-19). What Claude did: built the pairs on Edwin's own eval-v1 questions (A029, A035, A036,
+A037, A038, A040, A042), each of the six kinds at least once (two "separate_opinion"); one test pair only (F001, on
+A036, a TEST question of eval-v1), because Joe's and Yasser's 4 test pairs plus 2 would give 6 of 21 (29%), far from
+80/20. Unlike the earlier drafts, every quote and trap was checked on Edwin's database before the draft was shown:
+gold quotes copied from find_quote's output, find_case "Clinton" (no United States v. Clinton), find_quote "Bostock"
+"back pay" --all (0 sentences), "We issue no holding on § 5 itself" (Shelby County). check_followups: "no problems"
+on the 21 pairs. What was wrong:
+1. **Wrong opinion labels in find_quote.** With --all, sentences of Justice Sotomayor's concurrence in Counterman
+   ("I agree with the Court that precedent ...") are labelled "Opinion of the Court (Kagan)", and Justice Thomas's
+   concurrence in Shelby County is labelled "Opening". A gold quote taken on the label alone could put a concurrence
+   in the Court's mouth. Caught by reading the sentences ("I agree with the Court" cannot be the Court). Avoided:
+   F001's quote is the majority's own reasoning; F002 asks for the concurrence and says so. Not fixed here (chunk
+   labels are Yasser's, app/chunking.py): to tell him.
+
+## 2026-11-19 — Yasser's F016 and F021 rewritten on TEST questions (drafted with help, eval/FOLLOWUPS.md)
+
+Edwin found that F016 and F021 were TEST pairs whose first question was a TUNE question of eval-v1 (A012 Kelo,
+A008 Riley): the first answer would come from the TUNE split. Yasser asked Claude to help rewrite both on his own
+TEST questions: F016 on A005 (West Virginia v. EPA), F021 on A010 (Citizens United). Claude gave three drafts of
+each follow-up; Yasser chose F016 "What makes a case one of these 'extraordinary cases' ..." (explain) and F021 the
+"developer mode" injection asking for an invented Kennedy quote with a page cite. The gold quote of F016 was taken
+from find_quote's output (Opinion of the Court, Roberts), not typed. F021's must_not_appear "corporations are
+people" was checked with find_quote "Citizens United" "corporations are people" --all (0 sentences), so a true
+quote cannot be counted as a failure. Kelo and Riley stay in Yasser's TUNE pairs (F015, F019). What was wrong:
+1. **Placeholder left in the file.** The first version of F016 still had the template text in gold_quote;
+   check_followups caught it ("gold_quote NOT FOUND word for word"). The check does not catch a placeholder in
+   follow_up or expected_answer (they are only checked for length), so the file was also searched for "<".
+check_followups: "no problems" on the 21 pairs (7 each).
+
+## 2026-11-19 — Concurrence labelled as the Court in a combined text (Yasser)
+
+Edwin found with `find_quote --all` that Sotomayor's concurrence in Counterman v. Colorado (2023) was labelled
+"Opinion of the Court (Kagan)". We asked Claude to find the cause from the real text (a read-only query on Yasser's
+database) and to fix it, test first. What was wrong, and how it was caught:
+1. **The "as to Parts ..." pattern stopped at the first comma.** The heading pattern written with Claude on 2026-11-06
+   (for "joins as to Parts II and III") read the list of parts with `[^,.]`, so "joins as to Parts I, II, III-A, and
+   III-B, concurring ..." was not recognised. Counterman is stored as ONE combined text labelled "Opinion", so every
+   paragraph of the concurrence kept the majority's label, and nothing in the passage header said "concurring": the
+   model and check 6 of the verifier would take it for the Court's view. The 2026-11-06 tests only had lists without
+   commas, so they passed. Caught by Edwin reading the labels of real passages. Fix: the list is read up to the comma
+   before the role, never past a full stop; a test with the real line, and one showing that the list does not swallow
+   a later sentence. `scripts/check_sections.py` counts, before a re-index, the passages whose label would change.
+2. **Not a bug, but misleading: "Opening".** Thomas's concurrence in Shelby County (2013) is a separate opinion whose
+   Harvard XML text does not contain "JUSTICE THOMAS, concurring.", so its section is "Opening"; the model still sees
+   the stored label "Concurring opinion (Thomas)" and check 6 still catches it. `find_quote` printed only the section;
+   it now prints the label too.
+3. **A test that passed for the wrong reason** (Edwin's review of #119). The "never swallows the next sentence" test
+   used "... Parts I and II. The Court errs. Some judges were dissenting.": with no comma before "dissenting", a
+   too-wide pattern that reads past the full stop finds no role either, so it passed that test too. Edwin caught it by
+   putting a too-wide pattern in and seeing every test still pass. The example is now "... Parts I and II. The Court
+   errs, dissenting. x": our pattern gives no label, the too-wide one gives "Scalia, J., dissenting" (checked both).
+4. **What the re-index fixes** (check_sections on Yasser's and Edwin's databases, same numbers): 385 stored labels
+   change in 15 opinions; 149 passages in 8 decisions go from the Court to a separate opinion; none goes the other
+   way. The other 236 fix the author: e.g. 34 passages of Thomas's dissent in Sessions v. Dimaya (2018) were labelled
+   as Roberts's dissent, because the heading of the next dissent was not recognised and the previous label went on.

@@ -495,7 +495,6 @@ administrator reads and deletes them (admin page "Messages", admin role + CSRF).
 CONTACT_EMAIL. Files of others changed and told: app/db.py, app/main.py, frontend/index.html, frontend/src/main.jsx
 (Joe), app/config.py and .env.example (Yasser).
 
-
 2026-11-12 - Visitor accounts (Yasser, team decision; replaces the "administrator only" part of the 2026-11-06 entry and
 step 5.11). A visitor may create an account on /signup (email + password) to keep their question history; the research
 page stays open to everyone without an account (SR33, FR1). Written before the code; the instructor is to be told
@@ -524,3 +523,174 @@ browser session without an account, logged for the admins but no saved chat; fre
 an admin, no real payment). This changes SR33 (accounts exist; a visitor gets one question) and FR1 (follow-ups); FR28
 stays (every question logged). Plan, split and order: docs/PLAN_2026-11-13.md.
 
+2026-11-12 - Instructor's answer on follow-up questions (Edwin). We wrote to Dr. Salloum that, after his answer of
+2026-11-06 (one independent question per message, no follow-up questions; entry above), we were considering follow-up
+questions: the visitor asks about an answer, and the new answer explains the passages already shown and answers the new
+question, still only from real, verified passages with the same checks, measured with a rule written first, or else we
+keep one question per message. He answered on 2026-11-12 at 20:49: "Akid" (Lebanese: "of course"). Follow-ups are
+therefore allowed on those terms; the rule is in EVALUATION.md ("Follow-up questions rule", written before any code).
+Independent questions stay as they are. Files of others that will change, with Joe's agreement: app/api.py (/api/ask
+accepts the previous answer's id, checked against the session) and frontend/src/pages/Chat.jsx (the follow-up in the
+thread).
+
+2026-11-13 - The two logs (part 3 of docs/PLAN_2026-11-13.md, Yasser; Dr. Salloum's request 6). Written before the code.
+(1) **User log** (table user_log): one row per thing an account does, with the time and a small JSON detail. Events:
+signup, login, login_failed (wrong password or locked; the attempt is on a known account), logout, question (with the
+query_log id), follow_up (with the query_log id; Joe's chats), plan_change (Joe's plans), refused (a limit or a rule
+said no: e.g. too many questions; the reason is in the detail). Visitors without an account have no user log: their
+questions stay anonymous in query_log (FR28/SR41). (2) **Admin log** (table admin_log): everything an administrator
+does: login, logout, and every change made through /api/admin (any request that is not a GET), plus the exports
+(downloading a log, a list or a PDF). Each row keeps the admin, the action, the account it concerns if any, and the
+answer's HTTP status; it is written by one middleware, so a new admin route is logged without extra code. (3) Every
+action calls one helper (app/logs.py: log_user, log_admin). A log that cannot be written never blocks the action
+(the error goes to the server output). (4) No IP address, no browser information and no password are stored in the
+logs (the privacy page says what is kept). (5) Only administrators read the logs: GET /api/admin/users/{id}/log and
+GET /api/admin/log, each also downloadable as a CSV file (?format=csv). Rows are never edited; they are deleted only
+with their account (ON DELETE CASCADE for the user log). Joe's admin pages (part 2) show them; the PDF exports
+(part 4) include them.
+
+2026-11-13 - Saved demo answers (Edwin; Dr. Salloum at the meeting of 13 Nov: the demo questions and their answers
+saved in the database, so the jury sees them with no tokens and no waiting). Not a cache of every question: only the
+example questions of the chat page (config.EXAMPLE_QUESTIONS). Each one is answered ONCE by the real pipeline, with
+every check of the verifier, by `python -m scripts.make_demo_answers`, and stored as shown (table demo_answers).
+/api/ask returns the saved answer when the question is the same one (case, spaces and the final ? ignored): no search,
+no model call, not counted in the limit per address, but logged in query_log like any question (FR28), with the reason
+"saved demo answer of <date>". The page labels it "Saved answer · checked on <date>" instead of the time taken. An
+ERROR while making them (e.g. the model's daily limit) is not saved; the answer saved before is kept. Any other
+question goes through the pipeline as before, so the evaluation is not affected. Files of others changed and told:
+app/db.py (one new table) and app/api.py (the check at the start of /api/ask) (Joe).
+
+2026-11-13 - Sign in with Google (Yasser's decision). Written before the code. (1) The sign-up and login pages show a
+"Continue with Google" button (Google Identity Services). The browser gets a signed ID token from Google and sends it
+to POST /api/auth/google (with the CSRF token, like every POST). (2) The server checks the token with Google's public
+keys (google-auth: signature, audience = our GOOGLE_CLIENT_ID, issuer, expiry) and accepts only an email that Google
+marks as verified. No Google password or token is stored; only the email, as for any account. (3) A new email makes a
+'user' account (the same as POST /api/signup: counted in the 5 sign-ups per address per hour; its password is a random
+secret nobody knows, so only Google opens it until an administrator sets a password). An email that already has a
+'user' account logs into that account. (4) Administrator accounts are refused (HTTP 403, "Administrators log in with
+their password"): they keep the password with the 15-minute lock (SR36), so a Google account can never open the admin
+pages. A disabled account is refused (403). A bad or expired token: 401, nothing saved. (5) Logs: user_log 'signup' or
+'login' with detail {"method": "google"}; a refused administrator goes to admin_log as login_failed. (6) The button is
+shown only when GOOGLE_CLIENT_ID is set (GET /api/me gives it; it is public, not a secret); without it the route answers
+404 and the site works as before. Files of others changed and told: app/api.py (the route and the client id in /api/me)
+(Joe).
+
+2026-11-13 - The two logs, clarified after Edwin's review of PR #96 (Yasser). (a) A failed login on an
+administrator's email is written to the admin log as an ATTEMPT ON that account (detail attempt_on_account: true;
+the PDF says "failed login attempt on this account"), made by anyone who typed that email, not an action by the
+administrator; on a visitor's account it is the user log's login_failed. (b) The reason of a failed login is the
+account's state before the try: "wrong password", "locked", "disabled", or "wrong password (account now locked)" for
+the try that locked it. (c) Only the last part of an admin path decides whether a read is logged (export, log, pdf).
+(d) An administrator's own questions are kept in query_log with their user_id, not in the logs (the logs are for
+visitors' accounts and for administrative actions); to be confirmed by the team.
+
+2026-11-13 - PDF exports (part 4 of docs/PLAN_2026-11-13.md, Yasser; Dr. Salloum's request 5). Written before the code.
+(1) **One user**: GET /api/admin/users/{id}/pdf: the account's details (email, role, plan if the account has one,
+active, signed up, last login, number of logins, last activity, number of questions), its log (newest first, from
+the user log) and its questions (newest first, from query_log: date, status, question; not the answers). (2) **All
+users**: GET /api/admin/users/pdf: one table row per account with the same details. (3) Admins only (403/401 for
+anyone else), and each download is written to the admin log (the path contains /pdf). (4) The figures are counted
+from the logs and query_log at the moment of the export; the PDF says when it was made and by which admin.
+(5) Made with ReportLab (BSD licence), no external service; no IP or password in the PDF (there is none in the logs).
+
+2026-11-14 - One question for a visitor without an account (part 1 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's
+request 2). Written before the code. (1) A visitor who is not logged in may ask **one** question per browser session
+(the session cookie). The question is answered and logged in query_log like before, with no user_id (FR28, SR41);
+nothing is saved for the visitor (no history, no chat). (2) A second question from the same session is refused with
+HTTP 403 and "You have used your free question. Log in or sign up to keep asking.", BEFORE the search and the model;
+the refusal is not saved (a visitor has no user log). (3) Only a real answer uses up the question: a question refused
+by SR3, a greeting (WELCOME) or an ERROR (e.g. the model's limit) does not count, so the visitor can try again.
+(4) The example questions (saved demo answers, 0 tokens) never count and are always answered, so the jury can click
+them. (5) A logged-in account is not limited by this rule (its daily limit is the next step: plans). (6) GET /api/me
+says how many free questions the session has left (1 or 0; none for an account), so the page can show "Log in to
+continue" instead of the question box. (7) Known limit, said honestly: a visitor who deletes the cookie gets a new
+session and a new question; the 10 questions a minute per address (step 5.12) still apply on top.
+
+2026-11-14 - Free and paid accounts, questions per day (part 1 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's request 7).
+Written before the code. (1) Every 'user' account has a plan, 'free' (the default, also for accounts made before) or
+'paid'. There is no real payment (a student project; the Terms page says so): an administrator switches an account
+with POST /api/admin/users/{id}/plan {"plan": "free" | "paid"}; only a 'user' account has a plan (an administrator: 400).
+Each switch is written to the account's user log (plan_change, with the old plan, the new plan and the administrator's
+email) and, by the middleware, to the admin log. (2) A free account may ask **10** questions a day, a paid account
+**100**. The two numbers are settings (free_daily_questions, paid_daily_questions), changed by an administrator with
+POST /api/admin/limits (whole numbers from 1 to 1000). (3) "A day" starts at midnight, Beirut time. The questions of the
+day are counted from query_log (the account's rows since midnight); like the visitor's question, only real answers
+count: greetings (WELCOME), ERRORs and the example questions (saved demo answers) do not. (4) The question after the
+limit is refused with HTTP 429 and "You have used your 10 questions for today (free plan). The limit starts again at
+midnight, Beirut time.", BEFORE the search and the model; it is not saved in query_log but written to the user log
+(refused, reason "daily limit"). (5) Administrators have no daily limit. (6) GET /api/me gives a logged-in 'user' its
+plan, its daily limit and the questions left today, so the page can show them. (7) GET /api/admin/users gives each
+account's plan. The admin page buttons (switch the plan, change the limits) come with the admin pages (part 2).
+
+2026-11-14 - Saved chats for logged-in accounts, and follow-ups connected (part 1 of docs/PLAN_2026-11-13.md, Joe;
+Dr. Salloum's requests 1 and 2; Edwin's pipeline.answer(history=...)). Written before the code. (1) A logged-in account
+(user or admin) keeps its chats: a table chats (id, user_id, title = the first question cut to 80 characters,
+created_at, updated_at), and each question of a chat in query_log with its chat_id. Visitors without an account have
+no chat: a chat_id sent by a visitor is refused (401 "Log in to keep a chat."). (2) POST /api/ask takes an optional
+chat_id. Without it, an account's question starts a NEW chat; with it, the question is added to that chat, which must
+be the account's own (someone else's or an unknown chat: 404, before the model). The answer gives its chat_id.
+(3) Each answer keeps, in query_log, what a follow-up needs (pipeline.turn_of: the question, every passage the model
+had, and only the VERIFIED sentences with their quotes); a greeting or an ERROR keeps nothing (turn_of gives None).
+(4) **Follow-ups are switched by a setting, follow_ups, OFF by default** (EVALUATION.md, follow-up questions rule:
+switched on only after followups-v1 meets the rule; Edwin decides). Off: every question of a chat is answered on its
+own, exactly as now (pipeline.answer without history). On: a question in an existing chat is answered with
+answer(question, ..., history=[the chat's earlier turns, oldest first, the last 10 at most; the pipeline keeps the
+last followup_max_turns]); a new chat has no history. An administrator switches it with POST /api/admin/follow-ups
+{"on": true|false}. (5) The user log writes follow_up (with the chat id) for a question added to an existing chat, and
+question for the first question of a chat. (6) GET /api/chats lists the account's own chats, newest first (id, title,
+updated_at, number of questions); GET /api/chats/{id} gives one of its own chats with every question and the answer
+as it was shown; someone else's: 404; not logged in: 401. (7) The daily limit (plans) counts every question, in a chat
+or not. (8) The research page shows "My chats" for an account (a new chat, or an earlier one continued) and keeps the
+page-only list for a visitor. /api/history stays as it is (Yasser's, 2026-11-12).
+
+2026-11-14 - Admin pages: the accounts and one account's details (part 2 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's
+request 4). Written before the code. (1) GET /api/admin/users lists EVERY account (administrators and visitors'
+accounts), each with: email, role, plan, active, locked until, signed up (created_at), last login, number of logins,
+last activity, number of questions; never the password hash. The figures are counted the same way as Yasser's PDF
+exports (app/exports.py summaries: the user log for a visitor's account, the admin log for an administrator, query_log
+for the questions), so the page and the PDF always agree. (2) GET /api/admin/users/{id} gives one account: the same
+details, its questions (newest first: id, date, status, question, chat), its chats (as GET /api/chats gives them) and
+its log (the user log for a visitor's account; for an administrator, the admin log rows that administrator made).
+Unknown account: 404. (3) Administrators only (a 'user': 403; not logged in: 401). (4) Reading one account's details
+is reading someone's data, so it is written to the admin log (action "GET /api/admin/users/{id}", with the account),
+like the exports. (5) The Accounts page (frontend/src/admin/Users.jsx, restyled by Edwin; changed with Joe's OK, Edwin
+told) shows the list, a Free/Paid switch for visitors' accounts, the two daily limits and the follow-ups switch; a click
+on an account opens its details page (UserDetail.jsx) with its questions, chats, log and the PDF button.
+
+2026-11-14 - Admin pages: every question asked, and the admin log (part 2 of docs/PLAN_2026-11-13.md, Joe; Dr. Salloum's
+requests 3 and 6). Written before the code. (1) GET /api/admin/all-questions lists every question asked on the site
+(visitors without an account, visitors' accounts, administrators), newest first, 100 per page (?page=1, 2...; the
+answer gives the total): id, date, status, question, who (the account's email and id, or none for a visitor) and chat.
+(2) Filters, which can be combined: ?status= one of the statuses (ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR,
+WELCOME); ?who=visitors (no account) or ?who=<account id>; ?q= a piece of text in the question (case ignored). An
+unknown status or a bad who: 400. (3) GET /api/admin/all-questions/{id}: one question with its reason and the answer
+as it was shown (details.shown); unknown: 404. (4) The admin log page shows GET /api/admin/log (Yasser) with its CSV
+download. (5) Administrators only (a 'user': 403; not logged in: 401). Reading these lists is not written to the admin
+log (they are the site's own questions, like the Abstentions page); one account's details and the exports still are.
+
+2026-11-15 - Paying for the paid plan, in Stripe TEST mode (Edwin; Edwin's decision, after Joe's free/paid plans of
+14 Nov). Written before the code. Replaces "no real payment, an administrator switches an account to paid" as the only
+way: the administrator's switch stays. (1) **Test mode only**: no real money moves. The server accepts only a Stripe
+test key: a secret key sk_test_... or a restricted key rk_test_... (added 2026-11-16, before the code: Edwin's key is a
+restricted one, which can only do what it is allowed); a live key (sk_live_... or rk_live_...) is refused at start-up
+and payments stay off. Stripe's test card
+4242 4242 4242 4242 pays. (2) **Off unless set up**: STRIPE_SECRET_KEY and STRIPE_PRICE_ID (a monthly price made in
+the Stripe dashboard) in the environment; without them the /api/billing routes answer 404 and the pricing page says
+payments are not set up. STRIPE_WEBHOOK_SECRET is optional (see 5). (3) **Choosing the plan**: a public page /pricing
+compares Free and Paid (the daily limits come from the settings, the price label from PAID_PRICE_LABEL). A visitor is
+sent to sign up first; an administrator has no plan (no limit); a 'user' account on the free plan gets "Upgrade".
+(4) **Paying**: POST /api/billing/checkout (a logged-in 'user' on the free plan, CSRF) creates a Stripe Checkout
+session (subscription, our price, the account id as client_reference_id) and returns its address; the browser goes
+to Stripe's own page, so card numbers never reach our server and nothing about the card is stored. Back on
+/pricing?session_id=..., POST /api/billing/confirm asks Stripe for that session: only if it is complete and paid AND
+was made for the account that is logged in, the account becomes paid. An administrator account, a paid account, or
+another account's session: refused (400/403), nothing changes. (5) **Webhook** (when STRIPE_WEBHOOK_SECRET is set):
+POST /api/billing/webhook checks Stripe's signature (a bad or missing signature: 400, nothing changes);
+checkout.session.completed does the same as (4); customer.subscription.deleted makes the account free again. The same
+event twice changes nothing the second time. (6) **Cancelling**: POST /api/billing/cancel (the paid account itself)
+cancels the subscription at Stripe and makes the account free at once. (7) **Kept**: only Stripe's customer id and
+subscription id on the account (users.stripe_customer_id, users.stripe_subscription_id), to cancel later; no card
+data, no amount. Every change is a plan_change row in the user log, with "by": "stripe" (or the administrator's
+email, as before). (8) An administrator switching an account back to free does not cancel its Stripe subscription
+(test mode: no money); the Accounts page shows the switch as before. Terms and Privacy say all of this. Files of
+others changed, told: app/api.py, app/db.py (two columns), frontend router and pages (Joe).

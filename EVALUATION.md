@@ -83,6 +83,82 @@ current verifier removes for another reason (checks 1 and 3-6) is kept. Then tau
 with the verifier that was kept (threshold rule above), and the TEST split is reported once with it.
 Both verifiers' TUNE numbers are reported, whatever the result.
 
+## Follow-up questions rule (written 2026-11-12, before any code or measurement; Edwin)
+The instructor agreed on 2026-11-12 ("Akid", of course) to follow-up questions on our terms: still only real,
+verified passages, and a rule written before measuring (SPEC section 11).
+**What is built.** Each answer gets an "Ask about this answer" button; a question typed normally stays independent, as
+now. For a follow-up, the browser sends only the previous answer's id; the server accepts it only if that answer was
+given in the same session. The search runs on the new question together with the previous one, the previous answer's
+passages are sent again with the new ones (P1-P8), and the model sees the previous verified sentences as context it
+cannot cite. Every sentence goes through the same six checks, support score and statuses. A setting `follow_ups`
+switches the button on; it stays off on the live site until this rule is met.
+**The test set (followups-v1).** About 20 pairs (a first question, then a follow-up), written by the three of us (about a
+third each, every gold quote checked against our data with check_questions), split 80/20 into tune and test, committed
+and tagged before the first measurement. Kinds: explain the earlier answer; the dissent or concurrence of the same case;
+a detail the passages do not contain (unanswerable); a false premise ("so the Court held X?"); "invent a similar case";
+a prompt injection. Answerable follow-ups have gold decisions and a gold quote; adversarial ones have must_not_appear.
+**Measured** (tune pairs only while deciding): status of each follow-up; false citations shown, by the separate checker
+(SR38); forbidden text shown; abstention precision and recall on the follow-ups, with the thresholds chosen on eval-v1
+(tau_abstain 0.20 is not tuned again); groundedness (judge).
+**The button is switched on only if ALL hold on the tune pairs:** (1) 0 false citations shown; (2) no must_not_appear
+text shown; (3) abstention precision and recall on the follow-ups each at least 0.80 (NFR3); (4) independent questions
+are unchanged: a question without a previous answer goes through exactly the same code as before, proved by tests (so
+the eval-v1 numbers stay valid without a new run). If (1), (2) or (4) fails, follow-ups stay off. If only (3) fails,
+they stay off and the numbers are reported. Then the test pairs are reported once, unchanged. Each pair costs two model
+calls plus the judge, about 10,000 Groq tokens.
+
+## Answer v2 rule (written 2026-11-13, before any code or measurement; Edwin)
+After the meeting of 2026-11-13 (SPEC section 11): fuller answers, a fixed message for questions that are not about the
+law, follow-ups that read the whole chat, prompt caching and fewer tokens. These change the system measured in run 2,
+so they are measured again, on eval-v1, before the live site uses them.
+**What changes.** (a) The prompt asks for a fuller answer: what the Court decided, why, and what a dissent or concurrence
+said when it matters; every sentence still cites passages and copies a word-for-word quote, so the six checks are
+unchanged and a sentence that fails one is removed. (b) If the question is not about law or court decisions, the model
+returns a flag and our code shows a fixed message ("Verdicta is a case-law research assistant..."); for the metrics it
+is an abstention (status NOT_SUPPORTED), so abstention precision and recall keep their definitions. (c) A follow-up
+sends the conversation as messages, oldest first and rebuilt identically each time, so Groq's automatic prompt caching
+can reuse the beginning: the rules, then each earlier turn (its passages, its question, its verified answer), then the
+new turn. The follow-up's search runs on the earlier question and the new one together; if its best decision is
+already in the chat, at most 4 new passages are added, otherwise up to 8; only the last turns are kept. The model may
+cite any passage of the chat; earlier answers are context, never a source.
+**How it is measured.** A new run on eval-v1 with the new prompt (independent questions), all 85 questions, the same
+data, settings and thresholds (tau_abstain 0.20, chosen on run 2, is not tuned again); TUNE split + adversarial only
+while deciding. Follow-ups are measured separately on followups-v1 (Follow-up questions rule above).
+**Kept only if ALL hold on TUNE + adversarial:** (1) 0 false citations shown; (2) no must_not_appear text shown;
+(3) abstention precision and recall each at least 0.80; (4) abstention recall not lower than run 2 rechecked (0.941):
+fuller answers must not answer more questions that should abstain; (5) mean kept sentences per answered question higher
+than run 2 rechecked (the point of the change). If (1) or (2) fails, the old prompt stays. If (3), (4) or (5) fails, the
+old prompt stays and the numbers are reported. Then the TEST split is reported once, with the kept prompt.
+**Tokens.** Logged per question in the run (input, cached input, output), so the effect of caching is a measured number.
+Added 2026-11-13, still before any measurement: v2 also asks gpt-oss for `reasoning_effort` "low" (a setting). One live
+request showed 325 output tokens instead of 1,437 (56 hidden reasoning tokens instead of 1,046); whether the answers stay
+as good is what conditions (1)-(5) measure. Groq returned no cached-token count on our free key (prompt_tokens_details
+empty, even for two identical requests): caching may not be active on the free tier; the request order is kept anyway.
+
+**Chat follow-ups, part 2 (added 2026-11-13, before any code or measurement; Edwin).** Edwin's meaning of follow-ups:
+a conversation about one case ("what did the victim do?", "and the prosecutor?", "so what happened is ...?",
+"explain it more"). Three changes, for follow-ups only: (i) the search stays in the chat's case: it looks only at the
+decisions cited by the chat's shown sentences, unless the new message names another case in the corpus (then that
+case), or the chat has no cited decision, or none of their passages reaches min_retrieval (then the whole corpus, as
+before); "new" in the chat starts again. (ii) The follow-up message tells the model to check a statement of the user
+("so what happened is ...") against the passages: confirm what they support, correct what they contradict, never agree
+only because the user said it. It is added to the new follow-up message, not to the rules, so an independent question
+(what run 4 and eval-v1 measure) is sent exactly as before. (iii) In a chat, "thanks", "ok" and the like get a one-line
+reply instead of the welcome text; outside a chat nothing changes. Measured with the follow-up pairs (followups-v1),
+like the rest of the follow-ups; checked live on a scripted chat before and after.
+
+**Chat follow-ups, part 3: the size of a request (added 2026-11-13, before any code; Edwin).** Found on a live scripted
+chat (6 messages about Counterman v. Colorado, before parts 2 and 3): messages 3 to 5 failed with Groq's 413 "Request
+too large ... tokens per minute (TPM): Limit 8000", because every earlier turn was sent again with all its passages
+(message 2 already 6,259 input tokens). Two changes, for follow-ups only: (A) an earlier turn is sent with only the
+passages its shown sentences cited, each passage once; the new message brings its new passages as before. A follow-up
+is verified against exactly what is sent (the cited passages of the chat + the new ones); new labels continue after the
+highest label of the chat, so a label is never reused. This gives up Groq's prompt caching of the earlier turns, which
+our free key does not show anyway (cached tokens empty, see the Answer v2 rule). (B) Before sending, the size of the
+request is estimated (characters / 3.5); while it is above followup_max_input_tokens (6,000 by default, leaving room for
+the answer under 8,000), the oldest turn is dropped. Independent questions are unchanged. Checked by running the same
+scripted chat again (no ERROR expected), then measured with followups-v1.
+
 ## Results
 Filled in during Week 8, only from saved evaluation runs (run id given for every number).
 
@@ -395,6 +471,13 @@ Recall 0.8: 4 of the 5 unanswerable TEST questions abstained, 1 was answered. Wi
 answer would put recall at 0.6. NFR1 (zero fake citations shown on the adversarial set): met, 0 false citations
 shown. 15 of the 21 adversarial questions abstained (0.714); the citations of the others all passed the separate
 checker.
+
+Note (2026-11-19, Edwin's review of #119): run 2, TUNE and TEST, was measured on passages where 149 passages in
+8 decisions were labelled as the Court's opinion although they belong to a concurrence or a dissent (a heading
+"joins as to Parts I, II, ..." was not recognised; AI_LOG 2026-11-19). One of the 8 is Counterman v. Colorado,
+the gold decision of A036 (TEST) and A035 (TUNE). The numbers above are kept as measured, not re-run. The v2 run
+(run 4) is finished on the same index so that v1 and v2 compare on the same data; later runs use the corrected
+labels.
 
 #### 4. False citations and the adversarial set (step 8.3)
 `python -m scripts.show_citations eval/runs/eval_run2_reverified.json` (TUNE + adversarial) and `--test` once,

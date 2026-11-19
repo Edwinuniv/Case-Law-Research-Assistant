@@ -182,7 +182,8 @@ def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=p
                              for s in r["sentences"]],
                "removed": r["removed"], "fabrications_caught": r["fabrications_caught"],
                "false_by_sentence": false_by_sentence, "citations_shown": n_cites,
-               "judgements": judgements, "ms_total": r["ms_total"]}
+               "judgements": judgements, "ms_total": r["ms_total"],
+               "tokens": r.get("tokens", {})}                     # answer v2 rule: input, cached, output
         with db.connect() as con:
             con.execute("INSERT INTO eval_results (run_id, question_id, tag, split, result) VALUES (%s,%s,%s,%s,%s)",
                         (run_id, q["id"], q["tag"], q["split"], Jsonb(row)))

@@ -24,12 +24,30 @@ Needs Node.js 22 (in WSL: `curl -fsSL https://deb.nodesource.com/setup_22.x | su
     npm run dev                                # while changing the React code: http://127.0.0.1:5173 (uvicorn must run too)
 
 The landing page is http://127.0.0.1:8000 and the research (chat) page http://127.0.0.1:8000/research; neither needs an account.
+Without an account, a visitor gets ONE question per browser session (the example questions are always answered);
+after it, the page asks them to log in or sign up.
+An account is on the free plan (10 questions a day) or the paid plan (100 a day; no real payment): an administrator
+switches it (POST /api/admin/users/{id}/plan) and changes the two limits (POST /api/admin/limits). A day starts at
+midnight, Beirut time. Administrators have no daily limit.
+A logged-in account keeps its chats ("My chats" on the research page; GET /api/chats). Follow-up questions read the
+chat only when an administrator switches them on (POST /api/admin/follow-ups {"on": true}); they are off by default
+until the follow-up measurement in EVALUATION.md is done.
+The admin page "Accounts" (http://127.0.0.1:8000/admin/users) lists every account with its details (sign-up, last
+login, logins, last activity, plan, questions), switches plans, sets the daily limits and the follow-ups; a click on an
+account opens its questions, chats and log.
+"All questions" (http://127.0.0.1:8000/admin/all-questions) lists every question asked on the site, with filters;
+"Admin log" (http://127.0.0.1:8000/admin/log) shows everything the administrators did, downloadable as CSV.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
 a visitor's account lands on the research page and cannot open the admin pages. Run `npm run build` again after each
 `git pull` that changes frontend/, then restart uvicorn. Administrator accounts are made with `python -m scripts.seed --admin`
 (ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
+Every account has an activity log (sign-up, logins, logouts, questions, refusals) and every administrator action is
+written to the admin log; administrators read them at `/api/admin/users/{id}/log` and `/api/admin/log`, and add
+`?format=csv` to download them as a file (the admin pages show them). PDF exports: on the admin page "Accounts",
+"Download all accounts as PDF" (`/api/admin/users/pdf`) and a "PDF" link per account (`/api/admin/users/{id}/pdf`:
+details, log and questions). They use ReportLab, so run `pip install -r requirements.txt` again after pulling.
 
 The footer links to four information pages: /privacy, /terms, /sources and /contact. The Contact page shows the
 addresses in `CONTACT_EMAIL`, separated by commas so the whole team receives the mail (.env, and the Railway variables online) and has a form; messages are read and deleted on
@@ -39,10 +57,36 @@ The research page answers one question per message (no follow-up questions, as t
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
 
+### Paid plan with Stripe (test mode, no real money)
+The page /pricing compares Free and Paid; a free account upgrades on Stripe's own payment page. Only Stripe **test**
+keys are accepted. To switch it on:
+1. Create a free account at stripe.com and stay in **Test mode**.
+2. Products > Add product "Verdicta Paid" with a monthly price; copy its price id (`price_...`).
+3. Developers > API keys: copy the secret key (`sk_test_...`), or create a restricted key (`rk_test_...`) with
+   Checkout Sessions and Subscriptions set to Write (safer: it can do nothing else).
+4. In `.env` (and the Railway variables online): `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, optionally `PAID_PRICE_LABEL`.
+   Run `pip install -r requirements.txt` again (stripe), then restart uvicorn.
+5. Stripe chooses the payment methods its page shows (it showed Cash App Pay and US bank for a US account). To offer
+   only the card: Settings > Payment methods (in test mode) and turn the others off. The code cannot do this: Stripe
+   refuses `payment_method_types` now.
+6. Pay with the test card 4242 4242 4242 4242, any future date, any CVC. Back on /pricing the server asks Stripe
+   whether the payment is complete, then the account is paid.
+7. Optional, online: Developers > Webhooks > add the endpoint `https://<site>/api/billing/webhook` with the events
+   `checkout.session.completed` and `customer.subscription.deleted`, and put its signing secret in
+   `STRIPE_WEBHOOK_SECRET`. Locally the webhook is not needed.
+
 ## Deploy (week 6)
 The `Dockerfile` builds the website (it downloads the embedding model and the reranker while
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
 (plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
+
+### Sign in with Google (optional)
+1. Google Cloud console > APIs & Services > OAuth consent screen: app name Verdicta, user type External, your email.
+2. Credentials > Create credentials > OAuth client ID > Web application. Authorised JavaScript origins:
+   `https://case-law-research-assistant-production.up.railway.app` and `http://localhost:8000` (no redirect URI needed).
+3. Put the client id in `GOOGLE_CLIENT_ID` (in `.env` locally, in the Railway variables online) and restart.
+   No client secret is used. Without the variable the button is hidden. Google works for user accounts only:
+   administrators always log in with their password.
 
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets
@@ -63,7 +107,11 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
     python -m scripts.remove_out_of_scope      # remove the ones listed in app/scope.py (dry run; --apply)
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
+    python -m scripts.check_followups          # check eval/followups.jsonl (follow-up pairs, eval/FOLLOWUPS.md)
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
+    python -m scripts.chat                     # a chat in the terminal: follow-up questions (answer v2; "new", "quit")
+    python -m scripts.chat_scripted eval/chats/counterman_messages.txt   # the same chat before/after a change (uses the model)
+    python -m scripts.make_demo_answers        # answer the chat page's example questions once and save them (uses the model)
     python -m scripts.eval_retrieval "baseline"
     python -m scripts.eval_retrieval "eval-v1 baseline" --split test   # the numbers for the report
     python -m scripts.tune_search              # search settings on the TUNE split (EVALUATION.md)

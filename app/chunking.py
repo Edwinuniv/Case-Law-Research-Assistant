@@ -28,7 +28,9 @@ JUNK_LINE = re.compile(r"^\s*(Cite as: .*|\d{1,3}|Opinion of the Court|"
 _WHO = r"(?P<chief>(?i:chief)\s+)?(?i:justice)\s+(?P<name>[A-Z][A-Za-z’'\-]+)"
 # who joins: "with whom JUSTICE X joins", possibly several groups and limited to some parts
 # ("..., and with whom JUSTICE Y and JUSTICE Z join as to Parts II and III, dissenting.")
-_JOINS = r"(?:,\s*with whom .{0,400}?\bjoins?\b(?: (?:except |only )?as to [^,.]{1,80})?\*?)?"
+# the list of parts may hold commas ("as to Parts I, II, III-A, and III-B", Counterman 2023): it is read up to the
+# comma that comes before the role, never past a full stop
+_JOINS = r"(?:,\s*with whom .{0,400}?\bjoins?\b(?: (?:except |only )?as to [^.]{1,120}?)?\*?)?"
 OPINION_ROLE = re.compile(_WHO + _JOINS + r",\*?\s*"
                           r"(?P<role>(?:concurring|dissenting|respecting)(?: (?:in|from) [^.,;]{1,80}| the denial[^.,;]{0,60})?)\.")
 OPINION_MAIN = re.compile(_WHO + r"\s+(?P<what>delivered the opinion of the Court"

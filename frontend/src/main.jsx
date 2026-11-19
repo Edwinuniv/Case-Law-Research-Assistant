@@ -17,10 +17,14 @@ import QuestionForm from "./admin/QuestionForm.jsx";
 import Questions from "./admin/Questions.jsx";
 import Settings from "./admin/Settings.jsx";
 import Users from "./admin/Users.jsx";
+import UserDetail from "./admin/UserDetail.jsx";
+import AllQuestions from "./admin/AllQuestions.jsx";
+import AdminLog from "./admin/AdminLog.jsx";
 import Chat from "./pages/Chat.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Contact from "./pages/Contact.jsx";
+import Pricing from "./pages/Pricing.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
@@ -82,6 +86,7 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/sources" element={<Sources />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/pricing" element={<Pricing />} />            {/* Free or Paid, Stripe test mode (Edwin) */}
           {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others
             <Route path="/admin" element={<AdminLayout user={user} />}>
               <Route index element={<AdminHome />} />
@@ -96,6 +101,9 @@ function App() {
               <Route path="corpus" element={<Corpus />} />
               <Route path="messages" element={<Messages />} />
               <Route path="users" element={<Users user={user} />} />
+              <Route path="users/:id" element={<UserDetail />} />   {/* one account (SPEC 11, 2026-11-14) */}
+              <Route path="all-questions" element={<AllQuestions />} />   {/* every question (SPEC 11, 2026-11-14) */}
+              <Route path="log" element={<AdminLog />} />
             </Route>
           )}
           <Route path="*" element={<Navigate to="/" />} />

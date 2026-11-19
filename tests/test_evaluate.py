@@ -323,3 +323,19 @@ def test_the_test_split_of_a_saved_run_file_is_shown_when_asked(monkeypatch, cap
     run_eval.main(["--test", "eval/runs/eval_run2_reverified.json"], S)
     out = capsys.readouterr().out
     assert "== test split ==" in out and "answerable                       1" in out
+
+
+# --- Answer v2 rule (2026-11-13): the tokens of each question are saved with the run, to measure prompt caching ---
+def test_a_run_saves_the_tokens_of_each_question(clean_db, monkeypatch):
+    from app import evaluate
+    with clean_db.connect() as con:
+        con.execute("INSERT INTO test_questions (id, tag, split, question) VALUES ('U1', 'unanswerable', 'tune', 'q?')")
+    def fake_answer(question, searcher, index, settings, skip_gate=False):
+        return {"question": question, "status": "NOT_SUPPORTED", "reason": "", "sentences": [], "removed": [],
+                "passages": [], "top_score": 0.9, "support_score": 0.0, "fabrications_caught": 0,
+                "retrieved_decisions": [], "model_said": "NOT_SUPPORTED", "ms_total": 1,
+                "tokens": {"input": 4800, "cached": 3900, "output": 60}}
+    monkeypatch.setattr(evaluate, "answer", fake_answer)
+    run_id = evaluate.run_evaluation(object(), CHECK_INDEX, judge=False, log=lambda m: None)
+    (_, result), = evaluate.load_run(run_id)
+    assert result["tokens"] == {"input": 4800, "cached": 3900, "output": 60}

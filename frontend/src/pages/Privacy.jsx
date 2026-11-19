@@ -34,6 +34,14 @@ export default function Privacy() {
           a hashed password (never the password itself) and the failed login attempts, to lock an account after repeated
           failures. Signing up asks for no name. Only your own account can see your list of questions; the team's
           administrators can see every question in the log, as for visitors without an account.</li>
+        <li><strong>Activity log of an account.</strong> For each account we keep a dated list of what it did: sign-up,
+          logins and failed logins, logouts, questions, and requests refused by a limit. The team's administrators can
+          read it and download it, to run and improve the site; every action of an administrator is itself recorded in a
+          separate log. No IP address and no password are kept in these logs, and an account's log is deleted with it.</li>
+        <li><strong>The paid plan.</strong> If you upgrade, you type your card details on Stripe's own payment page, never on
+          ours. We keep only the two identifiers Stripe gives us (your customer record and your subscription), so that the
+          subscription can be cancelled: no card number and no amount. Payments run in Stripe's test mode: no real money
+          moves.</li>
       </ul>
 
       <h2>What we do not collect</h2>
@@ -42,7 +50,9 @@ export default function Privacy() {
           questions (10 a minute), logins, new accounts (5 an hour) and contact messages (3 in 10 minutes) come from one
           address.</li>
         <li>We do not save your browser or device information.</li>
-        <li>We use no analytics, no advertising and no tracking, and the pages load no script or font from another website.</li>
+        <li>We use no analytics, no advertising and no tracking. The pages load no script or font from another website,
+          except the login and sign-up pages, which load Google's sign-in button when "Continue with Google" is
+          offered.</li>
       </ul>
 
       <h2>The one cookie</h2>
@@ -57,6 +67,11 @@ export default function Privacy() {
           passages of the court decisions that were found, so that the model can draft the answer. Groq's own privacy
           policy applies to that request.</li>
         <li><strong>Railway</strong>, which hosts the website and its database.</li>
+        <li><strong>Google</strong>, only on the login and sign-up pages: its sign-in button is loaded from Google, so
+          Google sees that visit. If you continue with Google, Google gives us your email address and nothing else is
+          kept (no Google password or token).</li>
+        <li><strong>Stripe</strong>, only if you choose the paid plan: it receives your email address and what you type on
+          its payment page. Stripe's own privacy policy applies to that payment.</li>
       </ul>
       <p>We do not sell or share your questions or messages with anyone else.</p>
 

@@ -7,9 +7,10 @@ import time
 from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from app import config, db
+from google.auth.exceptions import GoogleAuthError
+from app import config, db, demo, google_auth, logs
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
-from app.pipeline import answer, check_input
+from app.pipeline import ERROR, WELCOME, answer, check_input, turn_of
 
 # The search index and the citation index, loaded by app/main.py when the site starts.
 STATE = {"searcher": None, "index": None}
@@ -86,12 +87,26 @@ def login(request: Request, body: Login):
     ip = request.client.host if request.client else "unknown"
     if too_many_failures(ip):
         raise HTTPException(429, "Too many failed logins from this address. Try again later.")
+    before = db.account_for_log(body.email)       # the account's state BEFORE this try (for the log's reason)
     user, message = db.check_login(body.email, body.password)
     if not user:
         FAILED_BY_IP[ip].append(time.time())
+        if before:                                 # a known account: the failure goes to its log (SPEC 11, 13 Nov)
+            reason = before["reason"]
+            if reason == "wrong password" and (db.account_for_log(body.email) or {}).get("reason") == "locked":
+                reason = "wrong password (account now locked)"     # this try was the one that locked it
+            if before["role"] == "user":
+                logs.log_user(before["id"], "login_failed", {"reason": reason})
+            else:                                  # an attempt ON an admin account, by anyone (SPEC 11)
+                logs.log_admin(before["id"], before["email"], "login_failed",
+                               detail={"reason": reason, "attempt_on_account": True})
         raise HTTPException(401, message)          # always "Wrong email or password."
     request.session.clear()                        # a new session at every login (no session fixation)
     request.session.update({"user_id": user["id"], "email": user["email"]})
+    if user["role"] == "admin":
+        logs.log_admin(user["id"], user["email"], "login")
+    else:
+        logs.log_user(user["id"], "login")
     return {"user": {"email": user["email"], "role": user["role"]}, "csrf": csrf_token(request)}
 
 
@@ -108,14 +123,20 @@ def valid_email(email):
     return bool(name and at and "." in domain.strip(".") and " " not in email.strip() and len(email) <= 254)
 
 
-@router.post("/signup")
-def signup(request: Request, body: Login):
+def signup_slots(request):
+    """The sign-ups of this address in the last hour, or HTTP 429 when the limit is reached (shared with Google)."""
     ip = request.client.host if request.client else "unknown"
     window, made = SIGNUP_LIMIT_MINUTES * 60, SIGNUPS_BY_IP[ip]
     while made and made[0] < time.time() - window:
         made.popleft()
     if len(made) >= SIGNUP_LIMIT_PER_IP:
         raise HTTPException(429, "Too many new accounts from this address. Try again later.")
+    return made
+
+
+@router.post("/signup")
+def signup(request: Request, body: Login):
+    made = signup_slots(request)
     if not valid_email(body.email):
         raise HTTPException(400, "Give a valid email address.")
     if len(body.password) < MIN_PASSWORD:
@@ -127,11 +148,53 @@ def signup(request: Request, body: Login):
     email = body.email.lower().strip()
     request.session.clear()                                      # logged in at once, in a new session
     request.session.update({"user_id": user_id, "email": email})
+    logs.log_user(user_id, "signup")
+    return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
+
+
+# ---------------- Sign in with Google (Yasser, SPEC 11, 2026-11-13; app/google_auth.py) ----------------
+class GoogleLogin(BaseModel):
+    credential: str                      # the ID token Google gave the browser
+
+
+@router.post("/auth/google")
+def google_login(request: Request, body: GoogleLogin):
+    if not google_auth.enabled():
+        raise HTTPException(404, "Google sign-in is not set up on this site.")
+    try:
+        email = google_auth.verify_credential(body.credential)    # Google's signature, our client id, not expired
+    except (ValueError, GoogleAuthError):
+        raise HTTPException(401, "Google sign-in failed. Please try again.")
+    with db.connect() as con:
+        account = con.execute("SELECT id, role, active FROM users WHERE email = %s", (email,)).fetchone()
+    if account and account["role"] == "admin":   # admins keep the password and its lock (SR36): never Google
+        logs.log_admin(account["id"], email, "login_failed", detail={"reason": "Google sign-in refused for an administrator"})
+        raise HTTPException(403, "Administrators log in with their password.")
+    if account and not account["active"]:
+        raise HTTPException(403, "This account is disabled.")
+    if account:
+        user_id, event = account["id"], "login"
+    else:                                         # a new 'user' account, like /api/signup
+        made = signup_slots(request)
+        user_id = db.create_visitor(email, secrets.token_urlsafe(32))   # a random password nobody knows
+        if user_id is None:
+            raise HTTPException(409, "An account with this email already exists. Log in instead.")
+        made.append(time.time())
+        event = "signup"
+    request.session.clear()                       # a new session, as at every login
+    request.session.update({"user_id": user_id, "email": email})
+    logs.log_user(user_id, event, {"method": "google"})
     return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
 
 
 @router.post("/logout")
 def logout(request: Request):
+    uid, email = request.session.get("user_id"), request.session.get("email", "")
+    role = db.active_role(uid) if uid else None
+    if role == "admin":
+        logs.log_admin(uid, email, "logout")
+    elif role == "user":
+        logs.log_user(uid, "logout")
     request.session.clear()
     return {"ok": True}
 
@@ -147,7 +210,41 @@ def me(request: Request):
         else:
             request.session.clear()
     return {"user": user, "csrf": csrf_token(request), "coverage": config.COVERAGE,
-            "examples": config.EXAMPLE_QUESTIONS}
+            "examples": config.EXAMPLE_QUESTIONS,
+            "free_questions_left": free_questions_left(request, request.session.get("user_id") if user else None),
+            "plan": plan_info(request.session["user_id"]) if user and user["role"] == "user" else None,
+            "follow_ups": bool(user) and bool(db.get_settings().get("follow_ups", False)),
+            "unlimited": bool(user) and user["role"] == "admin",      # administrators: no plan and no limit
+            "google_client_id": google_auth.CLIENT_ID or None}      # public; null: no Google button
+
+
+# ---------------- one question for a visitor without an account (SPEC 11, 2026-11-14) ----------------
+# Counted in the session (the browser's cookie), so nothing about the visitor is stored on the server.
+VISITOR_QUESTIONS = 1
+VISITOR_REFUSED = "You have used your free question. Log in or sign up to keep asking."
+
+
+# ---------------- free and paid accounts, questions per day (SPEC 11, 2026-11-14) ----------------
+# The two numbers are settings (an administrator changes them: POST /api/admin/limits); these are the defaults.
+DAILY_DEFAULTS = {"free": 10, "paid": 100}
+
+
+def daily_limit(plan):
+    return int(db.get_settings().get(f"{plan}_daily_questions", DAILY_DEFAULTS[plan]))
+
+
+def plan_info(user_id):
+    """A 'user' account's plan, its daily limit and the questions it may still ask today."""
+    plan = db.user_plan(user_id)
+    limit = daily_limit(plan)
+    return {"plan": plan, "daily_limit": limit, "left_today": max(0, limit - db.questions_today(user_id))}
+
+
+def free_questions_left(request, asker):
+    """How many questions this visitor may still ask; None for a logged-in account (the rule does not apply)."""
+    if asker:
+        return None
+    return max(0, VISITOR_QUESTIONS - request.session.get("visitor_asked", 0))
 
 
 # ---------------- question limit per IP address (step 5.12) ----------------
@@ -174,6 +271,7 @@ def seconds_to_wait(ip):
 # Every question is answered on its own by pipeline.answer (Edwin): earlier questions are NOT used.
 class Question(BaseModel):
     question: str
+    chat_id: int | None = None          # an account's saved chat to continue (SPEC 11, 2026-11-14); none: a new chat
 
 
 def decision_info(decision_ids):
@@ -220,20 +318,82 @@ def ask(request: Request, body: Question):
     error = check_input(body.question)                                         # SR3
     if error:
         raise HTTPException(400, error)
-    wait = seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
+    asker = request.session.get("user_id")                      # a logged-in account keeps its history (SPEC 11)
+    if asker and db.active_role(asker) is None:
+        asker = None
+    if body.chat_id is not None:                                # a saved chat: only an account's own (SPEC 11)
+        if not asker:
+            raise HTTPException(401, "Log in to keep a chat.")
+        if not db.own_chat(asker, body.chat_id):
+            raise HTTPException(404, "Chat not found.")
+    saved = demo.saved_answer(body.question)                    # an example question (Edwin, 2026-11-13): the
+    if saved:                                                   # answer saved once, no model call, not counted
+        return record(asker, body.chat_id, demo.saved_result(body.question), saved, {"demo": True})
+    if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
+        raise HTTPException(403, VISITOR_REFUSED)
+    if asker and db.active_role(asker) == "user":            # an account's questions per day; admins: no limit
+        info = plan_info(asker)
+        if info["left_today"] == 0:                           # before the search and the model; not in query_log
+            logs.log_user(asker, "refused", {"reason": "daily limit", "plan": info["plan"],
+                                             "daily_limit": info["daily_limit"]})
+            raise HTTPException(429, f"You have used your {info['daily_limit']} questions for today "
+                                     f"({info['plan']} plan). The limit starts again at midnight, Beirut time.")
+    is_admin = bool(asker) and db.active_role(asker) == "admin"   # administrators: no limit at all (2026-11-15)
+    wait = 0 if is_admin else seconds_to_wait(request.client.host if request.client else "unknown")   # step 5.12
     if wait:                                    # refused BEFORE the model is called, and not saved
+        uid = request.session.get("user_id")
+        if uid and db.active_role(uid) == "user":                   # the refusal goes to the account's log
+            logs.log_user(uid, "refused", {"reason": "questions per minute", "wait_seconds": wait})
         raise HTTPException(429, f"Too many questions from your address: at most {ASK_LIMIT_PER_IP} questions "
                                  f"per minute. Please wait {wait} seconds and try again.",
                             headers={"Retry-After": str(wait)})
     if STATE["searcher"] is None:
         raise HTTPException(503, "The search index is not ready yet.")
-    r = answer(body.question, STATE["searcher"], STATE["index"], db.get_settings())
-    shown = public_answer(r)
-    asker = request.session.get("user_id")                      # a logged-in account keeps its history (SPEC 11)
-    if asker and db.active_role(asker) is None:
-        asker = None
-    shown["id"] = db.log_query(r, user_id=asker, shown=shown)   # FR28, SR41 (no account: user_id stays empty)
+    settings = db.get_settings()
+    if body.chat_id is not None and settings.get("follow_ups", False):   # off until Edwin's rule is met
+        history = db.chat_history(body.chat_id)                 # the chat's earlier turns, oldest first
+        r = answer(body.question, STATE["searcher"], STATE["index"], settings, history=history or None)
+    else:                                                       # exactly as before: the question on its own
+        r = answer(body.question, STATE["searcher"], STATE["index"], settings)
+    shown = record(asker, body.chat_id, r, public_answer(r))
+    if not asker and r["status"] not in (WELCOME, ERROR):       # only a real answer uses the free question
+        request.session["visitor_asked"] = request.session.get("visitor_asked", 0) + 1
     return shown
+
+
+def record(asker, chat_id, r, shown, extra=None):
+    """Saves an answer (FR28, SR41) and, for an account, in its chat: a new chat when chat_id is None.
+    Keeps what a follow-up needs (turn_of: verified sentences only). Writes the user log: question for the first
+    question of a chat, follow_up for the next ones (SPEC 11, 2026-11-14)."""
+    new_chat = asker and chat_id is None
+    if new_chat:
+        chat_id = db.create_chat(asker, r["question"])
+    shown["chat_id"] = chat_id if asker else None
+    shown["id"] = db.log_query(r, user_id=asker, shown=shown, chat_id=shown["chat_id"], turn=turn_of(r))
+    if asker and db.active_role(asker) == "user":
+        logs.log_user(asker, "question" if new_chat else "follow_up",
+                      {"status": shown["status"], "chat_id": chat_id, **(extra or {})}, query_id=shown["id"])
+    return shown
+
+
+# ---------------- an account's saved chats (SPEC 11, 2026-11-14) ----------------
+def iso(row):
+    return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in row.items()}
+
+
+@router.get("/chats")
+def chats(user=Depends(require_user)):
+    """Only the account's own chats, newest first. Not logged in: 401."""
+    return [iso(c) for c in db.list_chats(user["id"])]
+
+
+@router.get("/chats/{chat_id}")
+def chat(chat_id: int, user=Depends(require_user)):
+    """One of the account's own chats, every question with the answer as it was shown; someone else's: 404."""
+    c = db.chat_turns(user["id"], chat_id)
+    if not c:
+        raise HTTPException(404, "Chat not found.")
+    return {**iso({k: v for k, v in c.items() if k != "turns"}), "turns": [iso(t) for t in c["turns"]]}
 
 
 # ---------------- the question history of a logged-in account (SPEC 11, 2026-11-12) ----------------
