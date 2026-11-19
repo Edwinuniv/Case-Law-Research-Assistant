@@ -1,7 +1,9 @@
 """The website: the React pages (frontend/dist) and the JSON API (app/api.py, app/api_admin.py).
 Visitors use the research page without an account; only administrators log in (step 5.11). The server checks the role on every /api/admin call and every /admin page."""
 from contextlib import asynccontextmanager
+import traceback
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -39,6 +41,22 @@ app.middleware("http")(logs.admin_logger)
 # session cookie: signed, HttpOnly (JavaScript cannot read it), Secure when HTTPS_ONLY=1, SameSite=Lax
 app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, max_age=8 * 3600,
                    https_only=config.HTTPS_ONLY, same_site="lax")
+
+
+# Error answers that reveal nothing (Edwin, SPEC 11, 2026-11-19): FastAPI's own 422 answer repeats the values that
+# were sent (a password too), and an unexpected error must never show a stack trace, an SQL error or a file path.
+# The details go to the server's console only.
+@app.exception_handler(RequestValidationError)
+async def bad_request(request: Request, exc: RequestValidationError):
+    return JSONResponse({"detail": "Some fields are missing or not valid."}, status_code=422)
+
+
+@app.exception_handler(Exception)
+async def unexpected_error(request: Request, exc: Exception):
+    traceback.print_exception(exc)
+    return JSONResponse({"detail": "Something went wrong on our side. Please try again."}, status_code=500)
+
+
 app.include_router(api.router)                                       # JSON API for React (/api/...)
 app.include_router(api_admin.router)                                 # admin JSON API (/api/admin/...)
 app.include_router(api_site.router)                                  # contact form and site information (Edwin)
