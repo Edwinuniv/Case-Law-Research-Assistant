@@ -472,6 +472,13 @@ answer would put recall at 0.6. NFR1 (zero fake citations shown on the adversari
 shown. 15 of the 21 adversarial questions abstained (0.714); the citations of the others all passed the separate
 checker.
 
+Note (2026-11-19, Edwin's review of #119): run 2, TUNE and TEST, was measured on passages where 149 passages in
+8 decisions were labelled as the Court's opinion although they belong to a concurrence or a dissent (a heading
+"joins as to Parts I, II, ..." was not recognised; AI_LOG 2026-11-19). One of the 8 is Counterman v. Colorado,
+the gold decision of A036 (TEST) and A035 (TUNE). The numbers above are kept as measured, not re-run. The v2 run
+(run 4) is finished on the same index so that v1 and v2 compare on the same data; later runs use the corrected
+labels.
+
 #### 4. False citations and the adversarial set (step 8.3)
 `python -m scripts.show_citations eval/runs/eval_run2_reverified.json` (TUNE + adversarial) and `--test` once,
 tau_abstain 0.20 -> `eval/runs/citations_tune_run2_reverified_2026-11-09.txt`,
