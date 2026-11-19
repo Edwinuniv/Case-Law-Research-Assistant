@@ -65,3 +65,14 @@
   #splash *{animation:none!important;clip-path:none!important;opacity:1!important;transform:none!important}
   .sl-shine,.sl-halo{display:none}
 }
+
+/* the same animation inside a page while it loads (components/Loader.jsx) */
+.ld{display:flex;flex-direction:column;align-items:center;gap:14px;padding:56px 0;width:100%}
+.ld .sl-stage{width:120px}
+.ld-small{padding:24px 0}
+.ld-small .sl-stage{width:76px}
+.ld .sl-v{filter:invert(1)}                      /* the black V turns white on the dark pages */
+:root[data-theme="light"] .ld .sl-v{filter:none}
+.ld-label{font:500 12.5px/1.4 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a837d;
+  opacity:0;animation:sl-letter .5s ease 1.6s forwards}   /* only if the wait is long */
+@media (prefers-reduced-motion: reduce){.ld *{animation:none!important;clip-path:none!important;opacity:1!important;transform:none!important}.ld .sl-shine{display:none}}
