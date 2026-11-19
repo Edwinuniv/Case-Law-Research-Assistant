@@ -8,7 +8,7 @@
   padding:20px clamp(16px,4vw,48px)}
 .lp-brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;font-weight:600;
   color:#fff;letter-spacing:.04em}
-.lp-brand img{width:34px;height:34px}
+.lp-brand img{width:44px;height:44px}
 .lp-nav-links{display:flex;align-items:center;gap:22px;font-size:15px}
 .lp-nav-links a{color:#cfd7e6}.lp-nav-links a:hover{color:#fff}
 .lp-nav-links a.lp-nav-cta{color:#141418;font-weight:600;padding:9px 20px;border-radius:999px;

@@ -13,7 +13,7 @@ body.ad-dark main{max-width:1400px}
 .ad-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;padding:18px 12px;border-radius:20px;
   background:var(--card);border:1px solid var(--line)}
 .ad-brand{display:flex;align-items:center;gap:10px;padding:2px 10px 16px;margin-bottom:8px;border-bottom:1px solid var(--line)}
-.ad-brand img{width:32px;height:32px}
+.ad-brand img{width:40px;height:40px}
 .ad-brand b{display:block;font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:19px;color:#fff;line-height:1.1}
 .ad-brand small{color:var(--faint);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 .ad .ad-side a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;color:var(--dim);text-decoration:none;
@@ -129,3 +129,10 @@ body.ad-dark main{max-width:1400px}
 .ad textarea{width:100%}
 .ad-field input:not([type=checkbox]):not([type=number]):not([type=date]){min-width:220px}
 @media(max-width:600px){.ad-field,.ad-field input,.ad-field select,.ad-field textarea{width:100%;min-width:0!important;box-sizing:border-box}}
+/* PDF export buttons on the Accounts page (Yasser, part 4) */
+/* .ad a.ad-pdf, not .ad-pdf: .ad a (amber links) is more specific and made the text amber on amber (Joe, 14 Nov) */
+.ad a.ad-pdf{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;
+  color:#141418;text-decoration:none;background:linear-gradient(90deg,#fbbf24,#fb923c)}
+.ad-pdf::before{content:"⤓";font-size:15px}
+.ad a.ad-pdf.small{padding:4px 11px;font-size:12px}
+.ad-pdf:hover{filter:brightness(1.08)}

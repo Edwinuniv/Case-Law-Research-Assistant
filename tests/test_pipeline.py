@@ -122,8 +122,216 @@ def test_a_legal_question_with_a_greeting_goes_through_the_pipeline(monkeypatch,
     monkeypatch.setattr(llm, "ask_model", good_model)
     assert pipeline.answer(text, FakeSearcher(0.9), INDEX, S)["status"] != "WELCOME"
 
+@pytest.mark.parametrize("text", ["hello verdicta", "Hi Verdicta!", "hey verdicta, what can you do?", "Verdicta?",
+                                  "good evening, Verdicta"])
+def test_a_greeting_that_names_verdicta_gets_the_welcome_message(monkeypatch, text):   # seen live on 2026-11-15
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: (_ for _ in ()).throw(AssertionError("no model call")))
+    assert pipeline.answer(text, NoSearch(), INDEX, S)["status"] == "WELCOME"
+
+def test_a_legal_question_to_verdicta_is_still_answered(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", good_model)
+    r = pipeline.answer("Verdicta, what did the Court hold in Bostock v. Clayton County?", FakeSearcher(0.9), INDEX, S)
+    assert r["status"] != "WELCOME"
+
 def test_no_test_question_is_taken_for_a_greeting():                  # the evaluation numbers stay valid
     import json
     from pathlib import Path
     questions = [json.loads(l)["question"] for l in Path("eval/questions.jsonl").read_text().splitlines() if l.strip()]
     assert len(questions) == 85 and not [q for q in questions if pipeline.is_greeting(q)]
+
+
+# --- Answer v2 (EVALUATION.md "Answer v2 rule", 2026-11-13): follow-ups that read the chat, "not about the law" ---
+V2 = dict(S, prompt_version="v2")
+
+def chunk(n, decision, text=None):
+    return {**PASSAGE, "chunk_id": f"c{n}", "decision_id": decision, "score": 0.9, "text": text or PASSAGE["text"],
+            "opinion_label": "Majority opinion", "section": "Part I", "date_filed": "2024-07-01"}
+
+class Recorder:
+    """A searcher that returns the given chunks and remembers the query it was asked."""
+    def __init__(self, chunks): self.chunks, self.queries, self.filters = chunks, [], []
+    def search(self, q, k, **kw): self.queries.append(q); self.filters.append(kw.get("decision_ids")); return self.chunks
+    def choose(self, q, found, top_k, use_reranker): return found[:top_k]
+
+FIRST_TURN = {"question": "Is the President immune?", "passages": [("P1", chunk(1, 9987186))],
+              "sentences": [{"text": "The President has absolute immunity for conclusive and preclusive actions.",
+                             "sources": ["P1"], "quote": QUOTE}]}
+
+def model_spy(calls, reply=None):
+    def ask(q, passages, history=None, version="v1", reasoning_effort=None):
+        calls.append({"question": q, "passages": dict(passages), "history": history, "version": version,
+                      "reasoning_effort": reasoning_effort})
+        return reply or {"status": "SUPPORTED", "sentences": [{"text": "The President has absolute immunity for conclusive actions.",
+                                                               "sources": ["P1"], "quote": QUOTE}]}
+    return ask
+
+def test_a_follow_up_reads_the_chat_and_searches_with_the_earlier_question(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    searcher = Recorder([chunk(2, 9987186)])
+    r = pipeline.answer("And for unofficial acts?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert "Is the President immune?" in searcher.queries[0] and "And for unofficial acts?" in searcher.queries[0]
+    assert calls[0]["history"] == [FIRST_TURN] and calls[0]["version"] == "v2" and calls[0]["reasoning_effort"] == "low"
+    assert r["status"] in ("ANSWERED", "LOW_CONFIDENCE")             # it cites P1, a passage of the earlier turn
+
+def test_same_topic_adds_at_most_4_new_passages_new_topic_up_to_8_never_twice(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    same = [chunk(1, 9987186)] + [chunk(n, 9987186) for n in range(2, 12)]      # c1 was already sent
+    pipeline.answer("And the dissent?", Recorder(same), INDEX, V2, history=[FIRST_TURN])
+    assert list(calls[-1]["passages"]) == ["P2", "P3", "P4", "P5"]                # new labels after P1, c1 not sent again
+    assert [p["chunk_id"] for p in calls[-1]["passages"].values()] == ["c2", "c3", "c4", "c5"]
+    other = [chunk(n, 5555) for n in range(20, 31)]
+    pipeline.answer("What about Chevron?", Recorder(other), INDEX, V2, history=[FIRST_TURN])
+    assert list(calls[-1]["passages"]) == [f"P{n}" for n in range(2, 10)]          # a new topic: up to 8
+
+def test_a_sentence_may_cite_an_earlier_passage_but_not_a_label_that_was_never_sent(monkeypatch):
+    bad = {"status": "SUPPORTED", "sentences": [{"text": "It is immune.", "sources": ["P9"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", model_spy([], bad))
+    r = pipeline.answer("And why?", Recorder([]), INDEX, V2, history=[FIRST_TURN])
+    assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]
+
+def test_only_the_last_turns_are_kept(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    turns = [{**FIRST_TURN, "question": f"Question {n}?"} for n in range(10)]
+    pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_turns=3), history=turns)
+    assert [t["question"] for t in calls[0]["history"]] == ["Question 7?", "Question 8?", "Question 9?"]
+
+def test_a_question_not_about_the_law_gets_the_assistant_message(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([], {"status": "OFF_TOPIC", "sentences": []}))
+    r = pipeline.answer("Which football team is the best?", FakeSearcher(0.9), INDEX, V2)
+    assert r["status"] == "NOT_SUPPORTED" and r["off_topic"] and "case-law research assistant" in r["reason"]
+    assert r["shown_sentences"] == []                                   # counted as an abstention, nothing generated
+
+def test_an_independent_question_with_the_old_prompt_calls_the_model_as_before(monkeypatch):    # rule (4)
+    seen = []
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: seen.append((q, list(p))) or good_model(q, p))
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)       # no history, prompt v1
+    assert r["status"] == "ANSWERED" and seen == [("Is the President immune?", ["P1"])]
+
+
+# --- turn_of: what a chat keeps of an answer for the next follow-up (scripts/chat.py; the website later) ---
+
+def test_a_turn_keeps_the_question_the_passages_and_only_the_sentences_shown(monkeypatch):
+    def half_fabricated(q, p, *a):
+        return {"status": "SUPPORTED", "sentences": [good_model(q, p)["sentences"][0],
+                {"text": "See Fake v. Case, 999 U.S. 9999.", "sources": ["P1"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", half_fabricated)
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)
+    turn = pipeline.turn_of(r)
+    assert turn["question"] == "Is the President immune?" and [p for p, _ in turn["passages"]] == ["P1"]
+    assert turn["sentences"] == r["shown_sentences"]                   # the fabricated sentence is never sent back
+
+def test_a_not_supported_turn_keeps_its_question_but_no_sentence(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: {"status": "SUPPORTED", "sentences": [
+        {"text": "See Fake v. Case, 999 U.S. 9999.", "sources": ["P1"], "quote": QUOTE}]})
+    r = pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)
+    assert r["status"] == "NOT_SUPPORTED" and pipeline.turn_of(r)["sentences"] == []
+    assert pipeline.turn_of(r)["question"] == "Is the President immune?"
+
+def test_a_greeting_or_an_error_is_not_a_turn(monkeypatch):
+    assert pipeline.turn_of(pipeline.answer("hello", FakeSearcher(0.9), INDEX, S)) is None
+    def broken(q, p): raise llm.ModelError("rate limit")
+    monkeypatch.setattr(llm, "ask_model", broken)
+    assert pipeline.turn_of(pipeline.answer("Is the President immune?", FakeSearcher(0.9), INDEX, S)) is None
+
+def test_a_follow_up_turn_keeps_every_passage_of_the_chat_for_the_next_one(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    r = pipeline.answer("And the dissent?", Recorder([chunk(2, 9987186)]), INDEX, V2, history=[FIRST_TURN])
+    assert [p for p, _ in pipeline.turn_of(r)["passages"]] == ["P1", "P2"]
+
+
+
+# --- Chat follow-ups, part 2 (EVALUATION.md, 2026-11-13): stay in the chat's case, "thanks" in a chat ---
+
+def test_a_follow_up_searches_only_the_case_the_chat_is_about(monkeypatch):     # "what did the victim do?"
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    searcher = Recorder([chunk(2, 9987186)])
+    pipeline.answer("What did the victim do?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert searcher.filters == [[9987186]]                             # the decision the chat's sentence cited
+
+def test_a_follow_up_naming_another_case_searches_that_case(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    searcher = Recorder([chunk(2, 9986254)])
+    pipeline.answer("What did Loper Bright Enterprises v. Raimondo decide?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert searcher.filters == [[9986254]]
+
+def test_a_chat_with_no_cited_sentence_searches_everything(monkeypatch):
+    monkeypatch.setattr(llm, "ask_model", model_spy([]))
+    searcher = Recorder([chunk(2, 9987186)])
+    pipeline.answer("And the dissent?", searcher, INDEX, V2, history=[{**FIRST_TURN, "sentences": []}])
+    assert searcher.filters == [None]
+
+def test_if_the_chats_case_has_no_close_passage_the_whole_corpus_is_searched(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    class Searcher(Recorder):
+        def search(self, q, k, **kw):
+            super().search(q, k, **kw)
+            return [{**chunk(2, 9987186), "score": 0.1}] if kw.get("decision_ids") else [chunk(30, 5555)]
+    searcher = Searcher([])
+    pipeline.answer("What about the Chevron doctrine?", searcher, INDEX, V2, history=[FIRST_TURN])
+    assert searcher.filters == [[9987186], None]
+    assert [p["chunk_id"] for p in calls[0]["passages"].values()] == ["c30"]
+
+@pytest.mark.parametrize("text", ["thanks", "Thank you!", "ok", "okay, thanks", "great", "thanks verdicta"])
+def test_thanks_in_a_chat_gets_one_line_without_search_or_model(monkeypatch, text):
+    calls, searcher = [], Recorder([chunk(2, 9987186)])
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    r = pipeline.answer(text, searcher, INDEX, V2, history=[FIRST_TURN])
+    assert r["status"] == "WELCOME" and r["reason"] != pipeline.welcome_text() and len(r["reason"]) < 120
+    assert searcher.queries == [] and calls == [] and pipeline.turn_of(r) is None
+
+def test_thanks_outside_a_chat_still_gets_the_welcome_text():
+    assert pipeline.answer("thanks", FakeSearcher(0.9), INDEX, S)["reason"] == pipeline.welcome_text()
+
+@pytest.mark.parametrize("text", ["Thanks, and what did the dissent say?", "OK so what did it decide?"])
+def test_a_question_with_a_thanks_word_is_still_answered(monkeypatch, text):     # found by planting "any" for "all"
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    r = pipeline.answer(text, Recorder([chunk(2, 9987186)]), INDEX, V2, history=[FIRST_TURN])
+    assert r["status"] != "WELCOME" and len(calls) == 1
+
+
+
+# --- Chat follow-ups, part 3 (EVALUATION.md, 2026-11-13): the size of a request (Groq's 413 on a live chat) ---
+TWO_PASSAGE_TURN = {**FIRST_TURN, "passages": [("P1", chunk(1, 9987186)), ("P2", chunk(2, 9987186))]}   # P2 not cited
+
+def test_a_follow_up_is_verified_only_against_the_passages_that_were_sent(monkeypatch):
+    bad = {"status": "SUPPORTED", "sentences": [{"text": "It is immune.", "sources": ["P2"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", model_spy([], bad))
+    r = pipeline.answer("And why?", Recorder([]), INDEX, V2, history=[TWO_PASSAGE_TURN])
+    assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]   # P2 was not sent again
+
+def test_new_labels_continue_after_the_highest_label_of_the_chat(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    pipeline.answer("And the dissent?", Recorder([chunk(5, 9987186)]), INDEX, V2, history=[TWO_PASSAGE_TURN])
+    assert list(calls[0]["passages"]) == ["P3"]                        # not P2 again, even though P2 is not sent
+
+def test_the_oldest_turns_are_dropped_until_the_request_fits(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    monkeypatch.setattr(llm, "estimate_tokens", lambda msgs: 1000 * len(msgs))   # 1,000 a message
+    turns = [{**FIRST_TURN, "question": f"Question {n}?"} for n in range(3)]
+    pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=4000), history=turns)
+    assert [t["question"] for t in calls[0]["history"]] == ["Question 2?"]   # system + 1 turn (2) + new = 4 messages
+    pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=100000), history=turns)
+    assert len(calls[1]["history"]) == 3
+
+def test_a_passage_not_sent_again_can_come_back_when_the_search_finds_it(monkeypatch):   # found by planting
+    calls = []
+    monkeypatch.setattr(llm, "ask_model", model_spy(calls))
+    pipeline.answer("And the dissent?", Recorder([chunk(2, 9987186)]), INDEX, V2, history=[TWO_PASSAGE_TURN])
+    assert [p["chunk_id"] for p in calls[0]["passages"].values()] == ["c2"]      # c2 was not cited, so not sent
+
+def test_a_passage_of_a_dropped_turn_cannot_be_cited(monkeypatch):                         # found by planting
+    cites_p1 = {"status": "SUPPORTED", "sentences": [{"text": "It is immune.", "sources": ["P1"], "quote": QUOTE}]}
+    monkeypatch.setattr(llm, "ask_model", model_spy([], cites_p1))
+    monkeypatch.setattr(llm, "estimate_tokens", lambda msgs: 1000 * len(msgs))
+    later = {"question": "And why?", "passages": [("P2", chunk(2, 9987186))],
+             "sentences": [{"text": "Because.", "sources": ["P2"], "quote": QUOTE}]}
+    r = pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=4000),
+                        history=[FIRST_TURN, later])                        # FIRST_TURN (P1) is dropped
+    assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]

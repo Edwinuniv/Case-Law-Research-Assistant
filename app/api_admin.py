@@ -4,9 +4,9 @@ database at each request (SR35, NFR8). A route cannot be added here without that
 import datetime
 import threading
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from pydantic import BaseModel
-from app import api, db, evaluate
+from app import api, db, evaluate, exports, logs
 
 router = APIRouter(prefix="/api/admin",
                    dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -235,6 +235,52 @@ def abstentions(status: str = "NOT_SUPPORTED"):
     return out
 
 
+# ---------------- every question asked (Joe, SPEC 11, 2026-11-14; Dr. Salloum's request 3) ----------------
+ALL_STATUSES = ("ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR", "WELCOME")
+PER_PAGE = 100
+
+
+@router.get("/all-questions")
+def all_questions(status: str = "", who: str = "", q: str = "", page: int = 1):
+    """Every question asked on the site, newest first, 100 per page, with who asked (email, or none for a visitor).
+    Filters: status; who = "visitors" or an account id; q = text in the question (case ignored)."""
+    where, args = [], []
+    if status:
+        if status not in ALL_STATUSES:
+            raise HTTPException(400, "Unknown status.")
+        where.append("q.status = %s"); args.append(status)
+    if who == "visitors":
+        where.append("q.user_id IS NULL")
+    elif who:
+        if not who.isdigit():
+            raise HTTPException(400, "who must be 'visitors' or an account id.")
+        where.append("q.user_id = %s"); args.append(int(who))
+    if q.strip():
+        where.append("q.question ILIKE %s"); args.append("%" + q.strip().replace("%", r"\%").replace("_", r"\_") + "%")
+    sql_where = ("WHERE " + " AND ".join(where)) if where else ""
+    page = max(1, page)
+    with db.connect() as con:
+        total = con.execute(f"SELECT count(*) AS n FROM query_log q {sql_where}", args).fetchone()["n"]
+        rows = con.execute(f"""SELECT q.id, q.created_at, q.status, q.question, q.user_id, u.email, q.chat_id
+                               FROM query_log q LEFT JOIN users u ON u.id = q.user_id {sql_where}
+                               ORDER BY q.id DESC LIMIT %s OFFSET %s""",
+                           args + [PER_PAGE, (page - 1) * PER_PAGE]).fetchall()
+    return {"total": total, "page": page, "per_page": PER_PAGE, "rows": logs.as_json(rows)}
+
+
+@router.get("/all-questions/{qid}")
+def one_question(qid: int):
+    """One question with its reason and the answer as it was shown."""
+    with db.connect() as con:
+        row = con.execute("""SELECT q.id, q.created_at, q.status, q.reason, q.question, q.user_id, u.email, q.chat_id,
+                                    q.details->'shown' AS shown
+                             FROM query_log q LEFT JOIN users u ON u.id = q.user_id WHERE q.id = %s""",
+                          (qid,)).fetchone()
+    if not row:
+        raise HTTPException(404, "No such question.")
+    return logs.as_json([row])[0]
+
+
 class Label(BaseModel):
     label: str
 
@@ -315,23 +361,135 @@ def reindex(body: Reindex):
 # ---------------- accounts (FR12): an administrator creates the other administrators ----------------
 @router.get("/users")
 def users():
-    """Never the password hashes."""
+    """Every account with its details (SPEC 11, 2026-11-14), counted like the PDF exports (exports.summaries, Yasser):
+    signed up, last login, number of logins, last activity, plan, number of questions. Never the password hash."""
     with db.connect() as con:
-        return con.execute("SELECT id, email, role, active, locked_until, created_at FROM users ORDER BY id").fetchall()
+        locked = {r["id"]: r["locked_until"] for r in con.execute("SELECT id, locked_until FROM users").fetchall()}
+    return [{**u, "locked_until": locked.get(u["id"])} for u in exports.summaries()]
+
+
+# ---------------- the two logs (Yasser, SPEC 11, 2026-11-13) ----------------
+# Read by Joe's admin pages (part 2) and by the PDF exports (part 4). ?format=csv downloads the same rows as a
+# file; reading a log is itself written to the admin log (app/logs.py, LOGGED_READS).
+def log_response(rows, fmt, filename):
+    if fmt == "csv":
+        return Response(logs.as_csv(rows), media_type="text/csv",
+                        headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    return logs.as_json(rows)
+
+
+@router.get("/users/{user_id}/log")
+def user_log(user_id: int, format: str = "json"):
+    """Everything this account did, newest first."""
+    with db.connect() as con:
+        if not con.execute("SELECT 1 FROM users WHERE id = %s", (user_id,)).fetchone():
+            raise HTTPException(404, "No such account.")
+    return log_response(logs.user_log(user_id), format, f"verdicta_user_{user_id}_log.csv")
+
+
+@router.get("/log")
+def admin_log(format: str = "json"):
+    """Everything the administrators did, newest first."""
+    return log_response(logs.admin_log(), format, "verdicta_admin_log.csv")
+
+
+# ---------------- PDF exports (Yasser, SPEC 11, 2026-11-13; part 4) ----------------
+# Each download is written to the admin log by app/logs.py (the path contains /pdf).
+def pdf_response(data, filename):
+    return Response(data, media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@router.get("/users/pdf")
+def users_pdf(admin=Depends(api.require_admin)):
+    """The list of all accounts with their details."""
+    return pdf_response(exports.users_pdf(admin["email"]), "verdicta_accounts.pdf")
+
+
+@router.get("/users/{user_id}")              # after /users/pdf, or "pdf" would be read as an id
+def user_details(user_id: int, admin=Depends(api.require_admin)):
+    """One account: its details, its questions (newest first), its chats and its log (the user log of a visitor's
+    account; for an administrator, the admin log rows they made). Reading it is written to the admin log."""
+    found = exports.summaries(user_id)
+    if not found:
+        raise HTTPException(404, "No such account.")
+    u = found[0]
+    with db.connect() as con:
+        u["locked_until"] = con.execute("SELECT locked_until FROM users WHERE id = %s", (user_id,)).fetchone()["locked_until"]
+        questions = con.execute("SELECT id, created_at, status, question, chat_id FROM query_log WHERE user_id = %s "
+                                "ORDER BY id DESC LIMIT 500", (user_id,)).fetchall()
+    log = logs.user_log(user_id) if u["role"] == "user" else logs.admin_log(admin_id=user_id)
+    logs.log_admin(admin["id"], admin["email"], f"GET /api/admin/users/{user_id}", target_user_id=user_id, status=200)
+    return {"user": logs.as_json([u])[0], "questions": logs.as_json(questions),
+            "chats": logs.as_json(db.list_chats(user_id)), "log": logs.as_json(log)}
+
+
+@router.get("/users/{user_id}/pdf")
+def user_pdf(user_id: int, admin=Depends(api.require_admin)):
+    """One account: details, log and questions."""
+    data = exports.user_pdf(user_id, admin["email"])
+    if data is None:
+        raise HTTPException(404, "No such account.")
+    return pdf_response(data, f"verdicta_account_{user_id}.pdf")
+
+
+# ---------------- free and paid accounts (Joe, SPEC 11, 2026-11-14) ----------------
+# No real payment: an administrator switches the plan. The admin log gets the request by the middleware (app/logs.py).
+class Plan(BaseModel):
+    plan: str
+
+
+@router.post("/users/{user_id}/plan")
+def user_plan(user_id: int, body: Plan, admin=Depends(api.require_admin)):
+    if body.plan not in db.PLANS:
+        raise HTTPException(400, "The plan must be 'free' or 'paid'.")
+    old, why = db.set_plan(user_id, body.plan)
+    if why == "not found":
+        raise HTTPException(404, "No such account.")
+    if why == "not a user":
+        raise HTTPException(400, "Only a visitor's account has a plan (administrators have no limit).")
+    logs.log_user(user_id, "plan_change", {"from": old, "to": body.plan, "by": admin["email"]})
+    return users()
+
+
+class Limits(BaseModel):
+    free_daily_questions: int
+    paid_daily_questions: int
+
+
+@router.post("/limits")
+def limits_save(body: Limits):
+    """The questions per day of each plan (whole numbers from 1 to 1000)."""
+    if not all(1 <= n <= 1000 for n in (body.free_daily_questions, body.paid_daily_questions)):
+        raise HTTPException(400, "Each limit must be between 1 and 1000 questions a day.")
+    db.set_setting("free_daily_questions", body.free_daily_questions)
+    db.set_setting("paid_daily_questions", body.paid_daily_questions)
+    return {"free_daily_questions": body.free_daily_questions, "paid_daily_questions": body.paid_daily_questions}
+
+
+class FollowUps(BaseModel):
+    on: bool
+
+
+@router.post("/follow-ups")
+def follow_ups_switch(body: FollowUps):
+    """Follow-ups in saved chats: off until followups-v1 meets the rule in EVALUATION.md (Edwin decides)."""
+    db.set_setting("follow_ups", body.on)
+    return {"follow_ups": body.on}
 
 
 class NewUser(BaseModel):
     email: str
     password: str
-    role: str = "admin"              # the only role (SR33): visitors use the research page without an account
+    role: str = "admin"              # this page makes administrators only; visitors sign up themselves (SPEC 11)
 
 
 @router.post("/users")
 def user_create(body: NewUser):
     if "@" not in body.email or len(body.password) < 10:
         raise HTTPException(400, "Give an email address and a password of at least 10 characters.")
-    if body.role not in db.ROLES:
-        raise HTTPException(400, "Only administrator accounts exist: visitors do not need one.")
+    if body.role != "admin":
+        raise HTTPException(400, "This page creates administrators only: visitors make their own account on the sign-up page.")
     db.create_user(body.email, body.password, role=body.role)
     return users()
 

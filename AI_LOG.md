@@ -668,6 +668,41 @@ logged in with the local admin account, screenshots of every page at both widths
 4. **A number cut off and a striped passage**: 17,859,437 did not fit its card; the passage in the drawer had a dark
    background on each line. Both seen on screenshots and fixed.
 
+## 2026-11-12 — Visitor accounts (Yasser, feature/visitor-accounts)
+
+We asked Claude to make the sign-up page really create accounts and open the research page, after writing the rule in
+SPEC section 11 (team decision replacing step 5.11's "administrator only"). Checked with the whole test suite on a local
+PostgreSQL and a headless browser on a local database (sign up, log out, log in, saved question, admin refused).
+What was wrong or nearly wrong, and how it was caught:
+1. **Every 'user' account would have been deleted at each start.** The 5.11 migration in app/db.py ran
+   `DELETE FROM users WHERE role <> 'admin'` at every start of the site, so sign-up would have "worked" until the next
+   deploy. Caught by reading the code before writing any; now kept and tested (test_the_start_keeps_the_user_accounts,
+   test_existing_database_keeps_its_accounts_and_questions).
+2. **Sign-up could have reset someone's password.** db.create_user updates an existing email (it is how an admin
+   resets a password, FR12); used for sign-up, anyone could take over an account by "signing up" with its email.
+   Avoided with create_visitor (insert or nothing) and checked by breaking it on purpose: with an update instead, the
+   test test_sign_up_never_changes_an_existing_account fails. The same was done for the history (a query showing
+   everyone's questions makes test_history_shows_only_your_own_questions fail).
+3. **The saved questions could not be clicked.** In the browser check, a returning user's "My questions" were listed but
+   invisible and unclickable: the research page hid that column until the first question of the visit (fine when the
+   list always started empty). Caught by the click failing in Playwright. Fix: the column shows as soon as there are
+   saved questions, on phones too.
+4. **A test asked for a page that does not exist** (`/api/admin/overview` instead of `/api/admin/home`): it got 404
+   instead of 403 and failed. A mistake in the test, not the code; fixed in the test.
+
+## 2026-11-13 — Logs and PDF exports (Yasser, parts 3 and 4 of docs/PLAN_2026-11-13.md)
+
+We asked Claude to build the user log and admin log (part 3), then the PDF exports (part 4), rules written first in
+SPEC section 11, tests from the rules, whole suite on a local PostgreSQL, the downloads checked in a headless browser.
+What was wrong, and how it was caught:
+1. **The admin log silently lost some admin actions.** An admin request about an account that does not exist (e.g.
+   GET /api/admin/users/99999/log, a 404) produced an admin_log row pointing to a missing account; the database
+   refused it, the error went to the server output and the action was not logged. Part 3's test still passed, because
+   it never looked for that row. Caught by a part-4 test that expected the 404 PDF download in the admin log. Fix: the
+   row is kept without the link, the missing id in the detail; the part-3 test now expects it (both branches).
+2. **Mixed time zones in the PDF.** The header said UTC but the table times came out in the database's local time
+   (two hours apart in the test output). Caught by reading the test output; every time in the PDFs is now UTC.
+
 ## 2026-11-13 — Yasser's follow-up pairs F015-F021 (drafted with help, eval/FOLLOWUPS.md)
 
 Yasser asked Claude to draft his 7 follow-up pairs. FOLLOWUPS.md allows help if it is said here; Yasser checks and
@@ -702,6 +737,41 @@ verified by the team for eval-v1. What is not verified yet:
    Checked (2026-11-14): find_case "Raich" finds only 799995 Gonzales v. Raich.
 Structure checked with scripts/check_followups.py's own check_lines (0 problems apart from the quote check, which
 needs the database).
+
+## 2026-11-14 — Access and saved chats (Joe, part 1 of docs/PLAN_2026-11-13.md)
+
+We asked Claude to build part 1 in three steps (one question for a visitor, free and paid plans, saved chats), each
+rule written first in SPEC section 11, the test tables approved by Joe before the code (NFR17), the page checked in a
+headless browser.
+What was wrong, and how it was caught:
+1. **"New chat" while an answer was coming put the next question in the old chat.** The first version of the chat
+   page let the account click "New chat" while the previous question was still being answered; when the answer
+   arrived, it set the old chat back as the open one, so the next question was added to it (3 questions in one chat
+   instead of 2 + 1). The server tests could not see it (the server did what it was told). Caught in the browser check,
+   by printing what the page sent to /api/ask. Fix: "New chat" is disabled while an answer is coming.
+2. **The follow-ups would have been switched on without the measurement.** Connecting answer(history=...) directly, as
+   the plan describes, would have sent the chat's history to the model on the live site at once, but EVALUATION.md
+   (follow-up questions rule) says follow-ups stay off until followups-v1 meets the rule. Caught by reading
+   EVALUATION.md before writing the step-3 rule; the history is sent only when the setting follow_ups is on (off by
+   default; Edwin decides), and a test checks that no history is sent while it is off.
+
+## 2026-11-16 — Stripe test-mode payments (Edwin)
+
+We asked Claude to build paying for the paid plan with Stripe in test mode (Edwin's decision), rule first in SPEC
+section 11, tests from the rule before the code. What was wrong, and how it was caught:
+1. **Stripe's objects treated as dictionaries.** app/billing.py read the Checkout session and the webhook event with
+   `.get(...)`, as older versions of the stripe library allowed. In stripe 17.0.0 a StripeObject is not a dict:
+   "'get' is a dict method, but a StripeObject is not a dict". The confirm tests did not see it (their fake returns a
+   dict), but the webhook tests sign real events and go through the real `stripe.Webhook.construct_event`, so three of
+   them failed. On the live site a payment would have crashed when the person came back from Stripe. Fix: the session
+   and the event are converted with `.to_dict()` where they come in.
+2. **A Stripe parameter that no longer exists.** Stripe's page offered Cash App Pay and US bank payments, which Edwin
+   cannot use in Lebanon. Claude added `payment_method_types=["card"]` with a test that faked Stripe; the test passed,
+   because the fake accepted any parameter. A real call to Stripe's test mode refused it: "The payment_method_types
+   parameter is no longer supported ... Payment methods are now managed from your Dashboard settings". Upgrade would
+   have failed for everyone. Caught by calling Stripe for real before pushing; the parameter and its test were removed,
+   and the README says where to switch the other methods off. Lesson: a test with a fake only proves what the fake
+   knows; a live call to the test mode is needed for anything Stripe decides.
 
 ## 2026-11-19 — Edwin's follow-up pairs F001-F007 (drafted with help, eval/FOLLOWUPS.md)
 

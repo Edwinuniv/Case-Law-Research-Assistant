@@ -124,7 +124,9 @@ def test_every_question_is_saved_without_an_account(c, clean_db):              #
 
 
 def test_each_question_is_answered_on_its_own(c, monkeypatch):
-    """The chat must not pretend to remember: the model only gets the current question."""
+    """The chat must not pretend to remember: the model only gets the current question.
+    Two questions need an account since 2026-11-14 (a visitor has one, SPEC 11)."""
+    c.post("/api/signup", json={"email": "reader@example.com", "password": "a-long-password"}, headers=csrf(c))
     seen = []
     monkeypatch.setattr(llm, "ask_model", lambda q, p: seen.append(q) or good_model(q, p))
     ask(c, "Is the President immune from prosecution?")
@@ -132,12 +134,13 @@ def test_each_question_is_answered_on_its_own(c, monkeypatch):
     assert seen == ["Is the President immune from prosecution?", "And what about his private acts?"]
 
 
-def test_no_question_list_on_the_server(c):
-    """Visitors have no account, so the server cannot tell whose questions are whose: there is no
-    /api/history, and nobody can read the questions other visitors asked (only the admin pages can)."""
+def test_no_question_list_without_an_account(c):
+    """A visitor without an account has no history: the server cannot tell whose questions are whose, so
+    /api/history needs a logged-in account (SPEC 11, 2026-11-12) and nobody reads other visitors' questions
+    (only the admin pages can). Accounts and their own history: tests/test_visitor_accounts.py."""
     ask(c, "A question from another visitor")
-    assert c.get("/api/history").status_code == 404
-    assert c.get("/api/history/1").status_code == 404
+    assert c.get("/api/history").status_code == 401
+    assert c.get("/api/history/1").status_code == 401
 
 
 def test_passage_panel_highlights_the_quote(c):                                  # SR31

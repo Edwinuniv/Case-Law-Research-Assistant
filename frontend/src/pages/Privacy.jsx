@@ -11,7 +11,8 @@ export default function Privacy() {
       <div className="sp-card sp-note">
         <strong>In short:</strong> you do not need an account to use Verdicta. We keep the questions typed on the research
         page and the messages sent through the contact form, but no name, no IP address and no browser information with
-        your questions. We use one necessary cookie, no trackers and no advertising. Please do not type personal
+        your questions. If you choose to create an account, we keep your email address and link your questions to it, so
+        you can find them again. We use one necessary cookie, no trackers and no advertising. Please do not type personal
         information in a question.
       </div>
 
@@ -25,25 +26,38 @@ export default function Privacy() {
         <li><strong>Your questions.</strong> Each question typed on the research page is saved with its result: the answer
           that was shown, the passages that were found, the status (answered, low confidence, not supported) and how long it
           took. We use this log to measure the system, to see which questions it could not answer, and to improve it.
-          It is not linked to your name, your IP address or an account.</li>
+          It is not linked to your name or your IP address. Without an account it is not linked to you at all; if you are
+          logged in to your own account, it is saved with that account so that you see it again under "My questions".</li>
         <li><strong>Contact messages.</strong> If you use the contact form, we save your name, your email address and your
           message, so that we can answer you.</li>
-        <li><strong>Administrator accounts.</strong> For the team's own accounts we keep the email address, a hashed
-          password (never the password itself) and the failed login attempts, to lock an account after repeated
-          failures.</li>
+        <li><strong>Accounts.</strong> If you sign up, and for the team's administrator accounts, we keep the email address,
+          a hashed password (never the password itself) and the failed login attempts, to lock an account after repeated
+          failures. Signing up asks for no name. Only your own account can see your list of questions; the team's
+          administrators can see every question in the log, as for visitors without an account.</li>
+        <li><strong>Activity log of an account.</strong> For each account we keep a dated list of what it did: sign-up,
+          logins and failed logins, logouts, questions, and requests refused by a limit. The team's administrators can
+          read it and download it, to run and improve the site; every action of an administrator is itself recorded in a
+          separate log. No IP address and no password are kept in these logs, and an account's log is deleted with it.</li>
+        <li><strong>The paid plan.</strong> If you upgrade, you type your card details on Stripe's own payment page, never on
+          ours. We keep only the two identifiers Stripe gives us (your customer record and your subscription), so that the
+          subscription can be cancelled: no card number and no amount. Payments run in Stripe's test mode: no real money
+          moves.</li>
       </ul>
 
       <h2>What we do not collect</h2>
       <ul>
         <li>We do not save your IP address. The server uses it only for a short time, in memory, to limit how many
-          questions (10 a minute), logins and contact messages (3 in 10 minutes) come from one address.</li>
+          questions (10 a minute), logins, new accounts (5 an hour) and contact messages (3 in 10 minutes) come from one
+          address.</li>
         <li>We do not save your browser or device information.</li>
-        <li>We use no analytics, no advertising and no tracking, and the pages load no script or font from another website.</li>
+        <li>We use no analytics, no advertising and no tracking. The pages load no script or font from another website,
+          except the login and sign-up pages, which load Google's sign-in button when "Continue with Google" is
+          offered.</li>
       </ul>
 
       <h2>The one cookie</h2>
       <p>The site sets a single session cookie. It holds a security token that protects every form from requests sent by
-        other websites, and, for an administrator, the login. It is signed, cannot be read by the page's scripts, is sent
+        other websites, and, if you are logged in, your login. It is signed, cannot be read by the page's scripts, is sent
         only over HTTPS on the live site and expires after 8 hours. It is necessary for the site to work, so we do not ask
         for consent to it.</p>
 
@@ -53,12 +67,18 @@ export default function Privacy() {
           passages of the court decisions that were found, so that the model can draft the answer. Groq's own privacy
           policy applies to that request.</li>
         <li><strong>Railway</strong>, which hosts the website and its database.</li>
+        <li><strong>Google</strong>, only on the login and sign-up pages: its sign-in button is loaded from Google, so
+          Google sees that visit. If you continue with Google, Google gives us your email address and nothing else is
+          kept (no Google password or token).</li>
+        <li><strong>Stripe</strong>, only if you choose the paid plan: it receives your email address and what you type on
+          its payment page. Stripe's own privacy policy applies to that payment.</li>
       </ul>
       <p>We do not sell or share your questions or messages with anyone else.</p>
 
       <h2>How long we keep them</h2>
-      <p>Questions and contact messages are kept with no fixed deletion date. Because your questions are not linked to
-        you, we cannot find them by your name; if you want a contact message deleted, write to us and we will delete it.</p>
+      <p>Questions, accounts and contact messages are kept with no fixed deletion date. Questions asked without an account
+        are not linked to you, so we cannot find them by your name. If you want your account (with its questions) or a
+        contact message deleted, write to us from the email address concerned and we will delete it.</p>
 
       <h2>Changes</h2>
       <p>If what we collect changes, we will update this page and its date.</p>
