@@ -40,7 +40,8 @@ account opens its questions, chats and log.
 A visitor may create an account ("Sign up" on the landing page, http://127.0.0.1:8000/signup) to keep their questions:
 after sign-up the research page opens, and "My questions" shows the account's own questions again at the next login.
 The administrator logs in at http://127.0.0.1:8000/login and lands on the admin pages (http://127.0.0.1:8000/admin);
-a visitor's account lands on the research page and cannot open the admin pages. Run `npm run build` again after each
+a visitor's account lands on the research page and cannot open the admin pages. An administrator moves between the two with
+"Open the chat" (under the admin menu) and "Admin pages" (in the chat's sidebar). Run `npm run build` again after each
 `git pull` that changes frontend/, then restart uvicorn. Administrator accounts are made with `python -m scripts.seed --admin`
 (ADMIN_EMAIL and ADMIN_PASSWORD in .env) or on the admin page "Accounts"; sign-up only ever makes a visitor's account.
 Every account has an activity log (sign-up, logins, logouts, questions, refusals) and every administrator action is
