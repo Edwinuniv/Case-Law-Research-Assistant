@@ -127,6 +127,17 @@ def test_a_reset_unlocks_the_account_and_is_logged(c, clean_db, sent):          
     assert "password_reset" in events and left == 0                                        # every token deleted
 
 
+def test_after_a_reset_the_older_links_stop_working(c, clean_db, sent):                  # rule 3
+    forgot(c)
+    with clean_db.connect() as con:                                                        # 3 minutes later...
+        con.execute("UPDATE password_resets SET created_at = now() - interval '3 minutes'")
+    forgot(c)                                                                              # ...a second link
+    old, new = token_in(sent[0]), token_in(sent[1])
+    assert reset(c, new).status_code == 200
+    r = reset(c, old, "yet-another-password")
+    assert r.status_code == 400 and r.json()["detail"] == BAD_LINK
+
+
 def test_one_email_per_account_in_two_minutes(c, sent):                                    # rule 1
     forgot(c)
     r = forgot(c)
