@@ -23,7 +23,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:30;op
 .rs-hero h1,.au-card h1,.sp-hero h1,.lp-hero h1,.ad-title,.er h1{text-shadow:0 0 42px rgba(255,255,255,.16)}
 
 /* 4. a white light runs along the gold line under the header now and then */
-header{position:relative}
+header{position:relative;overflow-x:clip}   /* the light leaves on the right: never a sideways scroll */
 header::after{content:"";position:absolute;left:0;bottom:-3px;width:160px;height:3px;pointer-events:none;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
   animation:lf-sheen 9s ease-in-out 2s infinite;transform:translateX(-200px)}
