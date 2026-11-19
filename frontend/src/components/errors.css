@@ -1,7 +1,7 @@
 /* The error pages (components/ErrorPage.jsx): the dark site, with a white light behind the big code. */
 .er{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:40px 16px;text-align:center;overflow:hidden;background:#0d0d10;color:#f4f1ea}
-.er-in-app{min-height:calc(100vh - 64px)}
+.er-in-app{position:fixed;inset:64px 0 0;min-height:0;z-index:5}   /* fills the space under the site header */
 .er-glow{position:absolute;top:18%;left:50%;width:min(620px,120vw);aspect-ratio:1;transform:translateX(-50%);
   border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,rgba(255,255,255,.13) 0,rgba(255,236,200,.06) 35%,transparent 65%)}
