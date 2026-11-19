@@ -122,6 +122,7 @@ administrators are reset by another administrator on the Accounts page). The lin
     python -m scripts.remove_out_of_scope      # remove the ones listed in app/scope.py (dry run; --apply)
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
+    python -m scripts.check_followups          # check eval/followups.jsonl (follow-up pairs, eval/FOLLOWUPS.md)
     python -m scripts.ask "Did the Supreme Court overrule Chevron deference?"
     python -m scripts.chat                     # a chat in the terminal: follow-up questions (answer v2; "new", "quit")
     python -m scripts.chat_scripted eval/chats/counterman_messages.txt   # the same chat before/after a change (uses the model)

@@ -495,7 +495,6 @@ administrator reads and deletes them (admin page "Messages", admin role + CSRF).
 CONTACT_EMAIL. Files of others changed and told: app/db.py, app/main.py, frontend/index.html, frontend/src/main.jsx
 (Joe), app/config.py and .env.example (Yasser).
 
-
 2026-11-12 - Visitor accounts (Yasser, team decision; replaces the "administrator only" part of the 2026-11-06 entry and
 step 5.11). A visitor may create an account on /signup (email + password) to keep their question history; the research
 page stays open to everyone without an account (SR33, FR1). Written before the code; the instructor is to be told
@@ -511,6 +510,16 @@ returns one of them, anything else is 404 (another visitor's questions stay read
 and the role rule allows ('admin', 'user'). No name is asked: only the email and a bcrypt hash are stored. The privacy
 page says so. Changed files of others, told: app/db.py, app/api.py, app/api_admin.py, frontend/src/pages/Chat.jsx,
 the 5.11 tests (Joe); frontend/src/pages/Privacy.jsx (Edwin).
+
+2026-11-12 - Instructor's answer on follow-up questions (Edwin). We wrote to Dr. Salloum that, after his answer of
+2026-11-06 (one independent question per message, no follow-up questions; entry above), we were considering follow-up
+questions: the visitor asks about an answer, and the new answer explains the passages already shown and answers the new
+question, still only from real, verified passages with the same checks, measured with a rule written first, or else we
+keep one question per message. He answered on 2026-11-12 at 20:49: "Akid" (Lebanese: "of course"). Follow-ups are
+therefore allowed on those terms; the rule is in EVALUATION.md ("Follow-up questions rule", written before any code).
+Independent questions stay as they are. Files of others that will change, with Joe's agreement: app/api.py (/api/ask
+accepts the previous answer's id, checked against the session) and frontend/src/pages/Chat.jsx (the follow-up in the
+thread).
 
 2026-11-13 - The two logs (part 3 of docs/PLAN_2026-11-13.md, Yasser; Dr. Salloum's request 6). Written before the code.
 (1) **User log** (table user_log): one row per thing an account does, with the time and a small JSON detail. Events:
@@ -553,6 +562,7 @@ pages. A disabled account is refused (403). A bad or expired token: 401, nothing
 shown only when GOOGLE_CLIENT_ID is set (GET /api/me gives it; it is public, not a secret); without it the route answers
 404 and the site works as before. Files of others changed and told: app/api.py (the route and the client id in /api/me)
 (Joe).
+
 2026-11-13 - The two logs, clarified after Edwin's review of PR #96 (Yasser). (a) A failed login on an
 administrator's email is written to the admin log as an ATTEMPT ON that account (detail attempt_on_account: true;
 the PDF says "failed login attempt on this account"), made by anyone who typed that email, not an action by the

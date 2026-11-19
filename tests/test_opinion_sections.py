@@ -86,3 +86,28 @@ def test_long_headings_with_join_as_to_parts_are_labelled():
         assert INLINE_START.match(head)
     # the plain forms keep working
     assert opinion_start("JUSTICE SCALIA, with whom JUSTICE THOMAS joins, dissenting. x") == "Scalia, J., dissenting"
+
+
+def test_join_as_to_a_list_of_parts_with_commas_is_labelled():
+    """Edwin, 2026-11-19: in Counterman v. Colorado (2023, one combined text) Sotomayor's concurrence was labelled
+    "Opinion of the Court (Kagan)": "as to Parts I, II, III-A, and III-B" was read only up to the first comma.
+    The line below is copied from our database (opinion 10516262)."""
+    from app.chunking import INLINE_START
+    head = ("Justice Sotomayor, with whom Justice Gorsuch joins as to Parts I, II, III–A, and III–B, "
+            "concurring in part and concurring in the judgment. When the government seeks to punish speech")
+    label = "Sotomayor, J., concurring in part and concurring in the judgment"
+    assert opinion_start(head) == label
+    assert INLINE_START.match(head)
+    text = clean("Justice Kagan delivered the opinion of the Court. " + "Majority text. " * 60 + "\n\n"
+                 + head + " " + "Concurrence text. " * 60)
+    by_kind = {k: {c["section"] for c in chunk_opinion(text) if k in c["text"]}
+               for k in ("Majority text", "Concurrence text")}
+    assert by_kind == {"Majority text": {"Opinion of the Court (Kagan)"}, "Concurrence text": {label}}
+
+
+def test_a_list_of_parts_never_swallows_the_next_sentence():
+    """The 'as to' list stops at the end of the heading: a later sentence that happens to say ', dissenting.'
+    must not become part of the label. The comma before 'dissenting' matters: without it a pattern that reads
+    past the full stop finds no role either, and the test would pass for the wrong reason (Edwin's review)."""
+    head = "JUSTICE SCALIA, with whom JUSTICE THOMAS joins as to Parts I and II. The Court errs, dissenting. x"
+    assert opinion_start(head) is None

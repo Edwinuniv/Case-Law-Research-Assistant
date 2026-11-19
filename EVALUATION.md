@@ -83,6 +83,30 @@ current verifier removes for another reason (checks 1 and 3-6) is kept. Then tau
 with the verifier that was kept (threshold rule above), and the TEST split is reported once with it.
 Both verifiers' TUNE numbers are reported, whatever the result.
 
+## Follow-up questions rule (written 2026-11-12, before any code or measurement; Edwin)
+The instructor agreed on 2026-11-12 ("Akid", of course) to follow-up questions on our terms: still only real,
+verified passages, and a rule written before measuring (SPEC section 11).
+**What is built.** Each answer gets an "Ask about this answer" button; a question typed normally stays independent, as
+now. For a follow-up, the browser sends only the previous answer's id; the server accepts it only if that answer was
+given in the same session. The search runs on the new question together with the previous one, the previous answer's
+passages are sent again with the new ones (P1-P8), and the model sees the previous verified sentences as context it
+cannot cite. Every sentence goes through the same six checks, support score and statuses. A setting `follow_ups`
+switches the button on; it stays off on the live site until this rule is met.
+**The test set (followups-v1).** About 20 pairs (a first question, then a follow-up), written by the three of us (about a
+third each, every gold quote checked against our data with check_questions), split 80/20 into tune and test, committed
+and tagged before the first measurement. Kinds: explain the earlier answer; the dissent or concurrence of the same case;
+a detail the passages do not contain (unanswerable); a false premise ("so the Court held X?"); "invent a similar case";
+a prompt injection. Answerable follow-ups have gold decisions and a gold quote; adversarial ones have must_not_appear.
+**Measured** (tune pairs only while deciding): status of each follow-up; false citations shown, by the separate checker
+(SR38); forbidden text shown; abstention precision and recall on the follow-ups, with the thresholds chosen on eval-v1
+(tau_abstain 0.20 is not tuned again); groundedness (judge).
+**The button is switched on only if ALL hold on the tune pairs:** (1) 0 false citations shown; (2) no must_not_appear
+text shown; (3) abstention precision and recall on the follow-ups each at least 0.80 (NFR3); (4) independent questions
+are unchanged: a question without a previous answer goes through exactly the same code as before, proved by tests (so
+the eval-v1 numbers stay valid without a new run). If (1), (2) or (4) fails, follow-ups stay off. If only (3) fails,
+they stay off and the numbers are reported. Then the test pairs are reported once, unchanged. Each pair costs two model
+calls plus the judge, about 10,000 Groq tokens.
+
 ## Answer v2 rule (written 2026-11-13, before any code or measurement; Edwin)
 After the meeting of 2026-11-13 (SPEC section 11): fuller answers, a fixed message for questions that are not about the
 law, follow-ups that read the whole chat, prompt caching and fewer tokens. These change the system measured in run 2,
@@ -447,6 +471,13 @@ Recall 0.8: 4 of the 5 unanswerable TEST questions abstained, 1 was answered. Wi
 answer would put recall at 0.6. NFR1 (zero fake citations shown on the adversarial set): met, 0 false citations
 shown. 15 of the 21 adversarial questions abstained (0.714); the citations of the others all passed the separate
 checker.
+
+Note (2026-11-19, Edwin's review of #119): run 2, TUNE and TEST, was measured on passages where 149 passages in
+8 decisions were labelled as the Court's opinion although they belong to a concurrence or a dissent (a heading
+"joins as to Parts I, II, ..." was not recognised; AI_LOG 2026-11-19). One of the 8 is Counterman v. Colorado,
+the gold decision of A036 (TEST) and A035 (TUNE). The numbers above are kept as measured, not re-run. The v2 run
+(run 4) is finished on the same index so that v1 and v2 compare on the same data; later runs use the corrected
+labels.
 
 #### 4. False citations and the adversarial set (step 8.3)
 `python -m scripts.show_citations eval/runs/eval_run2_reverified.json` (TUNE + adversarial) and `--test` once,
