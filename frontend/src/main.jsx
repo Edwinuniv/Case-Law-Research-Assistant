@@ -30,6 +30,7 @@ import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
 import ErrorPage, { ErrorBoundary } from "./components/ErrorPage.jsx";   // error pages that reveal nothing (Edwin)
 import "./style.css";
+import "./life.css";                              // white light on the dark pages (Edwin; for Yasser's opinion)
 import logoMark from "./assets/logo-light.webp";   // the Verdicta logo, white V for the dark pages (Edwin, 2026-11-19; was the seal)
 
 // The loading screen of index.html (Edwin, 2026-11-19): it fades out once the page is ready. On the first visit
@@ -50,7 +51,7 @@ function App() {
   const path = useLocation().pathname;
   const navigate = useNavigate();
   const landing = path === "/";                    // the landing page has its own top bar
-  const authPage = ["/login", "/signup", "/forgot"].includes(path);   // the account pages have their own logo
+  const authPage = ["/login", "/signup", "/forgot", "/reset"].includes(path);   // the account pages have their own logo
 
   useEffect(() => {
     me().then(setInfo, () => setInfo({ failed: true }))   // no answer from the server: say so, not "Loading…" forever
@@ -97,7 +98,8 @@ function App() {
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
           <Route path="/signup" element={user ? <Navigate to={user.role === "admin" ? "/admin" : "/research"} /> :
             <Login mode="signup" onLogin={(u) => setInfo({ ...info, user: u })} />} />   {/* visitor accounts (SPEC 11) */}
-          <Route path="/forgot" element={<Login mode="forgot" />} />   {/* an administrator resets the password */}
+          <Route path="/forgot" element={<Login mode="forgot" />} />   {/* a link by email (Edwin, SPEC 11) */}
+          <Route path="/reset" element={<Login mode="reset" />} />     {/* the page the emailed link opens */}
           <Route path="/" element={<Landing info={info} />} />  {/* the story of Verdicta, then "Try a question" */}
           <Route path="/research" element={<Chat info={info} />} />    {/* open to everyone, no account (SR33) */}
           <Route path="/privacy" element={<Privacy />} />              {/* the site's information pages (Edwin) */}
