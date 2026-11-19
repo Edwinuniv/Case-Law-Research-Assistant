@@ -1,0 +1,231 @@
+/* Appearance (Edwin, 2026-11-19, for the team's opinion): two themes, chosen in Settings (components/ThemeSwitch.jsx).
+   - dark (the default): dark pages with WHITE sections (the question box, examples, answers, cards, forms);
+   - light: the reverse, light pages with DARK sections.
+   Two sets of colours: --p-* for the page around, --s-* for the sections on it. Each page's own file keeps its
+   layout; this file only recolours, loaded after them (main.jsx). The landing page keeps its dark scenes. */
+:root{
+  --p-bg:#0c0c0e;--p-bg2:#111114;--p-ink:#e7e5e4;--p-head:#fff;--p-dim:#a8a29e;--p-faint:#78716c;
+  --p-edge:rgba(255,255,255,.09);--p-soft:rgba(255,255,255,.06);--p-glass:rgba(10,10,12,.6);--p-bar:rgba(12,12,14,.85);
+  --p-gold:#fbbf24;--p-header:#141418;--p-panel:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  --p-side:radial-gradient(ellipse at 60% 40%,#3a250c 0%,#17120c 45%,#0c0c0e 80%);
+  --p-main:radial-gradient(ellipse at 80% 0%,rgba(245,158,11,.10),transparent 55%),#111114;
+  --p-hero:radial-gradient(ellipse at 50% 120%,rgba(245,158,11,.18),transparent 60%),linear-gradient(180deg,#141418,#0c0c0e);
+  --p-code:linear-gradient(180deg,#fff 0,#f6e7c4 55%,#d4a84a 100%);
+
+  --s-bg:#fff;--s-bg2:#f5f3ee;--s-input:#f7f6f3;--s-ink:#2b2b31;--s-head:#121216;--s-dim:#5f5b55;--s-faint:#8a847c;
+  --s-edge:rgba(20,20,24,.11);--s-shadow:0 24px 60px rgba(0,0,0,.45);--s-shadow-sm:0 12px 34px rgba(0,0,0,.35);
+  --s-gold:#b45309;--s-ok:#047857;--s-bad:#b91c1c;--s-grey:#475569;--s-info:#0369a1;--s-err-bg:#fff1f2;--s-err:#be123c;
+  --s-kpi:linear-gradient(180deg,#d97706,#92400e);
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --p-bg:#f4f2ed;--p-bg2:#ebe8e1;--p-ink:#2b2b31;--p-head:#121216;--p-dim:#5f5b55;--p-faint:#8a847c;
+  --p-edge:rgba(20,20,24,.11);--p-soft:rgba(20,20,24,.05);--p-glass:rgba(255,255,255,.72);--p-bar:rgba(244,242,237,.92);
+  --p-gold:#b45309;--p-header:#fff;--p-panel:#fff;
+  --p-side:radial-gradient(ellipse at 60% 40%,#fbe7c2 0%,#f6eddc 45%,#f4f2ed 80%);
+  --p-main:radial-gradient(ellipse at 80% 0%,rgba(245,158,11,.12),transparent 55%),#ebe8e1;
+  --p-hero:radial-gradient(ellipse at 50% 120%,rgba(245,158,11,.22),transparent 60%),linear-gradient(180deg,#ebe8e1,#f4f2ed);
+  --p-code:linear-gradient(180deg,#121216 0,#5b3a0c 60%,#b45309 100%);
+
+  --s-bg:#17171c;--s-bg2:#212127;--s-input:#0f0f12;--s-ink:#e4e1dc;--s-head:#fff;--s-dim:#aaa49c;--s-faint:#7d776f;
+  --s-edge:rgba(255,255,255,.11);--s-shadow:0 24px 60px rgba(20,20,24,.22);--s-shadow-sm:0 12px 30px rgba(20,20,24,.16);
+  --s-gold:#fbbf24;--s-ok:#34d399;--s-bad:#f87171;--s-grey:#cbd5e1;--s-info:#7dd3fc;--s-err-bg:rgba(244,63,94,.12);--s-err:#fecdd3;
+  --s-kpi:linear-gradient(180deg,#fde68a,#f59e0b);
+}
+
+/* ---------- the logo: white V on dark backgrounds, black V on light ones (components/Logo.jsx) ---------- */
+.logo-on-light{display:none}
+:root[data-theme="light"] .logo-on-dark{display:none}
+:root[data-theme="light"] .logo-on-light{display:inline-block}
+
+/* ---------- the site header ---------- */
+header{background:var(--p-header)}
+header .brand{color:var(--p-head)}
+header .logout{color:var(--p-ink);background:var(--p-soft);border-color:var(--p-edge)}
+header .logout:hover{color:var(--p-head)}
+:root[data-theme="light"] header{box-shadow:0 1px 0 rgba(20,20,24,.06)}
+
+/* ---------- research page (pages/research.css): the page ---------- */
+.rs{--ink:var(--p-ink);--dim:var(--p-dim);--faint:var(--p-faint);--edge:var(--p-edge);background:var(--p-bg)}
+.rs-side{background:var(--p-glass)}
+.rs-side-head b,.rs-bar-title,.rs-hero h1{color:var(--p-head)}
+.rs-kicker,.rs-question span,.rs-side-note a,.rs-plan{color:var(--p-gold)}
+.rs-list button{color:var(--p-dim)}
+.rs-list button:hover{background:var(--p-soft);color:var(--p-head)}
+.rs.started .rs-bar{background:var(--p-bar)}
+.rs.started .rs-ask{background:linear-gradient(0deg,var(--p-bg) 70%,transparent)}
+.rs-question{color:var(--p-head)}
+.rs-foot a{color:var(--p-faint)}
+@media(max-width:900px){.rs-side{background:var(--p-bg2)}}
+
+/* ... and its sections */
+.rs-box,.rs-example,.rs-how,.rs-locked{background:var(--s-bg);border-color:var(--s-edge)}
+.rs-box{box-shadow:var(--s-shadow)}
+.rs-box textarea{color:var(--s-head)}
+.rs-box textarea::placeholder{color:var(--s-faint)}
+.rs-chip{color:var(--s-dim);background:var(--s-bg2);border-color:var(--s-edge)}
+.rs-counter{color:var(--s-faint)}
+.rs-example{color:var(--s-ink);box-shadow:var(--s-shadow-sm)}
+.rs-example:hover{background:var(--s-bg)}        /* style.css's button:hover would paint it dark grey */
+.rs-example-q,.rs-how-step b{color:var(--s-head)}
+.rs-example-n,.rs-example-go,.rs-how-n,.rs-locked b{color:var(--s-gold)}
+.rs-example-go{background:color-mix(in srgb,var(--s-gold) 12%,transparent)}
+.rs-how-n{border-color:color-mix(in srgb,var(--s-gold) 45%,transparent)}
+.rs-how-step+.rs-how-step{border-color:var(--s-edge)}
+.rs-how-step p,.rs-locked p{color:var(--s-dim)}
+.rs-locked-btn{color:var(--s-ink);border-color:var(--s-edge)}
+.rs-locked-btn.main{color:#1c1917}
+
+/* ---------- the answer, the waiting steps and the passage drawer (components/answer.css) ---------- */
+.an,.an-working,.an-drawer{background:var(--s-bg);color:var(--s-ink);border-color:var(--s-edge)}
+.an,.an-working{box-shadow:var(--s-shadow)}
+.an-status{color:var(--s-dim);border-bottom-color:var(--s-edge)}
+.an.st-WELCOME .an-status,.an-text,.an-opinion,.an-working li.done{color:var(--s-ink)}
+.an-status b,.an-meta b,.an-passage-top,.an-drawer h3,.an-hl,.an-working li.now{color:var(--s-head)}
+.an-reason,.an-passage-label,.an-dim,.an-opinion .an-dim,.an-working{color:var(--s-faint)}
+.an-meta,.an-support,.an-passage-text,.an-cit{color:var(--s-dim)}
+.an-meta>span{background:var(--s-bg2);border-color:var(--s-edge)}
+.an-meta>.an-saved,.an-toggle,.an-passage-top b,.an-kicker{color:var(--s-gold)}
+.an-toggle:hover{color:var(--s-head)}
+.an-passage,.an-passage:hover{background:var(--s-bg2);color:var(--s-ink)}
+.an-passage{border-color:var(--s-edge)}
+.an-score,.an-six i{background:var(--s-edge)}
+.an-step{border-color:var(--s-edge);color:var(--s-faint)}
+.an-close{background:var(--s-bg2);color:var(--s-head)}
+.an-close:hover{background:var(--s-edge)}
+
+/* ---------- log in, sign up, forgot password (pages/auth.css) ---------- */
+.au{background:var(--p-bg);color:var(--p-head)}
+.au-side{background:var(--p-side)}
+.au-main{background:var(--p-main)}
+.au-brand{color:var(--p-head)}
+.au-back{color:var(--p-ink);background:var(--p-soft);border-color:var(--p-edge)}
+.au-back:hover{color:var(--p-head)}
+.au-side-text ul{color:var(--p-dim)}
+.au-side-text b{color:var(--p-gold)}
+.au-legal,.au-links a{color:var(--p-faint)}
+.au-card{background:var(--s-bg);border-color:var(--s-edge);box-shadow:var(--s-shadow)}
+.au-card h1{color:var(--s-head)}
+.au-sub,.au-switch,.au-tabs a,.au-small a{color:var(--s-dim)}
+.au-tabs{background:var(--s-bg2)}
+.au-tabs a.on{color:#141418}
+.au-form label,.au-note,.au-sent p{color:var(--s-ink)}
+.au-form input{color:var(--s-head);background:var(--s-input);border-color:var(--s-edge)}
+.au-form input::placeholder{color:var(--s-faint)}
+.au-eye{background:var(--s-bg2);color:var(--s-dim)}
+.au-eye:hover{background:var(--s-edge)}
+.au-link,.au-caps,.au-switch a{color:var(--s-gold)}
+.au-small,.au-muted{color:var(--s-faint)}
+.au-card .au-error{color:var(--s-err);background:var(--s-err-bg)}
+.au-note b{color:var(--s-head)}
+.au-note a{color:var(--s-info)}
+.au-sent{background:var(--s-bg2);border-color:var(--s-edge)}
+.au-sent span{background:var(--s-head);color:var(--s-bg)}
+
+/* ---------- the information pages and the pricing page (pages/site.css) ---------- */
+body:has(.sp){background:var(--p-bg)}
+.sp{background:var(--p-bg);color:var(--p-ink)}
+.sp-hero{background:var(--p-hero)}
+.sp-hero h1{color:var(--p-head)}
+.sp-kicker{color:var(--p-gold)}
+.sp-updated{color:var(--p-faint)}
+.sp-nav a{color:var(--p-dim)}
+.sp-nav a:hover,.sp-nav a.active{color:var(--p-head);background:var(--p-soft)}
+.sp-back{color:var(--p-ink);background:var(--p-soft);border-color:var(--p-edge)}
+.sp-back:hover{color:var(--p-head)}
+/* the text column becomes one section, like a printed page */
+.sp-text{background:var(--s-bg);color:var(--s-ink);padding:30px 34px;border-radius:22px;border:1px solid var(--s-edge);
+  box-shadow:var(--s-shadow)}
+.sp-text h2,.sp-text strong{color:var(--s-head)}
+.sp-text a{color:var(--s-gold)}
+.sp-card{background:var(--s-bg2);border-color:var(--s-edge)}
+.sp-form label{color:var(--s-dim)}
+.sp-form input,.sp-form textarea{background:var(--s-input);color:var(--s-head);border-color:var(--s-edge)}
+.sp-small{color:var(--s-faint)}
+.sp-ok,.pl-ok{color:var(--s-ok)}
+.sp-err,.pl-err{color:var(--s-bad)}
+@media(max-width:800px){.sp-text{padding:22px 18px}}
+
+/* the plans (components/plans.css): sections inside the pricing page's section, and the panel over the chat */
+.pl-card,.pl-usage{background:var(--s-bg2);color:var(--s-ink);border-color:var(--s-edge)}
+.pl-card h3,.pl-card b,.pl-price,.pl-usage-top b,.pl-dialog h2{color:var(--s-head)}
+.pl-bar{background:var(--s-edge)}
+.pl-dim,.pl-note{color:var(--s-faint)}
+.pl-admin,.pl-kicker{color:var(--s-gold)}
+.pl-quiet{color:var(--s-ink);border-color:var(--s-edge)}
+.pl-quiet:hover{background:var(--s-bg2)}
+.pl-dialog{background:var(--s-bg);color:var(--s-ink);border-color:var(--s-edge)}
+.pl-close{background:var(--s-bg2);color:var(--s-head);border-color:var(--s-edge)}
+
+/* ---------- the admin pages (admin/admin.css): the page and the sidebar ---------- */
+body.ad-dark{background:var(--p-bg)}
+.ad{--text:var(--p-ink);--dim:var(--p-dim);--faint:var(--p-faint);--line:var(--p-edge)}
+.ad h2{color:var(--p-head)}
+.ad-side{background:var(--p-panel)}
+.ad-brand b{color:var(--p-head)}
+.ad .ad-side a:hover{background:var(--p-soft);color:var(--p-head)}
+.ad .ad-side a.active{color:var(--p-head)}
+.ad-side a i{background:var(--p-edge)}
+
+/* ... and its sections: the cards, the numbers and the tables */
+.ad-card,.ad .card,.ad-kpi,.ad-table{--text:var(--s-ink);--dim:var(--s-dim);--faint:var(--s-faint);--line:var(--s-edge);
+  --ok:var(--s-ok);--bad:var(--s-bad);background:var(--s-bg);color:var(--s-ink);border-color:var(--s-edge);box-shadow:var(--s-shadow-sm)}
+:is(.ad-card,.ad .card,.ad-kpi,.ad-table) :is(h3,td b,.ad-score b){color:var(--s-head)}
+:is(.ad-card,.ad .card,.ad-table) th{background:var(--s-bg2)}
+:is(.ad-card,.ad .card,.ad-table) tbody tr:hover{background:var(--s-bg2)}
+:is(.ad-card,.ad .card,.ad-kpi,.ad-table) a:not(.ad-pdf){color:var(--s-gold)}
+.ad-kpi b{background:var(--s-kpi);-webkit-background-clip:text;background-clip:text}
+.ad-status.st-LOW_CONFIDENCE{color:var(--s-gold)}
+.ad-status.st-NOT_SUPPORTED{color:var(--s-grey)}
+.ad .status{background:var(--s-bg2)}
+.ad input,.ad select,.ad textarea{background:var(--s-input);color:var(--s-head);border-color:var(--s-edge)}
+.ad select option{background:var(--s-bg)}
+.ad button.light,.ad .chip{background:var(--s-bg2);color:var(--s-ink);border-color:var(--s-edge)}
+.ad button.light:hover,.ad .chip:hover{background:var(--s-edge)}
+/* the charts draw with fixed white lines and text (charts.jsx): CSS wins over those SVG attributes */
+.ad-ring-v,.ad-dial-v{fill:var(--s-head)}
+.ad-axis{fill:var(--s-faint)}
+.ad svg [stroke="rgba(255,255,255,.08)"]{stroke:var(--s-edge)}
+.ad svg line[stroke="#fff"]{stroke:var(--s-head)}
+.ad-pair-a,.ad-bar{background:var(--s-edge)}
+
+/* ---------- error pages (components/errors.css) ---------- */
+.er{background:var(--p-bg);color:var(--p-ink)}
+.er h1,.er-brand{color:var(--p-head)}
+.er-text{color:var(--p-dim)}
+.er-code{background:var(--p-code);-webkit-background-clip:text;background-clip:text}
+.er-btn{background:var(--p-head);color:var(--p-bg)}
+.er-btn:hover{background:var(--p-dim);color:var(--p-bg)}
+.er-link{color:var(--p-gold)}
+
+/* ---------- the footer of index.html, on the pages that show it ---------- */
+:root[data-theme="light"] body{background:var(--p-bg)}
+:root[data-theme="light"] body:has(.sp) footer{border-top-color:var(--p-edge);color:var(--p-faint)}
+
+/* ---------- Settings: the round button at the bottom left, and its panel (components/ThemeSwitch.jsx) ---------- */
+.ts{position:fixed;left:16px;bottom:16px;z-index:50}
+.ts-btn{display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;cursor:pointer;
+  color:var(--s-head);background:var(--s-bg);border:1px solid var(--s-edge);box-shadow:0 10px 28px rgba(0,0,0,.3);
+  transition:transform .3s}
+.ts-btn:hover{background:var(--s-bg);transform:rotate(45deg)}
+.ts-btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ts-panel{position:absolute;left:0;bottom:56px;width:min(300px,calc(100vw - 32px));box-sizing:border-box;padding:16px;
+  border-radius:18px;background:var(--s-bg);color:var(--s-ink);border:1px solid var(--s-edge);box-shadow:var(--s-shadow);
+  animation:ts-in .2s ease-out}
+@keyframes ts-in{from{opacity:0;transform:translateY(8px)}}
+.ts-panel h2{margin:0 0 2px;font:500 19px Georgia,serif;color:var(--s-head)}
+.ts-panel p{margin:0 0 12px;font-size:12.5px;color:var(--s-faint)}
+.ts-label{display:block;margin-bottom:8px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--s-gold)}
+.ts-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ts-option{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:14px;cursor:pointer;text-align:left;
+  background:var(--s-bg2);color:var(--s-ink);border:2px solid transparent;font:600 13px system-ui,sans-serif}
+.ts-option:hover{background:var(--s-bg2);border-color:var(--s-edge)}
+.ts-option[aria-checked="true"]{border-color:#f59e0b}
+.ts-option small{display:block;font-weight:400;color:var(--s-faint);font-size:11.5px}
+/* a small picture of each theme: the page, with a section on it */
+.ts-pic{display:block;height:54px;border-radius:9px;padding:9px;box-sizing:border-box}
+.ts-pic i{display:block;height:100%;border-radius:6px}
+.ts-pic-dark{background:#0c0c0e}.ts-pic-dark i{background:#fff}
+.ts-pic-light{background:#f4f2ed;border:1px solid rgba(20,20,24,.1)}.ts-pic-light i{background:#17171c}
+@media(max-width:900px){body:has(.rs.started) .ts{bottom:150px}}
+@media(prefers-reduced-motion:reduce){.ts-btn,.ts-panel{transition:none;animation:none}}
