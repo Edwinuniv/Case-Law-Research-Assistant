@@ -125,6 +125,9 @@ export default function Chat({ info }) {
 
       <aside className={`rs-side ${panel ? "open" : ""}`} aria-label="My questions">
         <button className="rs-new" onClick={newQuestion} disabled={busy}><span aria-hidden="true">+</span> {account ? "New chat" : "New question"}</button>
+        {account?.role === "admin" && (   /* back to the admin pages (Edwin, 2026-11-19); the server checks the role */
+          <Link to="/admin" className="rs-to-admin"><span aria-hidden="true">←</span> Admin pages</Link>
+        )}
         <div className="rs-side-head">
           <b>{account ? "My chats" : "My questions"}</b>
           <span className="rs-count">{history.length}</span>
