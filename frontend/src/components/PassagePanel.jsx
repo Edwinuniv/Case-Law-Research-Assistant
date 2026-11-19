@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import "./answer.css";
+import Loader from "./Loader.jsx";   // the animated logo while the opinion loads (Edwin)
 
 export default function PassagePanel({ open, onClose }) {
   const [p, setP] = useState(null);
@@ -32,7 +33,7 @@ export default function PassagePanel({ open, onClose }) {
       <aside className={`an-drawer ${open ? "on" : ""}`} aria-hidden={!open} aria-label="Passage">
         <button className="an-close" onClick={onClose} aria-label="Close">×</button>
         {error && <p className="error">{error}</p>}
-        {open && !p && !error && <p className="an-dim">Loading the opinion…</p>}
+        {open && !p && !error && <Loader small label="Loading the opinion…" />}
         {p && (
           <>
             <span className="an-kicker">{p.opinion_label}{p.section ? ` · ${p.section}` : ""}</span>
