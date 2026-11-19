@@ -131,7 +131,7 @@ function App() {
           <Route path="*" element={<ErrorPage kind="notFound" inApp />} />   {/* not a silent jump to the home page */}
         </Routes>
       </main>
-      {!landing && <ThemeSwitch />}   {/* the landing page keeps its dark scenes in both themes */}
+      <ThemeSwitch />   {/* Settings, on every page */}
     </>
   );
 }

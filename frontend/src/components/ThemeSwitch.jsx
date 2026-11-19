@@ -1,5 +1,5 @@
 // Settings (Edwin, 2026-11-19): a round button at the bottom left of every page opens a small panel where the
-// visitor chooses the appearance: dark pages with white sections (the default) or light pages with dark sections.
+// visitor chooses the appearance: dark (the default, the site as designed) or light (every page light).
 // The choice is kept in this browser only (localStorage): no account needed, nothing sent to the server.
 // index.html applies it before the page is drawn, so there is no flash of the other theme.
 import { useEffect, useRef, useState } from "react";
@@ -44,8 +44,8 @@ export default function ThemeSwitch() {
           <p>Saved in this browser only.</p>
           <span className="ts-label" id="ts-appearance">Appearance</span>
           <div className="ts-options" role="radiogroup" aria-labelledby="ts-appearance">
-            {option("dark", "Dark", "white sections")}
-            {option("light", "Light", "dark sections")}
+            {option("dark", "Dark", "the default")}
+            {option("light", "Light", "every page light")}
           </div>
         </div>
       )}
