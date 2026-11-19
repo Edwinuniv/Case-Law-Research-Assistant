@@ -849,3 +849,8 @@ rule, then the code. What was wrong, and how it was caught:
    headless browser; fixed in errors.css.
 Checked in a headless browser on a copy of the database: sign up, forgot, the printed link, new password, log in;
 the used link refused; the token gone from the address bar; 404 and no-server pages; 1280 and 390 px wide.
+4. **Every page with the site header scrolled sideways.** The white light that runs along the header's gold line
+   (life.css) travelled past the right edge of the screen, and the browser made the page wider for it (1,280 px
+   screen: up to 1,326 px; phone: 523 instead of 390). The screenshots were all taken at the top left, so they never
+   showed it. Caught by Edwin, who could slide the page to the right. Fixed: the header clips what leaves it on the
+   sides (overflow-x: clip); measured on 10 pages at 1,280 and 390 px: no page wider than the screen.
