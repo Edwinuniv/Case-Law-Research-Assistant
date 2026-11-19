@@ -804,3 +804,30 @@ quote cannot be counted as a failure. Kelo and Riley stay in Yasser's TUNE pairs
    check_followups caught it ("gold_quote NOT FOUND word for word"). The check does not catch a placeholder in
    follow_up or expected_answer (they are only checked for length), so the file was also searched for "<".
 check_followups: "no problems" on the 21 pairs (7 each).
+
+## 2026-11-19 — Concurrence labelled as the Court in a combined text (Yasser)
+
+Edwin found with `find_quote --all` that Sotomayor's concurrence in Counterman v. Colorado (2023) was labelled
+"Opinion of the Court (Kagan)". We asked Claude to find the cause from the real text (a read-only query on Yasser's
+database) and to fix it, test first. What was wrong, and how it was caught:
+1. **The "as to Parts ..." pattern stopped at the first comma.** The heading pattern written with Claude on 2026-11-06
+   (for "joins as to Parts II and III") read the list of parts with `[^,.]`, so "joins as to Parts I, II, III-A, and
+   III-B, concurring ..." was not recognised. Counterman is stored as ONE combined text labelled "Opinion", so every
+   paragraph of the concurrence kept the majority's label, and nothing in the passage header said "concurring": the
+   model and check 6 of the verifier would take it for the Court's view. The 2026-11-06 tests only had lists without
+   commas, so they passed. Caught by Edwin reading the labels of real passages. Fix: the list is read up to the comma
+   before the role, never past a full stop; a test with the real line, and one showing that the list does not swallow
+   a later sentence. `scripts/check_sections.py` counts, before a re-index, the passages whose label would change.
+2. **Not a bug, but misleading: "Opening".** Thomas's concurrence in Shelby County (2013) is a separate opinion whose
+   Harvard XML text does not contain "JUSTICE THOMAS, concurring.", so its section is "Opening"; the model still sees
+   the stored label "Concurring opinion (Thomas)" and check 6 still catches it. `find_quote` printed only the section;
+   it now prints the label too.
+3. **A test that passed for the wrong reason** (Edwin's review of #119). The "never swallows the next sentence" test
+   used "... Parts I and II. The Court errs. Some judges were dissenting.": with no comma before "dissenting", a
+   too-wide pattern that reads past the full stop finds no role either, so it passed that test too. Edwin caught it by
+   putting a too-wide pattern in and seeing every test still pass. The example is now "... Parts I and II. The Court
+   errs, dissenting. x": our pattern gives no label, the too-wide one gives "Scalia, J., dissenting" (checked both).
+4. **What the re-index fixes** (check_sections on Yasser's and Edwin's databases, same numbers): 385 stored labels
+   change in 15 opinions; 149 passages in 8 decisions go from the Court to a separate opinion; none goes the other
+   way. The other 236 fix the author: e.g. 34 passages of Thomas's dissent in Sessions v. Dimaya (2018) were labelled
+   as Roberts's dissent, because the heading of the next dissent was not recognised and the previous label went on.
