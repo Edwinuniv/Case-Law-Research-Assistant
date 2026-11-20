@@ -729,7 +729,9 @@ scripts/gmail_token.py); on a laptop, SMTP with a Gmail app password also works 
 either: printed in the console locally, never online (as before). Sending never blocks or breaks a request: it runs
 after the answer, and a failure is only written to the server's log. (2) **Verification code**: a new account made
 with a password gets a 6-digit code by email; valid 15 minutes, 5 wrong tries then a new code is needed, a new code
-at most once a minute; only an HMAC of the code is stored. Until it is verified, the account may ask one question
+at most once a minute, and at most 5 codes per account in 24 hours, the sign-up's code included (added
+2026-11-20 before the code, after Yasser's review: a new code every minute allowed about 7,200 guesses a day); only an
+HMAC of the code is stored. Until it is verified, the account may ask one question
 (like a visitor) and may not buy the paid plan; everything else works. Google accounts are verified (Google checked
 the address); administrators are verified. Accounts made before this rule are verified. (3) **Notifications**, to
 the account's own address only: welcome (once verified), password changed (after a reset), plan changed (paid or
