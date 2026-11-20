@@ -58,6 +58,9 @@ The research page answers one question per message (no follow-up questions, as t
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
 
+Feedback: under each answer, "Was this answer helpful?" (yes, or no with a reason and a comment); administrators
+read the ratings on the admin page "Feedback". Only the person who got an answer can rate it.
+
 Appearance: the round Settings button at the bottom left of every page switches the whole site between dark (the
 default, as designed) and light. The choice is kept in the browser (localStorage) and applies to every page;
 nothing is sent to the server.
