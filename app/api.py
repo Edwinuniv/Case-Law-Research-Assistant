@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from google.auth.exceptions import GoogleAuthError
-from app import config, db, demo, google_auth, logs
+from app import config, db, demo, google_auth, logs, verification
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import ERROR, WELCOME, answer, check_input, turn_of
 
@@ -149,7 +149,10 @@ def signup(request: Request, body: Login):
     request.session.clear()                                      # logged in at once, in a new session
     request.session.update({"user_id": user_id, "email": email})
     logs.log_user(user_id, "signup")
-    return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request)}
+    verify = config.EMAIL_VERIFICATION                           # SPEC 11, 2026-11-20: a code by email
+    if verify:
+        verification.send_code(user_id, email)
+    return {"user": {"email": email, "role": "user"}, "csrf": csrf_token(request), "verify": verify}
 
 
 # ---------------- Sign in with Google (Yasser, SPEC 11, 2026-11-13; app/google_auth.py) ----------------
@@ -174,12 +177,14 @@ def google_login(request: Request, body: GoogleLogin):
         raise HTTPException(403, "This account is disabled.")
     if account:
         user_id, event = account["id"], "login"
+        db.set_email_verified(user_id)            # Google checked the address (SPEC 11, 2026-11-20)
     else:                                         # a new 'user' account, like /api/signup
         made = signup_slots(request)
         user_id = db.create_visitor(email, secrets.token_urlsafe(32))   # a random password nobody knows
         if user_id is None:
             raise HTTPException(409, "An account with this email already exists. Log in instead.")
         made.append(time.time())
+        db.set_email_verified(user_id)            # Google checked the address: no code (SPEC 11, 2026-11-20)
         event = "signup"
     request.session.clear()                       # a new session, as at every login
     request.session.update({"user_id": user_id, "email": email})
@@ -215,6 +220,7 @@ def me(request: Request):
             "plan": plan_info(request.session["user_id"]) if user and user["role"] == "user" else None,
             "follow_ups": bool(user) and bool(db.get_settings().get("follow_ups", False)),
             "unlimited": bool(user) and user["role"] == "admin",      # administrators: no plan and no limit
+            "email_verified": db.email_verified(request.session["user_id"]) if user else None,   # SPEC 11, 2026-11-20
             "google_client_id": google_auth.CLIENT_ID or None}      # public; null: no Google button
 
 
@@ -238,6 +244,12 @@ def plan_info(user_id):
     plan = db.user_plan(user_id)
     limit = daily_limit(plan)
     return {"plan": plan, "daily_limit": limit, "left_today": max(0, limit - db.questions_today(user_id))}
+
+
+def needs_verification(user_id):
+    """An account made with a password whose email is not verified yet (Edwin, SPEC 11, 2026-11-20): it may ask
+    one question, like a visitor, and may not buy the paid plan."""
+    return config.EMAIL_VERIFICATION and db.email_verified(user_id) is False
 
 
 def free_questions_left(request, asker):
@@ -331,6 +343,9 @@ def ask(request: Request, body: Question):
         return record(asker, body.chat_id, demo.saved_result(body.question), saved, {"demo": True})
     if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
         raise HTTPException(403, VISITOR_REFUSED)
+    if asker and needs_verification(asker) and db.questions_ever(asker) >= 1:   # SPEC 11, 2026-11-20
+        raise HTTPException(403, "Verify your email to keep asking: type the code we sent you, "
+                                 "or ask for a new one on the verification page.")
     if asker and db.active_role(asker) == "user":            # an account's questions per day; admins: no limit
         info = plan_info(asker)
         if info["left_today"] == 0:                           # before the search and the model; not in query_log
