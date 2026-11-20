@@ -65,6 +65,30 @@ def norm(text):
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+# Quote matching v2 (EVALUATION.md, 2026-11-20): "A ... B" joins two real pieces of the passage. After norm() the
+# ellipsis is "..." (NFKC turns "…" into it), ". . ." or "[...]".
+ELLIPSIS = re.compile(r"\[\s*(?:\.\s*){3}\]|(?:\.\s*){3}")
+
+
+def quote_found(quote, cited_text):
+    """True if the quote is in the cited passages word for word. With an ellipsis, each piece (3 words at least) must
+    be there, in the order given; nothing else is accepted (a near-quote or a paraphrase is still refused)."""
+    q = norm(quote)
+    pieces = ELLIPSIS.split(q)
+    if len(pieces) == 1:                                   # no ellipsis: exactly as before (step 8.2)
+        return q.rstrip(".,;: ") in cited_text
+    pieces = [x.strip(" .,;:") for x in pieces]
+    if any(len(x.split()) < 3 for x in pieces):
+        return False
+    at = 0
+    for piece in pieces:
+        found = cited_text.find(piece, at)
+        if found < 0:
+            return False
+        at = found + len(piece)
+    return True
+
+
 def numbers_in(text):
     return {n.replace(",", "").rstrip(".") for n in NUMBER.findall(text or "")}
 
@@ -96,7 +120,7 @@ def check_sentence(sentence, passages, index):
         return ["cites a passage that was not sent to the model"]
     cited_text = norm(" ".join(c["text"] for c in cited))
     # check 2; the quote's final . , ; : is ignored (the passage may go on: "militia service, though")
-    if len(quote.split()) < 5 or norm(quote).rstrip(".,;: ") not in cited_text:
+    if len(quote.split()) < 5 or not quote_found(quote, cited_text):
         problems.append("quote not found in the cited passage")
 
     retrieved_decisions = {p["decision_id"] for p in passages.values()}
