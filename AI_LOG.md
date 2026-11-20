@@ -957,3 +957,17 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    had been done in dark mode only. Measured in light mode (background unchanged after the click); fixed with a light
    rule for the chosen chip, and a ✓ before the chosen reason so it shows in any theme; measured in both themes.
 
+## 2026-11-20 — Quote matching v2 and the fuller answers (branch step/8.5-quote-ellipsis)
+
+1. **Why the answers were short.** Asked to make the answers fuller, the AI first looked at the prompt; the saved
+   drafts of run 4 showed the model already wrote fuller answers and the verifier removed 44 of 105 sentences, 35 of
+   them because a real quote was cut with "..." (counted by comparing each removed quote with the decision's full
+   text). Rule written first (EVALUATION.md), then tests, then the code; measured on the saved drafts.
+2. **Switching the prompt by changing the code's default was wrong.** The AI changed `prompt_version`'s default in
+   pipeline.py to "v2"; 84 tests in 18 files failed (their fake models take 2 arguments, the v2 call passes 5),
+   most of them Joe's and Yasser's website tests. Caught by running the whole suite before committing; reverted.
+   The switch is a settings row instead (`prompt_version = "v2"`), like tau_abstain, and no test changes.
+3. **A first live try of v2 gave ERROR twice**: Groq's per-minute token limit, after four questions in a row (v2
+   thinks before answering). With a minute between them: LOW_CONFIDENCE with 3 sentences and ANSWERED with 4. The
+   site does not wait and retry like the evaluation does, so busy minutes can show ERROR (told the team).
+
