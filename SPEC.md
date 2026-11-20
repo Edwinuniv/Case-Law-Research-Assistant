@@ -803,3 +803,11 @@ every page, for everyone; a visitor may close a message, and it stays closed in 
 admin page lists them (active, coming, ended) and deletes one; every change is in the admin log (as every
 /api/admin change). (4) GET /api/announcements is public and gives only the active messages. Files of others changed,
 told: app/db.py (one table), the frontend router and the admin menu (Joe).
+
+2026-11-20 - Saved answers, bookmarks (Edwin; from CedarPay's saved beneficiaries, 6 of 7). Written before the code.
+(1) A logged-in account may save one of its own answers ("Save" under the answer; "Saved" to remove it); at most 200
+saved answers. Visitors cannot (their answers live only in the browser session); someone else's answer: 404.
+(2) The page "Saved answers" (/saved) lists them, newest saved first, and opens each one as it was shown (the saved
+answer: no model call), with its citations and passages. (3) GET /api/answers/{id} gives an account's own saved-or-not
+answer as it was shown (the same rule as the PDF). (4) Saved answers are deleted with the answer or the account.
+Files of others changed, told: app/db.py (one table), Chat.jsx (which answers are saved), the frontend router (Joe).
