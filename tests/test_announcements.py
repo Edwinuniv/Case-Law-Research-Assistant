@@ -39,7 +39,8 @@ def test_ended_and_coming_announcements_are_not_shown(c, admin, clean_db):
     post(admin, {"text": "Coming", "level": "info", "days": 2, "starts_in_hours": 5})
     post(admin, {"text": "Ended", "level": "info", "days": 1})
     with clean_db.connect() as con:
-        con.execute("UPDATE announcements SET ends_at = now() - interval '1 minute' WHERE text = 'Ended'")
+        con.execute("UPDATE announcements SET starts_at = now() - interval '2 days', "
+                    "ends_at = now() - interval '1 minute' WHERE text = 'Ended'")
     assert shown(c) == []
     listed = {a["text"]: a["state"] for a in admin.get("/api/admin/announcements").json()}
     assert listed == {"Coming": "coming", "Ended": "ended"}
