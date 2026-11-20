@@ -114,6 +114,9 @@ def verdict(m):
     c1 = m["false_citations_shown"] == 0
     c2 = m["forbidden_text_shown"] == 0
     c3 = all(m.get(k) is not None and m[k] >= 0.80 for k in ("abstention_precision", "abstention_recall"))
+    if m.get("errors") or m.get("first_answer_errors"):              # a failed answer measures nothing
+        return {"1_no_false_citation": c1, "2_no_forbidden_text": c2, "3_abstention_at_least_0.80": c3,
+                "switch_on": False, "note": "some answers failed (ERROR): rerun them before deciding"}
     if c1 and c2 and c3:
         note = "all conditions hold: follow-ups may be switched on, then the TEST pairs are reported once"
     elif c1 and c2:
