@@ -16,6 +16,7 @@ import AdminHome from "./admin/Home.jsx";
 import QuestionForm from "./admin/QuestionForm.jsx";
 import Questions from "./admin/Questions.jsx";
 import Settings from "./admin/Settings.jsx";
+import Previews from "./admin/Previews.jsx";                // page previews (Edwin, SPEC 11, 2026-11-20)
 import Users from "./admin/Users.jsx";
 import UserDetail from "./admin/UserDetail.jsx";
 import AllQuestions from "./admin/AllQuestions.jsx";
@@ -118,6 +119,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout user={user} />}>
               <Route index element={<AdminHome />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="previews" element={<Previews />} />
               <Route path="eval" element={<Eval />} />
               <Route path="eval/compare" element={<Compare />} />
               <Route path="eval/:runId" element={<EvalRun />} />
