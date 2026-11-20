@@ -897,6 +897,11 @@ first, then 3 test files from the rule, then the code. What was wrong, and how i
    still allowed about 7,200 guesses a day (about 0.7% chance of finding the 6 digits). Caught by Yasser's review of
    #126 ("is the code limited?"). Fixed, rule and test first: at most 5 codes per account in 24 hours, the sign-up's
    code included (Yasser's point for the test), so at most 25 guesses a day; 3 planted bugs caught by the new test.
+6. **Guesses sent at the same moment were all compared.** check() read the tries, compared, then added one: 20
+   guesses at once all read "0 tries" (Yasser estimated ~40 comparisons per code instead of 5); send_code had the
+   same race for the 6th code of the day. Caught by Yasser's second review of #126. Fixed, tests first (20 guesses /
+   10 code requests from threads at the same moment; both failed before the fix): the try is counted first, in the
+   one UPDATE that checks it is allowed (his proposal); send_code locks the account's code row (FOR UPDATE).
 14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
 checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
 
