@@ -1,6 +1,7 @@
 """Email verification codes (Edwin, SPEC 11, 2026-11-20, rule 2).
 A 6-digit code, emailed when an account is made with a password. It works for 15 minutes; after 5 wrong tries a new
-code is needed; a new code at most once a minute. The table keeps only an HMAC of the code (keyed with the site's
+code is needed; a new code at most once a minute, and at most 5 codes per account in 24 hours, the sign-up's included
+(Yasser's review: otherwise 5 tries x a code a minute = 7,200 guesses a day; now at most 25). The table keeps only an HMAC of the code (keyed with the site's
 SESSION_SECRET), so a copy of the database does not show the codes."""
 import hashlib
 import hmac
@@ -8,6 +9,7 @@ import secrets
 from app import config, db, emails
 
 MINUTES, MAX_TRIES, RESEND_SECONDS = 15, 5, 60
+CODES_PER_DAY = 5
 
 
 def code_hash(user_id, code):
@@ -15,20 +17,27 @@ def code_hash(user_id, code):
 
 
 def send_code(user_id, email):
-    """Makes a new code, replacing the old one, and emails it. False if the last code was sent less than a
-    minute ago (nothing sent)."""
+    """Makes a new code, replacing the old one, and emails it: "sent". Nothing is sent if the last code is less than
+    a minute old ("wait") or if 5 codes were already sent in the last 24 hours ("daily")."""
     code = f"{secrets.randbelow(10 ** 6):06d}"
     with db.connect() as con:
-        recent = con.execute("SELECT 1 FROM email_codes WHERE user_id = %s "
-                             "AND sent_at > now() - make_interval(secs => %s)", (user_id, RESEND_SECONDS)).fetchone()
-        if recent:
-            return False
-        con.execute("""INSERT INTO email_codes (user_id, code_hash, sent_at, expires_at, tries)
-                       VALUES (%s, %s, now(), now() + make_interval(mins => %s), 0)
+        row = con.execute("""SELECT sent_at > now() - make_interval(secs => %s) AS recent,
+                                    window_start > now() - interval '24 hours' AS same_day, sent_in_window
+                             FROM email_codes WHERE user_id = %s""", (RESEND_SECONDS, user_id)).fetchone()
+        if row and row["recent"]:
+            return "wait"
+        if row and row["same_day"] and row["sent_in_window"] >= CODES_PER_DAY:
+            return "daily"
+        same_day = bool(row and row["same_day"])
+        con.execute("""INSERT INTO email_codes (user_id, code_hash, sent_at, expires_at, tries, window_start, sent_in_window)
+                       VALUES (%s, %s, now(), now() + make_interval(mins => %s), 0, now(), 1)
                        ON CONFLICT (user_id) DO UPDATE SET code_hash = EXCLUDED.code_hash, sent_at = now(),
-                       expires_at = EXCLUDED.expires_at, tries = 0""", (user_id, code_hash(user_id, code), MINUTES))
+                       expires_at = EXCLUDED.expires_at, tries = 0,
+                       window_start = CASE WHEN %s THEN email_codes.window_start ELSE now() END,
+                       sent_in_window = CASE WHEN %s THEN email_codes.sent_in_window + 1 ELSE 1 END""",
+                    (user_id, code_hash(user_id, code), MINUTES, same_day, same_day))
     emails.verification_code(email, code, MINUTES)
-    return True
+    return "sent"
 
 
 def check(user_id, code):
