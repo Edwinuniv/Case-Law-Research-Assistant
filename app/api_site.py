@@ -10,7 +10,7 @@ import time
 from collections import defaultdict, deque
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
-from app import api, config, db, emails, logs, resets, verification
+from app import answers, api, config, db, emails, logs, resets, verification
 
 router = APIRouter(prefix="/api", dependencies=[Depends(api.check_csrf)])
 admin = APIRouter(prefix="/api/admin", dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -119,6 +119,52 @@ def password_reset(body: Reset):
 def account_email(user_id):
     with db.connect() as con:
         return con.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()["email"]
+
+
+# ---------------- feedback on an answer (SPEC 11, 2026-11-20, from CedarPay's reviews) ----------------
+REASONS = {"wrong_case": "Wrong case or citation", "missed_holding": "Missed the Court's holding",
+           "incomplete": "Incomplete", "should_answer": "It should have answered", "other": "Other"}
+
+
+class Feedback(BaseModel):
+    query_id: int
+    helpful: bool
+    reason: str | None = None
+    comment: str | None = None
+
+
+@router.post("/feedback")
+def feedback(request: Request, body: Feedback):
+    row = answers.owned(request, body.query_id)
+    if not row:
+        raise HTTPException(404, "Answer not found.")              # someone else's, or none: the same answer
+    if row["status"] == "ERROR":
+        raise HTTPException(400, "There is no answer to rate.")
+    comment = (body.comment or "").strip() or None
+    if body.reason is not None and body.reason not in REASONS:
+        raise HTTPException(400, "Choose one of the reasons.")
+    if comment and len(comment) > 500:
+        raise HTTPException(400, "Write at most 500 characters.")
+    reason = None if body.helpful else body.reason              # a reason only for "not helpful"
+    with db.connect() as con:
+        con.execute("""INSERT INTO answer_feedback (query_id, helpful, reason, comment, user_id)
+                       VALUES (%s, %s, %s, %s, %s) ON CONFLICT (query_id) DO UPDATE SET helpful = EXCLUDED.helpful,
+                       reason = EXCLUDED.reason, comment = EXCLUDED.comment, created_at = now()""",
+                    (body.query_id, body.helpful, reason, comment, request.session.get("user_id")))
+    return {"ok": True}
+
+
+@admin.get("/feedback")
+def admin_feedback():
+    with db.connect() as con:
+        c = con.execute("SELECT count(*) FILTER (WHERE helpful) AS helpful, "
+                        "count(*) FILTER (WHERE NOT helpful) AS not_helpful FROM answer_feedback").fetchone()
+        by_reason = {r["reason"]: r["n"] for r in con.execute(
+            "SELECT reason, count(*) AS n FROM answer_feedback WHERE reason IS NOT NULL GROUP BY reason ORDER BY n DESC")}
+        latest = con.execute("""SELECT f.query_id, f.helpful, f.reason, f.comment, f.created_at, q.question, q.status,
+                                       u.email FROM answer_feedback f JOIN query_log q ON q.id = f.query_id
+                                LEFT JOIN users u ON u.id = f.user_id ORDER BY f.created_at DESC LIMIT 100""").fetchall()
+    return {"counts": {**c, "by_reason": by_reason}, "reasons": REASONS, "latest": latest}
 
 
 # ---------------- email verification (SPEC 11, 2026-11-20) ----------------
