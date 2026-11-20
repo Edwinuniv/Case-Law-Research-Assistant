@@ -127,3 +127,11 @@ def test_the_switch_goes_on_only_if_every_condition_holds(change, on):
     assert v["switch_on"] is on
     if not on and "abstention" in next(iter(change)):
         assert "report" in v["note"]                               # only (3) failed: off, numbers reported
+
+
+def test_a_run_with_errors_decides_nothing():
+    """Seen on a run with no model key (2026-11-20): every answer failed, yet conditions 1 and 2 'held'."""
+    m = {"false_citations_shown": 0, "forbidden_text_shown": 0, "abstention_precision": 1.0,
+         "abstention_recall": 1.0, "errors": 1, "first_answer_errors": 0}
+    v = rf.verdict(m)
+    assert v["switch_on"] is False and "rerun" in v["note"]
