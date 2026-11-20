@@ -251,10 +251,13 @@ def test_final_full_stop_of_the_quote_is_ignored():                          # A
                   "to certain restrictions.",
                   "the right to bear arms was an individual right unconnected to militia service.")
 
-def test_words_left_out_with_an_ellipsis_are_still_removed():                # A029: not word for word
-    assert not quoted("the separation of powers principles explicated in the Court's precedent necessitate at least "
-                      "a presumptive immunity from criminal prosecution",
-                      "the separation of powers principles ... necessitate at least a presumptive immunity")
+def test_words_left_out_with_an_ellipsis_are_kept_since_quote_matching_v2():   # A029
+    """Step 8.2 removed this quote (one unbroken quote only). Quote matching v2 (EVALUATION.md, 2026-11-20, written
+    before the code) accepts it: both pieces are word for word, in order. A changed piece is still removed."""
+    passage = ("the separation of powers principles explicated in the Court's precedent necessitate at least "
+               "a presumptive immunity from criminal prosecution")
+    assert quoted(passage, "the separation of powers principles ... necessitate at least a presumptive immunity")
+    assert not quoted(passage, "the separation of powers principles ... necessitate at least an absolute immunity")
 
 def test_a_dropped_word_is_still_removed_after_the_new_matching():           # A034: "the majority today upends"
     assert not quoted("The majority today upends longstanding precedent and the established practice.",
