@@ -21,9 +21,10 @@ def send_code(user_id, email):
     a minute old ("wait") or if 5 codes were already sent in the last 24 hours ("daily")."""
     code = f"{secrets.randbelow(10 ** 6):06d}"
     with db.connect() as con:
+        # FOR UPDATE: two requests at the same moment wait for each other, so both cannot pass the checks below
         row = con.execute("""SELECT sent_at > now() - make_interval(secs => %s) AS recent,
                                     window_start > now() - interval '24 hours' AS same_day, sent_in_window
-                             FROM email_codes WHERE user_id = %s""", (RESEND_SECONDS, user_id)).fetchone()
+                             FROM email_codes WHERE user_id = %s FOR UPDATE""", (RESEND_SECONDS, user_id)).fetchone()
         if row and row["recent"]:
             return "wait"
         if row and row["same_day"] and row["sent_in_window"] >= CODES_PER_DAY:
@@ -42,19 +43,18 @@ def send_code(user_id, email):
 
 def check(user_id, code):
     """"ok" (the account is now verified), "missing", "expired", "tries" (too many wrong tries) or "wrong:N" (N
-    tries left). A wrong try is counted before anything else, so guessing is limited to 5 tries per code."""
+    tries left). The try is counted FIRST, in the same statement that checks it is allowed (Yasser's review): guesses
+    sent at the same moment cannot all read "0 tries", so a code gets 5 comparisons at most."""
     with db.connect() as con:
-        row = con.execute("SELECT code_hash, tries, expires_at < now() AS expired FROM email_codes "
-                          "WHERE user_id = %s", (user_id,)).fetchone()
-        if not row:
-            return "missing"
-        if row["tries"] >= MAX_TRIES:
-            return "tries"
-        if row["expired"]:
-            return "expired"
+        row = con.execute("""UPDATE email_codes SET tries = tries + 1
+                             WHERE user_id = %s AND tries < %s AND expires_at > now()
+                             RETURNING code_hash, tries""", (user_id, MAX_TRIES)).fetchone()
+        if not row:                                   # no try left to count: say why
+            why = con.execute("SELECT tries >= %s AS used, expires_at <= now() AS expired FROM email_codes "
+                              "WHERE user_id = %s", (MAX_TRIES, user_id)).fetchone()
+            return "missing" if not why else "tries" if why["used"] else "expired"
         if not hmac.compare_digest(row["code_hash"], code_hash(user_id, code.strip())):
-            con.execute("UPDATE email_codes SET tries = tries + 1 WHERE user_id = %s", (user_id,))
-            left = MAX_TRIES - row["tries"] - 1
+            left = MAX_TRIES - row["tries"]
             return "tries" if left == 0 else f"wrong:{left}"
         con.execute("DELETE FROM email_codes WHERE user_id = %s", (user_id,))
         con.execute("UPDATE users SET email_verified = TRUE WHERE id = %s", (user_id,))
