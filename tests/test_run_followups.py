@@ -102,7 +102,8 @@ def test_the_daily_limit_pauses_and_resume_skips_the_pairs_done(fake, tmp_path):
     replies["first F002?"] = evaluate.DailyLimit("rate limit reached per day")
     out = tmp_path / "r.json"
     assert run([pair("F001"), pair("F002")], out) == "paused"
-    assert list(json.loads(out.read_text())["pairs"]) == ["F001"]  # F002 is asked again, from the start
+    saved = json.loads(out.read_text())
+    assert list(saved["pairs"]) == ["F001"] and saved["status"] == "paused"   # F002 is asked again, from the start
     del replies["first F002?"]
     calls.clear()
     assert run([pair("F001"), pair("F002")], out, resume=True) == "done"
