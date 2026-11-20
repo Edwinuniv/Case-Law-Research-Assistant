@@ -22,6 +22,13 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value JSONB NOT NULL);
 
+CREATE TABLE IF NOT EXISTS email_codes (           -- email verification (Edwin, SPEC 11, 2026-11-20)
+    user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,   -- one code at a time per account
+    code_hash TEXT NOT NULL,                      -- an HMAC of the 6 digits: the code itself is never stored
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    tries INT NOT NULL DEFAULT 0);
+
 CREATE TABLE IF NOT EXISTS password_resets (       -- forgot password (Edwin, SPEC 11, 2026-11-19)
     token_hash TEXT PRIMARY KEY,                  -- SHA-256 of the emailed token: the token itself is never stored
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -108,7 +115,7 @@ CREATE TABLE IF NOT EXISTS user_log (              -- everything an account does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     event TEXT NOT NULL CHECK (event IN ('signup', 'login', 'login_failed', 'logout', 'question', 'follow_up',
-                                         'plan_change', 'refused', 'password_reset')),
+                                         'plan_change', 'refused', 'password_reset', 'email_verified')),
     query_id INT REFERENCES query_log(id) ON DELETE SET NULL, detail JSONB NOT NULL DEFAULT '{}');
 CREATE TABLE IF NOT EXISTS admin_log (             -- everything an administrator does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -155,6 +162,13 @@ CREATE INDEX IF NOT EXISTS query_log_chat ON query_log (chat_id, id);
 ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
 ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
     'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset'));
+-- 2026-11-20 (Edwin, SPEC section 11): email verification. The accounts that exist already count as verified
+-- (DEFAULT TRUE fills them), then every new account starts unverified (DEFAULT FALSE).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE users ALTER COLUMN email_verified SET DEFAULT FALSE;
+ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
+ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
+    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset', 'email_verified'));
 """
 
 
@@ -201,9 +215,9 @@ def create_user(email, password, role="admin"):
         raise ValueError(f"unknown role: {role}")
     h = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     with connect() as con:
-        con.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s) "
+        con.execute("INSERT INTO users (email, password_hash, role, email_verified) VALUES (%s, %s, %s, TRUE) "
                     "ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, "
-                    "role = EXCLUDED.role, active = TRUE",
+                    "role = EXCLUDED.role, active = TRUE, email_verified = TRUE",   # made by an admin: verified
                     (email.lower().strip(), h, role))
 
 
@@ -215,6 +229,24 @@ def create_visitor(email, password):
         row = con.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, 'user') "
                           "ON CONFLICT (email) DO NOTHING RETURNING id", (email.lower().strip(), h)).fetchone()
     return row["id"] if row else None
+
+
+def email_verified(user_id):
+    """True if the account's email is verified (SPEC 11, 2026-11-20); None for no such account."""
+    with connect() as con:
+        row = con.execute("SELECT email_verified FROM users WHERE id = %s", (user_id,)).fetchone()
+    return row["email_verified"] if row else None
+
+
+def set_email_verified(user_id):
+    with connect() as con:
+        con.execute("UPDATE users SET email_verified = TRUE WHERE id = %s", (user_id,))
+
+
+def questions_ever(user_id):
+    """Every question an account has asked (an unverified account may ask one)."""
+    with connect() as con:
+        return con.execute("SELECT count(*) AS n FROM query_log WHERE user_id = %s", (user_id,)).fetchone()["n"]
 
 
 def check_login(email, password):
