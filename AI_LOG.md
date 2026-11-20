@@ -942,3 +942,10 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    query_log. This time a check in the edit script itself (the new table must come after query_log) stopped it before
    any test ran; moved. 3 planted bugs caught (anyone saving any answer, no limit, oldest first).
 
+## 2026-11-20 — CedarPay features, 7 of 7: in-app notifications (branch feature/notifications)
+
+1. **On a phone the notifications panel went 304 pixels off the left of the screen**: the header wraps there, the bell
+   sits on the left, and the panel opened leftward from it. Measured in the headless browser at 390 px; fixed (on
+   narrow screens the panel spans the screen under the header) and measured again at 390 and 1280 px.
+   3 planted bugs caught (everyone's notices shown, no limit of 50, oldest first).
+
