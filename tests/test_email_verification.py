@@ -170,3 +170,21 @@ def test_the_site_still_starts_after_an_account_is_verified(clean_db):
     logs.log_user(uid, "email_verified")
     clean_db.init_db()                                                # the next start of the site
     clean_db.init_db()
+
+
+def test_at_most_five_codes_a_day_the_sign_up_code_included(c, mail, clean_db):
+    """Yasser's review (2026-11-20): with only "one a minute", 5 tries x 1,440 codes = 7,200 guesses a day."""
+    def a_minute_later():
+        with clean_db.connect() as con:
+            con.execute("UPDATE email_codes SET sent_at = now() - interval '2 minutes'")
+    sign_up(c, READER)                                              # code 1 of the day
+    for _ in range(4):                                              # codes 2 to 5
+        a_minute_later()
+        assert resend(c).status_code == 200
+    a_minute_later()
+    r = resend(c)                                                   # code 6: refused, nothing sent
+    assert r.status_code == 429 and "tomorrow" in r.json()["detail"] and len(mail) == 5
+    with clean_db.connect() as con:                                 # 24 hours later the count starts again
+        con.execute("UPDATE email_codes SET window_start = now() - interval '25 hours', "
+                    "sent_at = now() - interval '25 hours'")
+    assert resend(c).status_code == 200 and len(mail) == 6
