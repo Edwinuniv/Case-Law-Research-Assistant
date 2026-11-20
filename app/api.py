@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from google.auth.exceptions import GoogleAuthError
-from app import config, db, demo, google_auth, logs, verification
+from app import answers, config, db, demo, google_auth, logs, verification
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
 from app.pipeline import ERROR, WELCOME, answer, check_input, turn_of
 
@@ -340,7 +340,8 @@ def ask(request: Request, body: Question):
             raise HTTPException(404, "Chat not found.")
     saved = demo.saved_answer(body.question)                    # an example question (Edwin, 2026-11-13): the
     if saved:                                                   # answer saved once, no model call, not counted
-        return record(asker, body.chat_id, demo.saved_result(body.question), saved, {"demo": True})
+        return answers.remember(request, record(asker, body.chat_id, demo.saved_result(body.question), saved,
+                                                {"demo": True}))
     if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
         raise HTTPException(403, VISITOR_REFUSED)
     if asker and needs_verification(asker) and db.questions_ever(asker) >= 1:   # SPEC 11, 2026-11-20
@@ -370,7 +371,7 @@ def ask(request: Request, body: Question):
         r = answer(body.question, STATE["searcher"], STATE["index"], settings, history=history or None)
     else:                                                       # exactly as before: the question on its own
         r = answer(body.question, STATE["searcher"], STATE["index"], settings)
-    shown = record(asker, body.chat_id, r, public_answer(r))
+    shown = answers.remember(request, record(asker, body.chat_id, r, public_answer(r)))   # SPEC 11, 2026-11-20
     if not asker and r["status"] not in (WELCOME, ERROR):       # only a real answer uses the free question
         request.session["visitor_asked"] = request.session.get("visitor_asked", 0) + 1
     return shown
