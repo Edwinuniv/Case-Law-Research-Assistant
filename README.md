@@ -63,6 +63,9 @@ pages of the site and the server's 401/403 pages, in the chosen appearance; a bu
 My account (/account, a logged-in user account): details and plan, change password, delete the account with its
 questions, chats and ratings (a paid test subscription is cancelled first). Links in the header and the chat sidebar.
 
+Announcements: on the admin page "Announcements", a short message (information or warning, at most 300 characters,
+up to 30 days) shown as a banner at the top of every page until it ends; visitors can close it.
+
 Guided tour: the first visit of the research page shows a short tour (question box, examples, My questions, Settings,
 how to read an answer); Settings > "Take the tour" shows it again.
 

@@ -166,6 +166,60 @@ def answer_as_pdf(request: Request, query_id: int):
                     headers={"Content-Disposition": f'attachment; filename="verdicta-answer-{query_id}.pdf"'})
 
 
+# ---------------- announcements (SPEC 11, 2026-11-20, from CedarPay) ----------------
+@router.get("/announcements")
+def announcements():
+    """The messages active now, for the banner on every page (public): at most 3, newest first."""
+    with db.connect() as con:
+        return con.execute("SELECT id, text, level FROM announcements WHERE starts_at <= now() AND ends_at > now() "
+                           "ORDER BY starts_at DESC, id DESC LIMIT 3").fetchall()
+
+
+class Announcement(BaseModel):
+    text: str
+    level: str
+    days: float                                       # how long it lasts, from its start
+    starts_in_hours: float = 0
+
+
+def all_announcements():
+    with db.connect() as con:
+        return con.execute("""SELECT a.id, a.text, a.level, a.starts_at, a.ends_at, u.email AS created_by,
+                                     CASE WHEN a.ends_at <= now() THEN 'ended' WHEN a.starts_at > now() THEN 'coming'
+                                          ELSE 'active' END AS state
+                              FROM announcements a LEFT JOIN users u ON u.id = a.created_by
+                              ORDER BY a.starts_at DESC, a.id DESC""").fetchall()
+
+
+@admin.get("/announcements")
+def admin_announcements():
+    return all_announcements()
+
+
+@admin.post("/announcements")
+def admin_announce(body: Announcement, me=Depends(api.require_admin)):
+    text = " ".join(body.text.split())
+    if not 1 <= len(text) <= 300:
+        raise HTTPException(400, "Write a message of 1 to 300 characters.")
+    if body.level not in ("info", "warning"):
+        raise HTTPException(400, "The kind must be information or warning.")
+    if not 0 < body.days <= 30 or not 0 <= body.starts_in_hours <= 30 * 24:
+        raise HTTPException(400, "An announcement lasts at most 30 days, and starts within 30 days.")
+    with db.connect() as con:
+        con.execute("""INSERT INTO announcements (text, level, starts_at, ends_at, created_by)
+                       VALUES (%s, %s, now() + make_interval(secs => %s), now() + make_interval(secs => %s), %s)""",
+                    (text, body.level, body.starts_in_hours * 3600, (body.starts_in_hours + body.days * 24) * 3600, me["id"]))
+    return all_announcements()
+
+
+@admin.post("/announcements/{announcement_id}/delete")
+def admin_unannounce(announcement_id: int):
+    with db.connect() as con:
+        if not con.execute("DELETE FROM announcements WHERE id = %s RETURNING id", (announcement_id,)).fetchone():
+            raise HTTPException(404, "No such announcement.")
+    return all_announcements()
+
+
 @admin.get("/feedback")
 def admin_feedback():
     with db.connect() as con:

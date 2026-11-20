@@ -31,6 +31,12 @@ CREATE TABLE IF NOT EXISTS email_codes (           -- email verification (Edwin,
     window_start TIMESTAMPTZ NOT NULL DEFAULT now(),   -- the 24 hours in which codes are counted (at most 5)
     sent_in_window INT NOT NULL DEFAULT 1);
 
+CREATE TABLE IF NOT EXISTS announcements (          -- banners for everyone (Edwin, SPEC 11, 2026-11-20)
+    id SERIAL PRIMARY KEY, text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 300),
+    level TEXT NOT NULL CHECK (level IN ('info', 'warning')),
+    starts_at TIMESTAMPTZ NOT NULL DEFAULT now(), ends_at TIMESTAMPTZ NOT NULL CHECK (ends_at > starts_at),
+    created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+
 CREATE TABLE IF NOT EXISTS password_resets (       -- forgot password (Edwin, SPEC 11, 2026-11-19)
     token_hash TEXT PRIMARY KEY,                  -- SHA-256 of the emailed token: the token itself is never stored
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

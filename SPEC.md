@@ -794,3 +794,12 @@ badges, the gold citation that opens the exact passage, PDF and feedback). Next 
 step whose part is not on the screen (a phone's closed sidebar) is skipped. Seen once per browser (localStorage); "Take
 the tour" in Settings shows it again. Only on the page: nothing is sent to the server or kept about the visitor.
 Files of others changed, told: the frontend router (Joe).
+
+2026-11-20 - Announcements (Edwin; from CedarPay's announcement system, 5 of 7). Written before the code. (1) On the
+admin page "Announcements" an administrator writes a short message (at most 300 characters, plain text), chooses
+"information" or "warning", and when it ends (and, if not now, when it starts); the end must come after the start and
+at most 30 days ahead. (2) A banner shows the messages that are active now (at most 3, newest first) at the top of
+every page, for everyone; a visitor may close a message, and it stays closed in that browser (localStorage). (3) The
+admin page lists them (active, coming, ended) and deletes one; every change is in the admin log (as every
+/api/admin change). (4) GET /api/announcements is public and gives only the active messages. Files of others changed,
+told: app/db.py (one table), the frontend router and the admin menu (Joe).
