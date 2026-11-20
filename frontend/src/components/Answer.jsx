@@ -128,6 +128,9 @@ export default function Answer({ a, onOpen }) {
           ? <span className="an-saved" title="Made once by the same pipeline and checks, then saved: no model call now">
               Saved answer · checked on <b>{a.saved_at.slice(0, 10)}</b></span>
           : <span>{(a.ms_total / 1000).toFixed(1)} s</span>}
+        {a.id && a.status !== "ERROR" && a.status !== "WELCOME" &&   /* a research note (SPEC 11, 2026-11-20) */
+          <a className="an-pdf" href={`/api/answers/${a.id}/pdf`} download title="The question, the verified answer and the exact quotes, as a PDF">
+            ⤓ PDF</a>}
         {a.passages.length > 0 &&
           <button className="an-toggle" onClick={() => setShowPassages(!showPassages)} aria-expanded={showPassages}>
             {showPassages ? "Hide" : "Show"} the {a.passages.length} retrieved passages

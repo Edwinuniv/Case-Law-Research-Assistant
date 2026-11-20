@@ -8,9 +8,9 @@ Messages are kept with no deletion date (team decision, written on the privacy p
 delete one. The visitor's IP address is used only in memory, to limit messages; it is never saved."""
 import time
 from collections import defaultdict, deque
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
-from app import answers, api, config, db, emails, logs, resets, verification
+from app import answer_pdf, answers, api, config, db, emails, logs, resets, verification
 
 router = APIRouter(prefix="/api", dependencies=[Depends(api.check_csrf)])
 admin = APIRouter(prefix="/api/admin", dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -152,6 +152,18 @@ def feedback(request: Request, body: Feedback):
                        reason = EXCLUDED.reason, comment = EXCLUDED.comment, created_at = now()""",
                     (body.query_id, body.helpful, reason, comment, request.session.get("user_id")))
     return {"ok": True}
+
+
+@router.get("/answers/{query_id}/pdf")
+def answer_as_pdf(request: Request, query_id: int):
+    """The answer as a PDF research note (SPEC 11, 2026-11-20): own answers only, made on request, nothing kept."""
+    row = answers.owned(request, query_id)
+    if not row:
+        raise HTTPException(404, "Answer not found.")
+    if row["status"] in ("ERROR", "WELCOME"):
+        raise HTTPException(400, "There is no answer to download.")
+    return Response(answer_pdf.build(row), media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="verdicta-answer-{query_id}.pdf"'})
 
 
 @admin.get("/feedback")
