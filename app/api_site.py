@@ -10,7 +10,7 @@ import time
 from collections import defaultdict, deque
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
-from app import answer_pdf, answers, api, config, db, emails, logs, resets, verification
+from app import answer_pdf, answers, api, config, db, emails, logs, notices, resets, verification
 
 router = APIRouter(prefix="/api", dependencies=[Depends(api.check_csrf)])
 admin = APIRouter(prefix="/api/admin", dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -113,6 +113,7 @@ def password_reset(body: Reset):
         raise HTTPException(400, BAD_LINK)            # wrong, used or expired: one message
     logs.log_user(user_id, "password_reset")
     emails.password_changed(account_email(user_id))   # a security notice (SPEC 11, 2026-11-20)
+    notices.add(user_id, "password_changed", "Your password was changed with a reset link.", "/account")
     return {"ok": True}
 
 
@@ -164,6 +165,24 @@ def answer_as_pdf(request: Request, query_id: int):
         raise HTTPException(400, "There is no answer to download.")
     return Response(answer_pdf.build(row), media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="verdicta-answer-{query_id}.pdf"'})
+
+
+# ---------------- in-app notifications (SPEC 11, 2026-11-20, from CedarPay) ----------------
+@router.get("/notifications")
+def notifications(user=Depends(api.require_user)):
+    with db.connect() as con:
+        items = con.execute("""SELECT id, kind, text, link, created_at, read_at IS NOT NULL AS read FROM notifications
+                               WHERE user_id = %s ORDER BY id DESC LIMIT 20""", (user["id"],)).fetchall()
+        unread = con.execute("SELECT count(*) AS n FROM notifications WHERE user_id = %s AND read_at IS NULL",
+                             (user["id"],)).fetchone()["n"]
+    return {"unread": unread, "items": items}
+
+
+@router.post("/notifications/read")
+def notifications_read(user=Depends(api.require_user)):
+    with db.connect() as con:
+        con.execute("UPDATE notifications SET read_at = now() WHERE user_id = %s AND read_at IS NULL", (user["id"],))
+    return {"ok": True}
 
 
 # ---------------- saved answers (SPEC 11, 2026-11-20, from CedarPay) ----------------
@@ -308,6 +327,7 @@ def verify_check(body: Code, user=Depends(api.require_user)):
         raise HTTPException(400, CODE_REFUSED[result])
     logs.log_user(user["id"], "email_verified")
     emails.welcome(account_email(user["id"]))
+    notices.add(user["id"], "welcome", "Welcome to Verdicta: your email is verified.", "/research")
     return {"ok": True}
 
 
