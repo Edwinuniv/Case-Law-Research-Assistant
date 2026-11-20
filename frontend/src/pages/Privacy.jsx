@@ -49,6 +49,9 @@ export default function Privacy() {
         <li><strong>Email verification.</strong> When you create an account with a password, we email you a 6-digit code
           to check that the address is yours. We keep only a scrambled copy of the code, for 15 minutes at most, and
           delete it once it is used. Until the address is verified, the account can ask one question.</li>
+        <li><strong>Feedback on an answer.</strong> If you answer "Was this answer helpful?", we keep your rating, the
+          reason and comment you chose, with that answer (and your account, if you have one). The team reads them to
+          improve Verdicta; they change nothing by themselves.</li>
         <li><strong>Emails we send.</strong> Only about your account: the code, the password link, a welcome once your
           address is verified, and a notice when your password, your plan or your account's status changes. No
           advertising, and never the text of your questions.</li>
