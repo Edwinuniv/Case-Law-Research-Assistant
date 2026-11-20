@@ -4,7 +4,7 @@ GET /api/account, POST /api/account/password, POST /api/account/delete. CSRF on 
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from app import api, billing, db, emails, logs
+from app import api, billing, db, emails, logs, notices
 
 router = APIRouter(prefix="/api/account", dependencies=[Depends(api.check_csrf)])
 
@@ -52,6 +52,7 @@ def change_password(body: NewPassword, user=Depends(user_account)):
                     (bcrypt.hashpw(body.new.encode(), bcrypt.gensalt()).decode(), user["id"]))
     logs.log_user(user["id"], "password_changed")
     emails.password_changed(email, "from your account page")
+    notices.add(user["id"], "password_changed", "Your password was changed from your account page.", "/account")
     return {"ok": True}
 
 

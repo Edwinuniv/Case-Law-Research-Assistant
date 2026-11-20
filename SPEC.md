@@ -811,3 +811,12 @@ saved answers. Visitors cannot (their answers live only in the browser session);
 answer: no model call), with its citations and passages. (3) GET /api/answers/{id} gives an account's own saved-or-not
 answer as it was shown (the same rule as the PDF). (4) Saved answers are deleted with the answer or the account.
 Files of others changed, told: app/db.py (one table), Chat.jsx (which answers are saved), the frontend router (Joe).
+
+2026-11-20 - In-app notifications (Edwin; from CedarPay's notifications, 7 of 7). Written before the code. (1) A bell in
+the header for a logged-in account, with the number of unread notices; opening it shows the latest 20 (newest first)
+and marks them all read. (2) A notice is written for the same events as the emails of 2026-11-20: welcome (email
+verified), password changed (reset or account page), plan changed (Stripe or an administrator), account disabled or
+enabled by an administrator; each with a short text and, when useful, a link inside the site. (3) Only the account's
+own notices; a visitor has none (401). At most 50 kept per account (the oldest go first); deleted with the account.
+(4) The page asks for new notices when it opens and every minute while it is in front. Files of others changed,
+told: app/db.py (one table), app/api.py, app/api_admin.py (the events), the header in main.jsx (Joe).

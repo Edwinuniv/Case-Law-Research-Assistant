@@ -31,6 +31,13 @@ CREATE TABLE IF NOT EXISTS email_codes (           -- email verification (Edwin,
     window_start TIMESTAMPTZ NOT NULL DEFAULT now(),   -- the 24 hours in which codes are counted (at most 5)
     sent_in_window INT NOT NULL DEFAULT 1);
 
+CREATE TABLE IF NOT EXISTS notifications (          -- the bell in the header (Edwin, SPEC 11, 2026-11-20)
+    id SERIAL PRIMARY KEY, user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL CHECK (kind IN ('welcome', 'password_changed', 'plan_changed', 'account_disabled',
+                                       'account_enabled')),
+    text TEXT NOT NULL, link TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), read_at TIMESTAMPTZ);
+CREATE INDEX IF NOT EXISTS notifications_user ON notifications (user_id, id DESC);
+
 CREATE TABLE IF NOT EXISTS announcements (          -- banners for everyone (Edwin, SPEC 11, 2026-11-20)
     id SERIAL PRIMARY KEY, text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 300),
     level TEXT NOT NULL CHECK (level IN ('info', 'warning')),

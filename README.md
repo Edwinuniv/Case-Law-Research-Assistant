@@ -63,6 +63,9 @@ pages of the site and the server's 401/403 pages, in the chosen appearance; a bu
 My account (/account, a logged-in user account): details and plan, change password, delete the account with its
 questions, chats and ratings (a paid test subscription is cancelled first). Links in the header and the chat sidebar.
 
+Notifications: a bell in the header (user accounts) counts unread notices (welcome, password changed, plan changed,
+account disabled or enabled) and shows the latest 20; opening it marks them read.
+
 Saved answers: a logged-in account keeps an answer with "☆ Save" and finds it on /saved ("★ Saved answers" in the
 chat sidebar), opened as it was shown, with its citations and passages; at most 200.
 
