@@ -76,7 +76,9 @@ def test_every_split_is_rechecked_but_only_tune_is_listed():                    
 
 
 def test_a_quote_the_fix_still_does_not_find_stays_removed():                  # A029: words left out with "..."
-    gap = {**BROKEN, "quote": "requires a State ... between two people of the same sex"}
+    """Step 8.2 kept this removed. Quote matching v2 (EVALUATION.md, 2026-11-20) accepts real pieces joined by "...",
+    so the removed quote here has a piece that is NOT in the passage: still removed, never newly kept."""
+    gap = {**BROKEN, "quote": "requires a State ... between two people of a different country"}
     out = reverify([(q("a"), res(removed=[gap]))])
     (_, r), = out["pairs"]
     assert r["n_kept"] == 0 and out["newly_kept"] == [] and "quote not found in the cited passage" in r["removed"][0]["problems"]
@@ -109,3 +111,10 @@ def test_a_sentence_judged_two_different_ways_is_asked_again():
              for q, v in (("a", "yes"), ("b", "no"))]
     asked = []
     assert reuse_judgements(saved, lambda t, p: asked.append(t) or "yes")("S", "p") == "yes" and asked == ["S"]
+
+
+def test_real_pieces_joined_by_an_ellipsis_are_newly_kept():                    # quote matching v2 (2026-11-20)
+    gap = {**BROKEN, "quote": "requires a State ... between two people of the same sex"}
+    out = reverify([(q("a"), res(removed=[gap]))])
+    (_, r), = out["pairs"]
+    assert r["n_kept"] == 1 and [x["quote"] for x in out["newly_kept"]] == [gap["quote"]]
