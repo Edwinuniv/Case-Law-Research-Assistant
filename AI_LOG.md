@@ -927,3 +927,12 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    and 1024x640 by measuring the card. The PDF showed a data problem that is not ours to fix: some case names hold
    the reporter's revision note ("SEC v. Jarkesy Revisions: 6/27/24, No. 22-859"), told to Yasser.
 
+## 2026-11-20 — CedarPay features, 5 of 7: announcements (branch feature/announcements)
+
+1. **The admin form could not be sent with its own default.** The "days" field said minimum 0.1 in steps of 0.5, so the
+   allowed values were 0.1, 0.6, 1.1...: the browser refused the default 1 without a word. Seen in the headless
+   browser (nothing was posted); fixed to minimum 0.5.
+2. **Two mistakes in the new tests**: one read the admin log's request from `detail` (it is in `action`), one moved an
+   announcement's end into the past without its start, which the table rightly refuses (end after start). The tests
+   were corrected, not the code. 3 planted bugs caught (coming ones shown early, more than 3 shown, a year allowed).
+
