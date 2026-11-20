@@ -949,3 +949,11 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    narrow screens the panel spans the screen under the header) and measured again at 390 and 1280 px.
    3 planted bugs caught (everyone's notices shown, no limit of 50, oldest first).
 
+## 2026-11-20 — The feedback reasons looked unclickable in light mode (branch feature/cedarpay-features)
+
+1. **A chosen reason did not change colour in light mode**, so the reasons seemed not to react. The light theme's rule
+   for the reason chips (`:root[data-theme="light"] :is(...)`) is more specific than answer.css's `.on`, so the
+   choice stayed cream. Caught by Edwin testing the merged branch ("the options cannot be clicked"); the browser checks
+   had been done in dark mode only. Measured in light mode (background unchanged after the click); fixed with a light
+   rule for the chosen chip, and a ✓ before the chosen reason so it shows in any theme; measured in both themes.
+
