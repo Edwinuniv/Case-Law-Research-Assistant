@@ -10,7 +10,7 @@ import os
 
 import stripe
 
-from app import config, db, emails, logs  # noqa: F401  (config loads .env before the keys below are read)
+from app import config, db, emails, logs, notices  # noqa: F401  (config loads .env before the keys below are read)
 
 SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()       # sk_test_ or rk_test_ only (a live key: payments off)
 PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "").strip()           # the monthly price made in the Stripe dashboard
@@ -78,6 +78,8 @@ def notify_plan(user_id, plan):
     with db.connect() as con:
         email = con.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()["email"]
     emails.plan_changed(email, plan, api.daily_limit(plan))
+    notices.add(user_id, "plan_changed", f"Your plan is now {'Paid' if plan == 'paid' else 'Free'}: "
+                f"{api.daily_limit(plan)} questions a day.", "/pricing")
 
 
 def is_paid(session):

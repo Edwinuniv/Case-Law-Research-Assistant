@@ -108,9 +108,9 @@ def welcome(to):
             button=("Ask a question", "/research"))
 
 
-def password_changed(to):
+def password_changed(to, how="with a reset link"):
     deliver(to, "Your Verdicta password was changed", "Your password was changed",
-            ["The password of your Verdicta account has just been changed with a reset link.",
+            [f"The password of your Verdicta account has just been changed {how}.",
              "If it was you, there is nothing to do. If it was not, ask for a new reset link at once and tell us."],
             button=("Log in", "/login"))
 
@@ -134,6 +134,14 @@ def account_status(to, active):
                 ["An administrator has disabled your Verdicta account: you cannot log in for now.",
                  "If you think this is a mistake, write to us from the contact page or answer this email."],
                 button=("Contact us", "/contact"))
+
+
+def account_deleted(to):
+    deliver(to, "Your Verdicta account was deleted", "Your account was deleted",
+            ["As you asked, your Verdicta account has been deleted, with your questions, chats and ratings.",
+             "You can still use Verdicta without an account, or create a new one at any time."],
+            button=("Open Verdicta", "/"),
+            note="This is the last email about this account.")
 
 
 def contact_to_team(recipients, name, sender, text):

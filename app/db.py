@@ -31,6 +31,19 @@ CREATE TABLE IF NOT EXISTS email_codes (           -- email verification (Edwin,
     window_start TIMESTAMPTZ NOT NULL DEFAULT now(),   -- the 24 hours in which codes are counted (at most 5)
     sent_in_window INT NOT NULL DEFAULT 1);
 
+CREATE TABLE IF NOT EXISTS notifications (          -- the bell in the header (Edwin, SPEC 11, 2026-11-20)
+    id SERIAL PRIMARY KEY, user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL CHECK (kind IN ('welcome', 'password_changed', 'plan_changed', 'account_disabled',
+                                       'account_enabled')),
+    text TEXT NOT NULL, link TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), read_at TIMESTAMPTZ);
+CREATE INDEX IF NOT EXISTS notifications_user ON notifications (user_id, id DESC);
+
+CREATE TABLE IF NOT EXISTS announcements (          -- banners for everyone (Edwin, SPEC 11, 2026-11-20)
+    id SERIAL PRIMARY KEY, text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 300),
+    level TEXT NOT NULL CHECK (level IN ('info', 'warning')),
+    starts_at TIMESTAMPTZ NOT NULL DEFAULT now(), ends_at TIMESTAMPTZ NOT NULL CHECK (ends_at > starts_at),
+    created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+
 CREATE TABLE IF NOT EXISTS password_resets (       -- forgot password (Edwin, SPEC 11, 2026-11-19)
     token_hash TEXT PRIMARY KEY,                  -- SHA-256 of the emailed token: the token itself is never stored
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -96,6 +109,19 @@ CREATE TABLE IF NOT EXISTS query_log (           -- SR41, FR28
     n_sentences INT, n_removed INT, removed_citations JSONB, fabrications_caught INT,
     ms_search INT, ms_model INT, ms_total INT, details JSONB, label TEXT);
 
+CREATE TABLE IF NOT EXISTS answer_feedback (        -- "was this answer helpful?" (Edwin, SPEC 11, 2026-11-20)
+    query_id INT PRIMARY KEY REFERENCES query_log(id) ON DELETE CASCADE,   -- one rating per answer
+    helpful BOOLEAN NOT NULL,
+    reason TEXT CHECK (reason IN ('wrong_case', 'missed_holding', 'incomplete', 'should_answer', 'other')),
+    comment TEXT CHECK (length(comment) <= 500),
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,                   -- none for a visitor
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+
+CREATE TABLE IF NOT EXISTS bookmarks (              -- saved answers (Edwin, SPEC 11, 2026-11-20)
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    query_id INT NOT NULL REFERENCES query_log(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (user_id, query_id));
+
 CREATE TABLE IF NOT EXISTS eval_runs (
     id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     trigger TEXT, status TEXT, settings JSONB, note TEXT);
@@ -117,7 +143,8 @@ CREATE TABLE IF NOT EXISTS user_log (              -- everything an account does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     event TEXT NOT NULL CHECK (event IN ('signup', 'login', 'login_failed', 'logout', 'question', 'follow_up',
-                                         'plan_change', 'refused', 'password_reset', 'email_verified')),
+                                         'plan_change', 'refused', 'password_reset', 'email_verified',
+                                         'password_changed')),
     query_id INT REFERENCES query_log(id) ON DELETE SET NULL, detail JSONB NOT NULL DEFAULT '{}');
 CREATE TABLE IF NOT EXISTS admin_log (             -- everything an administrator does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -171,7 +198,8 @@ ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS window_start TIMESTAMPTZ NOT NU
 ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS sent_in_window INT NOT NULL DEFAULT 1;
 ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
 ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
-    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset', 'email_verified'));
+    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset', 'email_verified',
+    'password_changed'));
 """
 
 

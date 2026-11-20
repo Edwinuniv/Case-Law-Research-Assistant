@@ -1,0 +1,30 @@
+/* The guided tour (components/Tour.jsx): a dark veil with a lit hole around one part, and a card next to it. */
+.tour{position:fixed;inset:0;z-index:900}
+.tour-veil{position:absolute;inset:0;background:rgba(8,8,10,.62)}
+.tour-hole{position:absolute;border-radius:18px;box-shadow:0 0 0 9999px rgba(8,8,10,.62),0 0 0 2px #fbbf24,0 0 30px rgba(251,191,36,.45);
+  transition:top .35s ease,left .35s ease,width .35s ease,height .35s ease;pointer-events:none}
+.tour-card{position:absolute;width:min(340px,calc(100vw - 24px));box-sizing:border-box;padding:18px 18px 14px;border-radius:16px;
+  background:#16161b;color:#e7e5e4;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.55);
+  animation:tour-in .3s ease-out}
+.tour-center{top:50%;left:50%;width:min(420px,calc(100vw - 24px));transform:translate(-50%,-50%)}
+@keyframes tour-in{from{opacity:0;margin-top:8px}}
+.tour-n{font-size:11px;letter-spacing:.18em;color:#fbbf24}
+.tour-card h3{margin:6px 0 6px;font:500 20px Georgia,serif;color:#fff}
+.tour-card p{margin:0 0 12px;font-size:14px;line-height:1.55;color:#c9c6c0}
+.tour-card ul{margin:4px 0 14px;padding:0;list-style:none;display:grid;gap:8px;font-size:13.5px;line-height:1.5;color:#c9c6c0}
+.tour-card li b{color:#fff;margin-right:4px}
+.tour-go{display:flex;gap:8px;align-items:center}
+.tour-go button{border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.05);color:#e7e5e4}
+.tour-go button:hover{background:rgba(255,255,255,.1)}
+.tour-go .tour-skip{margin-right:auto;border:0;background:none;color:#a8a29e;padding-left:0}
+.tour-go .tour-skip:hover{background:none;color:#fff}
+.tour-go .tour-next{border:0;color:#141418;background:linear-gradient(90deg,#fbbf24,#fb923c)}
+.tour-go .tour-next:hover{background:linear-gradient(90deg,#fbbf24,#fb923c);filter:brightness(1.06)}
+:root[data-theme="light"] .tour-card{background:#fff;color:#2b2b31;border-color:rgba(20,20,24,.1);box-shadow:0 24px 60px rgba(20,20,24,.2)}
+:root[data-theme="light"] .tour-card h3,:root[data-theme="light"] .tour-card li b{color:#121216}
+:root[data-theme="light"] :is(.tour-card p,.tour-card ul){color:#5f5b55}
+:root[data-theme="light"] .tour-n{color:#b45309}
+:root[data-theme="light"] .tour-go button{background:#f7f5f0;color:#2b2b31;border-color:rgba(20,20,24,.12)}
+:root[data-theme="light"] .tour-go .tour-skip{background:none;color:#8a847c}
+@media (prefers-reduced-motion:reduce){.tour-hole,.tour-card{transition:none;animation:none}}

@@ -60,6 +60,26 @@ The research page answers one question per message (no follow-up questions, as t
 
 Previews: the admin page "Previews" shows the loading screen (and plays it again), the small loader, the three error
 pages of the site and the server's 401/403 pages, in the chosen appearance; a button crashes the page on purpose.
+My account (/account, a logged-in user account): details and plan, change password, delete the account with its
+questions, chats and ratings (a paid test subscription is cancelled first). Links in the header and the chat sidebar.
+
+Notifications: a bell in the header (user accounts) counts unread notices (welcome, password changed, plan changed,
+account disabled or enabled) and shows the latest 20; opening it marks them read.
+
+Saved answers: a logged-in account keeps an answer with "☆ Save" and finds it on /saved ("★ Saved answers" in the
+chat sidebar), opened as it was shown, with its citations and passages; at most 200.
+
+Announcements: on the admin page "Announcements", a short message (information or warning, at most 300 characters,
+up to 30 days) shown as a banner at the top of every page until it ends; visitors can close it.
+
+Guided tour: the first visit of the research page shows a short tour (question box, examples, My questions, Settings,
+how to read an answer); Settings > "Take the tour" shows it again.
+
+PDF: "⤓ PDF" under an answer downloads it as a research note (question, verified sentences, citations and the exact
+quotes); made from the saved answer, only for the person who got it.
+
+Feedback: under each answer, "Was this answer helpful?" (yes, or no with a reason and a comment); administrators
+read the ratings on the admin page "Feedback". Only the person who got an answer can rate it.
 
 Appearance: the round Settings button at the bottom left of every page switches the whole site between dark (the
 default, as designed) and light. The choice is kept in the browser (localStorage) and applies to every page;

@@ -9,7 +9,8 @@ import "./admin.css";
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],
   ["abstentions", "Abstentions"], ["analytics", "Analytics"], ["settings", "Settings"], ["previews", "Previews"],
   ["corpus", "Corpus & citations"], ["messages", "Messages"], ["users", "Accounts"],
-  ["all-questions", "All questions"], ["log", "Admin log"]];          // the last two: Joe, SPEC 11, 2026-11-14
+  ["all-questions", "All questions"], ["feedback", "Feedback"], ["announcements", "Announcements"], ["log", "Admin log"]];
+// all-questions and log: Joe, SPEC 11, 2026-11-14; previews and feedback: Edwin, 2026-11-20
 
 export default function AdminLayout({ user }) {
   useEffect(() => {

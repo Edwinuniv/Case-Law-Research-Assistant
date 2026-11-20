@@ -49,6 +49,9 @@ export default function Privacy() {
         <li><strong>Email verification.</strong> When you create an account with a password, we email you a 6-digit code
           to check that the address is yours. We keep only a scrambled copy of the code, for 15 minutes at most, and
           delete it once it is used. Until the address is verified, the account can ask one question.</li>
+        <li><strong>Feedback on an answer.</strong> If you answer "Was this answer helpful?", we keep your rating, the
+          reason and comment you chose, with that answer (and your account, if you have one). The team reads them to
+          improve Verdicta; they change nothing by themselves.</li>
         <li><strong>Emails we send.</strong> Only about your account: the code, the password link, a welcome once your
           address is verified, and a notice when your password, your plan or your account's status changes. No
           advertising, and never the text of your questions.</li>
@@ -89,8 +92,9 @@ export default function Privacy() {
 
       <h2>How long we keep them</h2>
       <p>Questions, accounts and contact messages are kept with no fixed deletion date. Questions asked without an account
-        are not linked to you, so we cannot find them by your name. If you want your account (with its questions) or a
-        contact message deleted, write to us from the email address concerned and we will delete it.</p>
+        are not linked to you, so we cannot find them by your name. You can delete your account yourself, with its
+        questions, chats and ratings, on the page "My account"; it is done at once. To have a contact message deleted,
+        write to us from the email address concerned and we will delete it.</p>
 
       <h2>Changes</h2>
       <p>If what we collect changes, we will update this page and its date.</p>

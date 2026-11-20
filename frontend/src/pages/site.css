@@ -59,3 +59,35 @@ body:has(.sp) footer{border-top-color:rgba(255,255,255,.08);color:#78716c}
 .sp-back:hover{color:#fff;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.55)}
 .sp-back:hover span{transform:translateX(-3px)}
 @media(max-width:700px){.sp-back{top:12px;left:16px;padding:7px 13px 7px 10px;font-size:13px}.sp-hero{padding-top:64px}}
+
+/* My account (Edwin, 2026-11-20) */
+.ac-details p{display:flex;justify-content:space-between;gap:16px;margin:0;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.ac-details p:last-child{border-bottom:0}
+.ac-details span{color:#a8a29e}
+.ac-details b{text-align:right;font-weight:600}
+.ac-danger{padding:18px 20px;border-radius:16px;border:1px solid rgba(248,113,113,.45);background:rgba(248,113,113,.06)}
+.ac-danger p{margin:0;color:#e7e5e4}
+.ac-check{display:flex!important;flex-direction:row!important;align-items:center;gap:10px}
+.ac-check input{width:auto!important}
+.sp-form button.ac-delete{background:#dc2626;color:#fff}
+.sp-form button.ac-delete:hover{background:#b91c1c;filter:none}
+.sp-form button.ac-delete:disabled{opacity:.45;cursor:not-allowed}
+:root[data-theme="light"] .ac-details p{border-bottom-color:rgba(20,20,24,.08)}
+:root[data-theme="light"] .ac-details span{color:#5f5b55}
+:root[data-theme="light"] .ac-danger p{color:#2b2b31}
+
+/* Saved answers (Edwin, 2026-11-20) */
+.sv-item{margin:0 0 12px}
+.sv-head{display:flex;gap:10px;align-items:stretch}
+.sv-open{flex:1;display:flex;flex-direction:column;gap:4px;text-align:left;padding:14px 16px;border-radius:14px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);color:inherit;font:inherit}
+.sv-open:hover{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.4)}
+.sv-q{font-family:Georgia,serif;font-size:16px;color:#fff}
+.sv-meta{font-size:12.5px;color:#8a837d}
+.sv-remove{flex:none;align-self:center;background:none;border:1px solid rgba(251,191,36,.45);color:#fbbf24;border-radius:999px;
+  padding:6px 13px;font-size:13px;cursor:pointer}
+.sv-remove:hover{background:rgba(251,191,36,.12)}
+.sv-item .an{margin-top:10px}
+:root[data-theme="light"] .sv-open{background:#fff;border-color:rgba(20,20,24,.1)}
+:root[data-theme="light"] .sv-q{color:#121216}
+:root[data-theme="light"] .sv-remove{color:#b45309;border-color:rgba(180,83,9,.4)}

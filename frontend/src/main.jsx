@@ -21,11 +21,14 @@ import Users from "./admin/Users.jsx";
 import UserDetail from "./admin/UserDetail.jsx";
 import AllQuestions from "./admin/AllQuestions.jsx";
 import AdminLog from "./admin/AdminLog.jsx";
+import Feedback from "./admin/Feedback.jsx";                // answer feedback (Edwin, SPEC 11, 2026-11-20)
 import Chat from "./pages/Chat.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Contact from "./pages/Contact.jsx";
 import Pricing from "./pages/Pricing.jsx";
+import Account from "./pages/Account.jsx";
+import Saved from "./pages/Saved.jsx";                     // saved answers (Edwin, SPEC 11, 2026-11-20)                 // my account (Edwin, SPEC 11, 2026-11-20)
 import Privacy from "./pages/Privacy.jsx";
 import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
@@ -34,7 +37,11 @@ import "./style.css";
 import "./life.css";                              // white light on the dark pages (Edwin; for Yasser's opinion)
 import "./theme.css";                             // dark pages with white sections, or the reverse (Edwin)
 import Logo from "./components/Logo.jsx";        // the Verdicta logo, white or black V for the theme (Edwin, 2026-11-19)
-import ThemeSwitch from "./components/ThemeSwitch.jsx";   // Settings: the appearance (Edwin, 2026-11-19)
+import ThemeSwitch from "./components/ThemeSwitch.jsx";
+import Tour from "./components/Tour.jsx";
+import Bell from "./components/Bell.jsx";                  // in-app notifications (Edwin, SPEC 11, 2026-11-20)
+import AnnouncementsBar from "./components/Announcements.jsx";   // banners for everyone (Edwin, 2026-11-20)
+import AdminAnnouncements from "./admin/Announcements.jsx";                  // the guided tour of the research page (Edwin, 2026-11-20)   // Settings: the appearance (Edwin, 2026-11-19)
 
 // The loading screen of index.html (Edwin, 2026-11-19): it fades out once the page is ready. On the first visit
 // of this tab it stays until its animation has played once (about 2.1 s since the page started loading).
@@ -82,16 +89,21 @@ function App() {
   const user = info.user;
   return (
     <>
+      <AnnouncementsBar />
       {!landing && !authPage && <header>
         {/* only the logo, and "Log out" for a logged-in administrator (Yasser's decision, 2026-11-12):
             the coverage line is on the research page itself, the admin menu is in the admin sidebar */}
         <Link to="/" className="brand"><Logo /> Verdicta</Link>
         {user && (
+          <span className="hdr-right">
+          {user.role === "user" && <Bell />}
+          {user.role === "user" && <Link to="/account" className="hdr-account">My account</Link>}
           <button className="logout" onClick={logout} title={`Log out ${user.email}`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
               <path d="M10 17l-5-5 5-5" /><path d="M5 12h11" /></svg>
             Log out
           </button>
+          </span>
         )}
       </header>}
       <main className={landing || authPage ? "bare" : ""}>
@@ -113,7 +125,10 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/sources" element={<Sources />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/pricing" element={<Pricing />} />            {/* Free or Paid, Stripe test mode (Edwin) */}
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/saved" element={user ? <Saved /> : <Navigate to="/login" />} />
+          <Route path="/account" element={!user ? <Navigate to="/login" /> : user.role === "admin" ? <Navigate to="/admin" /> :
+            <Account onDeleted={async () => setInfo(await me())} />} />            {/* Free or Paid, Stripe test mode (Edwin) */}
           {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others
             <Route path="/admin" element={<AdminLayout user={user} />}>
               <Route index element={<AdminHome />} />
@@ -132,12 +147,15 @@ function App() {
               <Route path="users/:id" element={<UserDetail />} />   {/* one account (SPEC 11, 2026-11-14) */}
               <Route path="all-questions" element={<AllQuestions />} />   {/* every question (SPEC 11, 2026-11-14) */}
               <Route path="log" element={<AdminLog />} />
+              <Route path="feedback" element={<Feedback />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
             </Route>
           )}
           <Route path="*" element={<ErrorPage kind="notFound" inApp />} />   {/* not a silent jump to the home page */}
         </Routes>
       </main>
       <ThemeSwitch />   {/* Settings, on every page */}
+      {path === "/research" && <Tour />}
     </>
   );
 }

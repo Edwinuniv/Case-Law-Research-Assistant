@@ -752,3 +752,71 @@ three error pages of the React app (page not found, page crashed, server unreach
 GET /admin-preview/401 and /admin-preview/403, which answer an administrator only (others: the real refusal) and change
 nothing. Nothing else changes: the pages shown are the real ones, in the chosen appearance. Files of others changed,
 told: app/main.py (the preview address), the frontend router and the admin menu (Joe).
+2026-11-20 - Feedback on an answer (Edwin; from CedarPay's reviews, 1 of 7 features). Written before the code.
+(1) Under each answer (not an ERROR), "Was this answer helpful?" with yes / no; after "no", an optional reason (wrong
+case or citation, missed the Court's holding, incomplete, it should have answered, other) and an optional comment of
+at most 500 characters. (2) Only the person who got the answer may rate it: an account its own answers, a visitor the
+answers of its browser session (the session remembers its last 20 answer ids; nothing about the visitor is stored).
+Someone else's answer: 404. One rating per answer: rating again changes it. (3) Kept in answer_feedback with the
+answer's id and the account (none for a visitor); an answer deleted deletes its rating. (4) The admin page "Feedback"
+shows the counts (helpful, not helpful, by reason) and the latest ratings with the question, the answer's status and
+the comment, newest first. (5) The ratings are not used by the system itself (no learning, no change of answers): they
+are read by the team, to find answers to look at. Privacy page says so. Files of others changed, told: app/api.py (the
+session remembers a visitor's answers), app/db.py (one table), frontend router and admin menu (Joe).
+
+2026-11-20 - My account (Edwin; from CedarPay's profile, change password and delete account, 2 of 7). Written before
+the code. (1) A page /account for a logged-in 'user' account: its email, verified or not, member since, the plan and the
+questions left today. (2) Change password: the current password and a new one (10 characters at least). A wrong
+current password counts as a failed login (5 lock the account for 15 minutes, SR36), so the page cannot be used to
+guess. On success: a password_changed row in the user log and a notice email. An account made with Google has no
+password it knows: it uses "Forgot password?" to set one. (3) Delete my account: confirmed with the password, or, for
+an account made with Google, by typing its email address. It deletes the account, its questions and their answers,
+its chats, ratings, codes, reset links and its user log; a paid plan's Stripe test subscription is cancelled first;
+a last email confirms it; the session ends. FR28 (every question logged) does not hold for a deleted account's
+questions: the privacy page promises that deleting removes them. (4) Administrators have no /account page: another
+administrator manages their account. Files of others changed, told: app/main.py (the router), app/db.py (the log's
+list of events), app/logs.py, the frontend router and the header (Joe, Yasser).
+
+2026-11-20 - An answer as a PDF (Edwin; from CedarPay's printable receipts, 3 of 7). Written before the code.
+(1) "Download PDF" under an answer gives a one-page (or more) research note: the question, the date, the answer's
+status and what it means, each verified sentence with its citation, then "Sources": for each citation the case, the
+citation, which opinion (majority, concurrence or dissent) and the exact words quoted from it; the coverage line and
+"a research aid, not legal advice". (2) It is made from the answer exactly as it was shown (saved in query_log), never
+asked again: no model call, no new search. (3) Only the person who got the answer may download it (the same rule as
+the feedback: an account its own answers, a visitor its session's last 20); someone else's: 404. An ERROR or a
+greeting has no PDF (400). (4) Nothing is kept: the PDF is made on request. Files of others changed, told: none
+(a new route in Edwin's api_site.py, a new module; the button in Edwin's Answer.jsx).
+
+2026-11-20 - A guided tour of the research page (Edwin; from CedarPay's tutorial, 4 of 7; for NFR9 usability).
+Written before the code. On the first visit of the research page in a browser, a short tour highlights, one at a time:
+the question box, the example questions, "My questions", Settings, and ends with how to read an answer (the status
+badges, the gold citation that opens the exact passage, PDF and feedback). Next / Back / Skip, Escape closes it; a
+step whose part is not on the screen (a phone's closed sidebar) is skipped. Seen once per browser (localStorage); "Take
+the tour" in Settings shows it again. Only on the page: nothing is sent to the server or kept about the visitor.
+Files of others changed, told: the frontend router (Joe).
+
+2026-11-20 - Announcements (Edwin; from CedarPay's announcement system, 5 of 7). Written before the code. (1) On the
+admin page "Announcements" an administrator writes a short message (at most 300 characters, plain text), chooses
+"information" or "warning", and when it ends (and, if not now, when it starts); the end must come after the start and
+at most 30 days ahead. (2) A banner shows the messages that are active now (at most 3, newest first) at the top of
+every page, for everyone; a visitor may close a message, and it stays closed in that browser (localStorage). (3) The
+admin page lists them (active, coming, ended) and deletes one; every change is in the admin log (as every
+/api/admin change). (4) GET /api/announcements is public and gives only the active messages. Files of others changed,
+told: app/db.py (one table), the frontend router and the admin menu (Joe).
+
+2026-11-20 - Saved answers, bookmarks (Edwin; from CedarPay's saved beneficiaries, 6 of 7). Written before the code.
+(1) A logged-in account may save one of its own answers ("Save" under the answer; "Saved" to remove it); at most 200
+saved answers. Visitors cannot (their answers live only in the browser session); someone else's answer: 404.
+(2) The page "Saved answers" (/saved) lists them, newest saved first, and opens each one as it was shown (the saved
+answer: no model call), with its citations and passages. (3) GET /api/answers/{id} gives an account's own saved-or-not
+answer as it was shown (the same rule as the PDF). (4) Saved answers are deleted with the answer or the account.
+Files of others changed, told: app/db.py (one table), Chat.jsx (which answers are saved), the frontend router (Joe).
+
+2026-11-20 - In-app notifications (Edwin; from CedarPay's notifications, 7 of 7). Written before the code. (1) A bell in
+the header for a logged-in account, with the number of unread notices; opening it shows the latest 20 (newest first)
+and marks them all read. (2) A notice is written for the same events as the emails of 2026-11-20: welcome (email
+verified), password changed (reset or account page), plan changed (Stripe or an administrator), account disabled or
+enabled by an administrator; each with a short text and, when useful, a link inside the site. (3) Only the account's
+own notices; a visitor has none (401). At most 50 kept per account (the oldest go first); deleted with the account.
+(4) The page asks for new notices when it opens and every minute while it is in front. Files of others changed,
+told: app/db.py (one table), app/api.py, app/api_admin.py (the events), the header in main.jsx (Joe).

@@ -905,3 +905,55 @@ first, then 3 test files from the rule, then the code. What was wrong, and how i
 14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
 checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
 
+## 2026-11-20 — CedarPay features, 1-2 of 7: answer feedback, my account (branches feature/answer-feedback, feature/my-account)
+
+Edwin asked Claude to add 7 features seen in the CedarPay reference, each on its own branch (stacked, merged in
+order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was caught:
+1. **A table created before the table it points to.** answer_feedback (which refers to query_log) was first put above
+   query_log in db.SCHEMA: every test failed with "relation query_log does not exist". Seen on the first test run;
+   moved below query_log.
+2. **A planted bug got through: the session kept after deleting the account.** /api/me already showed nobody,
+   because the account no longer existed, so the test could not see it. Caught by planting 6 bugs (5 caught); the
+   test now reads the signed session cookie itself.
+3. **After "Delete my account" the browser landed on the login page, not the home page.** The page learnt "nobody
+   is logged in" first, and the /account route sent it to /login before "go home" ran. Seen in the headless browser
+   (also: the first check came too early, the deletion takes about 3 seconds). Fixed: home first, then refresh.
+
+## 2026-11-20 — CedarPay features, 3-4 of 7: answer as PDF, guided tour (branches feature/answer-pdf, feature/guided-tour)
+
+1. **The tour's card left the screen** on the step that lights the tall "My questions" sidebar: there was no room
+   below or above, and the card was pushed above the top of the window. Seen on the headless browser's screenshots
+   of every step; fixed (below, else above, else beside, else in the middle) and checked on every step at 1280x820
+   and 1024x640 by measuring the card. The PDF showed a data problem that is not ours to fix: some case names hold
+   the reporter's revision note ("SEC v. Jarkesy Revisions: 6/27/24, No. 22-859"), told to Yasser.
+
+## 2026-11-20 — CedarPay features, 5 of 7: announcements (branch feature/announcements)
+
+1. **The admin form could not be sent with its own default.** The "days" field said minimum 0.1 in steps of 0.5, so the
+   allowed values were 0.1, 0.6, 1.1...: the browser refused the default 1 without a word. Seen in the headless
+   browser (nothing was posted); fixed to minimum 0.5.
+2. **Two mistakes in the new tests**: one read the admin log's request from `detail` (it is in `action`), one moved an
+   announcement's end into the past without its start, which the table rightly refuses (end after start). The tests
+   were corrected, not the code. 3 planted bugs caught (coming ones shown early, more than 3 shown, a year allowed).
+
+## 2026-11-20 — CedarPay features, 6 of 7: saved answers (branch feature/bookmarks)
+
+1. **The same table-order mistake as in branch 1**: bookmarks (which points to query_log) was first placed above
+   query_log. This time a check in the edit script itself (the new table must come after query_log) stopped it before
+   any test ran; moved. 3 planted bugs caught (anyone saving any answer, no limit, oldest first).
+
+## 2026-11-20 — CedarPay features, 7 of 7: in-app notifications (branch feature/notifications)
+
+1. **On a phone the notifications panel went 304 pixels off the left of the screen**: the header wraps there, the bell
+   sits on the left, and the panel opened leftward from it. Measured in the headless browser at 390 px; fixed (on
+   narrow screens the panel spans the screen under the header) and measured again at 390 and 1280 px.
+   3 planted bugs caught (everyone's notices shown, no limit of 50, oldest first).
+
+## 2026-11-20 — The feedback reasons looked unclickable in light mode (branch feature/cedarpay-features)
+
+1. **A chosen reason did not change colour in light mode**, so the reasons seemed not to react. The light theme's rule
+   for the reason chips (`:root[data-theme="light"] :is(...)`) is more specific than answer.css's `.on`, so the
+   choice stayed cream. Caught by Edwin testing the merged branch ("the options cannot be clicked"); the browser checks
+   had been done in dark mode only. Measured in light mode (background unchanged after the click); fixed with a light
+   rule for the chosen chip, and a ✓ before the chosen reason so it shows in any theme; measured in both themes.
+
