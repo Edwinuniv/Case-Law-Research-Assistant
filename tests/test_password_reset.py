@@ -14,7 +14,9 @@ def sent(monkeypatch):
     """Every email the site sends: (to, subject, text)."""
     from app import mailer
     out = []
-    monkeypatch.setattr(mailer, "send", lambda to, subject, text: out.append((to, subject, text)) or True)
+    record = lambda to, subject, text, html=None, reply_to=None: out.append((to, subject, text)) or True
+    monkeypatch.setattr(mailer, "send", record)
+    monkeypatch.setattr(mailer, "send_later", record)          # 2026-11-20: emails go out after the answer
     return out
 
 
@@ -151,9 +153,10 @@ def test_five_asks_per_address_then_429(c, sent):                               
     assert forgot(c, "someone5@example.com").status_code == 429
 
 
-def test_without_resend_the_link_is_printed_locally_but_never_online(monkeypatch, capsys):  # rule 4
+def test_without_a_mail_account_the_link_is_printed_locally_but_never_online(monkeypatch, capsys):  # rule 4
     from app import config, mailer
-    monkeypatch.setattr(config, "RESEND_API_KEY", "")
+    for k in ("GMAIL_REFRESH_TOKEN", "SMTP_PASSWORD"):       # 2026-11-20: Gmail replaces Resend (SPEC 11)
+        monkeypatch.setattr(config, k, "")
     monkeypatch.setattr(config, "HTTPS_ONLY", False)
     mailer.send("a@example.com", "Reset", "Open https://x/reset?token=abc123")
     assert "abc123" in capsys.readouterr().out
