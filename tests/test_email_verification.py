@@ -188,3 +188,50 @@ def test_at_most_five_codes_a_day_the_sign_up_code_included(c, mail, clean_db):
         con.execute("UPDATE email_codes SET window_start = now() - interval '25 hours', "
                     "sent_at = now() - interval '25 hours'")
     assert resend(c).status_code == 200 and len(mail) == 6
+
+
+def test_guesses_sent_at_the_same_moment_still_get_five_tries(c, mail, clean_db):
+    """Yasser's review (2026-11-20): the try was counted after the comparison, so guesses sent at the same moment all
+    read tries=0 and were all compared. Now the try is counted first, in one statement."""
+    import threading
+    from app import verification
+    sign_up(c, READER)
+    uid = clean_db.connect().execute("SELECT id FROM users WHERE email = %s", (READER,)).fetchone()["id"]
+    wrong = "000000" if code_in(mail[0]) != "000000" else "111111"
+    start, results = threading.Barrier(20), []
+
+    def guess():
+        start.wait()                                                # all 20 at the same moment
+        results.append(verification.check(uid, wrong))
+    threads = [threading.Thread(target=guess) for _ in range(20)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    compared = [r for r in results if r.startswith("wrong:") or r == "ok"]
+    assert len(compared) <= 4 and results.count("tries") >= 16      # 5 tries: 4 "wrong:N", then "tries"
+    assert verification.check(uid, code_in(mail[0])) == "tries"     # even the right code: a new code is needed
+
+
+def test_new_codes_asked_at_the_same_moment_still_stop_at_five(c, mail, clean_db):
+    import threading
+    from app import verification
+    sign_up(c, READER)                                              # code 1
+    uid = clean_db.connect().execute("SELECT id FROM users WHERE email = %s", (READER,)).fetchone()["id"]
+    for _ in range(3):                                              # codes 2 to 4
+        with clean_db.connect() as con:
+            con.execute("UPDATE email_codes SET sent_at = now() - interval '2 minutes'")
+        assert verification.send_code(uid, READER) == "sent"
+    with clean_db.connect() as con:
+        con.execute("UPDATE email_codes SET sent_at = now() - interval '2 minutes'")
+    start, results = threading.Barrier(10), []
+
+    def ask_code():
+        start.wait()
+        results.append(verification.send_code(uid, READER))
+    threads = [threading.Thread(target=ask_code) for _ in range(10)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert results.count("sent") == 1 and len(mail) == 5            # only code 5 went out
