@@ -6,7 +6,7 @@ import threading
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse, Response
 from pydantic import BaseModel
-from app import api, billing, db, emails, evaluate, exports, logs
+from app import api, billing, db, emails, evaluate, exports, logs, notices
 
 router = APIRouter(prefix="/api/admin",
                    dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -507,4 +507,7 @@ def user_toggle(user_id: int, me=Depends(api.require_admin)):
         if not row:
             raise HTTPException(404, "No such account.")
     emails.account_status(row["email"], row["active"])   # an email to the account (Edwin, SPEC 11, 2026-11-20)
+    notices.add(user_id, "account_enabled" if row["active"] else "account_disabled",
+                "An administrator enabled your account again." if row["active"] else
+                "An administrator disabled your account.", None if row["active"] else "/contact")
     return users()
