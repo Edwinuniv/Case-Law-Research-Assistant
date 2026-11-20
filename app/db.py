@@ -27,7 +27,9 @@ CREATE TABLE IF NOT EXISTS email_codes (           -- email verification (Edwin,
     code_hash TEXT NOT NULL,                      -- an HMAC of the 6 digits: the code itself is never stored
     sent_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at TIMESTAMPTZ NOT NULL,
-    tries INT NOT NULL DEFAULT 0);
+    tries INT NOT NULL DEFAULT 0,
+    window_start TIMESTAMPTZ NOT NULL DEFAULT now(),   -- the 24 hours in which codes are counted (at most 5)
+    sent_in_window INT NOT NULL DEFAULT 1);
 
 CREATE TABLE IF NOT EXISTS password_resets (       -- forgot password (Edwin, SPEC 11, 2026-11-19)
     token_hash TEXT PRIMARY KEY,                  -- SHA-256 of the emailed token: the token itself is never stored
@@ -165,6 +167,8 @@ CREATE INDEX IF NOT EXISTS query_log_chat ON query_log (chat_id, id);
 -- (DEFAULT TRUE fills them), then every new account starts unverified (DEFAULT FALSE).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE users ALTER COLUMN email_verified SET DEFAULT FALSE;
+ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS window_start TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS sent_in_window INT NOT NULL DEFAULT 1;
 ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
 ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
     'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset', 'email_verified'));
