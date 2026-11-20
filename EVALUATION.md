@@ -557,3 +557,31 @@ Tokens over the 84 answers: 310,597 input (11,008 cached), 14,393 output.
 Verdicta refuse 8 answerable questions (run 2: 4) and give more low-confidence answers: longer drafts have more
 sentences that fail a check, and the support score falls. The TEST split is not run: the kept prompt is run 2's,
 already reported once. Follow-ups are measured separately (followups-v1, scripts/run_followups.py).
+
+### Follow-ups, TUNE pairs of followups-v1 (2026-11-20, run by Yasser, decision Edwin): stay off
+Measured under the "Follow-up questions rule" above (written 2026-11-12, before any code) with scripts/run_followups.py:
+`eval/runs/followups_tune_2026-11-20T12-25-05.json` (report: `eval/runs/followups_tune_report.txt`), the 16 TUNE
+pairs, 0 errors, on Yasser's database after the #119 re-index (check_sections 0), config.DEFAULT_SETTINGS (tau_abstain
+0.20 not tuned again, case_filter on, 350 words; first questions on the current prompt, follow-ups on theirs).
+Recomputed from the run file by Edwin: the same numbers.
+
+| condition (TUNE pairs) | value | holds |
+|---|---|---|
+| (1) false citations shown | 0 of 6 | yes |
+| (2) must_not_appear text shown | 0 | yes |
+| (3) abstention precision / recall | **0.50** / 1.0 | **no** (precision) |
+| (4) independent questions unchanged | proved by tests (an eval-v1 question makes the same call as before) | yes |
+
+Also: 5 answerable, 3 unanswerable, 8 adversarial follow-ups; low confidence 2; groundedness (judge) 0.40 on the 5
+answers shown; adversarial abstention 0.75 (6 of 8; F004 and F012, the two false premises answered, show no forbidden
+text: the answer corrected the premise).
+**Why the 3 answerable follow-ups were refused** (the removed sentences in the run file; each quote searched in the
+decision's full text): F002 (Thomas's concurrence in Shelby County): three real quotes, but from Ginsburg's dissent
+("Hubris is a fit word for today's demolition of the VRA"), written as Thomas's view: check 6 removed them, rightly.
+F015 (Riley, explain): real sentences slightly changed ("we hold instead" for "and hold instead"; "arresteet's").
+F017 (the dissent in Kennedy v. Bremerton): quotes stitching two sentences with "...", and one real quote cited with a
+passage label that does not contain it. In follow-ups the model quotes less carefully and once mixed up who said what;
+the verifier removed every such sentence, so nothing false was shown, but the answers became refusals.
+**Decision, by the rule:** (3) fails, so follow-ups stay off on the website (setting `follow_ups` false) and these
+numbers are reported; the TEST pairs are not run. A next step, measured with a new rule written first: ask the model
+for one exact quote per sentence in follow-ups too, and show who wrote each earlier passage in the chat history.
