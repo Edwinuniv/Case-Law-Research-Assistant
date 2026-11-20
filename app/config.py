@@ -49,11 +49,18 @@ HTTPS_ONLY = os.getenv("HTTPS_ONLY", "0") == "1"          # 1 only on the deploy
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "")          # Contact page addresses, separated by commas; empty: none shown
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "change-me")
-# Forgot password (Edwin, SPEC 11, 2026-11-19): the site's own address for the links (never the request's Host),
-# and Resend's HTTPS API for the emails (Railway blocks SMTP). Without a key, the link is printed locally only.
+# Forgot password (Edwin, SPEC 11, 2026-11-19): the site's own address for the links (never the request's Host).
 PUBLIC_URL = os.getenv("PUBLIC_URL", "http://127.0.0.1:8000")
-RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-MAIL_FROM = os.getenv("MAIL_FROM", "")                    # e.g. "Verdicta <no-reply@your-domain>"
+# Emails (Edwin, SPEC 11, 2026-11-20), from the team's Gmail account. Online through the Gmail API (Railway blocks
+# SMTP): the OAuth client and the account's refresh token, made once with scripts/gmail_token.py. On a laptop a Gmail
+# app password works too. With neither, an email is printed in the console locally, never online.
+TEAM_EMAIL = os.getenv("TEAM_EMAIL", "verdicta.team@gmail.com")
+GMAIL_CLIENT_ID = os.getenv("GMAIL_CLIENT_ID", "")
+GMAIL_CLIENT_SECRET = os.getenv("GMAIL_CLIENT_SECRET", "")
+GMAIL_REFRESH_TOKEN = os.getenv("GMAIL_REFRESH_TOKEN", "")
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")          # a Gmail app password (16 letters), not the account's password
+EMAIL_VERIFICATION = os.getenv("EMAIL_VERIFICATION", "1") == "1"   # new password accounts must verify their email
 LOCK_AFTER_FAILED_LOGINS, LOCK_MINUTES = 5, 15            # SR36
 COVERAGE = f"U.S. Supreme Court opinions filed {DATE_FROM[:4]}–{DATE_TO[:4]} (CourtListener release {RELEASE})"
 EXAMPLE_QUESTIONS = [
