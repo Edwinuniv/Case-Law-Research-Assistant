@@ -27,7 +27,8 @@ import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Contact from "./pages/Contact.jsx";
 import Pricing from "./pages/Pricing.jsx";
-import Account from "./pages/Account.jsx";                 // my account (Edwin, SPEC 11, 2026-11-20)
+import Account from "./pages/Account.jsx";
+import Saved from "./pages/Saved.jsx";                     // saved answers (Edwin, SPEC 11, 2026-11-20)                 // my account (Edwin, SPEC 11, 2026-11-20)
 import Privacy from "./pages/Privacy.jsx";
 import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
@@ -123,6 +124,7 @@ function App() {
           <Route path="/sources" element={<Sources />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/saved" element={user ? <Saved /> : <Navigate to="/login" />} />
           <Route path="/account" element={!user ? <Navigate to="/login" /> : user.role === "admin" ? <Navigate to="/admin" /> :
             <Account onDeleted={async () => setInfo(await me())} />} />            {/* Free or Paid, Stripe test mode (Edwin) */}
           {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others
