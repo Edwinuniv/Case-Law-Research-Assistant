@@ -18,11 +18,19 @@ HELP_PHRASES = {"", "help", "what can you do", "what do you do", "who are you", 
                 "thanks", "thank you"}
 
 
+def squeeze(word):
+    """A letter repeated in a row counts once: "hii", "heyyy", "hellooo" -> "hi", "hey", "helo" (2026-11-20)."""
+    return "".join(c for i, c in enumerate(word) if i == 0 or c != word[i - 1])
+
+
+SQUEEZED_GREETINGS = {squeeze(w) for w in GREETING_WORDS}
+
+
 def is_greeting(question):
     words = "".join(c if c.isalpha() else " " for c in (question or "").lower()).split()
     if not words:
         return False
-    while words and words[0] in GREETING_WORDS:
+    while words and squeeze(words[0]) in SQUEEZED_GREETINGS:   # "hii" got "Not supported" live (2026-11-20)
         words.pop(0)
     return " ".join(words) in HELP_PHRASES
 
