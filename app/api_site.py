@@ -166,6 +166,50 @@ def answer_as_pdf(request: Request, query_id: int):
                     headers={"Content-Disposition": f'attachment; filename="verdicta-answer-{query_id}.pdf"'})
 
 
+# ---------------- saved answers (SPEC 11, 2026-11-20, from CedarPay) ----------------
+MAX_SAVED = 200
+
+
+class Bookmark(BaseModel):
+    query_id: int
+    saved: bool = True
+
+
+@router.post("/bookmarks")
+def bookmark(request: Request, body: Bookmark, user=Depends(api.require_user)):
+    if not answers.owned(request, body.query_id):
+        raise HTTPException(404, "Answer not found.")
+    with db.connect() as con:
+        if not body.saved:
+            con.execute("DELETE FROM bookmarks WHERE user_id = %s AND query_id = %s", (user["id"], body.query_id))
+            return {"saved": False}
+        n = con.execute("SELECT count(*) AS n FROM bookmarks WHERE user_id = %s", (user["id"],)).fetchone()["n"]
+        known = con.execute("SELECT 1 FROM bookmarks WHERE user_id = %s AND query_id = %s",
+                            (user["id"], body.query_id)).fetchone()
+        if n >= MAX_SAVED and not known:
+            raise HTTPException(400, f"You can save at most {MAX_SAVED} answers: remove one first.")
+        con.execute("INSERT INTO bookmarks (user_id, query_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    (user["id"], body.query_id))
+    return {"saved": True}
+
+
+@router.get("/bookmarks")
+def bookmarks(user=Depends(api.require_user)):
+    with db.connect() as con:
+        return con.execute("""SELECT b.query_id, b.created_at AS saved_at, q.question, q.status, q.created_at AS asked_at
+                              FROM bookmarks b JOIN query_log q ON q.id = b.query_id WHERE b.user_id = %s
+                              ORDER BY b.created_at DESC, b.query_id DESC""", (user["id"],)).fetchall()
+
+
+@router.get("/answers/{query_id}")
+def saved_answer(request: Request, query_id: int):
+    """An own answer exactly as it was shown (the saved answers page): no model call."""
+    row = answers.owned(request, query_id)
+    if not row or not row["shown"]:
+        raise HTTPException(404, "Answer not found.")
+    return {**row["shown"], "id": query_id}
+
+
 # ---------------- announcements (SPEC 11, 2026-11-20, from CedarPay) ----------------
 @router.get("/announcements")
 def announcements():

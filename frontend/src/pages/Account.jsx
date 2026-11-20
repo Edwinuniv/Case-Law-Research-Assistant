@@ -81,6 +81,7 @@ export default function Account({ onDeleted }) {
             <p><span>Email verified</span><b>{a.email_verified ? "Yes" : <>Not yet · <Link to="/verify">enter the code</Link></>}</b></p>
             <p><span>Sign in with</span><b>{a.google ? "Google" : "Email and password"}</b></p>
             <p><span>Member since</span><b>{a.created_at.slice(0, 10)}</b></p>
+            <p><span>Saved answers</span><b><Link to="/saved">Open them</Link></b></p>
             <p><span>Plan</span><b>{a.plan.plan === "paid" ? "Paid" : "Free"} · {a.plan.left_today} of {a.plan.daily_limit}
               {" "}questions left today · <Link to="/pricing">Plans</Link></b></p>
           </div>

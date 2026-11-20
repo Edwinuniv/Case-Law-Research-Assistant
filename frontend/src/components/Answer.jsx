@@ -79,7 +79,7 @@ function SupportRing({ value }) {
   );
 }
 
-export default function Answer({ a, onOpen }) {
+export default function Answer({ a, onOpen, save }) {   // save: {saved, toggle} for an account (SPEC 11, 2026-11-20)
   const [icon, title, text] = STATUS[a.status] || STATUS.ERROR;
   if (a.status === "WELCOME") {
     return (
@@ -128,6 +128,10 @@ export default function Answer({ a, onOpen }) {
           ? <span className="an-saved" title="Made once by the same pipeline and checks, then saved: no model call now">
               Saved answer · checked on <b>{a.saved_at.slice(0, 10)}</b></span>
           : <span>{(a.ms_total / 1000).toFixed(1)} s</span>}
+        {save && a.id && a.status !== "ERROR" && a.status !== "WELCOME" &&
+          <button className={save.saved ? "an-save on" : "an-save"} onClick={save.toggle} aria-pressed={save.saved}
+                  title={save.saved ? "Remove from your saved answers" : "Keep it in your saved answers"}>
+            {save.saved ? "★ Saved" : "☆ Save"}</button>}
         {a.id && a.status !== "ERROR" && a.status !== "WELCOME" &&   /* a research note (SPEC 11, 2026-11-20) */
           <a className="an-pdf" href={`/api/answers/${a.id}/pdf`} download title="The question, the verified answer and the exact quotes, as a PDF">
             ⤓ PDF</a>}

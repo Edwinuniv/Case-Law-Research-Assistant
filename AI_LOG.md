@@ -936,3 +936,9 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    announcement's end into the past without its start, which the table rightly refuses (end after start). The tests
    were corrected, not the code. 3 planted bugs caught (coming ones shown early, more than 3 shown, a year allowed).
 
+## 2026-11-20 — CedarPay features, 6 of 7: saved answers (branch feature/bookmarks)
+
+1. **The same table-order mistake as in branch 1**: bookmarks (which points to query_log) was first placed above
+   query_log. This time a check in the edit script itself (the new table must come after query_log) stopped it before
+   any test ran; moved. 3 planted bugs caught (anyone saving any answer, no limit, oldest first).
+
