@@ -160,3 +160,13 @@ def test_with_verification_off_no_code_is_sent_and_nothing_is_limited(c, mail, m
     sign_up(c, READER)
     assert mail == []
     assert ask(c).status_code == 200 and ask(c, "And what about unofficial acts?").status_code == 200
+
+
+def test_the_site_still_starts_after_an_account_is_verified(clean_db):
+    """Seen on 2026-11-20 on a copy of the real database: the migrations re-made the log's list of events twice,
+    the older list without email_verified, so once an account was verified the next start failed."""
+    from app import logs
+    uid = clean_db.create_visitor("reader@example.com", PW)
+    logs.log_user(uid, "email_verified")
+    clean_db.init_db()                                                # the next start of the site
+    clean_db.init_db()
