@@ -27,6 +27,7 @@ import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Contact from "./pages/Contact.jsx";
 import Pricing from "./pages/Pricing.jsx";
+import Account from "./pages/Account.jsx";                 // my account (Edwin, SPEC 11, 2026-11-20)
 import Privacy from "./pages/Privacy.jsx";
 import Sources from "./pages/Sources.jsx";
 import Terms from "./pages/Terms.jsx";
@@ -88,11 +89,14 @@ function App() {
             the coverage line is on the research page itself, the admin menu is in the admin sidebar */}
         <Link to="/" className="brand"><Logo /> Verdicta</Link>
         {user && (
+          <span className="hdr-right">
+          {user.role === "user" && <Link to="/account" className="hdr-account">My account</Link>}
           <button className="logout" onClick={logout} title={`Log out ${user.email}`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
               <path d="M10 17l-5-5 5-5" /><path d="M5 12h11" /></svg>
             Log out
           </button>
+          </span>
         )}
       </header>}
       <main className={landing || authPage ? "bare" : ""}>
@@ -114,7 +118,9 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/sources" element={<Sources />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/pricing" element={<Pricing />} />            {/* Free or Paid, Stripe test mode (Edwin) */}
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/account" element={!user ? <Navigate to="/login" /> : user.role === "admin" ? <Navigate to="/admin" /> :
+            <Account onDeleted={async () => setInfo(await me())} />} />            {/* Free or Paid, Stripe test mode (Edwin) */}
           {user?.role === "admin" && (       // display only: the server refuses /admin and /api/admin to others
             <Route path="/admin" element={<AdminLayout user={user} />}>
               <Route index element={<AdminHome />} />

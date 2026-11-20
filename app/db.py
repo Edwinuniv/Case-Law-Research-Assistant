@@ -125,7 +125,8 @@ CREATE TABLE IF NOT EXISTS user_log (              -- everything an account does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     event TEXT NOT NULL CHECK (event IN ('signup', 'login', 'login_failed', 'logout', 'question', 'follow_up',
-                                         'plan_change', 'refused', 'password_reset', 'email_verified')),
+                                         'plan_change', 'refused', 'password_reset', 'email_verified',
+                                         'password_changed')),
     query_id INT REFERENCES query_log(id) ON DELETE SET NULL, detail JSONB NOT NULL DEFAULT '{}');
 CREATE TABLE IF NOT EXISTS admin_log (             -- everything an administrator does
     id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -179,7 +180,8 @@ ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS window_start TIMESTAMPTZ NOT NU
 ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS sent_in_window INT NOT NULL DEFAULT 1;
 ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
 ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
-    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset', 'email_verified'));
+    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset', 'email_verified',
+    'password_changed'));
 """
 
 

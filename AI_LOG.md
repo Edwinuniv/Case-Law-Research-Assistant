@@ -905,3 +905,17 @@ first, then 3 test files from the rule, then the code. What was wrong, and how i
 14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
 checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
 
+## 2026-11-20 — CedarPay features, 1-2 of 7: answer feedback, my account (branches feature/answer-feedback, feature/my-account)
+
+Edwin asked Claude to add 7 features seen in the CedarPay reference, each on its own branch (stacked, merged in
+order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was caught:
+1. **A table created before the table it points to.** answer_feedback (which refers to query_log) was first put above
+   query_log in db.SCHEMA: every test failed with "relation query_log does not exist". Seen on the first test run;
+   moved below query_log.
+2. **A planted bug got through: the session kept after deleting the account.** /api/me already showed nobody,
+   because the account no longer existed, so the test could not see it. Caught by planting 6 bugs (5 caught); the
+   test now reads the signed session cookie itself.
+3. **After "Delete my account" the browser landed on the login page, not the home page.** The page learnt "nobody
+   is logged in" first, and the /account route sent it to /login before "go home" ran. Seen in the headless browser
+   (also: the first check came too early, the deletion takes about 3 seconds). Fixed: home first, then refresh.
+

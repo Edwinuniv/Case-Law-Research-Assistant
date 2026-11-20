@@ -763,3 +763,16 @@ shows the counts (helpful, not helpful, by reason) and the latest ratings with t
 the comment, newest first. (5) The ratings are not used by the system itself (no learning, no change of answers): they
 are read by the team, to find answers to look at. Privacy page says so. Files of others changed, told: app/api.py (the
 session remembers a visitor's answers), app/db.py (one table), frontend router and admin menu (Joe).
+
+2026-11-20 - My account (Edwin; from CedarPay's profile, change password and delete account, 2 of 7). Written before
+the code. (1) A page /account for a logged-in 'user' account: its email, verified or not, member since, the plan and the
+questions left today. (2) Change password: the current password and a new one (10 characters at least). A wrong
+current password counts as a failed login (5 lock the account for 15 minutes, SR36), so the page cannot be used to
+guess. On success: a password_changed row in the user log and a notice email. An account made with Google has no
+password it knows: it uses "Forgot password?" to set one. (3) Delete my account: confirmed with the password, or, for
+an account made with Google, by typing its email address. It deletes the account, its questions and their answers,
+its chats, ratings, codes, reset links and its user log; a paid plan's Stripe test subscription is cancelled first;
+a last email confirms it; the session ends. FR28 (every question logged) does not hold for a deleted account's
+questions: the privacy page promises that deleting removes them. (4) Administrators have no /account page: another
+administrator manages their account. Files of others changed, told: app/main.py (the router), app/db.py (the log's
+list of events), app/logs.py, the frontend router and the header (Joe, Yasser).
