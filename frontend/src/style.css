@@ -103,3 +103,9 @@ header .logout svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-w
 header .logout:hover{color:#fff;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.6)}
 header .logout:hover svg{transform:translateX(-2px)}
 header .logout:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
+/* "My account" next to "Log out" for a user account (Edwin, 2026-11-20) */
+header .hdr-right{display:flex;align-items:center;gap:14px}
+header a.hdr-account{color:#e7e5e4;font-weight:600;font-size:14px}
+header a.hdr-account:hover{color:#fbbf24}
+:root[data-theme="light"] header a.hdr-account{color:var(--l-ink)}
+

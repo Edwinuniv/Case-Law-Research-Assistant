@@ -128,6 +128,7 @@ export default function Chat({ info }) {
         {account?.role === "admin" && (   /* back to the admin pages (Edwin, 2026-11-19); the server checks the role */
           <Link to="/admin" className="rs-to-admin"><span aria-hidden="true">←</span> Admin pages</Link>
         )}
+        {account?.role === "user" && <Link to="/account" className="rs-to-admin">My account</Link>}
         <div className="rs-side-head">
           <b>{account ? "My chats" : "My questions"}</b>
           <span className="rs-count">{history.length}</span>
