@@ -580,3 +580,22 @@ cited passages (the checker's own re-test, listed); if (1) or (2) fails, the mat
 the numbers are reported. The TEST split is reported once, with what is kept.
 **Follow-ups:** the follow-up run saved neither its first answers nor its passages, so it cannot be rechecked; with the
 kept matching, the TUNE pairs are run again (scripts/run_followups.py) and judged by the follow-up rule above.
+**Result (2026-11-20).** Both runs rechecked on the same index (search changed for no question; 0 errors). TUNE +
+adversarial, tau_abstain 0.20 (eval/runs/eval_run2_reverified_reverified.json, eval/runs/eval_run_v2_reverified.json):
+
+| | run 2, v2 matching | run 4 (answer v2), v2 matching |
+|---|---|---|
+| false citations shown | 0 / 58 | 0 / 67 |
+| must_not_appear text shown | 0 | 0 |
+| abstention precision / recall | 0.889 / 0.941 | 0.85 / 1.0 |
+| answerable questions refused | 2 (was 4) | 3 (was 8) |
+| mean kept sentences per answered question | 1.79 | 2.19 |
+| newly kept sentences (all quotes with "...") | 3 | 18 |
+
+Condition (2): every newly kept quote was tested again with a simpler matcher (letters and digits only); all pieces
+found, in order (one needed the page marker "*489" dropped, as norm() does). The 21 sentences were read: correct
+statements of the holdings and reasons; A022 says "suspension of the Suspension Clause" for "of the writ" (quote
+correct). **Quote matching v2 is kept.** Answer v2 against run 2 with the same matching: (1) 0, (2) 0, (3) 0.85 and
+1.0, (4) 1.0 >= 0.941, (5) 2.19 > 1.79: **all five hold, prompt v2 goes live.**
+**TEST, reported once** (eval/runs/test_split_run_v2_reverified_2026-11-20.txt): 0 false citations of 30 shown;
+abstention precision 0.80 (run 2: 1.0; one answerable TEST question refused), recall 0.80 (unchanged). Not tuned on TEST.
