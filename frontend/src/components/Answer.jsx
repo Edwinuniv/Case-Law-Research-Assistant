@@ -51,7 +51,7 @@ function Feedback({ id }) {
           <div className="an-fb-reasons" role="radiogroup" aria-label="Reason">
             {REASONS.map(([k, label]) => (
               <button key={k} role="radio" aria-checked={reason === k} className={reason === k ? "on" : ""}
-                      onClick={() => setReason(reason === k ? null : k)}>{label}</button>
+                      onClick={() => setReason(reason === k ? null : k)}>{reason === k ? `✓ ${label}` : label}</button>
             ))}
           </div>
           <textarea maxLength={500} rows={2} value={comment} placeholder="A comment for the team (optional)"

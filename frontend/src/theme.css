@@ -68,6 +68,8 @@
 :root[data-theme="light"] .an-backdrop{background:rgba(20,20,24,.25)}
 :root[data-theme="light"] .an-fb{color:var(--l-dim);border-top-color:var(--l-edge)}
 :root[data-theme="light"] :is(.an-fb-btn,.an-fb-reasons button){background:var(--l-bg);color:var(--l-ink);border-color:var(--l-edge)}
+/* the chosen reason: the rule above is more specific than answer.css's .on, so light mode needs its own (it hid the choice) */
+:root[data-theme="light"] .an-fb-reasons button.on{background:#fbbf24;color:#141418;border-color:#f59e0b}
 :root[data-theme="light"] .an-fb-why textarea{background:var(--l-input);color:var(--l-head);border-color:var(--l-edge)}
 :root[data-theme="light"] .an-fb-done{color:var(--l-ok)}
 :root[data-theme="light"] .an-meta>a.an-pdf{color:var(--l-gold);background:var(--l-bg);border-color:rgba(180,83,9,.35)}
