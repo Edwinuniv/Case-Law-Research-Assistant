@@ -130,8 +130,11 @@ class Code(BaseModel):
 def verify_send(user=Depends(api.require_user)):
     if db.email_verified(user["id"]):
         raise HTTPException(400, "Your email is already verified.")
-    if not verification.send_code(user["id"], account_email(user["id"])):
+    sent = verification.send_code(user["id"], account_email(user["id"]))
+    if sent == "wait":
         raise HTTPException(429, "Wait a minute before asking for a new code.")
+    if sent == "daily":                               # at most 5 codes in 24 hours (Yasser's review)
+        raise HTTPException(429, "You have asked for 5 codes today. Try again tomorrow, or write to us from the contact page.")
     return {"ok": True}
 
 
