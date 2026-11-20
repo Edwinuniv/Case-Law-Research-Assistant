@@ -37,7 +37,9 @@ import "./life.css";                              // white light on the dark pag
 import "./theme.css";                             // dark pages with white sections, or the reverse (Edwin)
 import Logo from "./components/Logo.jsx";        // the Verdicta logo, white or black V for the theme (Edwin, 2026-11-19)
 import ThemeSwitch from "./components/ThemeSwitch.jsx";
-import Tour from "./components/Tour.jsx";                  // the guided tour of the research page (Edwin, 2026-11-20)   // Settings: the appearance (Edwin, 2026-11-19)
+import Tour from "./components/Tour.jsx";
+import AnnouncementsBar from "./components/Announcements.jsx";   // banners for everyone (Edwin, 2026-11-20)
+import AdminAnnouncements from "./admin/Announcements.jsx";                  // the guided tour of the research page (Edwin, 2026-11-20)   // Settings: the appearance (Edwin, 2026-11-19)
 
 // The loading screen of index.html (Edwin, 2026-11-19): it fades out once the page is ready. On the first visit
 // of this tab it stays until its animation has played once (about 2.1 s since the page started loading).
@@ -85,6 +87,7 @@ function App() {
   const user = info.user;
   return (
     <>
+      <AnnouncementsBar />
       {!landing && !authPage && <header>
         {/* only the logo, and "Log out" for a logged-in administrator (Yasser's decision, 2026-11-12):
             the coverage line is on the research page itself, the admin menu is in the admin sidebar */}
@@ -141,6 +144,7 @@ function App() {
               <Route path="all-questions" element={<AllQuestions />} />   {/* every question (SPEC 11, 2026-11-14) */}
               <Route path="log" element={<AdminLog />} />
               <Route path="feedback" element={<Feedback />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
             </Route>
           )}
           <Route path="*" element={<ErrorPage kind="notFound" inApp />} />   {/* not a silent jump to the home page */}
