@@ -59,3 +59,19 @@ body:has(.sp) footer{border-top-color:rgba(255,255,255,.08);color:#78716c}
 .sp-back:hover{color:#fff;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.55)}
 .sp-back:hover span{transform:translateX(-3px)}
 @media(max-width:700px){.sp-back{top:12px;left:16px;padding:7px 13px 7px 10px;font-size:13px}.sp-hero{padding-top:64px}}
+
+/* My account (Edwin, 2026-11-20) */
+.ac-details p{display:flex;justify-content:space-between;gap:16px;margin:0;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.ac-details p:last-child{border-bottom:0}
+.ac-details span{color:#a8a29e}
+.ac-details b{text-align:right;font-weight:600}
+.ac-danger{padding:18px 20px;border-radius:16px;border:1px solid rgba(248,113,113,.45);background:rgba(248,113,113,.06)}
+.ac-danger p{margin:0;color:#e7e5e4}
+.ac-check{display:flex!important;flex-direction:row!important;align-items:center;gap:10px}
+.ac-check input{width:auto!important}
+.sp-form button.ac-delete{background:#dc2626;color:#fff}
+.sp-form button.ac-delete:hover{background:#b91c1c;filter:none}
+.sp-form button.ac-delete:disabled{opacity:.45;cursor:not-allowed}
+:root[data-theme="light"] .ac-details p{border-bottom-color:rgba(20,20,24,.08)}
+:root[data-theme="light"] .ac-details span{color:#5f5b55}
+:root[data-theme="light"] .ac-danger p{color:#2b2b31}
