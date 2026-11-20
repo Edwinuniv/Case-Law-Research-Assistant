@@ -871,3 +871,22 @@ Also: evaluate.answer_with_retry passes the chat history only for a follow-up; a
 same call as before (the first version passed history=None to every call, and 5 existing tests with their own fake
 answer failed on the new argument).
 
+## 2026-11-20 — Emails from verdicta.team@gmail.com (branch feature/emails)
+
+Edwin asked Claude for emails from the team's new Gmail account: the contact form to the team, notifications, a
+verification code, the forgot-password link, in a design based on CedarPay's emails (its layout only) but in
+Verdicta's look. Claude proposed the Gmail API (HTTPS, works on Railway, no domain) instead of Resend; SPEC 11 rule
+first, then 3 test files from the rule, then the code. What was wrong, and how it was caught:
+1. **Sign-up landed on the chat, not on the verification page.** The new code sent the browser to /verify, but the
+   /signup page's own rule ("someone is logged in: go to the chat") fired in the same moment and won. Caught in the
+   headless browser (the address after sign-up was /research; a trace of the history showed /verify then /research).
+   Fixed: that rule sends a new unverified account to /verify.
+2. **The gold buttons turned dark grey under the mouse** (Log in, Create account, Verify): style.css's
+   `button:hover` is more specific than `.au-submit`. Already true before this branch, never seen because the
+   screenshots never hovered; seen on a screenshot taken with the pointer still on the button. Fixed in auth.css.
+3. **Two mistakes in the new tests themselves**: one expected "1 tries left" (the code rightly says "1 try left"),
+   one called billing.set_plan, a function that does not exist (it is billing.switch). Both seen on the first run;
+   the tests were corrected, not the code.
+14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
+checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
+
