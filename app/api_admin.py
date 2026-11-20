@@ -6,7 +6,7 @@ import threading
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse, Response
 from pydantic import BaseModel
-from app import api, db, evaluate, exports, logs
+from app import api, billing, db, emails, evaluate, exports, logs
 
 router = APIRouter(prefix="/api/admin",
                    dependencies=[Depends(api.check_csrf), Depends(api.require_admin)])
@@ -449,6 +449,8 @@ def user_plan(user_id: int, body: Plan, admin=Depends(api.require_admin)):
     if why == "not a user":
         raise HTTPException(400, "Only a visitor's account has a plan (administrators have no limit).")
     logs.log_user(user_id, "plan_change", {"from": old, "to": body.plan, "by": admin["email"]})
+    if old != body.plan:
+        billing.notify_plan(user_id, body.plan)          # an email to the account (Edwin, SPEC 11, 2026-11-20)
     return users()
 
 
@@ -500,6 +502,9 @@ def user_toggle(user_id: int, me=Depends(api.require_admin)):
     if user_id == me["id"]:
         raise HTTPException(400, "You cannot disable your own account.")
     with db.connect() as con:
-        if not con.execute("UPDATE users SET active = NOT active WHERE id = %s RETURNING id", (user_id,)).fetchone():
+        row = con.execute("UPDATE users SET active = NOT active WHERE id = %s RETURNING email, active",
+                          (user_id,)).fetchone()
+        if not row:
             raise HTTPException(404, "No such account.")
+    emails.account_status(row["email"], row["active"])   # an email to the account (Edwin, SPEC 11, 2026-11-20)
     return users()
