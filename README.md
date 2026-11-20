@@ -141,6 +141,9 @@ administrators are reset by another administrator on the Accounts page). The lin
     python -m scripts.run_eval "note"          # all test questions; prints the TUNE split and the tau sweep
     python -m scripts.run_eval --resume RUN_ID # continue a run paused at Groq's daily limit (200,000 tokens/day)
     python -m scripts.run_eval --test RUN_ID   # the TEST split, once, after tau_abstain is chosen (EVALUATION.md)
+    python -m scripts.run_followups            # the follow-up pairs (followups-v1), TUNE: metrics + the rule's verdict
+    python -m scripts.run_followups --resume eval/runs/followups_tune_<date>.json   # after Groq's daily limit
+    python -m scripts.run_followups --test     # the TEST pairs, once, after the decision on TUNE
     python -m scripts.show_citations RUN_ID    # step 8.3: every citation shown or removed in a run (TUNE; --test once)
     python -m scripts.export_run RUN_ID NAME "which dump"   # save a run in eval/runs (after each resume: a restore erases runs)
     python -m scripts.compare_runs eval/runs/RUN.json RUN_ID   # two runs (file or database) on the TUNE questions both answered

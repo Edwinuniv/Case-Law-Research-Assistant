@@ -99,9 +99,11 @@ def rate_limit_wait(message):
     return float(m.group(1)) + 1 if m else None
 
 
-def answer_with_retry(question, searcher, index, settings, log):
+def answer_with_retry(question, searcher, index, settings, log, history=None):
+    """history: the chat so far, for a follow-up pair (scripts/run_followups.py); None for an eval-v1 question."""
     for attempt in range(RATE_LIMIT_RETRIES + 1):
-        r = answer(question, searcher, index, settings, skip_gate=True)
+        r = (answer(question, searcher, index, settings, skip_gate=True, history=history) if history
+             else answer(question, searcher, index, settings, skip_gate=True))   # eval-v1: the same call as before
         wait = rate_limit_wait(r["reason"]) if r["status"] == ERROR else None
         if wait is not None and "per day" in r["reason"]:
             raise DailyLimit(r["reason"])
@@ -123,6 +125,28 @@ def judge_with_retry(statement, passage_text, log):
                 return "error"
             log(f"   rate limit (judge): waiting {wait:.0f} s")
             time.sleep(wait)
+
+
+def judge_sentences(r, log):
+    """The judge's verdict on each kept sentence against its cited passages (FR15)."""
+    passages = dict(r["passages"])
+    return [judge_with_retry(s["text"], " ".join(passages[p]["text"] for p in s["sources"]), log) for s in r["sentences"]]
+
+
+def result_row(r, q, index, judgements):
+    """What is saved for one answer: the same fields for an eval-v1 question and a follow-up pair."""
+    false_by_sentence, n_cites = check_shown_citations(r, q, index)
+    chosen = [p["decision_id"] for _, p in r["passages"]]
+    return {"top_score": r["top_score"], "support_score": r["support_score"], "status_raw": r["status"],
+            "model_said": r["model_said"], "reason": r["reason"],
+            "n_kept": len(r["sentences"]), "n_removed": len(r["removed"]),
+            "ranked_decisions": chosen + [d for d in r["retrieved_decisions"] if d not in chosen],
+            "sentences": [{"text": s["text"], "sources": s["sources"], "groundedness": s["groundedness"]}
+                          for s in r["sentences"]],
+            "removed": r["removed"], "fabrications_caught": r["fabrications_caught"],
+            "false_by_sentence": false_by_sentence, "citations_shown": n_cites,
+            "judgements": judgements, "ms_total": r["ms_total"],
+            "tokens": r.get("tokens", {})}                     # answer v2 rule: input, cached, output
 
 
 def run_status(run_id):
@@ -162,28 +186,13 @@ def run_evaluation(searcher, index, trigger="manual", note="", judge=True, log=p
     for n, q in enumerate(questions, 1):
         try:
             r = answer_with_retry(q["question"], searcher, index, settings, log)
-            judgements = []
-            if judge and r["status"] != ERROR:
-                passages = dict(r["passages"])
-                for s in r["sentences"]:
-                    judgements.append(judge_with_retry(s["text"], " ".join(passages[p]["text"] for p in s["sources"]), log))
+            judgements = judge_sentences(r, log) if judge and r["status"] != ERROR else []
         except DailyLimit as e:                          # nothing saved for this question: it is asked again
             with db.connect() as con:
                 con.execute("UPDATE eval_runs SET status = 'paused' WHERE id = %s", (run_id,))
             log(f"Paused at {q['id']} ({len(done) + n - 1} questions done): {e}")
             return run_id
-        false_by_sentence, n_cites = check_shown_citations(r, q, index)
-        chosen = [p["decision_id"] for _, p in r["passages"]]
-        row = {"top_score": r["top_score"], "support_score": r["support_score"], "status_raw": r["status"],
-               "model_said": r["model_said"], "reason": r["reason"],
-               "n_kept": len(r["sentences"]), "n_removed": len(r["removed"]),
-               "ranked_decisions": chosen + [d for d in r["retrieved_decisions"] if d not in chosen],
-               "sentences": [{"text": s["text"], "sources": s["sources"], "groundedness": s["groundedness"]}
-                             for s in r["sentences"]],
-               "removed": r["removed"], "fabrications_caught": r["fabrications_caught"],
-               "false_by_sentence": false_by_sentence, "citations_shown": n_cites,
-               "judgements": judgements, "ms_total": r["ms_total"],
-               "tokens": r.get("tokens", {})}                     # answer v2 rule: input, cached, output
+        row = result_row(r, q, index, judgements)
         with db.connect() as con:
             con.execute("INSERT INTO eval_results (run_id, question_id, tag, split, result) VALUES (%s,%s,%s,%s,%s)",
                         (run_id, q["id"], q["tag"], q["split"], Jsonb(row)))
