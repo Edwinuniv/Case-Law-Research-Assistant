@@ -720,3 +720,25 @@ another device is not ended by a reset (the session is a signed cookie, kept up 
 React app shows its own "page not found" page (not a jump to the home page) and a "something went wrong" page if a
 page crashes, with no technical detail. Files of others changed, told: app/api.py, app/main.py, app/db.py (one
 table), frontend router and Login.jsx (Joe).
+
+2026-11-20 - Emails from verdicta.team@gmail.com: verification code, forgot password, notifications, contact form
+(Edwin; the team's Gmail account, made by Edwin). Written before the code. Replaces "Resend + our own domain" of
+2026-11-19 (4): no domain is needed. (1) **Sending**: through the Gmail API over HTTPS (Railway blocks SMTP), with
+the account's OAuth refresh token (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN; made once with
+scripts/gmail_token.py); on a laptop, SMTP with a Gmail app password also works (SMTP_USER, SMTP_PASSWORD). Without
+either: printed in the console locally, never online (as before). Sending never blocks or breaks a request: it runs
+after the answer, and a failure is only written to the server's log. (2) **Verification code**: a new account made
+with a password gets a 6-digit code by email; valid 15 minutes, 5 wrong tries then a new code is needed, a new code
+at most once a minute; only an HMAC of the code is stored. Until it is verified, the account may ask one question
+(like a visitor) and may not buy the paid plan; everything else works. Google accounts are verified (Google checked
+the address); administrators are verified. Accounts made before this rule are verified. (3) **Notifications**, to
+the account's own address only: welcome (once verified), password changed (after a reset), plan changed (paid or
+free, by Stripe or an administrator), account disabled or enabled by an administrator. No marketing, no question
+content in an email. (4) **Contact form**: each message is still saved (as before) and is also emailed to the
+CONTACT_EMAIL addresses and verdicta.team@gmail.com, with Reply-To the visitor's address; the visitor gets no
+automatic email (otherwise anyone could make us email a stranger). (5) **Design**: one template in the site's look
+(dark header with the logo, white card, gold button, a box for a code, the team's signature, the "not legal advice"
+footer), with a plain-text copy; everything a user typed is escaped. (6) The tests run with verification off
+(tests/conftest.py), except the tests of this rule, so the other tests keep their accounts unchanged.
+Files of others changed, told: app/api.py, app/api_admin.py, app/db.py (a column, a table, the log events), app/config.py,
+app/logs.py, the frontend router, Login.jsx and Chat.jsx.
