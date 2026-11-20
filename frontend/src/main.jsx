@@ -53,7 +53,7 @@ function App() {
   const path = useLocation().pathname;
   const navigate = useNavigate();
   const landing = path === "/";                    // the landing page has its own top bar
-  const authPage = ["/login", "/signup", "/forgot", "/reset"].includes(path);   // the account pages have their own logo
+  const authPage = ["/login", "/signup", "/forgot", "/reset", "/verify"].includes(path);   // the account pages have their own logo
 
   useEffect(() => {
     me().then(setInfo, () => setInfo({ failed: true }))   // no answer from the server: say so, not "Loading…" forever
@@ -98,10 +98,14 @@ function App() {
           {/* already logged in: an administrator goes to /admin, a visitor's account to the research page */}
           <Route path="/login" element={user ? <Navigate to={user.role === "admin" ? "/admin" : "/research"} /> :
             <Login onLogin={(u) => setInfo({ ...info, user: u })} />} />
-          <Route path="/signup" element={user ? <Navigate to={user.role === "admin" ? "/admin" : "/research"} /> :
-            <Login mode="signup" onLogin={(u) => setInfo({ ...info, user: u })} />} />   {/* visitor accounts (SPEC 11) */}
+          <Route path="/signup" element={user ? <Navigate to={user.role === "admin" ? "/admin" :
+                                                   info.email_verified === false ? "/verify" : "/research"} /> :
+            <Login mode="signup" onLogin={(u, verify) => setInfo({ ...info, user: u,   // a code was emailed: /verify
+                                                                   email_verified: verify ? false : info.email_verified })} />} />   {/* visitor accounts (SPEC 11) */}
           <Route path="/forgot" element={<Login mode="forgot" />} />   {/* a link by email (Edwin, SPEC 11) */}
           <Route path="/reset" element={<Login mode="reset" />} />     {/* the page the emailed link opens */}
+          <Route path="/verify" element={!user ? <Navigate to="/login" /> : info.email_verified ? <Navigate to="/research" /> :
+            <Login mode="verify" email={user.email} onVerified={async () => setInfo(await me())} />} />   {/* SPEC 11, 2026-11-20 */}
           <Route path="/" element={<Landing info={info} />} />  {/* the story of Verdicta, then "Try a question" */}
           <Route path="/research" element={<Chat info={info} />} />    {/* open to everyone, no account (SR33) */}
           <Route path="/privacy" element={<Privacy />} />              {/* the site's information pages (Edwin) */}

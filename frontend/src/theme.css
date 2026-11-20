@@ -45,6 +45,8 @@
 :root[data-theme="light"] .rs-chip{color:var(--l-dim);background:var(--l-bg);border-color:var(--l-edge)}
 :root[data-theme="light"] .rs-question{background:linear-gradient(135deg,#fdecc8,#fde3c4);border-color:rgba(217,119,6,.35)}
 :root[data-theme="light"] .rs-locked-btn.main{color:#1c1917}
+:root[data-theme="light"] :is(.rs-verify b,.rs-verify a){color:var(--l-gold)}
+:root[data-theme="light"] .au-linkbtn{color:var(--l-gold)}
 :root[data-theme="light"] .rs-foot a{color:var(--l-faint)}
 @media(max-width:900px){:root[data-theme="light"] .rs-side{background:var(--l-bg2)}}
 

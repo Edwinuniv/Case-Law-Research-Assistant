@@ -871,3 +871,37 @@ Also: evaluate.answer_with_retry passes the chat history only for a follow-up; a
 same call as before (the first version passed history=None to every call, and 5 existing tests with their own fake
 answer failed on the new argument).
 
+## 2026-11-20 — Emails from verdicta.team@gmail.com (branch feature/emails)
+
+Edwin asked Claude for emails from the team's new Gmail account: the contact form to the team, notifications, a
+verification code, the forgot-password link, in a design based on CedarPay's emails (its layout only) but in
+Verdicta's look. Claude proposed the Gmail API (HTTPS, works on Railway, no domain) instead of Resend; SPEC 11 rule
+first, then 3 test files from the rule, then the code. What was wrong, and how it was caught:
+1. **Sign-up landed on the chat, not on the verification page.** The new code sent the browser to /verify, but the
+   /signup page's own rule ("someone is logged in: go to the chat") fired in the same moment and won. Caught in the
+   headless browser (the address after sign-up was /research; a trace of the history showed /verify then /research).
+   Fixed: that rule sends a new unverified account to /verify.
+2. **The gold buttons turned dark grey under the mouse** (Log in, Create account, Verify): style.css's
+   `button:hover` is more specific than `.au-submit`. Already true before this branch, never seen because the
+   screenshots never hovered; seen on a screenshot taken with the pointer still on the button. Fixed in auth.css.
+3. **Two mistakes in the new tests themselves**: one expected "1 tries left" (the code rightly says "1 try left"),
+   one called billing.set_plan, a function that does not exist (it is billing.switch). Both seen on the first run;
+   the tests were corrected, not the code.
+4. **The site would not start again once an account was verified.** db.py's migrations, run at every start, re-made
+   the user log's list of events twice: the 2026-11-19 list (without email_verified), then the new one. After the
+   first email_verified row, the older list was refused and the site stopped at start-up. No test restarted the
+   database after logging that event; seen when the local test site would not start on the copy of the real
+   database (which had one verified account from the browser test). On Railway it would have happened at the first
+   restart after a sign-up. Fixed: one list only, with a comment; a test restarts twice after a verification.
+5. **The code could be guessed by asking for new codes all day.** 5 tries per code and a new code once a minute
+   still allowed about 7,200 guesses a day (about 0.7% chance of finding the 6 digits). Caught by Yasser's review of
+   #126 ("is the code limited?"). Fixed, rule and test first: at most 5 codes per account in 24 hours, the sign-up's
+   code included (Yasser's point for the test), so at most 25 guesses a day; 3 planted bugs caught by the new test.
+6. **Guesses sent at the same moment were all compared.** check() read the tries, compared, then added one: 20
+   guesses at once all read "0 tries" (Yasser estimated ~40 comparisons per code instead of 5); send_code had the
+   same race for the 6th code of the day. Caught by Yasser's second review of #126. Fixed, tests first (20 guesses /
+   10 code requests from threads at the same moment; both failed before the fix): the try is counted first, in the
+   one UPDATE that checks it is allowed (his proposal); send_code locks the account's code row (FOR UPDATE).
+14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
+checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
+

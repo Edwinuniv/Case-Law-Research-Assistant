@@ -93,15 +93,23 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
    No client secret is used. Without the variable the button is hidden. Google works for user accounts only:
    administrators always log in with their password.
 
-### Forgot password by email (optional)
-"Forgot password?" on the login page emails a link to choose a new password (user accounts only;
-administrators are reset by another administrator on the Accounts page). The link works once, for 30 minutes.
-1. Set `PUBLIC_URL` to the site's own address (`https://case-law-research-assistant-production.up.railway.app`
-   online); the link is built from it, never from the request.
-2. To really send the emails: a free Resend account, a domain verified in Resend, then `RESEND_API_KEY` and
-   `MAIL_FROM` (e.g. `Verdicta <no-reply@your-domain>`). Railway blocks SMTP, which is why Gmail is not used.
-3. Without `RESEND_API_KEY`, on your own computer the email (with the link) is printed in the uvicorn console, to
-   test; online (`HTTPS_ONLY=1`) it is never printed.
+### Emails from verdicta.team@gmail.com
+The site emails: the 6-digit code that verifies a new account, the forgot-password link, notices (welcome, password
+changed, plan changed, account disabled/enabled) and every contact message to the team (CONTACT_EMAIL addresses and
+verdicta.team@gmail.com, "reply" goes to the visitor). Set `PUBLIC_URL` to the site's own address (online:
+`https://case-law-research-assistant-production.up.railway.app`): links and the logo in the emails use it.
+**Online (Railway blocks SMTP): the Gmail API**, once:
+1. Google Cloud console, the project of "Sign in with Google": APIs & Services > Library > enable **Gmail API**.
+2. OAuth consent screen: add the scope `.../auth/gmail.send`; Audience: **Publish app** ("In production"), otherwise
+   the token stops working after 7 days. Google shows "unverified app" once, to us only: continue.
+3. Credentials > Create credentials > OAuth client ID > **Desktop app**. Put its id and secret in `.env` as
+   `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET`.
+4. `python -m scripts.gmail_token`, open the printed address, sign in **as verdicta.team@gmail.com**, allow; copy the
+   printed `GMAIL_REFRESH_TOKEN=...` into `.env`.
+5. On Railway, add the same three variables (and `PUBLIC_URL`), then redeploy.
+**On a laptop, simpler:** a Gmail app password (Google account > Security > 2-Step Verification > App passwords) in
+`SMTP_USER=verdicta.team@gmail.com` and `SMTP_PASSWORD`. With neither, emails are printed in the uvicorn console
+locally (to test) and never online. `EMAIL_VERIFICATION=0` turns the verification code off (default on).
 
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets

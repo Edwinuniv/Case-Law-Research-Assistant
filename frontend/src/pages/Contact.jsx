@@ -21,7 +21,7 @@ export default function Contact() {
     try {
       await api("/contact", form);
       setForm(EMPTY);
-      setState({ busy: false, ok: "Thank you: your message was sent. We will answer by email.", error: "" });
+      setState({ busy: false, ok: "Thank you: your message was sent to the team. We will answer by email.", error: "" });
     } catch (err) {
       setState({ busy: false, ok: "", error: err.message });   // e.g. a missing field, or the 3-in-10-minutes limit
     }
