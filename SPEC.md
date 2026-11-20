@@ -776,3 +776,13 @@ a last email confirms it; the session ends. FR28 (every question logged) does no
 questions: the privacy page promises that deleting removes them. (4) Administrators have no /account page: another
 administrator manages their account. Files of others changed, told: app/main.py (the router), app/db.py (the log's
 list of events), app/logs.py, the frontend router and the header (Joe, Yasser).
+
+2026-11-20 - An answer as a PDF (Edwin; from CedarPay's printable receipts, 3 of 7). Written before the code.
+(1) "Download PDF" under an answer gives a one-page (or more) research note: the question, the date, the answer's
+status and what it means, each verified sentence with its citation, then "Sources": for each citation the case, the
+citation, which opinion (majority, concurrence or dissent) and the exact words quoted from it; the coverage line and
+"a research aid, not legal advice". (2) It is made from the answer exactly as it was shown (saved in query_log), never
+asked again: no model call, no new search. (3) Only the person who got the answer may download it (the same rule as
+the feedback: an account its own answers, a visitor its session's last 20); someone else's: 404. An ERROR or a
+greeting has no PDF (400). (4) Nothing is kept: the PDF is made on request. Files of others changed, told: none
+(a new route in Edwin's api_site.py, a new module; the button in Edwin's Answer.jsx).
