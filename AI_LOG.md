@@ -887,6 +887,12 @@ first, then 3 test files from the rule, then the code. What was wrong, and how i
 3. **Two mistakes in the new tests themselves**: one expected "1 tries left" (the code rightly says "1 try left"),
    one called billing.set_plan, a function that does not exist (it is billing.switch). Both seen on the first run;
    the tests were corrected, not the code.
+4. **The site would not start again once an account was verified.** db.py's migrations, run at every start, re-made
+   the user log's list of events twice: the 2026-11-19 list (without email_verified), then the new one. After the
+   first email_verified row, the older list was refused and the site stopped at start-up. No test restarted the
+   database after logging that event; seen when the local test site would not start on the copy of the real
+   database (which had one verified account from the browser test). On Railway it would have happened at the first
+   restart after a sign-up. Fixed: one list only, with a comment; a test restarts twice after a verification.
 14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
 checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
 
