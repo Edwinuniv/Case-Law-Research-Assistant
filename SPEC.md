@@ -745,6 +745,13 @@ footer), with a plain-text copy; everything a user typed is escaped. (6) The tes
 Files of others changed, told: app/api.py, app/api_admin.py, app/db.py (a column, a table, the log events), app/config.py,
 app/logs.py, the frontend router, Login.jsx and Chat.jsx.
 
+2026-11-20 - Page previews for administrators (Edwin, on request). Written before the code. An admin page "Previews"
+(/admin/previews) shows the loading screen (and plays it again on a button), the small loader used inside pages, the
+three error pages of the React app (page not found, page crashed, server unreachable), and the server's own 401 and
+403 pages; a button really crashes the page to show the crash page at work. The 401 and 403 pages come from
+GET /admin-preview/401 and /admin-preview/403, which answer an administrator only (others: the real refusal) and change
+nothing. Nothing else changes: the pages shown are the real ones, in the chosen appearance. Files of others changed,
+told: app/main.py (the preview address), the frontend router and the admin menu (Joe).
 2026-11-20 - Feedback on an answer (Edwin; from CedarPay's reviews, 1 of 7 features). Written before the code.
 (1) Under each answer (not an ERROR), "Was this answer helpful?" with yes / no; after "no", an optional reason (wrong
 case or citation, missed the Court's holding, incomplete, it should have answered, other) and an optional comment of

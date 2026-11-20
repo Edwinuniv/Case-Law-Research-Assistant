@@ -58,6 +58,8 @@ The research page answers one question per message (no follow-up questions, as t
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
 
+Previews: the admin page "Previews" shows the loading screen (and plays it again), the small loader, the three error
+pages of the site and the server's 401/403 pages, in the chosen appearance; a button crashes the page on purpose.
 Feedback: under each answer, "Was this answer helpful?" (yes, or no with a reason and a comment); administrators
 read the ratings on the admin page "Feedback". Only the person who got an answer can rate it.
 

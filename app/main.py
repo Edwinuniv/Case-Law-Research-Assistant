@@ -93,6 +93,26 @@ font-family:system-ui,sans-serif;text-align:center;padding:16px">
 font-weight:700;text-decoration:none">{link_text}</a></div></body></html>""", status_code=status)
 
 
+# the two refusals of /admin, written once: the real ones below and their previews (Edwin, SPEC 11, 2026-11-20)
+REFUSALS = {"401": (401, "Please log in", "This part of Verdicta is for administrators.", "/login", "Log in"),
+            "403": (403, "Administrators only", "This part of Verdicta is for administrators.", "/", "Back to the home page")}
+
+
+@app.get("/admin-preview/{code}")
+def admin_preview(request: Request, code: str):
+    """The admin page "Previews" shows the server's own refusal pages: to an administrator only, changing nothing."""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return error_page(*REFUSALS["401"])
+    if db.active_role(user_id) != "admin":
+        return error_page(*REFUSALS["403"])
+    if code not in REFUSALS:
+        return PlainTextResponse("No such preview.", status_code=404)
+    page = error_page(*REFUSALS[code])
+    page.status_code = 200                               # a preview, not a refusal
+    return page
+
+
 @app.get("/{path:path}")
 def react_app(request: Request, path: str = ""):
     """Every page (/, /login, /admin/...) is the same index.html; React Router then shows the right page.
@@ -104,9 +124,9 @@ def react_app(request: Request, path: str = ""):
     if first == "admin":
         user_id = request.session.get("user_id")
         if not user_id:
-            return error_page(401, "Please log in", "This part of Verdicta is for administrators.", "/login", "Log in")
+            return error_page(*REFUSALS["401"])
         if db.active_role(user_id) != "admin":
-            return error_page(403, "Administrators only", "This part of Verdicta is for administrators.", "/", "Back to the home page")
+            return error_page(*REFUSALS["403"])
     if not (FRONTEND / "index.html").is_file():
         return PlainTextResponse("The React app is not built. Run: cd frontend && npm install && npm run build",
                                  status_code=404)
