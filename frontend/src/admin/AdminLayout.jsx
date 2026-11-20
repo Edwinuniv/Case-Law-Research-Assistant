@@ -7,7 +7,7 @@ import Logo from "../components/Logo.jsx";   // the Verdicta logo for the theme 
 import "./admin.css";
 
 const PAGES = [["", "Overview"], ["eval", "Evaluation"], ["questions", "Test questions"],
-  ["abstentions", "Abstentions"], ["analytics", "Analytics"], ["settings", "Settings"],
+  ["abstentions", "Abstentions"], ["analytics", "Analytics"], ["settings", "Settings"], ["previews", "Previews"],
   ["corpus", "Corpus & citations"], ["messages", "Messages"], ["users", "Accounts"],
   ["all-questions", "All questions"], ["log", "Admin log"]];          // the last two: Joe, SPEC 11, 2026-11-14
 
