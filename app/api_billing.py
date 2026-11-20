@@ -33,6 +33,8 @@ def checkout(request: Request, user=Depends(api.require_user)):
     """The address of Stripe's payment page for this free account."""
     must_be_on()
     a_user_account(user)
+    if api.needs_verification(user["id"]):            # SPEC 11, 2026-11-20: verified accounts only
+        raise HTTPException(403, "Verify your email before choosing the paid plan.")
     if api.plan_info(user["id"])["plan"] == "paid":
         raise HTTPException(400, "This account is already on the paid plan.")
     base = billing.SITE_URL or str(request.base_url).rstrip("/")
