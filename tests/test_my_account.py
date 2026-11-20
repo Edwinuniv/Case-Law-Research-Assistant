@@ -108,3 +108,17 @@ def test_a_paid_subscription_is_cancelled_before_the_account_is_deleted(c, clean
     billing.switch(uid(clean_db), "paid", "cus_1", "sub_1")
     assert post(c, "/api/account/delete", {"password": PW}).status_code == 200
     assert cancelled == ["sub_1"]
+
+
+def test_deleting_clears_the_session_cookie(c, clean_db):
+    """A planted bug got through (2026-11-20): with the session kept, /api/me still showed nobody, because the account
+    was gone. So the test reads the signed cookie itself (Starlette's format: base64 JSON, signed)."""
+    import base64
+    import json
+    from itsdangerous import TimestampSigner
+    from app import config
+    sign_up(c, READER)
+    post(c, "/api/account/delete", {"password": PW})
+    cookie = c.cookies.get("session")
+    data = json.loads(base64.b64decode(TimestampSigner(config.SESSION_SECRET).unsign(cookie))) if cookie else {}
+    assert "user_id" not in data
