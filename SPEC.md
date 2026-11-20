@@ -786,3 +786,11 @@ asked again: no model call, no new search. (3) Only the person who got the answe
 the feedback: an account its own answers, a visitor its session's last 20); someone else's: 404. An ERROR or a
 greeting has no PDF (400). (4) Nothing is kept: the PDF is made on request. Files of others changed, told: none
 (a new route in Edwin's api_site.py, a new module; the button in Edwin's Answer.jsx).
+
+2026-11-20 - A guided tour of the research page (Edwin; from CedarPay's tutorial, 4 of 7; for NFR9 usability).
+Written before the code. On the first visit of the research page in a browser, a short tour highlights, one at a time:
+the question box, the example questions, "My questions", Settings, and ends with how to read an answer (the status
+badges, the gold citation that opens the exact passage, PDF and feedback). Next / Back / Skip, Escape closes it; a
+step whose part is not on the screen (a phone's closed sidebar) is skipped. Seen once per browser (localStorage); "Take
+the tour" in Settings shows it again. Only on the page: nothing is sent to the server or kept about the visitor.
+Files of others changed, told: the frontend router (Joe).

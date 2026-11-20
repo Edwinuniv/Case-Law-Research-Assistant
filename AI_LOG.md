@@ -919,3 +919,11 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    is logged in" first, and the /account route sent it to /login before "go home" ran. Seen in the headless browser
    (also: the first check came too early, the deletion takes about 3 seconds). Fixed: home first, then refresh.
 
+## 2026-11-20 — CedarPay features, 3-4 of 7: answer as PDF, guided tour (branches feature/answer-pdf, feature/guided-tour)
+
+1. **The tour's card left the screen** on the step that lights the tall "My questions" sidebar: there was no room
+   below or above, and the card was pushed above the top of the window. Seen on the headless browser's screenshots
+   of every step; fixed (below, else above, else beside, else in the middle) and checked on every step at 1280x820
+   and 1024x640 by measuring the card. The PDF showed a data problem that is not ours to fix: some case names hold
+   the reporter's revision note ("SEC v. Jarkesy Revisions: 6/27/24, No. 22-859"), told to Yasser.
+
