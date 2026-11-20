@@ -184,6 +184,10 @@ export default function Chat({ info }) {
           <div ref={bottom} />
         </div>
 
+        {account && info.email_verified === false && (     /* SPEC 11, 2026-11-20: one question until verified */
+          <p className="rs-verify" role="status"><b>Verify your email</b> to keep asking: type the code we sent to{" "}
+            {account.email}. <Link to="/verify">Enter the code</Link></p>
+        )}
         {locked ? (
           <div className="rs-ask">
             <div className="rs-locked" role="status">
