@@ -39,6 +39,7 @@ import "./theme.css";                             // dark pages with white secti
 import Logo from "./components/Logo.jsx";        // the Verdicta logo, white or black V for the theme (Edwin, 2026-11-19)
 import ThemeSwitch from "./components/ThemeSwitch.jsx";
 import Tour from "./components/Tour.jsx";
+import Bell from "./components/Bell.jsx";                  // in-app notifications (Edwin, SPEC 11, 2026-11-20)
 import AnnouncementsBar from "./components/Announcements.jsx";   // banners for everyone (Edwin, 2026-11-20)
 import AdminAnnouncements from "./admin/Announcements.jsx";                  // the guided tour of the research page (Edwin, 2026-11-20)   // Settings: the appearance (Edwin, 2026-11-19)
 
@@ -95,6 +96,7 @@ function App() {
         <Link to="/" className="brand"><Logo /> Verdicta</Link>
         {user && (
           <span className="hdr-right">
+          {user.role === "user" && <Bell />}
           {user.role === "user" && <Link to="/account" className="hdr-account">My account</Link>}
           <button className="logout" onClick={logout} title={`Log out ${user.email}`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
