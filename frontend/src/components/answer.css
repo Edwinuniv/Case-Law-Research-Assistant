@@ -98,3 +98,26 @@
 @media(prefers-reduced-motion:reduce){
   .an *,.an-working *,.an-drawer,.an-backdrop{animation:none!important;transition:none!important}
 }
+
+/* "Was this answer helpful?" (SPEC 11, 2026-11-20) */
+.an-fb{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 22px 16px;border-top:1px solid rgba(255,255,255,.08);
+  font-size:13.5px;color:#a8a29e}
+.an-fb-done{margin:0;color:#34d399}
+.an-fb-btn{background:rgba(255,255,255,.05);color:#e7e5e4;border:1px solid rgba(255,255,255,.12);border-radius:999px;
+  padding:5px 13px;font-size:13px;cursor:pointer}
+.an-fb-btn:hover{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.5)}
+.an-fb-why{display:flex;flex-direction:column;gap:9px;width:100%}
+.an-fb-why small{color:#78716c}
+.an-fb-reasons{display:flex;flex-wrap:wrap;gap:6px}
+.an-fb-reasons button{background:none;color:#d6d3d1;border:1px solid rgba(255,255,255,.14);border-radius:999px;
+  padding:4px 12px;font-size:12.5px;cursor:pointer}
+.an-fb-reasons button:hover{background:rgba(255,255,255,.06)}
+.an-fb-reasons button.on{color:#141418;background:#fbbf24;border-color:#fbbf24}
+.an-fb-why textarea{width:100%;box-sizing:border-box;background:rgba(0,0,0,.25);color:#e7e5e4;border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;resize:vertical}
+.an-fb-go{display:flex;gap:8px}
+.an-fb-send{background:linear-gradient(90deg,#fbbf24,#fb923c);color:#141418;border:0;border-radius:999px;padding:6px 18px;
+  font-weight:700;font-size:13px;cursor:pointer}
+.an-fb-send:hover{background:linear-gradient(90deg,#fbbf24,#fb923c);filter:brightness(1.06)}
+.an-fb-err{color:#f87171;font-size:12.5px}
+

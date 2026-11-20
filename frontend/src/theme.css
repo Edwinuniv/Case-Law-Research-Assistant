@@ -66,6 +66,10 @@
 :root[data-theme="light"] .an-close{background:var(--l-bg);color:var(--l-head)}
 :root[data-theme="light"] .an-close:hover{background:var(--l-edge)}
 :root[data-theme="light"] .an-backdrop{background:rgba(20,20,24,.25)}
+:root[data-theme="light"] .an-fb{color:var(--l-dim);border-top-color:var(--l-edge)}
+:root[data-theme="light"] :is(.an-fb-btn,.an-fb-reasons button){background:var(--l-bg);color:var(--l-ink);border-color:var(--l-edge)}
+:root[data-theme="light"] .an-fb-why textarea{background:var(--l-input);color:var(--l-head);border-color:var(--l-edge)}
+:root[data-theme="light"] .an-fb-done{color:var(--l-ok)}
 
 /* ---------- log in, sign up, forgot password (pages/auth.css) ---------- */
 :root[data-theme="light"] .au{background:var(--l-bg);color:var(--l-head)}
