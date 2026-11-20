@@ -335,3 +335,14 @@ def test_a_passage_of_a_dropped_turn_cannot_be_cited(monkeypatch):              
     r = pipeline.answer("And then?", Recorder([]), INDEX, dict(V2, followup_max_input_tokens=4000),
                         history=[FIRST_TURN, later])                        # FIRST_TURN (P1) is dropped
     assert r["shown_sentences"] == [] and "not sent" in r["removed"][0]["problems"][0]
+
+
+@pytest.mark.parametrize("text", ["hii", "Hiiii!", "heyyy", "hellooo", "Helloo Verdicta", "hiii there", "good morninggg"])
+def test_a_stretched_greeting_gets_the_welcome_message(monkeypatch, text):     # "hii" got "Not supported" live, 2026-11-20
+    monkeypatch.setattr(llm, "ask_model", lambda q, p: (_ for _ in ()).throw(AssertionError("no model call")))
+    assert pipeline.answer(text, NoSearch(), INDEX, S)["status"] == "WELCOME"
+
+
+@pytest.mark.parametrize("text", ["hii, was Chevron overruled?", "Hilton v. Guyot", "heyward v. state"])
+def test_a_question_that_starts_like_a_stretched_greeting_is_still_a_question(text):
+    assert pipeline.is_greeting(text) is False
