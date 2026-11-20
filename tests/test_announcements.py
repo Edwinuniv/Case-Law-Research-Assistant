@@ -70,5 +70,5 @@ def test_deleting_removes_it_and_both_are_in_the_admin_log(c, admin, clean_db):
     assert admin.post(f"/api/admin/announcements/{aid}/delete", headers=csrf(admin)).status_code == 200
     assert shown(c) == []
     with clean_db.connect() as con:
-        paths = [r["detail"].get("path", "") for r in con.execute("SELECT detail FROM admin_log ORDER BY id")]
+        paths = [r["action"] for r in con.execute("SELECT action FROM admin_log ORDER BY id")]
     assert any("announcements" in p and "delete" in p for p in paths) and sum("announcements" in p for p in paths) >= 2
