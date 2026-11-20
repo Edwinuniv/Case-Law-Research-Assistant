@@ -893,6 +893,10 @@ first, then 3 test files from the rule, then the code. What was wrong, and how i
    database after logging that event; seen when the local test site would not start on the copy of the real
    database (which had one verified account from the browser test). On Railway it would have happened at the first
    restart after a sign-up. Fixed: one list only, with a comment; a test restarts twice after a verification.
+5. **The code could be guessed by asking for new codes all day.** 5 tries per code and a new code once a minute
+   still allowed about 7,200 guesses a day (about 0.7% chance of finding the 6 digits). Caught by Yasser's review of
+   #126 ("is the code limited?"). Fixed, rule and test first: at most 5 codes per account in 24 hours, the sign-up's
+   code included (Yasser's point for the test), so at most 25 guesses a day; 3 planted bugs caught by the new test.
 14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
 checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
 
