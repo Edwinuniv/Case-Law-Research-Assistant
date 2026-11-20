@@ -536,3 +536,24 @@ above changes: A032 is answerable and answered (precision and recall unchanged),
 shows: the verifier checks support and attribution sentence by sentence, and nothing checks that an answer's
 conclusion is the Court's holding; our metrics measure false citations and abstentions, not correct conclusions.
 Next step, measured with a rule written first like the rest: compare the answer with the holding passages.
+
+### Answer v2, run 4 (2026-11-20, Edwin): not kept
+Measured under the "Answer v2 rule" above (written 2026-11-13, before any code): run 4, `eval/runs/eval_run_v2.json`,
+all 85 questions, prompt v2 with reasoning_effort "low", the same data, settings and tau_abstain 0.20 as run 2
+(2,415 decisions, 72,502 passages, labels before #119, as the rule asks). TUNE split + adversarial only.
+
+| condition | run 2 rechecked | run 4 (v2) | holds |
+|---|---|---|---|
+| (1) false citations shown | 0 of 56 | 0 of 51 | yes |
+| (2) must_not_appear text shown | 0 | 0 | yes |
+| (3) abstention precision / recall | 0.80 / 0.9412 | **0.68** / 1.0 | **no** (precision) |
+| (4) abstention recall not below 0.941 | | 1.0 | yes |
+| (5) mean kept sentences per answered question | 1.81 (37 answered) | 1.97 (31 answered) | yes |
+
+Also: low confidence 10 -> 23, groundedness (judge) 0.82 -> 0.77, 1 ERROR (A040, a connection error: answered or
+abstained, precision stays at 0.68 or lower, so it cannot change the decision), mean time 2.1 -> 2.5 s.
+Tokens over the 84 answers: 310,597 input (11,008 cached), 14,393 output.
+**Decision, by the rule:** (3) fails, so the old prompt stays and these numbers are reported. The fuller answers made
+Verdicta refuse 8 answerable questions (run 2: 4) and give more low-confidence answers: longer drafts have more
+sentences that fail a check, and the support score falls. The TEST split is not run: the kept prompt is run 2's,
+already reported once. Follow-ups are measured separately (followups-v1, scripts/run_followups.py).
