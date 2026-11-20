@@ -66,7 +66,8 @@ def test_five_wrong_tries_then_even_the_right_code_is_refused(c, mail):
     wrong = "000000" if code != "000000" else "111111"
     for left in (4, 3, 2, 1, 0):
         r = verify(c, wrong)
-        assert r.status_code == 400 and (f"{left} tries left" in r.json()["detail"] or left == 0)
+        words = f"{left} {'try' if left == 1 else 'tries'} left"
+        assert r.status_code == 400 and (words in r.json()["detail"] or left == 0)
     r = verify(c, code)
     assert r.status_code == 400 and "new code" in r.json()["detail"] and verified(c) is False
 

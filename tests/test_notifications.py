@@ -72,8 +72,8 @@ def test_stripe_changing_the_plan_notifies_the_account_once(c, mail, clean_db):
     sign_up(c, READER)
     uid = user_id(clean_db)
     before = len(to_reader(mail))
-    billing.set_plan(uid, "paid", "cus_1", "sub_1")
-    billing.set_plan(uid, "paid", "cus_1", "sub_1")                  # the same event twice: one email
+    billing.switch(uid, "paid", "cus_1", "sub_1")
+    billing.switch(uid, "paid", "cus_1", "sub_1")                    # the same event twice: one email
     assert len(to_reader(mail)) == before + 1 and "paid" in to_reader(mail)[-1]["subject"].lower()
 
 
