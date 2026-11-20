@@ -96,6 +96,14 @@ CREATE TABLE IF NOT EXISTS query_log (           -- SR41, FR28
     n_sentences INT, n_removed INT, removed_citations JSONB, fabrications_caught INT,
     ms_search INT, ms_model INT, ms_total INT, details JSONB, label TEXT);
 
+CREATE TABLE IF NOT EXISTS answer_feedback (        -- "was this answer helpful?" (Edwin, SPEC 11, 2026-11-20)
+    query_id INT PRIMARY KEY REFERENCES query_log(id) ON DELETE CASCADE,   -- one rating per answer
+    helpful BOOLEAN NOT NULL,
+    reason TEXT CHECK (reason IN ('wrong_case', 'missed_holding', 'incomplete', 'should_answer', 'other')),
+    comment TEXT CHECK (length(comment) <= 500),
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,                   -- none for a visitor
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+
 CREATE TABLE IF NOT EXISTS eval_runs (
     id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     trigger TEXT, status TEXT, settings JSONB, note TEXT);

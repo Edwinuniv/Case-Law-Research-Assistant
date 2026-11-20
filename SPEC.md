@@ -752,3 +752,14 @@ three error pages of the React app (page not found, page crashed, server unreach
 GET /admin-preview/401 and /admin-preview/403, which answer an administrator only (others: the real refusal) and change
 nothing. Nothing else changes: the pages shown are the real ones, in the chosen appearance. Files of others changed,
 told: app/main.py (the preview address), the frontend router and the admin menu (Joe).
+2026-11-20 - Feedback on an answer (Edwin; from CedarPay's reviews, 1 of 7 features). Written before the code.
+(1) Under each answer (not an ERROR), "Was this answer helpful?" with yes / no; after "no", an optional reason (wrong
+case or citation, missed the Court's holding, incomplete, it should have answered, other) and an optional comment of
+at most 500 characters. (2) Only the person who got the answer may rate it: an account its own answers, a visitor the
+answers of its browser session (the session remembers its last 20 answer ids; nothing about the visitor is stored).
+Someone else's answer: 404. One rating per answer: rating again changes it. (3) Kept in answer_feedback with the
+answer's id and the account (none for a visitor); an answer deleted deletes its rating. (4) The admin page "Feedback"
+shows the counts (helpful, not helpful, by reason) and the latest ratings with the question, the answer's status and
+the comment, newest first. (5) The ratings are not used by the system itself (no learning, no change of answers): they
+are read by the team, to find answers to look at. Privacy page says so. Files of others changed, told: app/api.py (the
+session remembers a visitor's answers), app/db.py (one table), frontend router and admin menu (Joe).

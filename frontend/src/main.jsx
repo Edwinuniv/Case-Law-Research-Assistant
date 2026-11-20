@@ -21,6 +21,7 @@ import Users from "./admin/Users.jsx";
 import UserDetail from "./admin/UserDetail.jsx";
 import AllQuestions from "./admin/AllQuestions.jsx";
 import AdminLog from "./admin/AdminLog.jsx";
+import Feedback from "./admin/Feedback.jsx";                // answer feedback (Edwin, SPEC 11, 2026-11-20)
 import Chat from "./pages/Chat.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
@@ -132,6 +133,7 @@ function App() {
               <Route path="users/:id" element={<UserDetail />} />   {/* one account (SPEC 11, 2026-11-14) */}
               <Route path="all-questions" element={<AllQuestions />} />   {/* every question (SPEC 11, 2026-11-14) */}
               <Route path="log" element={<AdminLog />} />
+              <Route path="feedback" element={<Feedback />} />
             </Route>
           )}
           <Route path="*" element={<ErrorPage kind="notFound" inApp />} />   {/* not a silent jump to the home page */}
