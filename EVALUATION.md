@@ -557,3 +557,26 @@ Tokens over the 84 answers: 310,597 input (11,008 cached), 14,393 output.
 Verdicta refuse 8 answerable questions (run 2: 4) and give more low-confidence answers: longer drafts have more
 sentences that fail a check, and the support score falls. The TEST split is not run: the kept prompt is run 2's,
 already reported once. Follow-ups are measured separately (followups-v1, scripts/run_followups.py).
+
+## Quote matching v2: quotes with "..." (written 2026-11-20, before any code or measurement; Edwin)
+Why: in run 4 (answer v2) 44 of 105 sentences were removed, 35 of them because their quote joins two real pieces of the
+opinion with an ellipsis ("A ... B"); 4 more were near-exact, 2 paraphrases, 1 not from the opinion (counted on the
+saved drafts, each quote compared with the decision's full text). Check 2 accepts only one unbroken quote, so every
+"A ... B" was removed, and the answers that lost all their sentences became NOT_SUPPORTED.
+**The change (check 2 only).** A quote may contain an ellipsis ("...", "…", ". . .", "[...]", "[…]"). It is cut there;
+every piece must be found word for word (the same norm() as now) in the cited passages, in the order given, each piece
+at least 3 words, the whole quote at least 5 words. Nothing else changes: a near-quote or a paraphrase is still
+removed, a quote from a passage that is not cited is still removed, checks 1 and 3-6 are unchanged. What is shown
+stays the Court's own words: only the joints are left out, as in any legal quotation.
+**How it is measured (no new model answers).** scripts/reverify_run.py on the saved drafts of run 2 (rechecked) and run 4,
+on the same index they were run on (2,415 decisions, 72,502 passages, before #119; reverify refuses a question whose
+passages changed); the judge is asked only for a newly kept sentence. TUNE split + adversarial while deciding;
+tau_abstain 0.20 is not tuned again. Every newly kept sentence is listed in the recheck file for reading.
+**Kept only if ALL hold:** (1) on run 2 rechecked again: 0 false citations shown, no must_not_appear text shown,
+abstention precision and recall each at least 0.80; (2) every newly kept quote in both runs has all its pieces in the
+cited passages (the checker's own re-test, listed); if (1) or (2) fails, the matching stays as it is.
+**Then answer v2 again:** run 4 rechecked with the kept matching is judged by the "Answer v2 rule" above, unchanged
+(conditions 1-5 against run 2 rechecked). If they all hold, the fuller answers (prompt v2) go live; otherwise not, and
+the numbers are reported. The TEST split is reported once, with what is kept.
+**Follow-ups:** the follow-up run saved neither its first answers nor its passages, so it cannot be rechecked; with the
+kept matching, the TUNE pairs are run again (scripts/run_followups.py) and judged by the follow-up rule above.
