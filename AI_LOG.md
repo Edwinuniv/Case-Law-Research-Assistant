@@ -854,3 +854,20 @@ the used link refused; the token gone from the address bar; 404 and no-server pa
    screen: up to 1,326 px; phone: 523 instead of 390). The screenshots were all taken at the top left, so they never
    showed it. Caught by Edwin, who could slide the page to the right. Fixed: the header clips what leaves it on the
    sides (overflow-x: clip); measured on 10 pages at 1,280 and 390 px: no page wider than the screen.
+
+## 2026-11-20 — Measuring the follow-up pairs (scripts/run_followups.py, branch step/followups-measure)
+
+Edwin asked Claude to write the script that measures followups-v1 under the EVALUATION.md follow-up rule. Tests
+first, from the rule (fake model); the script reuses evaluate.py's row, separate checker and metrics, so a follow-up
+is scored like an eval-v1 question. What was wrong, and how it was caught:
+1. **A planted bug got through the first tests.** Not saving the "paused" status at Groq's daily limit passed all
+   13 tests: the test only checked which pairs were in the file, and they had been saved already. Caught by planting
+   10 bugs on purpose (9 caught); the test now checks the status too.
+2. **A verdict on a run where everything failed.** A run on the real data with no model key (no tokens spent) saved
+   both pairs as "first answer failed", yet the verdict said "no false citation, no forbidden text": nothing was
+   shown, so nothing was false. Caught by reading that run's report. Fixed, test first: a run with an ERROR gives no
+   verdict, only "rerun them before deciding".
+Also: evaluate.answer_with_retry passes the chat history only for a follow-up; an eval-v1 question makes exactly the
+same call as before (the first version passed history=None to every call, and 5 existing tests with their own fake
+answer failed on the new argument).
+
