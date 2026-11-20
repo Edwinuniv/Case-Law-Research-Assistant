@@ -36,7 +36,8 @@ import "./style.css";
 import "./life.css";                              // white light on the dark pages (Edwin; for Yasser's opinion)
 import "./theme.css";                             // dark pages with white sections, or the reverse (Edwin)
 import Logo from "./components/Logo.jsx";        // the Verdicta logo, white or black V for the theme (Edwin, 2026-11-19)
-import ThemeSwitch from "./components/ThemeSwitch.jsx";   // Settings: the appearance (Edwin, 2026-11-19)
+import ThemeSwitch from "./components/ThemeSwitch.jsx";
+import Tour from "./components/Tour.jsx";                  // the guided tour of the research page (Edwin, 2026-11-20)   // Settings: the appearance (Edwin, 2026-11-19)
 
 // The loading screen of index.html (Edwin, 2026-11-19): it fades out once the page is ready. On the first visit
 // of this tab it stays until its animation has played once (about 2.1 s since the page started loading).
@@ -146,6 +147,7 @@ function App() {
         </Routes>
       </main>
       <ThemeSwitch />   {/* Settings, on every page */}
+      {path === "/research" && <Tour />}
     </>
   );
 }
