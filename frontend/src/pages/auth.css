@@ -62,7 +62,8 @@
 .au-note b{color:#fff}.au-note a{color:#7dd3fc}
 .au-submit{display:grid;place-items:center;height:48px;margin-top:4px;border:0;border-radius:999px;cursor:pointer;font-size:16px;font-weight:700;color:#141418;
   background:linear-gradient(90deg,#fbbf24,#fb923c);box-shadow:0 10px 30px rgba(245,158,11,.3);transition:transform .2s,box-shadow .2s}
-.au-submit:hover{transform:translateY(-1px);box-shadow:0 14px 36px rgba(245,158,11,.4)}
+.au-submit:hover{transform:translateY(-1px);box-shadow:0 14px 36px rgba(245,158,11,.4);
+  background:linear-gradient(90deg,#fbbf24,#fb923c)}   /* style.css's button:hover painted it dark grey */
 .au-submit:disabled{opacity:.7;cursor:default;transform:none}
 .au-as-button{text-decoration:none}
 .au-spin{width:20px;height:20px;border-radius:50%;border:3px solid rgba(20,20,24,.25);border-top-color:#141418;animation:au-rot .8s linear infinite}
@@ -96,3 +97,7 @@
 .au-google-btn{display:flex;justify-content:center;min-height:44px}
 .au-or{display:flex;align-items:center;gap:12px;margin:0 0 14px;font-size:12px;color:#8a837d;text-transform:uppercase;letter-spacing:.08em}
 .au-or::before,.au-or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
+/* the verification code (Edwin, 2026-11-20): one wide box, the digits spaced like the email's */
+.au-form input.au-code{font:700 26px/1 Menlo,Consolas,monospace;letter-spacing:.5em;text-align:center;padding:14px 10px}
+.au-linkbtn{background:none;border:0;padding:0;font:inherit;color:#fbbf24;font-weight:600;cursor:pointer}
+.au-linkbtn:hover{background:none;text-decoration:underline}
