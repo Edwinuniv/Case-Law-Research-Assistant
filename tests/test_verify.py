@@ -262,3 +262,37 @@ def test_a_dropped_word_is_still_removed_after_the_new_matching():           # A
 
 def test_a_dash_between_words_is_not_joined():                               # only a hyphen at a line break joins
     assert not quoted("The statute - read as a whole - forbids it.", "The statute read as a whole forbids it")
+
+
+# --- Quote matching v2 (EVALUATION.md, 2026-11-20): a quote may join real pieces of the passage with an ellipsis ---
+import pytest   # noqa: E402
+
+SENTENCE = "The President has absolute immunity for conclusive and preclusive actions."
+
+
+@pytest.mark.parametrize("quote", [
+    "enjoys absolute immunity ... conclusive and preclusive constitutional authority",
+    "The President enjoys … for actions within his conclusive",
+    "enjoys absolute immunity . . . The indictment was returned",
+    "The President enjoys absolute immunity [...] preclusive constitutional authority",
+    "The President enjoys absolute immunity […] preclusive constitutional authority"])
+def test_real_pieces_joined_by_an_ellipsis_are_kept(quote):
+    kept, removed = run(SENTENCE, quote=quote)
+    assert len(kept) == 1 and not removed
+
+
+@pytest.mark.parametrize("quote, why", [
+    ("preclusive constitutional authority ... The President enjoys absolute immunity", "pieces out of order"),
+    ("enjoys absolute immunity ... for every act of his life", "a piece not in the passage"),
+    ("The President enjoys absolute immunity ... his conclusive", "a piece of 2 words"),
+    ("absolute immunity ... returned in", "under 5 words with the pieces of 2 words"),
+    ("enjoys absolute immunity ... ... ... preclusive constitutional authority", "empty pieces between ellipses"),
+])
+def test_a_quote_with_an_ellipsis_is_still_checked_piece_by_piece(quote, why):
+    kept, removed = run(SENTENCE, quote=quote)
+    assert not kept and "quote" in removed[0]["problems"][0], why
+
+
+def test_a_near_quote_is_still_removed():                 # the rule changes the ellipsis only
+    kept, removed = run(SENTENCE, quote="The President has absolute immunity for actions within his conclusive")
+    assert not kept
