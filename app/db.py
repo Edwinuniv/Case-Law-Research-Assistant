@@ -158,11 +158,10 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 -- 2026-11-14 (Joe, SPEC section 11): each question of a saved chat; a deleted chat keeps its questions (FR28)
 ALTER TABLE query_log ADD COLUMN IF NOT EXISTS chat_id INT REFERENCES chats(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS query_log_chat ON query_log (chat_id, id);
--- 2026-11-19 (Edwin, SPEC section 11): forgot password, a new event in the user log
-ALTER TABLE user_log DROP CONSTRAINT IF EXISTS user_log_event_check;
-ALTER TABLE user_log ADD CONSTRAINT user_log_event_check CHECK (event IN ('signup', 'login', 'login_failed',
-    'logout', 'question', 'follow_up', 'plan_change', 'refused', 'password_reset'));
--- 2026-11-20 (Edwin, SPEC section 11): email verification. The accounts that exist already count as verified
+-- 2026-11-19 (Edwin, SPEC section 11): forgot password, a new event in the user log (password_reset); the list of
+-- events is re-made once, below, with every event: two lists made in a row failed once a newer event was logged.
+-- 2026-11-20 (Edwin, SPEC section 11): email verification. The user log's list of events, the only place it is
+-- re-made: add a new event HERE (and in SCHEMA and logs.USER_EVENTS), never in a second statement. The accounts that exist already count as verified
 -- (DEFAULT TRUE fills them), then every new account starts unverified (DEFAULT FALSE).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE users ALTER COLUMN email_verified SET DEFAULT FALSE;
