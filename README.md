@@ -63,6 +63,9 @@ pages of the site and the server's 401/403 pages, in the chosen appearance; a bu
 My account (/account, a logged-in user account): details and plan, change password, delete the account with its
 questions, chats and ratings (a paid test subscription is cancelled first). Links in the header and the chat sidebar.
 
+PDF: "⤓ PDF" under an answer downloads it as a research note (question, verified sentences, citations and the exact
+quotes); made from the saved answer, only for the person who got it.
+
 Feedback: under each answer, "Was this answer helpful?" (yes, or no with a reason and a comment); administrators
 read the ratings on the admin page "Feedback". Only the person who got an answer can rate it.
 
