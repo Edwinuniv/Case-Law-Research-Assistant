@@ -126,3 +126,11 @@
   color:#fbbf24;text-decoration:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35)}
 .an-meta>a.an-pdf:hover{background:rgba(251,191,36,.16)}
 
+/* "Save": an account keeps the answer in its saved answers (SPEC 11, 2026-11-20) */
+.an-meta>button.an-save{background:none;color:#e7e5e4;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px 12px;
+  font-size:13px;font-weight:600;cursor:pointer}
+.an-meta>button.an-save:hover{background:rgba(251,191,36,.12)}
+.an-meta>button.an-save.on{color:#fbbf24;border-color:rgba(251,191,36,.5)}
+:root[data-theme="light"] .an-meta>button.an-save{color:#2b2b31;border-color:rgba(20,20,24,.15)}
+:root[data-theme="light"] .an-meta>button.an-save.on{color:#b45309;border-color:rgba(180,83,9,.4)}
+
