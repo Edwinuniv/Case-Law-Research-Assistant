@@ -110,6 +110,11 @@ CREATE TABLE IF NOT EXISTS answer_feedback (        -- "was this answer helpful?
     user_id INT REFERENCES users(id) ON DELETE SET NULL,                   -- none for a visitor
     created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 
+CREATE TABLE IF NOT EXISTS bookmarks (              -- saved answers (Edwin, SPEC 11, 2026-11-20)
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    query_id INT NOT NULL REFERENCES query_log(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (user_id, query_id));
+
 CREATE TABLE IF NOT EXISTS eval_runs (
     id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     trigger TEXT, status TEXT, settings JSONB, note TEXT);
