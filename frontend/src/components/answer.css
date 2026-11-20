@@ -121,3 +121,8 @@
 .an-fb-send:hover{background:linear-gradient(90deg,#fbbf24,#fb923c);filter:brightness(1.06)}
 .an-fb-err{color:#f87171;font-size:12.5px}
 
+/* "PDF": the answer as a research note (SPEC 11, 2026-11-20) */
+.an-meta>a.an-pdf{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 12px;font-weight:600;
+  color:#fbbf24;text-decoration:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35)}
+.an-meta>a.an-pdf:hover{background:rgba(251,191,36,.16)}
+
