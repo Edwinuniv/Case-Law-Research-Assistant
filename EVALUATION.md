@@ -735,3 +735,12 @@ marks too. **S003 is weak**: one procedural line, because the model glued the do
 pick is cut off and the rest is checked as a pick (5 words or more), instead of removing the whole pick; a pick that
 is only a docket line is still removed. Run 5: the same 14 requests and conditions, on the data as it will be live
 (Yasser's #142 citation map and #143 names, loaded after run 4), said in the report; eval/runs/summaries_run5.json.
+**Run 5 result (2026-11-21; eval/runs/summaries_run5.json, _report.txt), on the data as live** (#119 passages, #142
+citation map: 113,810 rows, #143 names). (1) 0 false citations shown of 47 (S011's Blodgett pick is now confirmed by
+the map and shown); (2) 100% of 58 lines; (3) 13 of 14 shown. (g) and (h) fixed run 4's failures: S007 shows both
+passages (Justice Scalia's and Justice Kennedy's), S003 shows Riley's facts. (4) read by the AI (said so): 12 of 13
+give their passages' point; **S011 fails again** (as in run 2): one line, "Striking down an Act of Congress is the
+gravest and most delicate duty...", while the passage states the holding ("declare § 4(b) unconstitutional"). (4)
+fails: **passage summaries stay off.** Also: **S014 ("summarize the case") ended in a Groq API error in runs 3, 4 and
+5**: a pattern, not chance; a whole-case request sends up to 12 passages, probably more than one free-tier request
+accepts. To be checked before any run 6.
