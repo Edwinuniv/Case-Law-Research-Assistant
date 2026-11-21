@@ -858,3 +858,18 @@ only the 7 decisions' stored embeddings were computed with the old name (until t
 restarted after --apply (the citation index keeps the names in memory).
 Result (2026-11-21, Yasser's database): the dry run listed exactly the 7 names, each losing only its "Revisions:
 <date>"; --apply changed those 7 of 2,415 (report saved in ingestion_reports, kind case_names).
+
+2026-11-21 - Edit, versions, copy and a navigator in the chat (Edwin, on request, like the screenshots he sent).
+Written before the code. (1) Under each question the user wrote: copy, and edit. Editing sends the new wording as a
+NEW question, answered by the pipeline like any other (it counts toward the limits; nothing earlier is changed or
+deleted, FR28 keeps every row). The old and new wordings are versions of the same place in the chat: "< 1 / 2 >"
+switches between them, and each version shows its own answer and the questions asked after it (a tree: every
+question has a parent, the answer it followed; versions share a parent). (2) For an account, the parent is saved
+with the question (query_log details), only a question of the same chat may be a parent (404 otherwise, before the
+model), and reopening a chat shows every version; a chat saved before this has no parents and reads as one line. A
+visitor's versions live only in the page, like the rest of a visitor's questions. (3) A passage request ("summarise
+the first passage") uses the parent's answer, the one on screen, not the chat's newest row. Follow-ups (off) still
+read the chat in order: noted, to change when they are switched on. (4) Under each answer: copy (the shown sentences
+and their citations as plain text). (5) On the right of the conversation, one mark per question on screen, the one in
+view highlighted, click to go there; a round button to go back to the bottom when the page is scrolled up. Files of
+others changed, told: app/api.py and app/db.py (the parent), pages/Chat.jsx and research.css (Joe).
