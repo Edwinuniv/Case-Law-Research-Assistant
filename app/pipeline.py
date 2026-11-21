@@ -257,7 +257,8 @@ def answer(question, searcher, index, settings, skip_gate=False, history=None, p
     sentences (verified only)}. With no history, everything below runs exactly as in the evaluated system.
     previous: the chat's last answer (a turn), for a passage request ("summarize the first passage")."""
     request = passage_request(question)
-    if request is not None:                                       # no eval-v1 question is one (test)
+    if request is not None and (settings.get("passage_summaries", False) or not history):   # no eval-v1 question
+        # is a request (test); off, a follow-up keeps it in the chat's case instead (EVALUATION.md, 2026-11-21)
         return answer_passages(question, request, previous or (history[-1] if history else None), searcher, index,
                                settings)
     if history:
