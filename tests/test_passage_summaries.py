@@ -337,9 +337,33 @@ def test_a_pick_with_a_citation_that_is_not_in_the_table_is_removed_even_if_the_
     assert not r["shown_sentences"] and "citation" in r["removed"][0]["problems"][0]
 
 
-def test_a_pick_with_a_real_citation_is_kept(monkeypatch):
-    picks(monkeypatch, ("P1", "See Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984) for the old rule of deference."))
+CHEVRON = "See Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984) for the old rule of deference."
+
+
+def test_a_real_citation_in_the_opinions_citation_map_is_kept(monkeypatch):            # rule (f), before run 4
+    asked = []
+    monkeypatch.setattr(pipeline, "in_citation_map", lambda opinions, clusters: asked.append((opinions, clusters)) or True,
+                        raising=False)
+    picks(monkeypatch, ("P1", CHEVRON))
     assert pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)["shown_sentences"]
+    assert asked == [([WITH_CITES["opinion_id"]], [111])]       # the passage's opinion, the citation's clusters
+
+
+def test_a_real_citation_outside_the_passages_and_the_citation_map_is_removed(monkeypatch):   # run 3: Blodgett
+    monkeypatch.setattr(pipeline, "in_citation_map", lambda opinions, clusters: False, raising=False)
+    picks(monkeypatch, ("P1", CHEVRON))
+    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)
+    assert not r["shown_sentences"]
+    assert r["removed"][0]["problems"] == ["citation not from a passage sent or its citation map: 467 U.S. 837"]
+
+
+def test_a_citation_of_a_passage_sent_needs_no_citation_map(monkeypatch):
+    monkeypatch.setattr(pipeline, "in_citation_map", lambda *a: (_ for _ in ()).throw(AssertionError("not needed")),
+                        raising=False)
+    passage = {**MAJORITY, "text": "As the Court held in Trump v. United States, 603 U.S. 593 (2024), the immunity is absolute."}
+    turn = json.loads(json.dumps({"question": "q", "sentences": [], "passages": [["P1", passage]]}))
+    picks(monkeypatch, ("P1", "As the Court held in Trump v. United States, 603 U.S. 593 (2024), the immunity is absolute."))
+    assert pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=turn)["shown_sentences"]
 
 
 @pytest.mark.parametrize("section, opinion_label, shown", [
