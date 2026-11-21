@@ -836,5 +836,6 @@ with " Revisions: M/D/YY" (2024 slip opinions: NRA v. Vullo, Garland v. Cargill,
 v. EPA, Purdue Pharma); "School District No. 92" and the long official names are real and stay. Rule: (1) a case
 name loses a trailing "Revisions: <date>" (or "Revision:"), and nothing else; (2) the loader cleans names when it
 loads them; (3) scripts/fix_case_names repairs a loaded database: dry run lists each change, --apply writes it,
-in decisions.case_name only (no re-index: the passage headers show the name, so the 7 decisions' passages keep the
-old name until the next re-index).
+in decisions.case_name only. No re-index: the page and the model read the name from decisions at each question;
+only the 7 decisions' stored embeddings were computed with the old name (until the next re-index). The site is
+restarted after --apply (the citation index keeps the names in memory).
