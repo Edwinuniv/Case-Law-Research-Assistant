@@ -3,7 +3,7 @@ import re
 import time
 from app import config, llm
 from app.citations import find_case_names, find_citations
-from app.verify import verify, count_fabrications, groundedness, norm, quote_found
+from app.verify import PAGE_MARKER, verify, count_fabrications, groundedness, norm, quote_found
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
 WELCOME = "WELCOME"
@@ -209,6 +209,9 @@ def label_of(p):
     return " - ".join(x for x in (opinion, section) if x) or "Passage"
 
 
+DOCKET = re.compile(r"^\s*No\.\s*\d|\bArgued\b.{0,40}\bDecided\b", re.I)   # run 2, S003: "No. 13-132. Argued ..."
+
+
 def checked_picks(draft, passages, index, per_passage=3, total=8):
     """The model's picks -> (shown, removed). A pick is shown only if it comes from a requested passage (check 1) and is
     found word for word in it (check 2, at least 5 words); the line is ours: the label, then the passage's own words in
@@ -225,12 +228,17 @@ def checked_picks(draft, passages, index, per_passage=3, total=8):
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": ["quote not found in the cited passage"]})
             continue
+        if DOCKET.search(words):                                      # run 3 rule (d): not the passage's point
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["a docket or argument line, not the passage's point"]})
+            continue
         unknown = [c for c in find_citations(words) if not index.clusters_for(c)]   # check 3 (run 1: the source's
         if unknown:                                                                  # own "521 U.S. 701")
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": [f"citation not in the citation table (written in the passage): {unknown[0]}"]})
             continue
-        kept.append({"text": f"{label_of(passages[pid])}: \u201c{words}\u201d", "sources": [pid], "quote": words,
+        shown = " ".join(PAGE_MARKER.sub(" ", words).split())          # rule (e): "*803" is not a word of the Court
+        kept.append({"text": f"{label_of(passages[pid])}: \u201c{shown}\u201d", "sources": [pid], "quote": words,
                      "groundedness": round(groundedness(words, text), 3)})
     kept.sort(key=lambda x: int(x["sources"][0][1:]))             # stable: the model's order inside a passage
     shown, per = [], {}
