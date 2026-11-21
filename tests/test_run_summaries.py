@@ -4,13 +4,14 @@ Fake search, model and checker: no database, no Groq."""
 import json
 import pytest
 from app import llm
+from app.config import DEFAULT_SETTINGS
 from scripts import run_summaries as run
 from tests.test_citations import INDEX
 from tests.test_passage_summaries import OneSearch
 
 ITEM = {"id": "S001", "first_id": "A035", "first": "Is the President immune?", "request": "summarize the first passage",
         "kind": "passage", "split": "tune"}
-S = dict(run.SETTINGS_FOR_RUN)
+S = dict(DEFAULT_SETTINGS, **run.SETTINGS_FOR_RUN)     # as the run: the defaults + the rule's settings
 
 
 @pytest.fixture
@@ -86,7 +87,7 @@ def test_the_daily_limit_pauses_the_run_and_keeps_what_is_done(monkeypatch, tmp_
     monkeypatch.setattr(llm, "ask_model", day)
     path = tmp_path / "run.json"
     with pytest.raises(run.DailyLimit):
-        run.run_all([ITEM], OneSearch(), INDEX, path, checker=no_citations, log=lambda m: None)
+        run.run_all([ITEM], OneSearch(), INDEX, path, S, checker=no_citations, log=lambda m: None)
     assert json.loads(path.read_text())["rows"] == []
 
 
