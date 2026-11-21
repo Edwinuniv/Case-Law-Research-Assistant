@@ -685,3 +685,16 @@ words (a quote can carry the source's errors); (b) when the section heading does
 starts with the opinion's own label: "Dissenting opinion (Scalia) - Part II". Run 2: the same 14 requests (TUNE), the
 same conditions, a fresh run (the passages' search scores were not saved in run 1, so it cannot be rechecked; run 2
 saves them). Saved as eval/runs/summaries_run2.json and _report.txt.
+**Run 2 result (2026-11-21; eval/runs/summaries_run2.json, _report.txt).** 14 of 14 run (paused twice at Groq's daily
+limit, resumed). (1) 0 false citations shown of 50 (the Glucksberg "521 U.S. 701" pick was removed by (a)); (2) 100% of
+64 lines cite only a passage sent; (3) 14 of 14 shown. (4) Edwin delegated the reading to the AI ("do what you feel is
+best"), so this reading is the AI's, recorded as such: 12 summaries give their passages' main point; **S003 does not**
+(Riley's syllabus: "No. 13-132. Argued April 29, 2014...", the traffic stop, the motion to suppress: docket and facts,
+not the holding); S011 is borderline (one line, "Striking down an Act of Congress is the gravest and most delicate
+duty", true but not the passage's point). The rule says each summary, so **(4) fails and summaries stay off.**
+**Before run 3 (written 2026-11-21, before any code):** (c) the picker is told to prefer what is decided and why (a
+"Held:" line, the holding, the reasoning) over facts of the case, the procedural history and docket lines; (d) our code
+removes a pick that is a docket or argument line ("No. 13-132", "Argued ... Decided ..."); (e) page markers ("*803")
+are left out of the shown words, as norm() already leaves them out when matching (the words shown stay the passage's
+own). Run 3: the same 14 requests, the same conditions, condition (4) read by Edwin if he can, otherwise again by the
+AI, said so. Saved as eval/runs/summaries_run3.json.
