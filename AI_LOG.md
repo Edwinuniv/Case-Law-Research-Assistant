@@ -1031,3 +1031,17 @@ tests and a repair script (SPEC 11 first). What was wrong:
    tied to the end of the name, and one removing anything after "Revisions:" instead of a date. Two tests were added
    from the rule's words ("trailing", "a date"): a revisions date in the middle and "Revisions: pending" stay.
    All 4 planted bugs are now caught.
+
+## 2026-11-21 — Edit, versions, copy, navigator and pinned chats (branch feature/chat-edit-copy)
+
+1. **A syntax error in api.py**: `record(..., saved, **keep, {"demo": True})` (a positional argument after `**`);
+   caught at once by the tests (collection error), fixed by putting `**keep` last.
+2. **The first question of a new chat was saved without its place in the tree**: the condition was "has a chat id",
+   but a new chat gets its id only when the answer is saved. Caught by the test written from the rule; the condition
+   is now "an account".
+3. **The navigator was drawn in the wrong place**: `position: fixed` inside a parent with a CSS transform sits
+   relative to that parent, not the screen (marks at x = 415 instead of the right edge). Caught on the screenshot of
+   the browser check; drawn in <body> with a portal, measured again in both themes.
+4. **A test that could not pass**: the 10-pin limit test asked 11 questions, past a free account's 10 a day and the
+   10 a minute per address; the chats are now made in the database. 9 planted bugs (3 for each part) all caught.
+
