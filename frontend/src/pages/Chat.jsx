@@ -18,6 +18,7 @@ import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
 import PlansDialog from "../components/PlansDialog.jsx";   // the plans panel (Edwin, 2026-11-16)
 import Working from "../components/Working.jsx";
+import { CopyButton, Navigator, PenIcon, Versions } from "../components/ChatTools.jsx";   // Edwin, SPEC 11, 2026-11-21
 import "./research.css";
 
 const MAX = 1000;                                    // the longest question the server accepts (SR3)
@@ -33,8 +34,26 @@ const Arrow = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /><path d="M13 6l6 6-6 6" /></svg>
 );
 
+// Edit and versions (Edwin, SPEC 11, 2026-11-21): every question remembers its parent, the answer it followed; an edit
+// is a new question with the same parent, so the versions of one place are siblings. The page shows one path: at each
+// place the version picked ("< 1 / 2 >"), by default the newest, then the questions asked after it.
+function shownPath(nodes, pick) {
+  const path = [];
+  let parent = null;
+  for (;;) {
+    const siblings = nodes.filter((n) => n.parent === parent);
+    if (siblings.length === 0) return path;
+    const node = siblings.find((n) => n.id === pick[parent ?? "root"]) || siblings[siblings.length - 1];
+    path.push({ node, index: siblings.indexOf(node), siblings });
+    parent = node.id;
+  }
+}
+
 export default function Chat({ info }) {
-  const [turns, setTurns] = useState([]);          // [{question, answer}] shown on the page
+  const [nodes, setNodes] = useState([]);          // every question asked on this page or in the open chat, with its answer
+  const [pick, setPick] = useState({});            // parent id ("root" for none) -> the version shown
+  const [editing, setEditing] = useState(null);    // {id, text}: a question being edited
+  const turns = shownPath(nodes, pick);            // what is on screen
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState("");     // the question being answered right now
@@ -64,7 +83,7 @@ export default function Chat({ info }) {
     loadChats();
   }, [account?.email]);
 
-  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [turns, busy]);
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [nodes.length, busy]);
   useEffect(() => {                                // which answers this account saved (Edwin, SPEC 11, 2026-11-20)
     if (account) api("/bookmarks").then((b) => setSaved(new Set(b.map((x) => x.query_id))), () => {});
   }, [account?.email]);
@@ -82,14 +101,22 @@ export default function Chat({ info }) {
     t.style.height = `${Math.min(t.scrollHeight, 6 * 26 + 16)}px`;
   }, [question]);
 
-  async function ask(e, text) {
+  async function ask(e, text, editOf) {          // editOf: the question edited (its new version gets the same parent)
     e?.preventDefault();
     const q = text ?? question;
-    if (!q.trim() || busy) return;
-    setBusy(true); setError(""); setPending(q); setQuestion("");
+    if (!q.trim() || busy) return false;
+    const parent = editOf ? editOf.parent : (turns.length ? turns[turns.length - 1].node.id : null);
+    setBusy(true); setError(""); setPending(q); if (!editOf) setQuestion("");
     try {
-      const a = await api("/ask", account && chatId ? { question: q, chat_id: chatId } : { question: q });
-      setTurns((t) => [...t, { question: a.question, answer: a }]);
+      const body = { question: q };
+      if (account) {                               // an account: the server keeps the tree with the chat
+        if (chatId) body.chat_id = chatId;
+        body.parent_id = parent;
+      }
+      const a = await api("/ask", body);
+      const id = a.id ?? `page-${Date.now()}`;
+      setNodes((n) => [...n, { id, question: a.question, answer: a, parent }]);
+      setPick((p) => ({ ...p, [parent ?? "root"]: id }));
       if (account) { setChatId(a.chat_id); loadChats(); }          // the chat moves to the top of "My chats"
       else setHistory((h) => [{ id: a.id, question: a.question, status: a.status, answer: a }, ...h]);
       if (!account && !a.demo && !["WELCOME", "ERROR"].includes(a.status)) setLeft(0);   // as the server counts
@@ -98,9 +125,17 @@ export default function Chat({ info }) {
       if (!account && err.message.startsWith("You have used your free question")) setLeft(0);
       else setError(err.message);                  // e.g. the SR3 length message, or the 429 wait
       if (text === undefined) setQuestion(q);      // give the question back so it can be sent again
+      return false;
     } finally {
       setBusy(false);
     }
+    return true;
+  }
+
+  async function sendEdit(node) {                   // a new version beside the old one; nothing is deleted
+    const text = editing.text.trim();
+    if (!text || text === node.question) { setEditing(null); return; }
+    if (await ask(null, text, node)) setEditing(null);
   }
 
   function onKey(e) {                               // Enter sends, Shift+Enter makes a new line
@@ -110,24 +145,35 @@ export default function Chat({ info }) {
   async function showEarlier(h) {                  // a visitor: an earlier answer from this page's memory
     setPanel(false);
     if (account) return openChat(h);
-    setTurns((t) => [...t, { question: h.question, answer: h.answer, earlier: true }]);
+    const parent = turns.length ? turns[turns.length - 1].node.id : null;
+    const id = `earlier-${h.id}-${Date.now()}`;
+    setNodes((n) => [...n, { id, question: h.question, answer: h.answer, parent, earlier: true }]);
+    setPick((p) => ({ ...p, [parent ?? "root"]: id }));
   }
 
   async function openChat(c) {                     // an account: an earlier chat, shown as it was, and continued
     setError("");
     try {
       const chat = await api(`/chats/${c.id}`);
-      setTurns(chat.turns.filter((t) => t.shown).map((t) => ({ question: t.question, answer: t.shown })));
+      const rows = chat.turns.filter((t) => t.shown);
+      const ids = new Set(rows.map((t) => t.id));
+      let before = null;                            // a chat saved before 2026-11-21 has no parents: one line
+      setNodes(rows.map((t) => {
+        const parent = t.linked ? (ids.has(t.parent) ? t.parent : null) : before;
+        before = t.id;
+        return { id: t.id, question: t.question, answer: t.shown, parent };
+      }));
+      setPick({}); setEditing(null);
       setChatId(chat.id);
     } catch (err) { setError(err.message); }
   }
 
   function newQuestion() {                          // a clean page (an account: a new chat); the list stays
-    setTurns([]); setError(""); setQuestion(""); setPanel(false); setChatId(null);
+    setNodes([]); setPick({}); setEditing(null); setError(""); setQuestion(""); setPanel(false); setChatId(null);
     setTimeout(() => box.current?.focus(), 0);
   }
 
-  const started = turns.length > 0 || busy;
+  const started = nodes.length > 0 || busy;
 
   return (
     <div className={`rs ${started ? "started" : ""}`}>
@@ -186,9 +232,35 @@ export default function Chat({ info }) {
         )}
 
         <div className="rs-thread">
-          {turns.map((t, i) => (
-            <div key={i} className="rs-turn">
-              <p className="rs-question">{t.question}{t.earlier && <span> · earlier answer</span>}</p>
+          {turns.map(({ node: t, index, siblings }) => (
+            <div key={t.id} id={`q-${t.id}`} className="rs-turn">
+              {editing?.id === t.id ? (
+                <div className="ct-edit">
+                  <textarea value={editing.text} maxLength={MAX} autoFocus aria-label="Edit your question"
+                            onChange={(e) => setEditing({ ...editing, text: e.target.value })}
+                            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendEdit(t); }
+                                                if (e.key === "Escape") setEditing(null); }} />
+                  <div className="ct-edit-bar">
+                    <button type="button" onClick={() => setEditing(null)}>Cancel</button>
+                    <button type="button" className="main" onClick={() => sendEdit(t)}
+                            disabled={busy || !editing.text.trim()}>Send</button>
+                  </div>
+                  <p className="ct-edit-note">Sent as a new question; the first version stays, switch with ‹ ›.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="rs-question">{t.question}{t.earlier && <span> · earlier answer</span>}</p>
+                  <div className="ct-row">
+                    <CopyButton text={t.question} label="Copy your question" />
+                    {!locked && !t.earlier && (
+                      <button type="button" className="ct-icon" onClick={() => setEditing({ id: t.id, text: t.question })}
+                              disabled={busy} aria-label="Edit your question" title="Edit"><PenIcon /></button>
+                    )}
+                    <Versions index={index} count={siblings.length}
+                              onPick={(k) => setPick((p) => ({ ...p, [t.parent ?? "root"]: siblings[k].id }))} />
+                  </div>
+                </>
+              )}
               <Answer a={t.answer} onOpen={(chunkId, quote) => setOpen({ chunkId, quote })}
                       save={account && t.answer.id ? { saved: saved.has(t.answer.id), toggle: () => toggleSave(t.answer.id) } : undefined} />
             </div>
@@ -196,6 +268,7 @@ export default function Chat({ info }) {
           {busy && <Working question={pending} />}
           <div ref={bottom} />
         </div>
+        {started && <Navigator ids={turns.map((x) => x.node.id)} titles={turns.map((x) => x.node.question)} />}
 
         {account && info.email_verified === false && (     /* SPEC 11, 2026-11-20: one question until verified */
           <p className="rs-verify" role="status"><b>Verify your email</b> to keep asking: type the code we sent to{" "}
