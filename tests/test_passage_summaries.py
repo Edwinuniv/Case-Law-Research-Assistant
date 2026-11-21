@@ -257,3 +257,9 @@ def test_the_case_is_the_cited_decisions_passages_plus_its_syllabus(model):
 
 def test_with_no_earlier_answer_a_case_request_gets_the_fixed_text(no_model):
     assert pipeline.answer("summarize the case", NoSearch(), INDEX, ON)["status"] == "WELCOME"
+
+
+def test_the_cases_syllabus_is_kept_even_when_the_search_finds_it_last(model):     # a planted bug got through
+    many = [{**MAJORITY, "chunk_id": f"1-{n}"} for n in range(20, 25)] + [SYLLABUS]
+    r = pipeline.answer("summarize the case", InsideSearch(found=many), INDEX, ON, previous=CITED)
+    assert any(p["chunk_id"] == "1-1" for _, p in r["passages"])
