@@ -11,7 +11,7 @@ from tests.test_verify import PASSAGE, QUOTE
 ON = dict(DEFAULT_SETTINGS, passage_summaries=True)
 OFF = dict(DEFAULT_SETTINGS, passage_summaries=False)
 
-DISSENT = {**PASSAGE, "chunk_id": "1-9", "opinion_label": "Dissent", "section": "Sotomayor, J., dissenting",
+DISSENT = {**PASSAGE, "chunk_id": "1-9", "date_filed": "2024-07-01", "opinion_label": "Dissent", "section": "Sotomayor, J., dissenting",
            "text": "With fear for our democracy, I dissent. The President is now a king above the law."}
 MAJORITY = {**PASSAGE, "opinion_label": "Majority opinion", "section": "Opinion of the Court (Roberts)",
             "date_filed": "2024-07-01"}
@@ -211,10 +211,10 @@ def test_a_summary_is_not_a_turn_so_the_next_request_still_means_the_same_answer
 
 
 # ---------- widened (EVALUATION.md, 2026-11-21): citations, opinions, the case ----------
-SYLLABUS = {**PASSAGE, "chunk_id": "1-1", "opinion_label": "Syllabus", "section": "Syllabus", "is_syllabus": True,
+SYLLABUS = {**PASSAGE, "chunk_id": "1-1", "date_filed": "2024-07-01", "opinion_label": "Syllabus", "section": "Syllabus", "is_syllabus": True,
             "text": "Held: The President enjoys absolute immunity for actions within his conclusive and preclusive "
                     "constitutional authority."}
-CONCURRENCE = {**PASSAGE, "chunk_id": "1-7", "opinion_label": "Concurrence", "section": "Barrett, J., concurring in part",
+CONCURRENCE = {**PASSAGE, "chunk_id": "1-7", "date_filed": "2024-07-01", "opinion_label": "Concurrence", "section": "Barrett, J., concurring in part",
                "text": "I agree that the Constitution prohibits Congress from criminalizing the President's conduct."}
 OTHER_CASE = {**PASSAGE, "chunk_id": "2-0", "decision_id": 222, "case_name": "Nixon v. Fitzgerald",
               "section": "Opinion of the Court (Powell)", "opinion_label": "Majority opinion"}
