@@ -441,3 +441,46 @@ def test_a_pick_that_is_only_a_docket_line_is_still_removed(monkeypatch):
     picks(monkeypatch, ("P1", "No. 13-132. Argued April 29, 2014-Decided June 25, 2014"))
     r = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)
     assert not r["shown_sentences"] and r["removed"][0]["problems"] == ["a docket or argument line, not the passage's point"]
+
+
+# ---------- before run 6 (EVALUATION.md: S014 sent 12 passages, too big for one free-tier request; S011 one line) ----------
+def sent_size(passages, request):
+    """The picker's request size, as the code estimates it."""
+    return llm.estimate_tokens([{"role": "system", "content": llm.PICK_PROMPT},
+                                {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages(passages)}\n\nREQUEST: {request}"}])
+
+
+def big(n, words):
+    return {**MAJORITY, "chunk_id": f"1-{100 + n}", "date_filed": "2024-07-01",
+            "text": " ".join(f"word{n}x{i}" for i in range(words))}
+
+
+def test_a_case_summary_sends_at_most_8_passages_with_the_syllabus_first(monkeypatch):
+    got = []
+    monkeypatch.setattr(llm, "pick_sentences", lambda q, passages, *a, **k: got.append(passages) or {"picks": []},
+                        raising=False)
+    answer_turn = json.loads(json.dumps({"question": "q", "sentences": [{"text": "a", "sources": ["P1"], "quote": "x"}],
+                                         "passages": [[f"P{n}", big(n, 60)] for n in range(1, 9)]}))
+    found = [{**SYLLABUS, "date_filed": "2024-07-01"}] + [big(n, 60) for n in range(20, 24)]
+    pipeline.answer("summarize the case", InsideSearch(found=found), INDEX, ON, previous=answer_turn)
+    (sent,) = got
+    assert len(sent) <= 8 and next(iter(sent.values()))["chunk_id"] == "1-1"           # the syllabus first
+
+
+def test_a_summary_request_stays_under_4500_estimated_tokens(monkeypatch):
+    got = []
+    monkeypatch.setattr(llm, "pick_sentences", lambda q, passages, *a, **k: got.append(passages) or {"picks": []},
+                        raising=False)
+    long_turn = json.loads(json.dumps({"question": "q", "sentences": [],
+                                       "passages": [[f"P{n}", big(n, 700)] for n in range(1, 9)]}))   # ~8 x 1,300
+    pipeline.answer("summarize all the passages", NoSearch(), INDEX, ON, previous=long_turn)
+    (sent,) = got
+    assert 1 <= len(sent) < 8 and sent_size(sent, "summarize all the passages") <= 4500
+    assert list(sent) == [f"P{n}" for n in range(1, len(sent) + 1)]                     # dropped from the end
+
+
+def test_the_picker_picks_two_or_three_and_the_holding(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append(system) or {"picks": []})
+    llm.pick_sentences("summarize the first citation", {"P1": MAJORITY})
+    assert "2 or 3 sentences" in calls[0] and "decides or holds" in calls[0]
