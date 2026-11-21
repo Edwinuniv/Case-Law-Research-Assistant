@@ -423,6 +423,21 @@ def chats(user=Depends(require_user)):
     return [iso(c) for c in db.list_chats(user["id"])]
 
 
+class Pin(BaseModel):
+    pinned: bool
+
+
+@router.post("/chats/{chat_id}/pin")
+def chat_pin(chat_id: int, body: Pin, user=Depends(require_user)):
+    """Pins or unpins one of the account's own chats (Edwin, SPEC 11, 2026-11-21): someone else's 404, an 11th 409."""
+    result = db.pin_chat(user["id"], chat_id, body.pinned)
+    if result == "not found":
+        raise HTTPException(404, "Chat not found.")
+    if result == "too many":
+        raise HTTPException(409, f"At most {db.MAX_PINNED} pinned chats: unpin one first.")
+    return {"ok": True, "pinned": body.pinned}
+
+
 @router.get("/chats/{chat_id}")
 def chat(chat_id: int, user=Depends(require_user)):
     """One of the account's own chats, every question with the answer as it was shown; someone else's: 404."""
