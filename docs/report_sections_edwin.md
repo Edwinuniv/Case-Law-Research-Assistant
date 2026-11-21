@@ -1,4 +1,4 @@
-# Technical report - Edwin's sections (2026-11-09)
+# Technical report - Edwin's sections (2026-11-09; updated 2026-11-21)
 
 For the 6-page technical report (guide p.82: section 4 is 1.5 pages; parts of 5, 6 and 7). Every number
 comes from a saved file in eval/runs, named in EVALUATION.md ("Final evaluation, week 8"). Yasser assembles
@@ -18,7 +18,8 @@ not exist) can only come from the text of a sentence, and that text is checked.
 removed, with the reason recorded (FR7), unless all six checks pass:
 
 1. it cites at least one passage, and only passages we really sent (SR22, SR24);
-2. its quote (5 words or more) is found word for word in a cited passage;
+2. its quote (5 words or more) is found word for word in a cited passage; since 2026-11-20 a quote may leave words
+   out with "..." if every piece (3 words or more) is found word for word, in the order given (quote matching v2);
 3. every citation in its text is in the CourtListener citation table and belongs to a retrieved opinion,
    or is written in the cited passage (SR23). A citation that is in no table and in no passage is counted
    as FABRICATED;
@@ -73,8 +74,13 @@ takes the lowest. Answers with a support score between 0.20 and 0.70 are shown a
 
 | | abstention precision | abstention recall | false-citation rate | citations shown |
 |---|---|---|---|---|
-| TEST | **1.0** | **0.8** | **0** | 23 |
+| TEST, run 2 (2026-11-09) | 1.0 | 0.8 | 0 | 23 |
+| **TEST, current system** (answer v2 + quote matching v2, 2026-11-20) | **0.80** | **0.80** | **0** | 30 |
 | target | >= 0.80 (NFR3) | >= 0.80 (NFR3) | 0 (NFR1) | |
+
+Each TEST figure was computed once, for the system it describes, after the decision on TUNE
+(eval/runs/test_split_run2_reverified_2026-11-09.txt, test_split_run_v2_reverified_2026-11-20.txt). The current
+system answers one answerable TEST question less than run 2 did; with 8 answerable questions that is the 0.2.
 
 **Adversarial set.** 21 questions written to make the system invent or misattribute a citation (invented
 cases, mixed names, wrong years, dissents presented as holdings, a prompt injection). 15 of 21 were
@@ -118,6 +124,28 @@ by "...", one dissent presented as the Court). For all 4 the gold quote was not 
 main limit is retrieval: the gold quote is in the 8 passages for 13 of 34 questions, and the model cannot
 quote what it was not given.
 
+**Why the answers were short, and quote matching v2.** After the meeting of 13 November we measured fuller answers
+(answer v2: the holding, the reasons, a dissent when it matters). Run 4 kept fewer sentences than expected: 44 of 105
+were removed, 35 of them because the quote joined two real pieces of the opinion with "..." (each removed quote
+compared with the decision's full text). With a rule written first, check 2 now accepts such a quote when every piece
+is word for word, in order. Measured on the saved drafts of run 2 and run 4 (no new answers; the judge only for newly
+kept sentences), TUNE + adversarial, tau 0.20: false citations 0 of 58 and 0 of 67; abstention precision/recall
+0.889/0.941 (run 2) and 0.85/1.0 (run 4); kept sentences per answered question 1.79 -> 2.19. Every newly kept quote
+was tested again with a simpler matcher and read. Both changes were kept (EVALUATION.md, "Quote matching v2").
+
+**Passage summaries ("summarise the first passage").** On the live site this message, sent after an answer about
+Counterman v. Colorado, was answered about another case: follow-ups are off, so it was searched alone. A request about
+the passages, a citation, an opinion ("the dissent") or "the case" now uses only the last answer's passages (or
+searches inside its decision). A first version retold the passages; a judge model was added to check meaning, and it
+kept "Justice Barrett argues that the Court should apply a subjective standard", the reverse of her dissent. So a
+summary now quotes: the model only picks sentences, our code checks each word for word and writes the line
+"label: the passage's own words". Measured on 14 requests (summaries-v1, TUNE), four conditions written first:
+run 1 showed 1 false citation (S004: Justice Alito's dissent as CourtListener prints it, "Washington v. Glucksberg,
+521 U.S. 701"; the real citation is 702); run 2 passed the three automatic conditions (0 of 50, 100% of 64 lines from
+the passages asked about, 14 of 14 shown) but one summary missed its passage's holding (S011); run 3 quoted a real
+citation outside the citation map (Blodgett v. Holden, 1927). Summaries stay off until all four hold.
+[Run 4: to fill in from eval/runs/summaries_run4_report.txt and EVALUATION.md when it is done.]
+
 ---
 
 ## 6. Limitations (my bullets)
@@ -134,6 +162,12 @@ quote what it was not given.
   was possible, and the same question can get a different draft in another run.
 - A quote from a dissent that the sentence names as such passes every check; on an off-topic or
   false-premise question it can still produce a misleading answer (U022, X009).
+- A model judging meaning has the writer's blind spots: the judge kept a summary sentence that reversed a dissent's
+  view. We do not show model-written summaries; summaries quote, which reads less smoothly but cannot reverse a view.
+- 2,011 of the 3,639 opinions with passages have no citation-map rows (1,919 from the Harvard text), so a real
+  citation in them to a case outside the corpus cannot be confirmed by the separate checker; such lines are removed.
+- Two case names joined by "and" ("Virginia v. Black and Chaplinsky") are read as one, so a true sentence can be
+  removed; 0 times in the saved runs (EVALUATION.md, "Known limitations").
 - A sentence can be true of its passage but not of the holding: for A032 the model wrote that the SEC can
   impose penalties in-house, which the passage (the statute) allows but the Court struck down; it was shown
   as low confidence. Checking an answer's conclusion against the holding is the next step.
@@ -146,3 +180,9 @@ quote what it was not given.
    "The Court rejected Chevron deference" cited only Justice Gorsuch's concurrence; the quote was real,
    so all five guide checks passed. Caught by reading the passage labels; fixed with check 6 and five
    tests (two that fail if the check is too weak, three if it is too strict).
+
+**A judge model kept a reversed summary** (2026-11-21). To check the meaning of summary sentences, a judge model
+read each sentence with its passage; it kept "Justice Barrett argues that the Court should apply a subjective
+standard", though her dissent describes that view in order to reject it, even after it was given the passage's
+label. The writer and the judge are the same model, with the same blind spot. Caught by reading the output on a real
+chat; the judge was dropped and summaries now quote the passage's own words (Edwin's choice), measured as above.
