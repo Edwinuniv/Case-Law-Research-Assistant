@@ -209,6 +209,15 @@ def label_of(p):
     return " - ".join(x for x in (opinion, section) if x) or "Passage"
 
 
+def in_citation_map(opinion_ids, cluster_ids):
+    """True if one of these opinions cites one of these clusters in CourtListener's citation map (the separate
+    checker's second test, evaluate.check_shown_citations)."""
+    from app import db
+    with db.connect() as con:
+        return con.execute("SELECT 1 FROM citation_map WHERE citing_opinion_id = ANY(%s) AND cited_cluster_id = ANY(%s) "
+                           "LIMIT 1", (opinion_ids, cluster_ids)).fetchone() is not None
+
+
 DOCKET = re.compile(r"^\s*No\.\s*\d|\bArgued\b.{0,40}\bDecided\b", re.I)   # run 2, S003: "No. 13-132. Argued ..."
 
 
@@ -236,6 +245,14 @@ def checked_picks(draft, passages, index, per_passage=3, total=8):
         if unknown:                                                                  # own "521 U.S. 701")
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": [f"citation not in the citation table (written in the passage): {unknown[0]}"]})
+            continue
+        sent = {p["decision_id"] for p in passages.values()}       # rule (f), run 3: Blodgett v. Holden
+        outside = [c for c in find_citations(words)
+                   if not {index.decision_for_cluster(k) for k in index.clusters_for(c)} & sent
+                   and not in_citation_map([passages[pid]["opinion_id"]], list(index.clusters_for(c)))]
+        if outside:
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": [f"citation not from a passage sent or its citation map: {outside[0]}"]})
             continue
         shown = " ".join(PAGE_MARKER.sub(" ", words).split())          # rule (e): "*803" is not a word of the Court
         kept.append({"text": f"{label_of(passages[pid])}: \u201c{shown}\u201d", "sources": [pid], "quote": words,
