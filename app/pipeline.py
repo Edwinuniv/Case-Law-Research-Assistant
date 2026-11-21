@@ -3,7 +3,7 @@ import re
 import time
 from app import config, llm
 from app.citations import find_case_names
-from app.verify import verify, count_fabrications
+from app.verify import verify, count_fabrications, groundedness, norm, quote_found
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
 WELCOME = "WELCOME"
@@ -180,21 +180,53 @@ def answer_passages(question, request, previous, searcher, index, settings):
         return finish(r, WELCOME, missing, t0)
     r["passages"], r["retrieved_decisions"] = list(passages.items()), sorted({p["decision_id"] for p in passages.values()})
     r["top_score"] = max(p.get("score", 0.0) for p in passages.values())
-    wanted = list(passages)
-    asked = (f"{r['question']}\n(Summarise only passage{'s' if len(wanted) > 1 else ''} {', '.join(wanted)}: what "
-             f"{'they say' if len(wanted) > 1 else 'it says'}, who is speaking (the Court, a concurrence, a dissent or the "
-             f"syllabus, as the passage's label says) and why. A dissent or concurrence often states the majority's or a "
-             f"party's view before answering it: say whose view each point is. Name each Justice; do not use a pronoun "
-             f"for a Justice.)")
     t = time.perf_counter()
     try:
-        version = settings.get("prompt_version", "v1")
-        draft = llm.ask_model(asked, passages) if version == "v1" else \
-            llm.ask_model(asked, passages, None, version, settings.get("reasoning_effort", "low"))
+        draft = llm.pick_sentences(r["question"], passages)
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
-    return check_draft(r, draft, passages, index, settings, t, t0, judge=True)
+    r["ms_model"], r["tokens"], r["model_said"] = ms(t), dict(llm.LAST_USAGE), "PICKS"
+    kept, removed = checked_picks(draft, passages)
+    r["sentences"], r["removed"] = kept, removed
+    r["support_score"] = support_score(kept, removed, passages, settings)
+    status = decide(r["support_score"], len(kept), settings)
+    return finish(r, status, {NOT_SUPPORTED: "no sentence picked word for word from the passages" if not kept else
+                              "support score below the abstention threshold",
+                              LOW_CONFIDENCE: "support score between the two thresholds", ANSWERED: ""}[status], t0)
+
+
+def label_of(p):
+    """Who is speaking, from the passage's own label (never the model): "Barrett, J., dissenting", "Syllabus"."""
+    return p.get("section") or p.get("opinion_label") or "Passage"
+
+
+def checked_picks(draft, passages, per_passage=3, total=8):
+    """The model's picks -> (shown, removed). A pick is shown only if it comes from a requested passage (check 1) and is
+    found word for word in it (check 2, at least 5 words); the line is ours: the label, then the passage's own words in
+    quotation marks. In the order of the passages, at most 3 per passage and 8 in all (EVALUATION.md, option A)."""
+    kept, removed = [], []
+    for pick in (draft.get("picks") or []) if isinstance(draft, dict) else []:
+        pid, words = pick.get("passage"), (pick.get("sentence") or "").strip()
+        if pid not in passages:
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["cites a passage that was not sent to the model"]})
+            continue
+        text = norm(passages[pid]["text"])
+        if len(words.split()) < 5 or not quote_found(words, text):
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["quote not found in the cited passage"]})
+            continue
+        kept.append({"text": f"{label_of(passages[pid])}: \u201c{words}\u201d", "sources": [pid], "quote": words,
+                     "groundedness": round(groundedness(words, text), 3)})
+    kept.sort(key=lambda x: int(x["sources"][0][1:]))             # stable: the model's order inside a passage
+    shown, per = [], {}
+    for sentence in kept:
+        pid = sentence["sources"][0]
+        if per.get(pid, 0) < per_passage and len(shown) < total:
+            per[pid] = per.get(pid, 0) + 1
+            shown.append(sentence)
+    return shown, removed
 
 
 def follow_up_passages(found, context, settings, last_label=None):
@@ -301,28 +333,8 @@ def answer(question, searcher, index, settings, skip_gate=False, history=None, p
     return check_draft(r, draft, passages, index, settings, t, t0)
 
 
-NOT_SUPPORTED_BY_JUDGE = "the judge says the cited passage does not support it"
-
-
-def judged(kept, removed, passages):
-    """The meaning check of a summary (EVALUATION.md, 2026-11-21): only sentences the judge fully supports ("yes") stay;
-    "partly", "no" or a failed judge removes the sentence (fails closed)."""
-    still = []
-    for sentence in kept:
-        try:
-            verdict = llm.judge_summary(sentence["text"], "\n\n".join(       # with whose opinion it is (2026-11-21)
-                f"[{passages[p]['opinion_label']} - {passages[p]['section']}]\n{passages[p]['text']}"
-                for p in sentence["sources"]))
-        except llm.ModelError:
-            verdict = "error"
-        (still if verdict == "yes" else removed).append(
-            sentence if verdict == "yes" else {**sentence, "problems": [NOT_SUPPORTED_BY_JUDGE]})
-    return still, removed
-
-
-def check_draft(r, draft, passages, index, settings, t, t0, judge=False):
-    """Steps 4 and 5, the same for a first question and a follow-up: verify every sentence, score, decide.
-    judge=True (passage summaries only): the meaning check after the six checks."""
+def check_draft(r, draft, passages, index, settings, t, t0):
+    """Steps 4 and 5, the same for a first question and a follow-up: verify every sentence, score, decide."""
     r["ms_model"] = ms(t)
     r["tokens"] = dict(llm.LAST_USAGE)                            # input, cached, output (answer v2 rule: measured)
     r["model_said"] = draft.get("status") if isinstance(draft, dict) else None
@@ -333,8 +345,6 @@ def check_draft(r, draft, passages, index, settings, t, t0, judge=False):
         return finish(r, NOT_SUPPORTED, "the model said the passages do not answer this", t0)
 
     kept, removed = verify(draft, passages, index)               # 4. VERIFY EVERY SENTENCE
-    if judge:                                                     # 4b. summaries: does it MEAN what the passage says
-        kept, removed = judged(kept, removed, passages)
     r["removed"], r["fabrications_caught"] = removed, count_fabrications(removed)
     r["sentences"] = kept
     r["support_score"] = support_score(kept, removed, passages, settings)     # 5. SCORE + DECIDE
