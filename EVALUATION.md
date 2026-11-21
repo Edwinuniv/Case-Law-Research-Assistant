@@ -599,3 +599,28 @@ correct). **Quote matching v2 is kept.** Answer v2 against run 2 with the same m
 1.0, (4) 1.0 >= 0.941, (5) 2.19 > 1.79: **all five hold, prompt v2 goes live.**
 **TEST, reported once** (eval/runs/test_split_run_v2_reverified_2026-11-20.txt): 0 false citations of 30 shown;
 abstention precision 0.80 (run 2: 1.0; one answerable TEST question refused), recall 0.80 (unchanged). Not tuned on TEST.
+
+## Passage summaries (written 2026-11-21, before any code or measurement; Edwin)
+Why: on the live site "summurize the first passage", sent after an answer about Counterman v. Colorado, was answered
+about Bruesewitz v. Wyeth: follow-ups are off (rule above: precision 0.50), so the message was searched alone, and the
+model summarised the first passage of an unrelated search. Each sentence was true of its passage, so it was shown.
+**What changes.** A message that asks about the passages of the previous answer ("summarize the first passage", "explain
+passage 3", "what does P2 say", "summarise all the passages": the word passage(s) or a label P1-P8 with a number, an
+ordinal, "last" or "all"; misspellings of the verb do not matter) is a passage request (pipeline.passage_request).
+(a) In a chat with an earlier answer: no search. The model receives ONLY the requested passages of the last answer,
+with their labels, and is asked what they say, who is speaking (the Court, a concurrence, a dissent, the syllabus) and
+why. Every sentence goes through the same six checks against those passages only (a sentence citing another passage
+fails check 1); the support score decides the status as for any answer. (b) With no earlier answer (a first message,
+a visitor without a chat) or a label the last answer did not have: a fixed text of ours, no search and no model call,
+no legal statement (like the welcome message). Not counted as a question.
+**Not changed:** a message that is not a passage request goes through the pipeline exactly as before; no eval-v1
+question is a passage request (checked by a test, like greetings), so every saved number stays valid.
+**How it is measured.** A new small set, eval/summaries.jsonl, written and tagged (summaries-v1) before the run: 10
+requests, each after an answerable TUNE question of eval-v1 (5 for one passage, 2 for two passages, 3 for all
+passages), mixing majority, concurrence/dissent and syllabus passages. The first answer is made by the live pipeline,
+then the request. Same checker and settings (tau_abstain 0.20, prompt as live).
+**Switched on (setting passage_summaries) only if ALL hold:** (1) 0 false citations shown; (2) 100% of shown sentences
+cite only requested passages; (3) at least 8 of the 10 requests shown (ANSWERED or LOW_CONFIDENCE, no ERROR after the
+retries); (4) read by Edwin, each shown summary names the speaker correctly (majority, concurrence, dissent, syllabus)
+as the passage's own label says; a wrong speaker is a failure. Otherwise (a) stays off and a passage request gets the
+fixed text of (b) pointing to the passages under the answer; the numbers are reported either way.
