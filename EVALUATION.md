@@ -667,3 +667,8 @@ passage's own (a citation or a number inside them is the Court's, and the speake
 "whose view" instruction above are removed. A wrong label in the data (Counterman before #119) is still shown as stored:
 Yasser's re-index fixes the labels. Conditions: (1), (2), (3) unchanged; (4) becomes: read by Edwin, the picks of each
 shown summary give the passage's main point (not only a citation, a page heading or "Page Proof Pending Publication").
+**Before the run (2026-11-21).** The set has 14 requests (summaries-v1, tagged): condition (3) is the same share, at
+least 12 of the 14 shown (80%). Data: Yasser's #119 chunks (72,505 passages, labels fixed), restored locally from
+chunks_119.dump. Prompt v2, the one going live (prompt_version on Railway); tau_abstain 0.20. Saved as
+eval/runs/summaries_run1.json (every first answer, request, pick, removed pick and passage label) and a report
+eval/runs/summaries_run1_report.txt, by scripts/run_summaries.py.
