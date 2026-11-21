@@ -218,6 +218,20 @@ def in_citation_map(opinion_ids, cluster_ids):
                            "LIMIT 1", (opinion_ids, cluster_ids)).fetchone() is not None
 
 
+QUOTES = "\"'\u201c\u201d\u2018\u2019"                          # run 4, S007: picks wrapped in quotation marks
+DOCKET_START = re.compile(r"^\s*(?:No\.\s*[\d\u2013-]+\.\s*)?Argued\b.{0,40}?\bDecided\s+[A-Z][a-z]+\.?\s+\d{1,2},\s+"
+                          r"\d{4}\*?\s*")                        # run 4, S003: "No. 13-132. Argued ... Decided June 25, 2014*"
+
+
+def unwrap(words):
+    """Rules (g), (h): quotation marks around the whole pick, and a docket line at its start, are not part of it.
+    Returns (the pick, whether a docket line was cut off)."""
+    if len(words) > 1 and words[0] in QUOTES and words[-1] in QUOTES:
+        words = words[1:-1].strip()
+    rest = DOCKET_START.sub("", words, count=1).strip()
+    return rest, rest != words
+
+
 DOCKET = re.compile(r"^\s*No\.\s*\d|\bArgued\b.{0,40}\bDecided\b", re.I)   # run 2, S003: "No. 13-132. Argued ..."
 
 
@@ -227,19 +241,19 @@ def checked_picks(draft, passages, index, per_passage=3, total=8):
     quotation marks. In the order of the passages, at most 3 per passage and 8 in all (EVALUATION.md, option A)."""
     kept, removed = [], []
     for pick in (draft.get("picks") or []) if isinstance(draft, dict) else []:
-        pid, words = pick.get("passage"), (pick.get("sentence") or "").strip()
+        pid, (words, cut) = pick.get("passage"), unwrap((pick.get("sentence") or "").strip())
         if pid not in passages:
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": ["cites a passage that was not sent to the model"]})
             continue
         text = norm(passages[pid]["text"])
+        if DOCKET.search(words) or (cut and len(words.split()) < 5):   # rules (d), (h): not the passage's point
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["a docket or argument line, not the passage's point"]})
+            continue
         if len(words.split()) < 5 or not quote_found(words, text):
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": ["quote not found in the cited passage"]})
-            continue
-        if DOCKET.search(words):                                      # run 3 rule (d): not the passage's point
-            removed.append({"text": words, "sources": [pid], "quote": words,
-                            "problems": ["a docket or argument line, not the passage's point"]})
             continue
         unknown = [c for c in find_citations(words) if not index.clusters_for(c)]   # check 3 (run 1: the source's
         if unknown:                                                                  # own "521 U.S. 701")
