@@ -119,6 +119,12 @@ site keeps searching the old passages. Locally, also delete `data/work/bm25.*` (
 After a change of case names (`python -m scripts.fix_case_names --apply`) restart too: the citation index keeps the
 names in memory. Saved demo answers point to passages: make them again afterwards (`scripts.make_demo_answers`).
 
+### In the chat (Edwin, 2026-11-21)
+Under each question: copy, and edit (the new wording is sent as a new question; "< 1 / 2 >" switches between the
+versions, each with its own answer). Under each answer: copy (the sentences with their citations). On the right of a
+long chat, one mark per question (click to go there) and a button back to the bottom. In "My chats", pin a chat to
+keep it at the top (at most 10).
+
 ### Settings switched from the command line
 Two features are switched on by a setting, only after their measurement passed (EVALUATION.md). Online:
 `railway run python -c "..."`; the site reads the settings at each question, no restart needed.
