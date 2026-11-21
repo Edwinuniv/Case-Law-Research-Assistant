@@ -310,7 +310,9 @@ def judged(kept, removed, passages):
     still = []
     for sentence in kept:
         try:
-            verdict = llm.judge_summary(sentence["text"], " ".join(passages[p]["text"] for p in sentence["sources"]))
+            verdict = llm.judge_summary(sentence["text"], "\n\n".join(       # with whose opinion it is (2026-11-21)
+                f"[{passages[p]['opinion_label']} - {passages[p]['section']}]\n{passages[p]['text']}"
+                for p in sentence["sources"]))
         except llm.ModelError:
             verdict = "error"
         (still if verdict == "yes" else removed).append(
