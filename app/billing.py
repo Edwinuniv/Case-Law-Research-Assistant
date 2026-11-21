@@ -15,7 +15,12 @@ from app import config, db, emails, logs, notices  # noqa: F401  (config loads .
 SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()       # sk_test_ or rk_test_ only (a live key: payments off)
 PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "").strip()           # the monthly price made in the Stripe dashboard
 WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()   # optional: whsec_...
-PRICE_LABEL = os.environ.get("PAID_PRICE_LABEL", "").strip() or "$5 a month"
+DEFAULT_PRICE_LABEL = "$15 a month"          # the Stripe test price (price_1...); the page said $5 live (2026-11-21)
+
+
+def price_label():
+    """What the plans page shows for the paid plan: PAID_PRICE_LABEL if set, else the Stripe price."""
+    return os.environ.get("PAID_PRICE_LABEL", "").strip() or DEFAULT_PRICE_LABEL
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")      # where Stripe sends people back; empty: this site
 
 

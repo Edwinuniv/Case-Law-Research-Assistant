@@ -191,3 +191,12 @@ def test_a_free_account_has_nothing_to_cancel(c, reader, stripe_on):
     assert post(c, "/api/billing/cancel").status_code == 400
     assert stripe_on["cancel"] == []
 
+
+
+def test_the_price_shown_matches_the_stripe_price_when_no_label_is_set(monkeypatch):
+    """The live plans page said $5 a month while Stripe charges $15 (2026-11-21): Railway had no PAID_PRICE_LABEL."""
+    from app import billing
+    monkeypatch.delenv("PAID_PRICE_LABEL", raising=False)
+    assert billing.price_label() == "$15 a month"
+    monkeypatch.setenv("PAID_PRICE_LABEL", "  $20 a month ")
+    assert billing.price_label() == "$20 a month"
