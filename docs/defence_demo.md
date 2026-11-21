@@ -93,13 +93,12 @@ removed before it could be shown (rule (a)).
 - NFR3: TEST abstention precision 0.80, recall 0.80 for the current system (run 2: precision 1.0, recall 0.8). Say it:
   one answerable TEST question was refused, and with 8 + 5 questions one question moves a figure by 0.1-0.2.
 - Threshold: rule written first, TUNE sweep, 0.20 to 0.36 tie, lowest tau; TEST reported once.
-- The AI mistake (report section 7): the concurrence presented as the Court. Second story if asked: a judge model
-  checking summaries kept "Justice Barrett argues for a subjective standard", the reverse of her dissent, so
-  summaries now quote instead of retelling (report section 7).
-- Earlier: the concurrence presented as the Court. "The Court rejected Chevron
+- The AI mistake (report section 7): the concurrence presented as the Court. "The Court rejected Chevron
   deference" cited only Justice Gorsuch's concurrence; the quote was real, so all five guide checks passed. Found by
   reading the passage labels; fixed with check 6 and tests in both directions. In run 2, check 6 removed 8 such
   sentences.
+- Second story, if asked: a judge model checking summaries kept "Justice Barrett argues for a subjective standard",
+  the reverse of her dissent, so summaries now quote instead of retelling (report section 7).
 
 ## If asked
 - "Why does X009 get an answer?" (a false premise about Obergefell): since the quote matching fix, a sentence from
