@@ -820,3 +820,12 @@ enabled by an administrator; each with a short text and, when useful, a link ins
 own notices; a visitor has none (401). At most 50 kept per account (the oldest go first); deleted with the account.
 (4) The page asks for new notices when it opens and every minute while it is in front. Files of others changed,
 told: app/db.py (one table), app/api.py, app/api_admin.py (the events), the header in main.jsx (Joe).
+
+2026-11-21 - Passage summaries (Edwin; after "summurize the first passage" was answered about another case on the live
+site). Written before the code; the measurement rule is in EVALUATION.md ("Passage summaries"). (1) In a chat, a
+message about the passages of the last answer ("summarize the first passage", "explain passage 3", "summarise all the
+passages") is answered from those passages only: no new search, the same verifier, citations only to the requested
+passages. (2) With no earlier answer, or a passage the last answer did not have, a fixed text of ours explains how to
+ask (no search, no model call, not counted as a question). (3) Off until the measurement holds (setting
+passage_summaries); while off, a passage request gets the fixed text pointing to the passages under the answer.
+Files of others changed, told: app/api.py (the chat's last answer is given to the pipeline; Joe).

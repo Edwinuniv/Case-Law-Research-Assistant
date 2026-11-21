@@ -147,3 +147,18 @@ def ask_model(question, passages, history=None, version="v1", reasoning_effort=N
 def judge_support(statement, passage_text):
     """Used only by the evaluation, for the groundedness score (FR15)."""
     return _ask_json(JUDGE_PROMPT, f"PASSAGE:\n{passage_text}\n\nSTATEMENT:\n{statement}").get("verdict", "no")
+
+
+# Summaries quote instead of retelling (EVALUATION.md, 2026-11-21, option A): a retold summary reversed Justice Barrett's
+# dissent and the judge did not catch it. The model now only picks sentences; the page shows the passage's own words.
+PICK_PROMPT = """You pick the sentences of court-opinion passages that best answer a request about those passages.
+Use ONLY the passages given. Copy each sentence word for word, exactly as it is written in the passage: the same words
+in the same order. You may leave out the beginning or the end of a long sentence, but never change, add or reorder words.
+Pick at most 3 sentences per passage: the ones that state its main point (what is decided, the rule, the reasoning, what
+this opinion argues). Do not pick a citation alone, a page heading or "Page Proof Pending Publication".
+Reply with JSON only: {"picks": [{"passage": "P1", "sentence": "..."}]}"""
+
+
+def pick_sentences(request, passages):
+    """The sentences that answer a request about these passages, copied word for word (checked by the pipeline)."""
+    return _ask_json(PICK_PROMPT, f"PASSAGES:\n\n{format_passages(passages)}\n\nREQUEST: {request}")

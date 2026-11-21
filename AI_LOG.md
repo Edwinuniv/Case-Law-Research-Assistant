@@ -981,3 +981,30 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    "stop" and "go on to the next question" look the same, so a planted bug (continue instead of break) got
    through. A third question now must not be asked; the planted bug is caught.
 
+## 2026-11-21 — Passage summaries (branch feature/passage-summaries)
+
+1. **A summary request took a follow-up's place.** Widening the requests to "the dissent" made "Thanks, and what did
+   the dissent say?" a request; with summaries off it got our fixed text instead of the follow-up's answer. Caught by
+   an older follow-up test; rule clarified (off + follow-ups on: the follow-up answers), then fixed.
+2. **A test that could not fail.** The AI wrote `assert "P2" in sent or True`; seen when reading the tests before the
+   commit, removed with an unused helper.
+3. **Weak tests found by planted bugs**: "the passages of" a law taken as a request, and the case's syllabus dropped
+   when the search found it last, both got through; a test was added for each.
+4. **Summaries that misread the passage pass the six checks.** Real try on the Counterman chat: "Justice Barrett argues
+   that the Court should apply a subjective standard" (her dissent describes that view to reject it), "he" for Justice
+   Barrett, and P1 (Sotomayor's concurrence, with the old Kagan label of the local data) called the majority. The quote
+   was real, so check 2 passed. The judge model (only "yes" kept) removed the wrong "Kagan" sentences, but kept the
+   Barrett sentence, even after it was given each passage's label; it is the same model as the writer, with the same
+   blind spot. It also removed all 7 sentences of a "summarize the case" answer, correct ones included. Not solved;
+   decision left to Edwin (see the branch's message).
+5. **Check 4 removed a true sentence**: "citing Virginia v. Black and Chaplinsky" is read as one case name, "Virginia v.
+   Black and Chaplinsky", not found in the passage. Cutting names at "and" would break "President and Fellows of Harvard
+   College"; needs its own rule and fix (not in this branch).
+6. **Option A (Edwin's choice): summaries quote instead of retelling.** The model only picks sentences; our code checks
+   each one word for word in its passage and writes the line itself: the passage's label, then its own words. Real try
+   on the same chat: the dissent summary is now Justice Barrett's own words ("True threats carry little value and impose
+   great cost"), no reversed view possible; the case summary shows the holding in the Court's words. One pick removed
+   because the model corrected a typo of the source ("unjustifably") instead of copying it. Planting bugs: one plant
+   did not apply (the file has the quote marks as \u201c escapes), so "all passed" meant nothing; replanted with the
+   exact text, caught.
+

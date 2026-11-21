@@ -599,3 +599,71 @@ correct). **Quote matching v2 is kept.** Answer v2 against run 2 with the same m
 1.0, (4) 1.0 >= 0.941, (5) 2.19 > 1.79: **all five hold, prompt v2 goes live.**
 **TEST, reported once** (eval/runs/test_split_run_v2_reverified_2026-11-20.txt): 0 false citations of 30 shown;
 abstention precision 0.80 (run 2: 1.0; one answerable TEST question refused), recall 0.80 (unchanged). Not tuned on TEST.
+
+## Passage summaries (written 2026-11-21, before any code or measurement; Edwin)
+Why: on the live site "summurize the first passage", sent after an answer about Counterman v. Colorado, was answered
+about Bruesewitz v. Wyeth: follow-ups are off (rule above: precision 0.50), so the message was searched alone, and the
+model summarised the first passage of an unrelated search. Each sentence was true of its passage, so it was shown.
+**What changes.** A message that asks about the passages of the previous answer ("summarize the first passage", "explain
+passage 3", "what does P2 say", "summarise all the passages": the word passage(s) or a label P1-P8 with a number, an
+ordinal, "last" or "all"; misspellings of the verb do not matter) is a passage request (pipeline.passage_request).
+(a) In a chat with an earlier answer: no search. The model receives ONLY the requested passages of the last answer,
+with their labels, and is asked what they say, who is speaking (the Court, a concurrence, a dissent, the syllabus) and
+why. Every sentence goes through the same six checks against those passages only (a sentence citing another passage
+fails check 1); the support score decides the status as for any answer. (b) With no earlier answer (a first message,
+a visitor without a chat) or a label the last answer did not have: a fixed text of ours, no search and no model call,
+no legal statement (like the welcome message). Not counted as a question.
+**Not changed:** a message that is not a passage request goes through the pipeline exactly as before; no eval-v1
+question is a passage request (checked by a test, like greetings), so every saved number stays valid.
+**How it is measured.** A new small set, eval/summaries.jsonl, written and tagged (summaries-v1) before the run: 10
+requests, each after an answerable TUNE question of eval-v1 (5 for one passage, 2 for two passages, 3 for all
+passages), mixing majority, concurrence/dissent and syllabus passages. The first answer is made by the live pipeline,
+then the request. Same checker and settings (tau_abstain 0.20, prompt as live).
+**Switched on (setting passage_summaries) only if ALL hold:** (1) 0 false citations shown; (2) 100% of shown sentences
+cite only requested passages; (3) at least 8 of the 10 requests shown (ANSWERED or LOW_CONFIDENCE, no ERROR after the
+retries); (4) read by Edwin, each shown summary names the speaker correctly (majority, concurrence, dissent, syllabus)
+as the passage's own label says; a wrong speaker is a failure. Otherwise (a) stays off and a passage request gets the
+fixed text of (b) pointing to the passages under the answer; the numbers are reported either way.
+**Widened before any measurement (2026-11-21, Edwin: "it should work for all passages, citations and opinions").**
+Besides passages, a request may name, without naming a case (a message that names a case is a normal question, as
+"What did the dissent in Bostock argue?" in eval-v1): (c) a citation of the last answer: "the first citation", "the
+citations" = the passages cited by the shown sentences, in the order they first appear; (d) an opinion: "the dissent",
+"the concurrence", "the majority (opinion)", "the syllabus" = the last answer's passages with that label; if it has
+none, up to 4 passages of that opinion are searched inside the decision the last answer cited (no other decision);
+(e) the case: "the case", "this case", "this decision", "this opinion" = the cited decision's passages of the last
+answer, plus up to 4 found inside that decision for the earlier question (the syllabus first). For (c)-(e) a
+summarising verb is needed (summarise in any spelling, sum up, recap, explain, "what does ... say"). Nothing found
+(no dissent in the decision, no citation shown): our fixed text. Same verifier, same conditions; the set becomes 14
+requests: the 10 above plus one each for (c), (d) dissent, (d) majority and (e).
+**Clarified before any measurement (2026-11-21).** While passage_summaries is off and the chat has follow-ups on, a
+request ("and what did the dissent say?") is left to the follow-up, which already stays in the chat's case (a test of
+the follow-up rule caught it); the fixed text is only for a request with nothing else to keep it in the same case.
+**Meaning check and instructions for summaries (written 2026-11-21, before any measurement; Edwin).** A real try on the
+Counterman chat showed sentences that pass the six checks but misread the passage: "Justice Barrett argues that the
+Court should apply a subjective standard" (her dissent describes that view and rejects it), and "he" for Justice
+Barrett. The checks prove the quote is real and from the cited passage, not that the sentence means what the passage
+means. So, for passage requests only: (a) after the six checks, each kept sentence goes to the judge model (the one
+of the groundedness score, FR15) with its cited passages, with one more instruction: a passage that describes someone
+else's view (a dissent describing the majority's or a party's position) does not support presenting that view as the
+author's own. Only "yes" is kept; "partly", "no" or a judge that fails (Groq's limit, timeout) removes the sentence
+("the judge says the cited passage does not support it"). The support score and the status are then computed on what
+is kept, as for any answer. (b) The summary instruction tells the model that a separate opinion often states the other
+side's view before answering it, to say whose view each point is, and to name Justices instead of using pronouns.
+The evaluation's judge, eval-v1 and the questions answered by the normal pipeline are unchanged. The four conditions
+above apply unchanged; the judge's calls are counted per request (tokens) and reported.
+**Clarified before the measurement (2026-11-21).** A try on the Counterman chat (A035, which is also S001: noted, the
+set is not changed) showed the judge keeping "Justice Barrett argues the Court should require speakers to intend or
+know..." while it saw only the passage's words, not whose opinion it is. The judge now gets each cited passage with its
+label first ("Barrett, J., dissenting"), as the summarising model does. Nothing else changes.
+**Changed before the measurement: summaries that quote (2026-11-21, Edwin chose option A).** The judge kept a reversed
+sentence ("Justice Barrett argues ... subjective standard") even with each passage's label, and removed every sentence
+of a correct case summary; the writer and the judge are the same model. So a summary no longer retells: (a) the model
+only PICKS sentences of the requested passages (at most 3 per passage, 8 in all) and copies each word for word; (b) the
+page shows each pick as ITS OWN WORDS, in quotation marks, after the passage's label written by our code ("Barrett,
+J., dissenting:", "Opinion of the Court (Kagan):", "Syllabus:"), in the order of the passages; the model writes no
+sentence of its own. (c) Checks: a pick must come from a requested passage (check 1) and be found word for word in it
+(check 2, quote matching v2, at least 5 words); checks 3-6 and the judge are not used, because the shown words are the
+passage's own (a citation or a number inside them is the Court's, and the speaker is the label). The judge and the
+"whose view" instruction above are removed. A wrong label in the data (Counterman before #119) is still shown as stored:
+Yasser's re-index fixes the labels. Conditions: (1), (2), (3) unchanged; (4) becomes: read by Edwin, the picks of each
+shown summary give the passage's main point (not only a citation, a page heading or "Page Proof Pending Publication").
