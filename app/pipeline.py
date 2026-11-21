@@ -63,6 +63,30 @@ PASSAGES_OFF_TEXT = ("The passages of the answer are under it: open \"Show the r
                      "full. To ask about a case, name it in your question.")
 
 
+SUMMARISE = re.compile(r"\bsu[mn]+[aeiou]?r[iy]?[sz]|\bsummary\b|\bsum\s+(?:it\s+)?up\b|\brecap\b|\bexplain|"
+                       r"\btl;?dr\b|\bbreak\s+down\b|\bwhat\s+(?:does|did|do)\b.*\bsay")
+OPINIONS = [("dissent", r"\bdissent(?:ing)?\b"), ("concurrence", r"\bconcurr(?:ence|ing)\b"),
+            ("syllabus", r"\bsyllabus\b"), ("majority", r"\bmajority\b|\bopinion of the court\b|\bcourt'?s opinion\b")]
+
+
+def speaker(p):
+    """Who a passage is: the syllabus, a dissent, a concurrence or the majority (its label, as the verifier reads it)."""
+    text = f"{p.get('opinion_label') or ''} {p.get('section') or ''}".lower()
+    if p.get("is_syllabus") or "syllabus" in text:
+        return "syllabus"
+    return "dissent" if "dissent" in text else "concurrence" if "concurr" in text else "majority"
+
+
+def cited_decision(previous, have):
+    """The decision the last answer cited most (its shown sentences), else the decision of its first passage."""
+    counts = {}
+    for sentence in previous.get("sentences") or []:
+        for pid in sentence.get("sources") or []:
+            if pid in have:
+                counts[have[pid]["decision_id"]] = counts.get(have[pid]["decision_id"], 0) + 1
+    return max(counts, key=counts.get) if counts else have[min(have, key=lambda pid: int(pid[1:]))]["decision_id"]
+
+
 def passage_request(question):
     """The passages a message asks about: ["P1", "P3"], ["last"] or ["all"]; None if it is not about the passages.
     "passage" must come with a number, an ordinal, "last" or "all" ("the passage of the Affordable Care Act" is a
@@ -78,10 +102,64 @@ def passage_request(question):
     if re.search(r"\b(?:all|these|those|each|every|both|the)\s+(?:of\s+)?(?:the\s+)?passages\b(?!\s+of\b)", t) \
             or re.search(r"\b(?:each|every)\s+passage\b", t):
         return ["all"]
+    # widened (2026-11-21): citations, opinions, the case - only with a summarising verb and no case named
+    if not SUMMARISE.search(t) or find_case_names(question):
+        return None
+    cites = [f"C{n}" for n in re.findall(r"\bcitation\s+(\d)\b", t)]
+    cites += [f"C{ORDINALS[w]}" for w in re.findall("(" + ORDINAL + r")\s+citation\b", t) if w != "last"]
+    if cites:
+        return sorted(set(cites))
+    if re.search(r"\b(?:the|all|these|those|each|every)\s+(?:the\s+)?citations\b", t):
+        return ["citations"]
+    for kind, words in OPINIONS:
+        if re.search(words, t):
+            return [f"opinion:{kind}"]
+    if re.search(r"\b(?:the|this|that)\s+(?:case|decision|opinion|ruling)\b|\bthe\s+cited\s+case\b", t):
+        return ["case"]
     return None
 
 
-def answer_passages(question, request, previous, index, settings):
+def resolve_request(request, previous, have, labels, searcher, settings):
+    """The passages a request means -> ({label: passage}, None), or ({}, our fixed text) when there is nothing to send.
+    Passages and citations come from the last answer only. An opinion it did not have, and the case, are searched
+    INSIDE the decision it cited (never another decision); new passages are labelled after its last label."""
+    kind = request[0]
+    if kind == "all":
+        return {pid: have[pid] for pid in labels}, None
+    if kind.startswith("P") or kind == "last":
+        wanted = sorted({labels[-1] if x == "last" else x for x in request}, key=lambda pid: int(pid[1:]))
+        if any(pid not in have for pid in wanted):
+            return {}, (f"The last answer had {len(labels)} passages ({labels[0]}-{labels[-1]}). Ask about one of them, "
+                        f"for example \"summarise {labels[0]}\".")
+        return {pid: have[pid] for pid in wanted}, None
+    cited = list(dict.fromkeys(pid for s in previous.get("sentences") or [] for pid in s.get("sources") or []
+                               if pid in have))
+    if kind.startswith("C") or kind == "citations":
+        wanted = cited if kind == "citations" else [cited[int(x[1:]) - 1] for x in request if int(x[1:]) <= len(cited)]
+        if not wanted or (kind != "citations" and len(wanted) < len(request)):
+            return {}, (f"The last answer showed {len(cited)} citation{'s' if len(cited) != 1 else ''}. Ask about one "
+                        f"of them, or about a passage (\"summarise P1\").")
+        return {pid: have[pid] for pid in wanted}, None
+    decision = cited_decision(previous, have)
+    mine = {pid: p for pid, p in have.items() if p["decision_id"] == decision}
+    want = kind.split(":")[1] if kind.startswith("opinion:") else None
+    chosen = {pid: p for pid, p in mine.items() if want is None or speaker(p) == want}
+    if want is None or not chosen:                     # the case, or an opinion the answer did not have: search inside
+        query = f"{previous.get('question', '')} {want or ''}".strip()
+        found = searcher.search(query, k=int(settings["retrieve_k"]), decision_ids=[decision])
+        sent = {p["chunk_id"] for p in have.values()}
+        new = [p for p in found if p["chunk_id"] not in sent and (want is None or speaker(p) == want)]
+        if want is None:
+            new.sort(key=lambda p: speaker(p) != "syllabus")          # the case: its syllabus first
+        last = int(labels[-1][1:])
+        chosen.update({f"P{last + i + 1}": p for i, p in enumerate(new[:4])})
+    if not chosen:
+        return {}, (f"The passages we have of {next(iter(mine.values()), {}).get('case_name', 'this case')} include no "
+                    f"{want}. Ask about a passage of the answer (\"summarise P1\") or about another opinion.")
+    return chosen, None
+
+
+def answer_passages(question, request, previous, searcher, index, settings):
     """A passage request: the model gets ONLY the requested passages of the last answer (their labels kept), no search;
     every sentence goes through the same verifier against those passages, so citing another one fails check 1.
     Switched off, with no earlier answer, or a label the answer did not have: our fixed text (no model call)."""
@@ -95,14 +173,14 @@ def answer_passages(question, request, previous, index, settings):
     if not have:
         return finish(r, WELCOME, NO_PASSAGES_TEXT, t0)
     labels = sorted(have, key=lambda pid: int(pid[1:]))
-    wanted = labels if request == ["all"] else \
-        sorted({labels[-1] if x == "last" else x for x in request}, key=lambda pid: int(pid[1:]))
-    if any(pid not in have for pid in wanted):
-        return finish(r, WELCOME, f"The last answer had {len(labels)} passages ({labels[0]}-{labels[-1]}). Ask about "
-                                  f"one of them, for example \"summarise {labels[0]}\".", t0)
-    passages = {pid: have[pid] for pid in wanted}
+    t = time.perf_counter()
+    passages, missing = resolve_request(request, previous, have, labels, searcher, settings)
+    r["ms_search"] = ms(t)
+    if missing:
+        return finish(r, WELCOME, missing, t0)
     r["passages"], r["retrieved_decisions"] = list(passages.items()), sorted({p["decision_id"] for p in passages.values()})
     r["top_score"] = max(p.get("score", 0.0) for p in passages.values())
+    wanted = list(passages)
     asked = (f"{r['question']}\n(Summarise only passage{'s' if len(wanted) > 1 else ''} {', '.join(wanted)}: what "
              f"{'they say' if len(wanted) > 1 else 'it says'}, who is speaking (the Court, a concurrence, a dissent or the "
              f"syllabus, as the passage's label says) and why.)")
@@ -180,7 +258,8 @@ def answer(question, searcher, index, settings, skip_gate=False, history=None, p
     previous: the chat's last answer (a turn), for a passage request ("summarize the first passage")."""
     request = passage_request(question)
     if request is not None:                                       # no eval-v1 question is one (test)
-        return answer_passages(question, request, previous or (history[-1] if history else None), index, settings)
+        return answer_passages(question, request, previous or (history[-1] if history else None), searcher, index,
+                               settings)
     if history:
         return answer_follow_up(question, searcher, index, settings, history)
     t0 = time.perf_counter()
