@@ -5,7 +5,7 @@ checker as eval-v1 (evaluate.check_shown_citations). Saved after every request; 
 and continues with --resume.
 Conditions read automatically: (1) 0 false citations shown, (2) every shown line cites only a passage sent, (3) at
 least 12 of the 14 requests shown. Condition (4) is Edwin's reading of the report (the picks give each passage's point).
-Usage: python -m scripts.run_summaries                  -> eval/runs/summaries_run1.json + _report.txt
+Usage: python -m scripts.run_summaries                  -> eval/runs/summaries_run2.json + _report.txt (run 1: summaries_run1.*)
        python -m scripts.run_summaries --resume         -> continue the same file after the daily limit
        python -m scripts.run_summaries --report         -> the report again"""
 import json
@@ -15,7 +15,7 @@ from app import config, db, evaluate
 from app.pipeline import ANSWERED, ERROR, LOW_CONFIDENCE, answer, label_of, turn_of
 
 SET = config.ROOT / "eval" / "summaries.jsonl"
-RUN = config.ROOT / "eval" / "runs" / "summaries_run1.json"
+RUN = config.ROOT / "eval" / "runs" / "summaries_run2.json"   # run 1 failed (1); EVALUATION.md
 SETTINGS_FOR_RUN = {"passage_summaries": True, "prompt_version": "v2", "tau_abstain": 0.20}   # the rule's settings
 RETRIES = 6
 
@@ -46,7 +46,7 @@ def run_one(item, searcher, index, settings, checker=evaluate.check_shown_citati
     return {"id": item["id"], "kind": item["kind"], "first": item["first"], "first_status": first["status"],
             "request": item["request"], "status": r["status"], "reason": r["reason"],
             "sent": [{"pid": pid, "chunk_id": p["chunk_id"], "decision_id": p["decision_id"], "case": p["case_name"],
-                      "label": label_of(p)} for pid, p in r["passages"]],
+                      "label": label_of(p), "score": p.get("score")} for pid, p in r["passages"]],
             "shown": [{"text": s["text"], "sources": s["sources"]} for s in r["shown_sentences"]],
             "removed": [{"text": s["text"], "sources": s["sources"], "problems": s["problems"]} for s in r["removed"]],
             "false_citations": sum(1 for problems in false_by_line if problems), "citations_shown": n_cites,
@@ -113,7 +113,7 @@ def main(argv):
             print(f"Paused at Groq's daily limit ({e}). Run again tomorrow with --resume.")
             return
     text = report(json.loads(RUN.read_text()))
-    RUN.with_name("summaries_run1_report.txt").write_text(text + "\n")
+    RUN.with_name(RUN.stem + "_report.txt").write_text(text + "\n")
     print(text)
 
 
