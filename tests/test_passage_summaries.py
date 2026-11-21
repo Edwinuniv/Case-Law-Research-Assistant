@@ -8,6 +8,7 @@ from app.config import DEFAULT_SETTINGS
 from tests.test_citations import INDEX
 from tests.test_verify import PASSAGE, QUOTE
 
+REAL_JUDGE = getattr(llm, "judge_summary", None)        # kept before the fake judge replaces it in every test
 ON = dict(DEFAULT_SETTINGS, passage_summaries=True)
 OFF = dict(DEFAULT_SETTINGS, passage_summaries=False)
 
@@ -328,6 +329,7 @@ def test_the_model_is_told_whose_view_each_point_is_and_to_name_justices(monkeyp
 
 def test_the_summary_judge_is_told_a_described_view_is_not_the_authors(monkeypatch):
     calls = []
+    monkeypatch.setattr(llm, "judge_summary", REAL_JUDGE)            # the real one, with a fake model call
     monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append((system, user)) or {"verdict": "no"})
     assert llm.judge_summary("Justice Barrett argues for a subjective standard.", "The Court adopts a subjective standard.") == "no"
     system, user = calls[0]
