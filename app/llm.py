@@ -147,3 +147,15 @@ def ask_model(question, passages, history=None, version="v1", reasoning_effort=N
 def judge_support(statement, passage_text):
     """Used only by the evaluation, for the groundedness score (FR15)."""
     return _ask_json(JUDGE_PROMPT, f"PASSAGE:\n{passage_text}\n\nSTATEMENT:\n{statement}").get("verdict", "no")
+
+
+# Summaries only (EVALUATION.md, 2026-11-21): "Justice Barrett argues ... a subjective standard" passed the six checks;
+# her dissent described that view to reject it. The evaluation's judge above is unchanged.
+SUMMARY_JUDGE_PROMPT = JUDGE_PROMPT + """
+A passage that describes someone else's view (a dissent or concurrence describing the majority's or a party's position,
+or the Court describing a party's argument) does NOT support a statement presenting that view as the author's own."""
+
+
+def judge_summary(statement, passage_text):
+    """The meaning check of a summary sentence: "yes", "partly" or "no"; raises ModelError if the model fails."""
+    return _ask_json(SUMMARY_JUDGE_PROMPT, f"PASSAGE:\n{passage_text}\n\nSTATEMENT:\n{statement}").get("verdict", "no")
