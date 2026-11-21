@@ -706,3 +706,18 @@ AI, said so. Saved as eval/runs/summaries_run3.json.
   0 removals of this kind (all eval/runs/eval_run*.json counted). Cutting names at "and" would need care for real names
   that contain it ("President and Fellows of Harvard College"). It only removes (never shows a wrong name), so the
   guarantee holds; not changed without a rule and a measurement.
+**Run 2 reading corrected (2026-11-21, the AI's mistake, AI_LOG).** S003's passage (Riley syllabus, chunk 2680439-2)
+has no holding: only the facts and the procedural history, so the picks gave its content; S003 passes (4). S011's
+passage (Shelby County, 9515886-28) does state the holding ("declare § 4(b) unconstitutional", "no holding on § 5")
+and run 2 showed only "Striking down an Act of Congress is the gravest and most delicate duty": S011 fails (4). The
+verdict is unchanged: (4) fails, summaries stay off.
+**Run 3 result (2026-11-21; eval/runs/summaries_run3.json, _report.txt).** (1) **1 false citation of 45: fails.** S011
+quoted the same Shelby County sentence with its citation, "Blodgett v. Holden, 275 U.S. 142 ... (1927)": real (in the
+citation table) but neither a retrieved decision nor in the opinion's citation map (CourtListener's map is incomplete),
+so the separate checker counts it. (2) 100% of 56; (3) 13 of 14 (S014 ended in a Groq API error). Summaries stay off.
+**Before run 4 (written 2026-11-21, before any code):** (f) a citation inside a pick is shown only if it passes the two
+tests of the separate checker: in the citation table AND (its decision is one of the passages sent, or it is in the
+citation map of the passage's opinion); otherwise the pick is removed ("citation not from a passage sent or its
+citation map"). Said plainly: for picks, condition (1) then checks that this filter works, it is no longer an
+independent test of them (it still is for every model-written sentence). Run 4: the same 14 requests and conditions,
+eval/runs/summaries_run4.json.
