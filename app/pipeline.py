@@ -159,6 +159,24 @@ def resolve_request(request, previous, have, labels, searcher, settings):
     return chosen, None
 
 
+MAX_SUMMARY_PASSAGES, MAX_SUMMARY_TOKENS = 8, 4500    # rule (i): 12 passages (~6,800 tokens) were refused every time
+
+
+def fit(passages, request, syllabus_first=False):
+    """Rule (i): at most 8 passages (for the case, the syllabus first), then dropped from the end until the picker's
+    request is estimated under 4,500 input tokens: one free-tier request takes 8,000 tokens with the answer."""
+    items = list(passages.items())
+    if syllabus_first:
+        items.sort(key=lambda item: speaker(item[1]) != "syllabus")      # stable: the rest keeps its order
+    items = items[:MAX_SUMMARY_PASSAGES]
+    while len(items) > 1 and llm.estimate_tokens([
+            {"role": "system", "content": llm.PICK_PROMPT},
+            {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages(dict(items))}\n\nREQUEST: {request}"}]) \
+            > MAX_SUMMARY_TOKENS:
+        items.pop()
+    return dict(items)
+
+
 def answer_passages(question, request, previous, searcher, index, settings):
     """A passage request: the model gets ONLY the requested passages of the last answer (their labels kept), no search;
     every sentence goes through the same verifier against those passages, so citing another one fails check 1.
@@ -178,6 +196,7 @@ def answer_passages(question, request, previous, searcher, index, settings):
     r["ms_search"] = ms(t)
     if missing:
         return finish(r, WELCOME, missing, t0)
+    passages = fit(passages, r["question"], syllabus_first=request == ["case"])
     r["passages"], r["retrieved_decisions"] = list(passages.items()), sorted({p["decision_id"] for p in passages.values()})
     r["top_score"] = max(p.get("score", 0.0) for p in passages.values())
     t = time.perf_counter()
