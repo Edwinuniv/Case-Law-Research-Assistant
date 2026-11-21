@@ -829,3 +829,12 @@ passages. (2) With no earlier answer, or a passage the last answer did not have,
 ask (no search, no model call, not counted as a question). (3) Off until the measurement holds (setting
 passage_summaries); while off, a passage request gets the fixed text pointing to the passages under the answer.
 Files of others changed, told: app/api.py (the chat's last answer is given to the pipeline; Joe).
+
+2026-11-21 - Case names ending in "Revisions: <date>" (Yasser; Edwin's note, seen in the answer PDFs: "SEC v.
+Jarkesy Revisions: 6/27/24"). Written before the code. Read-only check on Yasser's database: 7 of 2,415 names end
+with " Revisions: M/D/YY" (2024 slip opinions: NRA v. Vullo, Garland v. Cargill, Chiaverini, Rahimi, Jarkesy, Ohio
+v. EPA, Purdue Pharma); "School District No. 92" and the long official names are real and stay. Rule: (1) a case
+name loses a trailing "Revisions: <date>" (or "Revision:"), and nothing else; (2) the loader cleans names when it
+loads them; (3) scripts/fix_case_names repairs a loaded database: dry run lists each change, --apply writes it,
+in decisions.case_name only (no re-index: the passage headers show the name, so the 7 decisions' passages keep the
+old name until the next re-index).
