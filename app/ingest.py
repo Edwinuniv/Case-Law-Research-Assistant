@@ -8,6 +8,14 @@ from app import config, db, scope
 from app.chunking import pick_text, OPINION_TYPES
 
 
+# 2024 slip opinions arrive as "SEC v. Jarkesy Revisions: 6/27/24" (SPEC 11, 2026-11-21): only that trailing date goes
+REVISIONS = re.compile(r"\s+Revisions?:\s*\d{1,2}/\d{1,2}/\d{2,4}\s*$")
+
+
+def clean_case_name(name):
+    return REVISIONS.sub("", name or "").strip()
+
+
 def opinion_label(op):
     label = OPINION_TYPES.get(op.get("type"), "Opinion")
     if op.get("per_curiam"):
@@ -201,7 +209,7 @@ def load_corpus():
             con.execute("""INSERT INTO decisions (decision_id, all_cluster_ids, docket_id, docket_number,
                 case_name, date_filed, source_url, licence) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
                         (main["cluster_id"], [c["cluster_id"] for c in group], main["docket_id"],
-                         main["docket_number"], main["case_name"], main["date_filed"],
+                         main["docket_number"], clean_case_name(main["case_name"]), main["date_filed"],
                          main["source_url"], licence))
             for c in group:
                 con.execute("INSERT INTO cluster_alias VALUES (%s, %s) ON CONFLICT DO NOTHING",
