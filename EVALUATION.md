@@ -635,3 +635,6 @@ answer, plus up to 4 found inside that decision for the earlier question (the sy
 summarising verb is needed (summarise in any spelling, sum up, recap, explain, "what does ... say"). Nothing found
 (no dissent in the decision, no citation shown): our fixed text. Same verifier, same conditions; the set becomes 14
 requests: the 10 above plus one each for (c), (d) dissent, (d) majority and (e).
+**Clarified before any measurement (2026-11-21).** While passage_summaries is off and the chat has follow-ups on, a
+request ("and what did the dissent say?") is left to the follow-up, which already stays in the chat's case (a test of
+the follow-up rule caught it); the fixed text is only for a request with nothing else to keep it in the same case.
