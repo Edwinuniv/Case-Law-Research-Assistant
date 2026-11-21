@@ -873,3 +873,10 @@ read the chat in order: noted, to change when they are switched on. (4) Under ea
 and their citations as plain text). (5) On the right of the conversation, one mark per question on screen, the one in
 view highlighted, click to go there; a round button to go back to the bottom when the page is scrolled up. Files of
 others changed, told: app/api.py and app/db.py (the parent), pages/Chat.jsx and research.css (Joe).
+
+2026-11-21 - Pinned chats (Edwin, on request). Written before the code. (1) In "My chats", an account can pin a chat:
+pinned chats come first, under "Pinned", the most recently pinned on top; the others follow as before (most recent
+activity first). Unpinning puts the chat back among the others. (2) Asking in a pinned chat keeps it pinned and in its
+place. (3) Only the account's own chats (404 otherwise), at most 10 pinned at once (409 for an 11th: unpin one first).
+(4) The time of pinning is kept with the chat (chats.pinned_at, added at start-up like the other new columns), and a
+deleted account's chats go with it. Files of others changed, told: app/db.py, app/api.py, pages/Chat.jsx (Joe).
