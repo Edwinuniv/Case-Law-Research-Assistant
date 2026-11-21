@@ -142,6 +142,7 @@ locally (to test) and never online. `EMAIL_VERIFICATION=0` turns the verificatio
     python -m scripts.filter_citations
     python -m scripts.filter_citation_map
     python -m scripts.seed --all               # loads everything into DATABASE_URL
+    python -m scripts.remap_citation_map       # map rows of skipped opinion copies -> our opinions (dry run; --apply)
 
 ## Useful commands
     python -m scripts.check_citation "603 U.S. 593"

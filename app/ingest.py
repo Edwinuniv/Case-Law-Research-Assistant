@@ -80,6 +80,38 @@ def drop_contained(kept, kept_shingles):
     return [k for i, k in enumerate(kept) if i not in gone], len(gone)
 
 
+def jaccard(a, b):
+    return len(a & b) / max(len(a | b), 1)
+
+
+def copy_targets(copy, ours):
+    """Which of OUR opinions of a decision get the citation-map rows of a copy we skipped (SPEC 11, 2026-11-21).
+    `copy`: the skipped copy's 5-word sequences; `ours`: {opinion_id: 5-word sequences} of the decision.
+    (1) the opinion with the same text (the closest if several); (2) else, if the copy is a combined text, every
+    opinion of ours it contains; (3) else, if the copy is a part of a combined text we kept, that text; (4) nobody."""
+    same = [(jaccard(copy, sh), oid) for oid, sh in ours.items() if same_text(copy, sh)]
+    if same:
+        return [max(same)[1]]
+    inside = [oid for oid, sh in ours.items() if contained(sh, copy)]
+    if inside:
+        return inside
+    return [oid for oid, sh in ours.items() if contained(copy, sh)][:1]
+
+
+def rows_to_add(targets, copy_rows, have):
+    """The citation-map rows to add (SPEC 11, 2026-11-21): each copy's rows go to each of its targets, except a
+    (citing, cited) pair our opinion already has (`have`) or that another copy already gave. Returns
+    [(citing, cited_opinion, cited_cluster, depth)]."""
+    new = {}
+    for c, ts in targets.items():
+        for t in ts:
+            for r in copy_rows.get(c, []):
+                key = (t, r["cited_opinion_id"])
+                if key not in have and key not in new:
+                    new[key] = (t, r["cited_opinion_id"], r["cited_cluster_id"], r["depth"])
+    return list(new.values())
+
+
 def _name_key(name):
     return re.sub(r"[^a-z0-9]", "", (name or "").lower())
 

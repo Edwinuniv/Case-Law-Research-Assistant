@@ -1008,3 +1008,17 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    did not apply (the file has the quote marks as \u201c escapes), so "all passed" meant nothing; replanted with the
    exact text, caught.
 
+
+## 2026-11-21 — Citation-map rows lost with the skipped opinion copies (Yasser)
+Edwin, measuring passage summaries, found 2,011 of our 3,639 opinions with no citation-map row (e.g. the Shelby County
+majority, so "Blodgett v. Holden, 275 U.S. 142", which it really cites, could not be confirmed). What was wrong:
+1. **Step 1.8 dropped the rows with the copies.** The loader written with Claude (group_opinions) keeps one copy of
+   an opinion stored twice by CourtListener and skips the others; nobody checked where the citation map pointed.
+   CourtListener's citation finder mostly ran on the HTML copy, so the rows hung on the copy we skipped. Checked on
+   Yasser's database: data/work/citation_map.csv and the table both have 2,575 citing opinions (nothing lost in
+   loading), but only 1,628 are ours; 940 of the other 947 belong to one of our decisions (Shelby: 9515886 kept,
+   its copy 931614 has the rows). Fix (SPEC 11 rule first, tests from the rule, 5 planted bugs caught):
+   scripts/remap_citation_map gives a copy's rows to our opinion with the same text.
+2. **The first dry run counted too many rows.** It counted each copy's rows separately, so a row given by two copies
+   to the same opinion was counted twice while --apply adds it once (5 vs 4 on a made-up decision in a test
+   database). Caught by running both on that decision; the rows are now worked out once for both.
