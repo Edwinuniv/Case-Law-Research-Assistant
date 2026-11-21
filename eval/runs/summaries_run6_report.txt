@@ -1,0 +1,124 @@
+Passage summaries, summaries-v1 (14 of 14 requests), settings {'min_retrieval': 0.35, 'tau_abstain': 0.2, 'tau_confident': 0.7, 'retrieve_k': 20, 'top_k': 8, 'use_reranker': False, 'w_bm25': 1.0, 'w_separate': 1.0, 'fusion_pool': 50, 'case_filter': True, 'w_retrieval': 0.5, 'w_grounded': 0.4, 'w_passages': 0.1, 'chunk_max_words': 350, 'index_meta': {'words': 18852079, 'chunks': 72502, 'built_at': '2026-11-06T21:15:53+00:00', 'opinions': 3647, 'max_words': 350}, 'reasoning_effort': 'low', 'passage_summaries': True, 'prompt_version': 'v2'}
+
+S001 [passage] 'summurize the first passage' after 'What mental state must the State prove in a true-threats prosecution?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P1 Counterman v. Colorado - Syllabus
+   SHOWN   Syllabus: “True threats are “serious expression[s]” conveying that a speaker means to “commit an act of unlawful violence.””
+   SHOWN   Syllabus: “The existence of a threat depends not on “the mental state of the author,” but on “what the statement conveys” to the person on the receiving end.”
+   SHOWN   Syllabus: “But a subjective standard is still required for true threats, lest prosecutions chill too much protected, non‑threatening expression.”
+
+S002 [passage] 'summarize passage 2' after 'What did the dissent in Trump v. United States argue?' (first answer LOW_CONFIDENCE)
+   -> ANSWERED  
+   sent: P2 Trump v. United States - Jackson, J., dissenting
+   SHOWN   Jackson, J., dissenting: “I write separately to explain, as succinctly as I can, the theoretical nuts and bolts of what, exactly, the majority has done today to alter the paradigm of accountability for Presidents of the United States.”
+   SHOWN   Jackson, J., dissenting: “Put simply, immunity is “exemption” from the duties and liabilities imposed by law.”
+   SHOWN   Jackson, J., dissenting: “In its purest form, the concept of immunity boils down to a maxim— “ ‘[t]he King can do no wrong’ ”—a notion that was firmly “rejected at the birth of [our] Republic.””
+
+S003 [passage] 'explain the first passage' after 'In Riley v. California, can police search the digital data on a cell phone seized from an arrested person without a warrant?' (first answer LOW_CONFIDENCE)
+   -> ANSWERED  
+   sent: P1 Riley v. Cal. United States - Syllabus
+   SHOWN   Syllabus: “In No. 13–132, petitioner Riley was stopped for a traffic violation, which eventually led to his arrest on weapons charges.”
+   SHOWN   Syllabus: “An officer searching Riley incident to the arrest seized a cell phone from Riley’s pants pocket.”
+   SHOWN   Syllabus: “First Circuit reversed the denial of the motion to suppress and vacated the relevant convictions.”
+
+S004 [passage] 'what does P3 say?' after 'Does the Constitution require states to license and recognize marriages between two people of the same sex?' (first answer ANSWERED)
+   -> LOW_CONFIDENCE  support score between the two thresholds
+   sent: P3 Obergefell v. Hodges - Alito, J., dissenting
+   SHOWN   Alito, J., dissenting: “The Constitution says nothing about a right to same-sex marriage, but the Court holds that the term “liberty” in the Due Process Clause of the Fourteenth Amendment encompasses this right.”
+   SHOWN   Alito, J., dissenting: “And it is beyond dispute that the right to same-sex marriage is not among those rights.”
+   removed To prevent five unelected Justices from imposing their personal vision of liberty upon the American people, the Court ha  (citation not in the citation table (written in the passage): 521 U.S. 701)
+
+S005 [passage] 'summarize the last passage' after 'What did the dissent in Bostock v. Clayton County argue?' (first answer LOW_CONFIDENCE)
+   -> ANSWERED  
+   sent: P8 Bostock v. Clayton County - Alito, J., dissenting
+   SHOWN   Alito, J., dissenting: “The Court observes that “[t]he people are entitled to rely on the law as written, without fearing that courts might disregard its plain terms,” ante, at 24, but it has no qualms about disregarding over 50 years of uniform judicial interpretation of Title VII’s plain text.”
+   SHOWN   Alito, J., dissenting: “Rather, the Court makes the jaw‑dropping statement that its decision exemplifies “judicial humility.” Ante, at 31.”
+   SHOWN   Alito, J., dissenting: “The Court’s brusque refusal to consider the consequences of its reasoning is irresponsible.”
+
+S006 [two passages] 'summarize passages 1 and 2' after 'What did the dissent in Shelby County v. Holder argue?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P1 Shelby County v. Holder - Majority opinion (Roberts) - Part C, P2 Shelby County v. Holder - Ginsburg, J., dissenting - Part IV
+   SHOWN   Majority opinion (Roberts) - Part C: “Shelby County's claim is that the coverage formula here is unconstitutional in all its applications, because of how it selects the jurisdictions subjected to preclearance.”
+   SHOWN   Majority opinion (Roberts) - Part C: “But that is like saying that a driver pulled over pursuant to a policy of stopping all redheads cannot complain about that policy, if it turns out his license has expired.”
+   SHOWN   Ginsburg, J., dissenting - Part IV: “[U]nder our constitutional system[,] courts are not roving commissions assigned to pass judgment on the validity of the Nation's laws.”
+   SHOWN   Ginsburg, J., dissenting - Part IV: “Embedded in the traditional rules governing constitutional adjudication is the principle that a person to whom a statute may constitutionally be applied will not be heard to challenge that statute on the ground that it may conceivably be applied unconstitutionally to others, in other situations not before the Court.”
+   SHOWN   Ginsburg, J., dissenting - Part IV: “Yet the Court's opinion in this case contains not a word explaining why Congress lacks the power to subject to preclearance the particular plaintiff that initiated this lawsuit‑Shelby County, Alabama.”
+
+S007 [two passages] 'summarize the second and third passages' after 'Do foreign prisoners held at Guantanamo Bay have the constitutional right to habeas corpus?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P2 Rasul v. Bush - Dissenting opinion (Scalia) - Part II, P3 Boumediene v. Bush - Opinion of the Court (Kennedy) - Part C
+   SHOWN   Dissenting opinion (Scalia) - Part II: “Considering that the statute draws no distinction between Americans and aliens held in federal custody, there is little reason to think that Congress intended the geographical coverage of the statute to vary depending on the detainee’s citizenship.”
+   SHOWN   Dissenting opinion (Scalia) - Part II: “Our answer to that ques tion, Justice Souter, is that citizens of the United States, because of their constitutional circumstances, may have greater rights with respect to the scope and reach of the Habeas Statute as the Court has or would interpret it.”
+   SHOWN   Dissenting opinion (Scalia) - Part II: “Quite obviously, the Court’s second reason has no force whatever.”
+   SHOWN   Opinion of the Court (Kennedy) - Part C: “The United States Naval Station at Guantanamo Bay consists of 45 square miles of land and water.”
+   SHOWN   Opinion of the Court (Kennedy) - Part C: “No Cuban court has jurisdiction over American military personnel at Guantanamo or the enemy combatants detained there.”
+   SHOWN   Opinion of the Court (Kennedy) - Part C: “Under the facts presented here, however, there are few practical barriers to the running of the writ.”
+
+S008 [all passages] 'summarize all the passages' after 'Is a former President immune from criminal prosecution for his official acts?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P1 Trump v. United States - Jackson, J., dissenting, P2 Trump v. United States - Opinion of the Court (Roberts), P3 Trump v. United States - Opinion of the Court (Roberts), P4 Trump v. United States - Syllabus, P5 Trump v. United States - Sotomayor, J., dissenting, P6 Trump v. United States - Sotomayor, J., dissenting
+   SHOWN   Jackson, J., dissenting: “It holds that a former President may or may not be immune from criminal prosecution for conduct undertaken while in office, to be determined on a case-by-case basis.”
+   SHOWN   Jackson, J., dissenting: “First, with respect to any criminal conduct relating to a President’s “core constitutional powers”—those subjects “within his ‘conclusive and preclusive’ constitutional authority”—the President is entitled to absolute immunity from criminal prosecution.”
+   SHOWN   Jackson, J., dissenting: “Second, expanding outward from this “core,” regarding all other “acts within the outer perimeter of [the President’s] official responsibility,” the President is entitled to “at least a presumptive immunity from criminal prosecution.””
+   SHOWN   Opinion of the Court (Roberts): “We granted certiorari to consider the following question: “Whether and if so to what extent does a former President enjoy presidential immunity from criminal prosecution for conduct alleged to involve official acts during his tenure in office.””
+   SHOWN   Opinion of the Court (Roberts): “The parties before us do not dispute that a former President can be subject to criminal prosecution for unofficial acts committed while in office.”
+   SHOWN   Opinion of the Court (Roberts): “They disagree, however, about whether a former President can be prosecuted for his official actions.”
+   SHOWN   Opinion of the Court (Roberts): “We conclude that under our constitutional structure of separated powers, the nature of Presidential power requires that a former President have some immunity from criminal prosecution for official acts during his tenure in office.”
+   SHOWN   Opinion of the Court (Roberts): “At least with respect to the President’s exercise of his core constitutional powers, this immunity must be absolute.”
+
+S009 [all passages] 'can you summarize these passages' after 'Does Title VII protect gay and transgender employees from being fired?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P1 Bostock v. Clayton County - Opinion of the Court (Gorsuch), P2 Bostock v. Clayton County - Syllabus, P3 Bostock v. Clayton County - Opinion of the Court (Gorsuch), P4 Bostock v. Clayton County - Syllabus, P5 Bostock v. Clayton County - Alito, J., dissenting, P6 Bostock v. Clayton County - Opinion of the Court (Gorsuch), P7 Bostock v. Clayton County - Opinion of the Court (Gorsuch)
+   SHOWN   Opinion of the Court (Gorsuch): “If an employer would not have discharged an employee but for that individual’s sex, the statute’s causation standard is met, and liability may attach.”
+   SHOWN   Opinion of the Court (Gorsuch): “No less, intentional discrimination based on sex violates Title VII, even if it is intended only as a means to achieving the employer’s ultimate goal of discriminating against homosexual or transgender employees.”
+   SHOWN   Syllabus: “An employer who intentionally fires an individual homosexual or transgender employee in part because of that individual’s sex violates the law even if the employer is willing to subject all male and female homosexual or transgender employees to the same rule.”
+   SHOWN   Opinion of the Court (Gorsuch): “But none of these contentions about what the employers think the law was meant to do, or should do, allow us to ignore the law as it is.”
+   SHOWN   Opinion of the Court (Gorsuch): “But these conversational conventions do not control Title VII’s legal analysis, which asks simply whether sex was a but‑for cause.”
+   SHOWN   Syllabus: “Held: An employer who fires an individual merely for being gay or transgender violates Title VII.”
+   SHOWN   Alito, J., dissenting: “Title VII prohibits discrimination based on five specified grounds, and neither sexual orientation nor gender identity is on the list.”
+   SHOWN   Alito, J., dissenting: “By proclaiming that sexual orientation and gender identity are “not relevant to employment decisions,” the Court updates Title VII to reflect what it regards as 2020 values.”
+   removed But these conversational conventions do not control Title VII’s legal analysis, which asks simply whether sex is a but‑f  (quote not found in the cited passage)
+
+S010 [all passages] 'summarise each passage' after 'Can a city take private homes through eminent domain to give the land to private developers as part of an economic development plan?' (first answer LOW_CONFIDENCE)
+   -> ANSWERED  
+   sent: P1 Kelo v. City of New London - Majority opinion (Stevens) - Part IV, P2 Kelo v. City of New London - Majority opinion (Stevens) - Part IV, P3 Kelo v. City of New London - Majority opinion (Stevens) - Part IV, P4 Kelo v. City of New London - Majority opinion (Stevens) - Part IV, P5 Kelo v. City of New London - Majority opinion (Stevens) - Part IV, P6 Kelo v. City of New London - Dissenting opinion (O'Connor) - Part I, P7 PennEast Pipeline Co. v. New J - Barrett, J., dissenting, P8 Kelo v. City of New London - Majority opinion (Stevens) - Opening
+   SHOWN   Majority opinion (Stevens) - Part IV: “Petitioners contend that using eminent domain for economic development impermissibly blurs the boundary between public and private takings.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “We cannot say that public ownership is the sole method of promoting the public purposes of community redevelopment projects.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “They do not warrant the crafting of an artificial restriction on the concept of public use.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “Under California law, for instance, a city may only take land for economic development purposes in blighted areas.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “For example, some argue that the need for eminent domain has been greatly exaggerated because private developers can use numerous techniques, including secret negotiations or precommitment strategies, to overcome holdout problems and assemble lands for genuinely profitable projects.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “Because that plan unquestionably serves a public purpose, the takings challenged here satisfy the public use requirement of the Fifth Amendment.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “Given the comprehensive character of the plan, the thorough deliberation that preceded its adoption, and the limited scope of our review, it is appropriate for us, as it was in Berman, to resolve the challenges of the individual owners, not on a piecemeal basis, but rather in light of the entire plan.”
+   SHOWN   Majority opinion (Stevens) - Part IV: “The record clearly demonstrates that the development plan was not intended to serve the interests of Pfizer, Inc., or any other private entity, but rather, to revitalize the local economy by creating temporary and permanent jobs, generating a significant increase in tax revenue, encouraging spin-off economic activities and maximizing public access to the waterfront.”
+
+S011 [citation] 'summarize the first citation' after 'What part of the Voting Rights Act did the Court strike down in Shelby County v. Holder?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P2 Shelby County v. Holder - Majority opinion (Roberts) - Part D
+   SHOWN   Majority opinion (Roberts) - Part D: “Striking down an Act of Congress "is the gravest and most delicate duty that this Court is called on to perform." Blodgett v. Holden, 275 U.S. 142 , 148, 48 S.Ct. 105 , 72 L.Ed. 206 (1927) (Holmes, J., concurring).”
+
+S012 [opinion: dissent] 'summarize the dissent' after 'Did the Supreme Court hold that race-conscious admissions at Harvard and the University of North Carolina violate the Equal Protection Clause?' (first answer ANSWERED)
+   -> ANSWERED  
+   sent: P4 Students for Fair Admissions,  - Sotomayor, J., dissenting, P5 Students for Fair Admissions,  - Sotomayor, J., dissenting
+   SHOWN   Sotomayor, J., dissenting: “Overruling decades of precedent, today's newly constituted Court singles out the limited use of race in holistic college admissions.”
+   SHOWN   Sotomayor, J., dissenting: “At bottom, without any new factual or legal justification, the Court overrides its longstanding holding that diversity in higher education is of compelling value.”
+   SHOWN   Sotomayor, J., dissenting: “To avoid public accountability for its choice, the Court seeks cover behind a unique measurability requirement of its own creation.”
+   SHOWN   Sotomayor, J., dissenting: “The Court long ago concluded that this guarantee can be enforced through race-conscious means in a society that is not, and has never been, colorblind.”
+   SHOWN   Sotomayor, J., dissenting: “For 45 years, the Court extended Brown's transformative legacy to the context of higher education, allowing colleges and universities to consider race in a limited way and for the limited purpose of promoting the important benefits of racial diversity.”
+   SHOWN   Sotomayor, J., dissenting: “It holds that race can no longer be used in a limited way in college admissions to achieve such critical benefits.”
+
+S013 [opinion: majority] 'summarize the majority opinion' after 'What did the dissent in SEC v. Jarkesy argue?' (first answer LOW_CONFIDENCE)
+   -> ANSWERED  
+   sent: P2 SEC v. Jarkesy - Opinion of the Court (Roberts), P7 SEC v. Jarkesy - Opinion of the Court (Roberts), P8 SEC v. Jarkesy - Opinion of the Court (Roberts)
+   SHOWN   Opinion of the Court (Roberts): “Jarkesy and Patriot28 are entitled to a jury trial in an Article III court.”
+   SHOWN   Opinion of the Court (Roberts): “The judgment of the Court of Appeals for the Fifth Circuit is affirmed, and the case is remanded for further proceedings consistent with this opinion.”
+   SHOWN   Opinion of the Court (Roberts): “A defendant facing a fraud suit has the right to be tried by a jury of his peers before a neutral adjudicator.”
+
+S014 [case] 'summarize the case' after 'Can California ban the sale of violent video games to minors?' (first answer LOW_CONFIDENCE)
+   -> ANSWERED  
+   sent: P1 Brown v. Entertainment Merchan - Majority opinion (Scalia) - Opening, P2 Brown v. Entertainment Merchan - Concurring opinion (Auto) - Part A, P3 Brown v. Entertainment Merchan - Majority opinion (Scalia) - Part II, P4 Brown v. Entertainment Merchan - Dissenting opinion (Breyer) - Part C, P5 Brown v. Entertainment Merchan - Dissenting opinion (Thomas) - Part A, P6 Brown v. Entertainment Merchan - Majority opinion (Scalia) - Part II, P7 Brown v. Entertainment Merchan - Majority opinion (Scalia) - Part II
+   SHOWN   Majority opinion (Scalia) - Opening: “We consider whether a California law imposing restrictions on violent video games comports with the First Amendment.”
+
+(1) false citations shown: 0 of 49
+(2) lines citing only a passage sent: 100% of 60
+(3) requests shown: 14 of 14 (12 needed)
+(1)-(3) hold: True.  (4): Edwin reads the SHOWN lines above.
