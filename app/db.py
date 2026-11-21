@@ -183,6 +183,8 @@ ALTER TABLE users DROP CONSTRAINT IF EXISTS users_plan_check;
 ALTER TABLE users ADD CONSTRAINT users_plan_check CHECK (plan IN ('free', 'paid'));
 -- 2026-11-15 (Edwin, Stripe test mode): only Stripe's ids, to cancel later; never card data or amounts
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+-- 2026-11-21 (Edwin, SPEC section 11): pinned chats come first in "My chats"
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 -- 2026-11-14 (Joe, SPEC section 11): each question of a saved chat; a deleted chat keeps its questions (FR28)
 ALTER TABLE query_log ADD COLUMN IF NOT EXISTS chat_id INT REFERENCES chats(id) ON DELETE SET NULL;
@@ -428,9 +430,30 @@ def chat_question(chat_id, query_id):
 def list_chats(user_id):
     """The account's own chats, newest first, with their number of questions."""
     with connect() as con:
-        return con.execute("""SELECT c.id, c.title, c.created_at, c.updated_at, count(q.id) AS questions
+        return con.execute("""SELECT c.id, c.title, c.created_at, c.updated_at, c.pinned_at, count(q.id) AS questions
                               FROM chats c LEFT JOIN query_log q ON q.chat_id = c.id WHERE c.user_id = %s
-                              GROUP BY c.id ORDER BY c.updated_at DESC, c.id DESC""", (user_id,)).fetchall()
+                              GROUP BY c.id ORDER BY c.pinned_at DESC NULLS LAST, c.updated_at DESC, c.id DESC""",
+                           (user_id,)).fetchall()       # pinned first, the newest pin on top (SPEC 11, 2026-11-21)
+
+
+MAX_PINNED = 10
+
+
+def pin_chat(user_id, chat_id, pinned):
+    """Pins or unpins one of the account's own chats. Returns "ok", "not found" or "too many" (an 11th pin)."""
+    with connect() as con:
+        chat = con.execute("SELECT pinned_at FROM chats WHERE id = %s AND user_id = %s", (chat_id, user_id)).fetchone()
+        if chat is None:
+            return "not found"
+        if pinned and chat["pinned_at"] is None:
+            n = con.execute("SELECT count(*) AS n FROM chats WHERE user_id = %s AND pinned_at IS NOT NULL",
+                            (user_id,)).fetchone()["n"]
+            if n >= MAX_PINNED:
+                return "too many"
+            con.execute("UPDATE chats SET pinned_at = now() WHERE id = %s", (chat_id,))
+        elif not pinned:
+            con.execute("UPDATE chats SET pinned_at = NULL WHERE id = %s", (chat_id,))
+    return "ok"
 
 
 def chat_turns(user_id, chat_id):
