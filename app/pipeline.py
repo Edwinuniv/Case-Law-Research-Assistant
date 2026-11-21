@@ -2,7 +2,7 @@
 import re
 import time
 from app import config, llm
-from app.citations import find_case_names
+from app.citations import find_case_names, find_citations
 from app.verify import verify, count_fabrications, groundedness, norm, quote_found
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
@@ -187,7 +187,7 @@ def answer_passages(question, request, previous, searcher, index, settings):
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
     r["ms_model"], r["tokens"], r["model_said"] = ms(t), dict(llm.LAST_USAGE), "PICKS"
-    kept, removed = checked_picks(draft, passages)
+    kept, removed = checked_picks(draft, passages, index)
     r["sentences"], r["removed"] = kept, removed
     r["support_score"] = support_score(kept, removed, passages, settings)
     status = decide(r["support_score"], len(kept), settings)
@@ -196,12 +196,20 @@ def answer_passages(question, request, previous, searcher, index, settings):
                               LOW_CONFIDENCE: "support score between the two thresholds", ANSWERED: ""}[status], t0)
 
 
+SPEAKER = re.compile(r"\bJ\.,|\bJustice\b|opinion of the court|syllabus|dissent|concurr|per curiam", re.I)
+
+
 def label_of(p):
-    """Who is speaking, from the passage's own label (never the model): "Barrett, J., dissenting", "Syllabus"."""
-    return p.get("section") or p.get("opinion_label") or "Passage"
+    """Who is speaking, from the passage's own labels (never the model): the section when it names the speaker
+    ("Barrett, J., dissenting", "Syllabus"); else the opinion's label first: "Dissenting opinion (Scalia) - Part II"
+    (run 1 showed only "Part II" for Justice Scalia's dissent in Rasul)."""
+    section, opinion = (p.get("section") or "").strip(), (p.get("opinion_label") or "").strip()
+    if section and (SPEAKER.search(section) or not opinion):
+        return section
+    return " - ".join(x for x in (opinion, section) if x) or "Passage"
 
 
-def checked_picks(draft, passages, per_passage=3, total=8):
+def checked_picks(draft, passages, index, per_passage=3, total=8):
     """The model's picks -> (shown, removed). A pick is shown only if it comes from a requested passage (check 1) and is
     found word for word in it (check 2, at least 5 words); the line is ours: the label, then the passage's own words in
     quotation marks. In the order of the passages, at most 3 per passage and 8 in all (EVALUATION.md, option A)."""
@@ -216,6 +224,11 @@ def checked_picks(draft, passages, per_passage=3, total=8):
         if len(words.split()) < 5 or not quote_found(words, text):
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": ["quote not found in the cited passage"]})
+            continue
+        unknown = [c for c in find_citations(words) if not index.clusters_for(c)]   # check 3 (run 1: the source's
+        if unknown:                                                                  # own "521 U.S. 701")
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": [f"citation not in the citation table (written in the passage): {unknown[0]}"]})
             continue
         kept.append({"text": f"{label_of(passages[pid])}: \u201c{words}\u201d", "sources": [pid], "quote": words,
                      "groundedness": round(groundedness(words, text), 3)})
