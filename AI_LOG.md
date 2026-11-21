@@ -990,4 +990,11 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
 5. **Check 4 removed a true sentence**: "citing Virginia v. Black and Chaplinsky" is read as one case name, "Virginia v.
    Black and Chaplinsky", not found in the passage. Cutting names at "and" would break "President and Fellows of Harvard
    College"; needs its own rule and fix (not in this branch).
+6. **Option A (Edwin's choice): summaries quote instead of retelling.** The model only picks sentences; our code checks
+   each one word for word in its passage and writes the line itself: the passage's label, then its own words. Real try
+   on the same chat: the dissent summary is now Justice Barrett's own words ("True threats carry little value and impose
+   great cost"), no reversed view possible; the case summary shows the holding in the Court's words. One pick removed
+   because the model corrected a typo of the source ("unjustifably") instead of copying it. Planting bugs: one plant
+   did not apply (the file has the quote marks as \u201c escapes), so "all passed" meant nothing; replanted with the
+   exact text, caught.
 
