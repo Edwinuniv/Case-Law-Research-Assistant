@@ -841,3 +841,8 @@ has them). Rule: (1) the rows of a skipped copy are given to OUR opinion of the 
 is one part of a combined text we kept, to that text; (4) otherwise to nobody, and it is counted in the report: no
 guess. Only citation_map changes (rows added, none removed, a row already there is not added twice); no re-index.
 Dry run by default (counts per rule, Shelby shown), --apply to write; the report is saved (ingestion_reports).
+Result (2026-11-21, Yasser's database, --apply after the dry run gave the same numbers): 947 skipped copies in the
+map; 483 given to 1 opinion, 457 combined copies given to each opinion they contain, 7 copies of decisions we do not
+have (counted, given to nobody); 54,852 rows added; our opinions without any row 2,011 -> 495; the Shelby County
+majority 0 -> 51 rows. Rule 2 is at the decision level: a citation made in a combined copy's dissent is also given to
+the majority it contains (for the checker: "cited by this decision"), never to another decision.
