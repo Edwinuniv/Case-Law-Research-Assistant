@@ -296,7 +296,16 @@ def judge(monkeypatch):
 def test_a_sentence_the_judge_says_yes_to_is_kept_and_it_saw_the_cited_passage(model, judge):
     seen, _ = judge
     r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
-    assert r["shown_sentences"] and len(seen) == 1 and seen[0][1] == MAJORITY["text"]
+    assert r["shown_sentences"] and len(seen) == 1 and MAJORITY["text"] in seen[0][1]
+
+
+def test_the_judge_sees_whose_opinion_each_passage_is(monkeypatch, judge):     # Barrett's dissent (2026-11-21)
+    monkeypatch.setattr(llm, "ask_model", lambda *a, **k: {"status": "SUPPORTED", "sentences": [
+        {"text": "Justice Sotomayor, dissenting, says the President is now a king above the law.", "sources": ["P2"],
+         "quote": "The President is now a king above the law"}]})
+    pipeline.answer("summarize the dissent", NoSearch(), INDEX, ON, previous=CITED)
+    shown_to_judge = judge[0][0][1]
+    assert "Sotomayor, J., dissenting" in shown_to_judge and DISSENT["text"] in shown_to_judge
 
 
 @pytest.mark.parametrize("verdict", ["no", "partly", "fail"])
