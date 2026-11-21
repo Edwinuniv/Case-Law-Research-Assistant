@@ -66,3 +66,49 @@ def test_a_saved_answer_goes_to_the_users_log_like_any_question(c, demo, clean_d
     with clean_db.connect() as con:
         row = con.execute("SELECT event, query_id, detail FROM user_log ORDER BY id DESC LIMIT 1").fetchone()
     assert row["event"] == "question" and row["query_id"] == shown["id"] and row["detail"]["status"] == "ANSWERED"
+
+
+# --- Groq's per-minute limit while making the saved answers (Joe, 2026-11-21: make_all on Railway saved few answers) ---
+LIMIT = "language model failed: rate limit reached, retry after 7 s"
+DAY = "language model failed: rate limit reached per day, retry after 2400 s"
+
+
+@pytest.fixture
+def made(c, monkeypatch):
+    """make_all with a pipeline that answers from a script of statuses, and a sleep that only records."""
+    from app import api, config, demo
+    monkeypatch.setattr(config, "EXAMPLE_QUESTIONS", [EXAMPLE, "Was Chevron overruled?"])
+    real, slept = demo.answer, []
+    monkeypatch.setattr(demo.time, "sleep", slept.append)
+
+    def run(script):
+        calls = iter(script)
+
+        def fake(q, *a, **k):
+            reason = next(calls)
+            if reason is None:
+                return real(q, *a, **k)
+            return {"question": q, "status": "ERROR", "reason": reason, "shown_sentences": []}
+        monkeypatch.setattr(demo, "answer", fake)
+        return demo.make_all(api.STATE["searcher"], api.STATE["index"], log=lambda m: None), slept
+    return run
+
+
+def test_the_minute_limit_is_waited_for_and_the_same_question_asked_again(made):
+    saved, slept = made([LIMIT, None, LIMIT, LIMIT, None])
+    assert saved == 2 and slept == [8.0, 8.0, 8.0]                 # the wait Groq gives, plus one second
+
+
+def test_the_daily_limit_stops_at_once_without_waiting(made):
+    saved, slept = made([None, DAY])
+    assert saved == 1 and slept == []                               # the first answer is kept, no 40-minute sleep
+
+
+def test_another_error_is_not_retried(made):
+    saved, slept = made(["language model failed: timeout", None])
+    assert saved == 1 and slept == []
+
+
+def test_the_retries_end(made):
+    saved, slept = made([LIMIT] * 7 + [None])
+    assert saved == 1 and len(slept) == 6                           # 6 waits, then the next question
