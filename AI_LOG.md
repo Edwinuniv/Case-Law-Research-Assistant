@@ -971,3 +971,13 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    thinks before answering). With a minute between them: LOW_CONFIDENCE with 3 sentences and ANSWERED with 4. The
    site does not wait and retry like the evaluation does, so busy minutes can show ERROR (told the team).
 
+## 2026-11-21 — Saved demo answers and Groq's per-minute limit (branch fix/demo-answers-rate-limit)
+
+1. **make_all saved few answers on Railway** (Joe's report): the example questions were asked back to back, Groq's
+   free tier allows 8,000 tokens a minute, and every ERROR was skipped. Missed when make_all was written (the tests
+   used a fake model, which has no limit). Fixed with the evaluation's rule (wait the time Groq gives, at most 6
+   times; stop at the daily limit); tests first.
+2. **A test that did not test what it said**: with two example questions and the daily limit on the second,
+   "stop" and "go on to the next question" look the same, so a planted bug (continue instead of break) got
+   through. A third question now must not be asked; the planted bug is caught.
+
