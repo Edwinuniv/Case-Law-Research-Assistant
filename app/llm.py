@@ -155,7 +155,9 @@ PICK_PROMPT = """You pick the sentences of court-opinion passages that best answ
 Use ONLY the passages given. Copy each sentence word for word, exactly as it is written in the passage: the same words
 in the same order. You may leave out the beginning or the end of a long sentence, but never change, add or reorder words.
 Pick at most 3 sentences per passage: the ones that state its main point (what is decided, the rule, the reasoning, what
-this opinion argues). Do not pick a citation alone, a page heading or "Page Proof Pending Publication".
+this opinion argues). Prefer a "Held:" line, the holding and the reasons for it over the facts of the case and the
+procedural history. Do not pick a citation alone, a page heading, a docket or argument line ("No. 13-132. Argued ...")
+or "Page Proof Pending Publication".
 Reply with JSON only: {"picks": [{"passage": "P1", "sentence": "..."}]}"""
 
 
