@@ -58,6 +58,29 @@ The research page answers one question per message (no follow-up questions, as t
 "what can you do" gets a short welcome message (what Verdicta does, its coverage, example questions) instead of
 "not supported": it is our fixed text, with no search and no model call.
 
+Previews: the admin page "Previews" shows the loading screen (and plays it again), the small loader, the three error
+pages of the site and the server's 401/403 pages, in the chosen appearance; a button crashes the page on purpose.
+My account (/account, a logged-in user account): details and plan, change password, delete the account with its
+questions, chats and ratings (a paid test subscription is cancelled first). Links in the header and the chat sidebar.
+
+Notifications: a bell in the header (user accounts) counts unread notices (welcome, password changed, plan changed,
+account disabled or enabled) and shows the latest 20; opening it marks them read.
+
+Saved answers: a logged-in account keeps an answer with "☆ Save" and finds it on /saved ("★ Saved answers" in the
+chat sidebar), opened as it was shown, with its citations and passages; at most 200.
+
+Announcements: on the admin page "Announcements", a short message (information or warning, at most 300 characters,
+up to 30 days) shown as a banner at the top of every page until it ends; visitors can close it.
+
+Guided tour: the first visit of the research page shows a short tour (question box, examples, My questions, Settings,
+how to read an answer); Settings > "Take the tour" shows it again.
+
+PDF: "⤓ PDF" under an answer downloads it as a research note (question, verified sentences, citations and the exact
+quotes); made from the saved answer, only for the person who got it.
+
+Feedback: under each answer, "Was this answer helpful?" (yes, or no with a reason and a comment); administrators
+read the ratings on the admin page "Feedback". Only the person who got an answer can rate it.
+
 Appearance: the round Settings button at the bottom left of every page switches the whole site between dark (the
 default, as designed) and light. The choice is kept in the browser (localStorage) and applies to every page;
 nothing is sent to the server.
@@ -85,6 +108,27 @@ The `Dockerfile` builds the website (it downloads the embedding model and the re
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
 (plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
 
+### Replacing the passages (a re-index, e.g. Yasser's chunks dump)
+Replace only the `chunks` table, then **restart the web service**: the keyword search (BM25) is built when the site
+starts and is cached while the number of passages and the index settings stay the same, so without a restart the
+site keeps searching the old passages. Locally, also delete `data/work/bm25.*` (rebuilt at the next start, about 20 s).
+
+    psql "$DATABASE_URL" -c "TRUNCATE chunks;"
+    pg_restore -d "$DATABASE_URL" --data-only --single-transaction chunks_119.dump
+
+After a change of case names (`python -m scripts.fix_case_names --apply`) restart too: the citation index keeps the
+names in memory. Saved demo answers point to passages: make them again afterwards (`scripts.make_demo_answers`).
+
+### Settings switched from the command line
+Two features are switched on by a setting, only after their measurement passed (EVALUATION.md). Online:
+`railway run python -c "..."`; the site reads the settings at each question, no restart needed.
+
+    python -c "from app import db; db.set_setting('prompt_version', 'v2')"        # fuller answers (answer v2; 'v1' undoes)
+    python -c "from app import db; db.set_setting('passage_summaries', True)"     # "summarise the first passage" (False undoes)
+
+While `passage_summaries` is off, such a request gets a fixed line pointing to the passages under the answer (never
+an answer about another case).
+
 ### Sign in with Google (optional)
 1. Google Cloud console > APIs & Services > OAuth consent screen: app name Verdicta, user type External, your email.
 2. Credentials > Create credentials > OAuth client ID > Web application. Authorised JavaScript origins:
@@ -93,15 +137,23 @@ building). On Railway: a pgvector database + this repo as a service, with the `.
    No client secret is used. Without the variable the button is hidden. Google works for user accounts only:
    administrators always log in with their password.
 
-### Forgot password by email (optional)
-"Forgot password?" on the login page emails a link to choose a new password (user accounts only;
-administrators are reset by another administrator on the Accounts page). The link works once, for 30 minutes.
-1. Set `PUBLIC_URL` to the site's own address (`https://case-law-research-assistant-production.up.railway.app`
-   online); the link is built from it, never from the request.
-2. To really send the emails: a free Resend account, a domain verified in Resend, then `RESEND_API_KEY` and
-   `MAIL_FROM` (e.g. `Verdicta <no-reply@your-domain>`). Railway blocks SMTP, which is why Gmail is not used.
-3. Without `RESEND_API_KEY`, on your own computer the email (with the link) is printed in the uvicorn console, to
-   test; online (`HTTPS_ONLY=1`) it is never printed.
+### Emails from verdicta.team@gmail.com
+The site emails: the 6-digit code that verifies a new account, the forgot-password link, notices (welcome, password
+changed, plan changed, account disabled/enabled) and every contact message to the team (CONTACT_EMAIL addresses and
+verdicta.team@gmail.com, "reply" goes to the visitor). Set `PUBLIC_URL` to the site's own address (online:
+`https://case-law-research-assistant-production.up.railway.app`): links and the logo in the emails use it.
+**Online (Railway blocks SMTP): the Gmail API**, once:
+1. Google Cloud console, the project of "Sign in with Google": APIs & Services > Library > enable **Gmail API**.
+2. OAuth consent screen: add the scope `.../auth/gmail.send`; Audience: **Publish app** ("In production"), otherwise
+   the token stops working after 7 days. Google shows "unverified app" once, to us only: continue.
+3. Credentials > Create credentials > OAuth client ID > **Desktop app**. Put its id and secret in `.env` as
+   `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET`.
+4. `python -m scripts.gmail_token`, open the printed address, sign in **as verdicta.team@gmail.com**, allow; copy the
+   printed `GMAIL_REFRESH_TOKEN=...` into `.env`.
+5. On Railway, add the same three variables (and `PUBLIC_URL`), then redeploy.
+**On a laptop, simpler:** a Gmail app password (Google account > Security > 2-Step Verification > App passwords) in
+`SMTP_USER=verdicta.team@gmail.com` and `SMTP_PASSWORD`. With neither, emails are printed in the uvicorn console
+locally (to test) and never online. `EMAIL_VERIFICATION=0` turns the verification code off (default on).
 
 ## Build the data (week 1-2)
     python -m scripts.filter_dockets
@@ -111,6 +163,7 @@ administrators are reset by another administrator on the Accounts page). The lin
     python -m scripts.filter_citations
     python -m scripts.filter_citation_map
     python -m scripts.seed --all               # loads everything into DATABASE_URL
+    python -m scripts.remap_citation_map       # map rows of skipped opinion copies -> our opinions (dry run; --apply)
 
 ## Useful commands
     python -m scripts.check_citation "603 U.S. 593"
@@ -120,6 +173,7 @@ administrators are reset by another administrator on the Accounts page). The lin
     python -m scripts.fix_line_breaks          # words broken at a line end, page markers *490 (dry run; --apply)
     python -m scripts.check_scope              # decisions that may not be SCOTUS 2000-2024 (read-only)
     python -m scripts.remove_out_of_scope      # remove the ones listed in app/scope.py (dry run; --apply)
+    python -m scripts.fix_case_names           # names ending in 'Revisions: 6/27/24' (dry run; --apply), then restart
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
     python -m scripts.check_followups          # check eval/followups.jsonl (follow-up pairs, eval/FOLLOWUPS.md)

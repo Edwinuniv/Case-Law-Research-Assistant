@@ -4,6 +4,7 @@
 // Props from pages/Chat.jsx: a (the /api/ask answer), onOpen(chunkId, quote) (opens the passage drawer).
 // WELCOME (a greeting) shows only our fixed welcome text: there is no passage, citation or score to show.
 import { useState } from "react";
+import { api } from "../api.js";
 import "./answer.css";
 
 const STATUS = {
@@ -13,6 +14,58 @@ const STATUS = {
   ERROR: ["✕", "The answer service is unavailable right now", "Please try again in a minute."],
   WELCOME: ["✦", "Welcome to Verdicta", ""],     // a greeting: our fixed text (app/pipeline.py), no search, no model
 };
+
+// "Was this answer helpful?" (SPEC 11, 2026-11-20, from CedarPay's reviews): yes, or no with an optional reason and
+// comment. Only the person who got the answer can rate it (the server checks). Rating again changes the rating.
+const REASONS = [["wrong_case", "Wrong case or citation"], ["missed_holding", "Missed the Court's holding"],
+  ["incomplete", "Incomplete"], ["should_answer", "It should have answered"], ["other", "Other"]];
+
+function Feedback({ id }) {
+  const [step, setStep] = useState("ask");          // ask -> why (after "no") -> thanks
+  const [reason, setReason] = useState(null);
+  const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
+
+  async function send(helpful) {
+    setError("");
+    try {
+      await api("/feedback", helpful ? { query_id: id, helpful } : { query_id: id, helpful, reason, comment });
+      setStep("thanks");
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  if (step === "thanks") return <p className="an-fb an-fb-done" role="status">Thank you: the team reads every rating.</p>;
+  return (
+    <div className="an-fb">
+      {step === "ask" ? (
+        <>
+          <span>Was this answer helpful?</span>
+          <button className="an-fb-btn" onClick={() => send(true)} aria-label="Helpful">👍 Yes</button>
+          <button className="an-fb-btn" onClick={() => setStep("why")} aria-label="Not helpful">👎 No</button>
+        </>
+      ) : (
+        <div className="an-fb-why">
+          <span>What was wrong? <small>(optional)</small></span>
+          <div className="an-fb-reasons" role="radiogroup" aria-label="Reason">
+            {REASONS.map(([k, label]) => (
+              <button key={k} role="radio" aria-checked={reason === k} className={reason === k ? "on" : ""}
+                      onClick={() => setReason(reason === k ? null : k)}>{reason === k ? `✓ ${label}` : label}</button>
+            ))}
+          </div>
+          <textarea maxLength={500} rows={2} value={comment} placeholder="A comment for the team (optional)"
+                    onChange={(e) => setComment(e.target.value)} />
+          <div className="an-fb-go">
+            <button className="an-fb-send" onClick={() => send(false)}>Send</button>
+            <button className="an-fb-btn" onClick={() => setStep("ask")}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {error && <span className="an-fb-err" role="alert">{error}</span>}
+    </div>
+  );
+}
 
 // The support score of this answer (0 to 1) as a small ring; the number is written inside it.
 function SupportRing({ value }) {
@@ -26,7 +79,7 @@ function SupportRing({ value }) {
   );
 }
 
-export default function Answer({ a, onOpen }) {
+export default function Answer({ a, onOpen, save }) {   // save: {saved, toggle} for an account (SPEC 11, 2026-11-20)
   const [icon, title, text] = STATUS[a.status] || STATUS.ERROR;
   if (a.status === "WELCOME") {
     return (
@@ -75,6 +128,13 @@ export default function Answer({ a, onOpen }) {
           ? <span className="an-saved" title="Made once by the same pipeline and checks, then saved: no model call now">
               Saved answer · checked on <b>{a.saved_at.slice(0, 10)}</b></span>
           : <span>{(a.ms_total / 1000).toFixed(1)} s</span>}
+        {save && a.id && a.status !== "ERROR" && a.status !== "WELCOME" &&
+          <button className={save.saved ? "an-save on" : "an-save"} onClick={save.toggle} aria-pressed={save.saved}
+                  title={save.saved ? "Remove from your saved answers" : "Keep it in your saved answers"}>
+            {save.saved ? "★ Saved" : "☆ Save"}</button>}
+        {a.id && a.status !== "ERROR" && a.status !== "WELCOME" &&   /* a research note (SPEC 11, 2026-11-20) */
+          <a className="an-pdf" href={`/api/answers/${a.id}/pdf`} download title="The question, the verified answer and the exact quotes, as a PDF">
+            ⤓ PDF</a>}
         {a.passages.length > 0 &&
           <button className="an-toggle" onClick={() => setShowPassages(!showPassages)} aria-expanded={showPassages}>
             {showPassages ? "Hide" : "Show"} the {a.passages.length} retrieved passages
@@ -94,6 +154,7 @@ export default function Answer({ a, onOpen }) {
           ))}
         </div>
       )}
+      {a.id && a.status !== "ERROR" && a.status !== "WELCOME" && <Feedback id={a.id} />}
     </article>
   );
 }

@@ -152,3 +152,9 @@ main:has(.rs){max-width:none;margin:0;padding:0}
 .rs-locked-btn.main{background:var(--gold);border-color:var(--gold);color:#1c1917}
 .rs-plan{color:var(--gold)}   /* an account's plan and questions left today (SPEC 11, 2026-11-14) */
 .rs-list button.on{background:rgba(251,191,36,.10);color:var(--ink)}   /* the open chat (SPEC 11, 2026-11-14) */
+/* an unverified account (Edwin, SPEC 11, 2026-11-20): the code is waiting in its mailbox */
+.rs-verify{margin:0 0 6px;padding:10px 16px;border-radius:14px;font-size:14px;color:var(--ink);
+  background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.35)}
+.rs-verify b{color:var(--gold)}
+.rs-verify a{color:var(--gold);font-weight:600;margin-left:4px}
+

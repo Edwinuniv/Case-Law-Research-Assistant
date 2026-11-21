@@ -45,6 +45,8 @@
 :root[data-theme="light"] .rs-chip{color:var(--l-dim);background:var(--l-bg);border-color:var(--l-edge)}
 :root[data-theme="light"] .rs-question{background:linear-gradient(135deg,#fdecc8,#fde3c4);border-color:rgba(217,119,6,.35)}
 :root[data-theme="light"] .rs-locked-btn.main{color:#1c1917}
+:root[data-theme="light"] :is(.rs-verify b,.rs-verify a){color:var(--l-gold)}
+:root[data-theme="light"] .au-linkbtn{color:var(--l-gold)}
 :root[data-theme="light"] .rs-foot a{color:var(--l-faint)}
 @media(max-width:900px){:root[data-theme="light"] .rs-side{background:var(--l-bg2)}}
 
@@ -64,6 +66,13 @@
 :root[data-theme="light"] .an-close{background:var(--l-bg);color:var(--l-head)}
 :root[data-theme="light"] .an-close:hover{background:var(--l-edge)}
 :root[data-theme="light"] .an-backdrop{background:rgba(20,20,24,.25)}
+:root[data-theme="light"] .an-fb{color:var(--l-dim);border-top-color:var(--l-edge)}
+:root[data-theme="light"] :is(.an-fb-btn,.an-fb-reasons button){background:var(--l-bg);color:var(--l-ink);border-color:var(--l-edge)}
+/* the chosen reason: the rule above is more specific than answer.css's .on, so light mode needs its own (it hid the choice) */
+:root[data-theme="light"] .an-fb-reasons button.on{background:#fbbf24;color:#141418;border-color:#f59e0b}
+:root[data-theme="light"] .an-fb-why textarea{background:var(--l-input);color:var(--l-head);border-color:var(--l-edge)}
+:root[data-theme="light"] .an-fb-done{color:var(--l-ok)}
+:root[data-theme="light"] .an-meta>a.an-pdf{color:var(--l-gold);background:var(--l-bg);border-color:rgba(180,83,9,.35)}
 
 /* ---------- log in, sign up, forgot password (pages/auth.css) ---------- */
 :root[data-theme="light"] .au{background:var(--l-bg);color:var(--l-head)}
@@ -234,6 +243,9 @@
 :root[data-theme="light"] .ts-label{color:var(--l-gold)}
 :root[data-theme="light"] .ts-option{background:var(--l-bg);color:var(--l-ink)}
 :root[data-theme="light"] .ts-option:hover{background:var(--l-bg2);border-color:var(--l-edge)}
+.ts-tour{display:block;margin-top:12px;font-size:13px;font-weight:600;color:#fbbf24;text-decoration:none}
+.ts-tour:hover{text-decoration:underline}
+:root[data-theme="light"] .ts-tour{color:var(--l-gold)}
 @media(max-width:900px){body:has(.rs.started) .ts{bottom:150px}}
 /* the admin sidebar reaches the bottom left ("Open the chat"): there, Settings sits at the bottom right */
 body.ad-dark .ts{left:auto;right:16px}

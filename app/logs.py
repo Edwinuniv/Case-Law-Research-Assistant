@@ -16,7 +16,7 @@ from psycopg.types.json import Jsonb
 from app import db
 
 USER_EVENTS = ("signup", "login", "login_failed", "logout", "question", "follow_up", "plan_change", "refused",
-               "password_reset")
+               "password_reset", "email_verified", "password_changed")
 # the routes that only READ but are still logged in the admin log: downloading people's data is an action too.
 # Compared with the LAST part of the path only, so a future /api/admin/logins or /exports-list is not an export
 # (Edwin's review of #96, point 1).

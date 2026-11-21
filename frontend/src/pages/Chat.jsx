@@ -41,6 +41,7 @@ export default function Chat({ info }) {
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);      // newest first: this page's questions, or the account's
   const [open, setOpen] = useState(null);          // the passage shown in the side drawer
+  const [saved, setSaved] = useState(new Set());   // an account's saved answers (Edwin, SPEC 11, 2026-11-20)
   const [panel, setPanel] = useState(false);       // phone: "My questions" opened
   const bottom = useRef(null);
   const box = useRef(null);
@@ -64,6 +65,15 @@ export default function Chat({ info }) {
   }, [account?.email]);
 
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [turns, busy]);
+  useEffect(() => {                                // which answers this account saved (Edwin, SPEC 11, 2026-11-20)
+    if (account) api("/bookmarks").then((b) => setSaved(new Set(b.map((x) => x.query_id))), () => {});
+  }, [account?.email]);
+  async function toggleSave(id) {
+    const r = await api("/bookmarks", { query_id: id, saved: !saved.has(id) });
+    const next = new Set(saved);
+    if (r.saved) next.add(id); else next.delete(id);
+    setSaved(next);
+  }
 
   useEffect(() => {                                // the box grows with the question, up to 6 lines
     const t = box.current;
@@ -128,6 +138,8 @@ export default function Chat({ info }) {
         {account?.role === "admin" && (   /* back to the admin pages (Edwin, 2026-11-19); the server checks the role */
           <Link to="/admin" className="rs-to-admin"><span aria-hidden="true">←</span> Admin pages</Link>
         )}
+        {account?.role === "user" && <Link to="/account" className="rs-to-admin">My account</Link>}
+        {account && <Link to="/saved" className="rs-to-admin">★ Saved answers</Link>}
         <div className="rs-side-head">
           <b>{account ? "My chats" : "My questions"}</b>
           <span className="rs-count">{history.length}</span>
@@ -177,13 +189,18 @@ export default function Chat({ info }) {
           {turns.map((t, i) => (
             <div key={i} className="rs-turn">
               <p className="rs-question">{t.question}{t.earlier && <span> · earlier answer</span>}</p>
-              <Answer a={t.answer} onOpen={(chunkId, quote) => setOpen({ chunkId, quote })} />
+              <Answer a={t.answer} onOpen={(chunkId, quote) => setOpen({ chunkId, quote })}
+                      save={account && t.answer.id ? { saved: saved.has(t.answer.id), toggle: () => toggleSave(t.answer.id) } : undefined} />
             </div>
           ))}
           {busy && <Working question={pending} />}
           <div ref={bottom} />
         </div>
 
+        {account && info.email_verified === false && (     /* SPEC 11, 2026-11-20: one question until verified */
+          <p className="rs-verify" role="status"><b>Verify your email</b> to keep asking: type the code we sent to{" "}
+            {account.email}. <Link to="/verify">Enter the code</Link></p>
+        )}
         {locked ? (
           <div className="rs-ask">
             <div className="rs-locked" role="status">

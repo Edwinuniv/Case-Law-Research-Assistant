@@ -871,3 +871,163 @@ Also: evaluate.answer_with_retry passes the chat history only for a follow-up; a
 same call as before (the first version passed history=None to every call, and 5 existing tests with their own fake
 answer failed on the new argument).
 
+## 2026-11-20 — Emails from verdicta.team@gmail.com (branch feature/emails)
+
+Edwin asked Claude for emails from the team's new Gmail account: the contact form to the team, notifications, a
+verification code, the forgot-password link, in a design based on CedarPay's emails (its layout only) but in
+Verdicta's look. Claude proposed the Gmail API (HTTPS, works on Railway, no domain) instead of Resend; SPEC 11 rule
+first, then 3 test files from the rule, then the code. What was wrong, and how it was caught:
+1. **Sign-up landed on the chat, not on the verification page.** The new code sent the browser to /verify, but the
+   /signup page's own rule ("someone is logged in: go to the chat") fired in the same moment and won. Caught in the
+   headless browser (the address after sign-up was /research; a trace of the history showed /verify then /research).
+   Fixed: that rule sends a new unverified account to /verify.
+2. **The gold buttons turned dark grey under the mouse** (Log in, Create account, Verify): style.css's
+   `button:hover` is more specific than `.au-submit`. Already true before this branch, never seen because the
+   screenshots never hovered; seen on a screenshot taken with the pointer still on the button. Fixed in auth.css.
+3. **Two mistakes in the new tests themselves**: one expected "1 tries left" (the code rightly says "1 try left"),
+   one called billing.set_plan, a function that does not exist (it is billing.switch). Both seen on the first run;
+   the tests were corrected, not the code.
+4. **The site would not start again once an account was verified.** db.py's migrations, run at every start, re-made
+   the user log's list of events twice: the 2026-11-19 list (without email_verified), then the new one. After the
+   first email_verified row, the older list was refused and the site stopped at start-up. No test restarted the
+   database after logging that event; seen when the local test site would not start on the copy of the real
+   database (which had one verified account from the browser test). On Railway it would have happened at the first
+   restart after a sign-up. Fixed: one list only, with a comment; a test restarts twice after a verification.
+5. **The code could be guessed by asking for new codes all day.** 5 tries per code and a new code once a minute
+   still allowed about 7,200 guesses a day (about 0.7% chance of finding the 6 digits). Caught by Yasser's review of
+   #126 ("is the code limited?"). Fixed, rule and test first: at most 5 codes per account in 24 hours, the sign-up's
+   code included (Yasser's point for the test), so at most 25 guesses a day; 3 planted bugs caught by the new test.
+6. **Guesses sent at the same moment were all compared.** check() read the tries, compared, then added one: 20
+   guesses at once all read "0 tries" (Yasser estimated ~40 comparisons per code instead of 5); send_code had the
+   same race for the 6th code of the day. Caught by Yasser's second review of #126. Fixed, tests first (20 guesses /
+   10 code requests from threads at the same moment; both failed before the fix): the try is counted first, in the
+   one UPDATE that checks it is allowed (his proposal); send_code locks the account's code row (FOR UPDATE).
+14 bugs planted on purpose in the new code (code stored in clear, tries not counted, expiry ignored, Reply-To not
+checked, user text not escaped, the contact form emailing the visitor, ...): all 14 caught.
+
+## 2026-11-20 — CedarPay features, 1-2 of 7: answer feedback, my account (branches feature/answer-feedback, feature/my-account)
+
+Edwin asked Claude to add 7 features seen in the CedarPay reference, each on its own branch (stacked, merged in
+order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was caught:
+1. **A table created before the table it points to.** answer_feedback (which refers to query_log) was first put above
+   query_log in db.SCHEMA: every test failed with "relation query_log does not exist". Seen on the first test run;
+   moved below query_log.
+2. **A planted bug got through: the session kept after deleting the account.** /api/me already showed nobody,
+   because the account no longer existed, so the test could not see it. Caught by planting 6 bugs (5 caught); the
+   test now reads the signed session cookie itself.
+3. **After "Delete my account" the browser landed on the login page, not the home page.** The page learnt "nobody
+   is logged in" first, and the /account route sent it to /login before "go home" ran. Seen in the headless browser
+   (also: the first check came too early, the deletion takes about 3 seconds). Fixed: home first, then refresh.
+
+## 2026-11-20 — CedarPay features, 3-4 of 7: answer as PDF, guided tour (branches feature/answer-pdf, feature/guided-tour)
+
+1. **The tour's card left the screen** on the step that lights the tall "My questions" sidebar: there was no room
+   below or above, and the card was pushed above the top of the window. Seen on the headless browser's screenshots
+   of every step; fixed (below, else above, else beside, else in the middle) and checked on every step at 1280x820
+   and 1024x640 by measuring the card. The PDF showed a data problem that is not ours to fix: some case names hold
+   the reporter's revision note ("SEC v. Jarkesy Revisions: 6/27/24, No. 22-859"), told to Yasser.
+
+## 2026-11-20 — CedarPay features, 5 of 7: announcements (branch feature/announcements)
+
+1. **The admin form could not be sent with its own default.** The "days" field said minimum 0.1 in steps of 0.5, so the
+   allowed values were 0.1, 0.6, 1.1...: the browser refused the default 1 without a word. Seen in the headless
+   browser (nothing was posted); fixed to minimum 0.5.
+2. **Two mistakes in the new tests**: one read the admin log's request from `detail` (it is in `action`), one moved an
+   announcement's end into the past without its start, which the table rightly refuses (end after start). The tests
+   were corrected, not the code. 3 planted bugs caught (coming ones shown early, more than 3 shown, a year allowed).
+
+## 2026-11-20 — CedarPay features, 6 of 7: saved answers (branch feature/bookmarks)
+
+1. **The same table-order mistake as in branch 1**: bookmarks (which points to query_log) was first placed above
+   query_log. This time a check in the edit script itself (the new table must come after query_log) stopped it before
+   any test ran; moved. 3 planted bugs caught (anyone saving any answer, no limit, oldest first).
+
+## 2026-11-20 — CedarPay features, 7 of 7: in-app notifications (branch feature/notifications)
+
+1. **On a phone the notifications panel went 304 pixels off the left of the screen**: the header wraps there, the bell
+   sits on the left, and the panel opened leftward from it. Measured in the headless browser at 390 px; fixed (on
+   narrow screens the panel spans the screen under the header) and measured again at 390 and 1280 px.
+   3 planted bugs caught (everyone's notices shown, no limit of 50, oldest first).
+
+## 2026-11-20 — The feedback reasons looked unclickable in light mode (branch feature/cedarpay-features)
+
+1. **A chosen reason did not change colour in light mode**, so the reasons seemed not to react. The light theme's rule
+   for the reason chips (`:root[data-theme="light"] :is(...)`) is more specific than answer.css's `.on`, so the
+   choice stayed cream. Caught by Edwin testing the merged branch ("the options cannot be clicked"); the browser checks
+   had been done in dark mode only. Measured in light mode (background unchanged after the click); fixed with a light
+   rule for the chosen chip, and a ✓ before the chosen reason so it shows in any theme; measured in both themes.
+
+## 2026-11-20 — Quote matching v2 and the fuller answers (branch step/8.5-quote-ellipsis)
+
+1. **Why the answers were short.** Asked to make the answers fuller, the AI first looked at the prompt; the saved
+   drafts of run 4 showed the model already wrote fuller answers and the verifier removed 44 of 105 sentences, 35 of
+   them because a real quote was cut with "..." (counted by comparing each removed quote with the decision's full
+   text). Rule written first (EVALUATION.md), then tests, then the code; measured on the saved drafts.
+2. **Switching the prompt by changing the code's default was wrong.** The AI changed `prompt_version`'s default in
+   pipeline.py to "v2"; 84 tests in 18 files failed (their fake models take 2 arguments, the v2 call passes 5),
+   most of them Joe's and Yasser's website tests. Caught by running the whole suite before committing; reverted.
+   The switch is a settings row instead (`prompt_version = "v2"`), like tau_abstain, and no test changes.
+3. **A first live try of v2 gave ERROR twice**: Groq's per-minute token limit, after four questions in a row (v2
+   thinks before answering). With a minute between them: LOW_CONFIDENCE with 3 sentences and ANSWERED with 4. The
+   site does not wait and retry like the evaluation does, so busy minutes can show ERROR (told the team).
+
+## 2026-11-21 — Saved demo answers and Groq's per-minute limit (branch fix/demo-answers-rate-limit)
+
+1. **make_all saved few answers on Railway** (Joe's report): the example questions were asked back to back, Groq's
+   free tier allows 8,000 tokens a minute, and every ERROR was skipped. Missed when make_all was written (the tests
+   used a fake model, which has no limit). Fixed with the evaluation's rule (wait the time Groq gives, at most 6
+   times; stop at the daily limit); tests first.
+2. **A test that did not test what it said**: with two example questions and the daily limit on the second,
+   "stop" and "go on to the next question" look the same, so a planted bug (continue instead of break) got
+   through. A third question now must not be asked; the planted bug is caught.
+
+## 2026-11-21 — Passage summaries (branch feature/passage-summaries)
+
+1. **A summary request took a follow-up's place.** Widening the requests to "the dissent" made "Thanks, and what did
+   the dissent say?" a request; with summaries off it got our fixed text instead of the follow-up's answer. Caught by
+   an older follow-up test; rule clarified (off + follow-ups on: the follow-up answers), then fixed.
+2. **A test that could not fail.** The AI wrote `assert "P2" in sent or True`; seen when reading the tests before the
+   commit, removed with an unused helper.
+3. **Weak tests found by planted bugs**: "the passages of" a law taken as a request, and the case's syllabus dropped
+   when the search found it last, both got through; a test was added for each.
+4. **Summaries that misread the passage pass the six checks.** Real try on the Counterman chat: "Justice Barrett argues
+   that the Court should apply a subjective standard" (her dissent describes that view to reject it), "he" for Justice
+   Barrett, and P1 (Sotomayor's concurrence, with the old Kagan label of the local data) called the majority. The quote
+   was real, so check 2 passed. The judge model (only "yes" kept) removed the wrong "Kagan" sentences, but kept the
+   Barrett sentence, even after it was given each passage's label; it is the same model as the writer, with the same
+   blind spot. It also removed all 7 sentences of a "summarize the case" answer, correct ones included. Not solved;
+   decision left to Edwin (see the branch's message).
+5. **Check 4 removed a true sentence**: "citing Virginia v. Black and Chaplinsky" is read as one case name, "Virginia v.
+   Black and Chaplinsky", not found in the passage. Cutting names at "and" would break "President and Fellows of Harvard
+   College"; needs its own rule and fix (not in this branch).
+6. **Option A (Edwin's choice): summaries quote instead of retelling.** The model only picks sentences; our code checks
+   each one word for word in its passage and writes the line itself: the passage's label, then its own words. Real try
+   on the same chat: the dissent summary is now Justice Barrett's own words ("True threats carry little value and impose
+   great cost"), no reversed view possible; the case summary shows the holding in the Court's words. One pick removed
+   because the model corrected a typo of the source ("unjustifably") instead of copying it. Planting bugs: one plant
+   did not apply (the file has the quote marks as \u201c escapes), so "all passed" meant nothing; replanted with the
+   exact text, caught.
+
+
+## 2026-11-21 — Citation-map rows lost with the skipped opinion copies (Yasser)
+Edwin, measuring passage summaries, found 2,011 of our 3,639 opinions with no citation-map row (e.g. the Shelby County
+majority, so "Blodgett v. Holden, 275 U.S. 142", which it really cites, could not be confirmed). What was wrong:
+1. **Step 1.8 dropped the rows with the copies.** The loader written with Claude (group_opinions) keeps one copy of
+   an opinion stored twice by CourtListener and skips the others; nobody checked where the citation map pointed.
+   CourtListener's citation finder mostly ran on the HTML copy, so the rows hung on the copy we skipped. Checked on
+   Yasser's database: data/work/citation_map.csv and the table both have 2,575 citing opinions (nothing lost in
+   loading), but only 1,628 are ours; 940 of the other 947 belong to one of our decisions (Shelby: 9515886 kept,
+   its copy 931614 has the rows). Fix (SPEC 11 rule first, tests from the rule, 5 planted bugs caught):
+   scripts/remap_citation_map gives a copy's rows to our opinion with the same text.
+2. **The first dry run counted too many rows.** It counted each copy's rows separately, so a row given by two copies
+   to the same opinion was counted twice while --apply adds it once (5 vs 4 on a made-up decision in a test
+   database). Caught by running both on that decision; the rows are now worked out once for both.
+
+## 2026-11-21 — Case names ending in "Revisions: <date>" (Yasser)
+Edwin saw "SEC v. Jarkesy Revisions: 6/27/24" in the answer PDFs. A read-only check found 7 such names of 2,415 (2024
+slip opinions); "School District No. 92" and the long official names are real. Yasser asked Claude for the rule,
+tests and a repair script (SPEC 11 first). What was wrong:
+1. **The first tests were too weak.** Written from the real names only, they passed two planted bugs: a pattern not
+   tied to the end of the name, and one removing anything after "Revisions:" instead of a date. Two tests were added
+   from the rule's words ("trailing", "a date"): a revisions date in the middle and "Revisions: pending" stay.
+   All 4 planted bugs are now caught.

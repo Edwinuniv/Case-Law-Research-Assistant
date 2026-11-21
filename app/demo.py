@@ -5,9 +5,12 @@ stored answer, so the same question costs no search and no model call. Made agai
 `python -m scripts.make_demo_answers` (for example after a change to the prompt or the data)."""
 import json
 import re
+import time
 from psycopg.types.json import Jsonb
 from app import config, db
 from app.pipeline import answer, ERROR
+
+RETRIES = 6        # Groq's free tier allows 8,000 tokens a minute: several example questions in a row hit it (Joe, 2026-11-21)
 
 
 def key(question):
@@ -19,6 +22,19 @@ def _json(value):
     return Jsonb(value, dumps=lambda v: json.dumps(v, default=str))    # dates as text
 
 
+def answer_waiting(question, searcher, index, settings, log):
+    """The pipeline's answer; on Groq's per-minute limit, waits the time Groq gives and asks again (the evaluation's
+    rule, evaluate.rate_limit_wait). Not on the daily limit (hours away) or on any other error."""
+    from app.evaluate import rate_limit_wait          # here: evaluate imports the pipeline too
+    for attempt in range(RETRIES + 1):
+        r = answer(question, searcher, index, settings)
+        wait = rate_limit_wait(r["reason"]) if r["status"] == ERROR else None
+        if wait is None or "per day" in r["reason"] or attempt == RETRIES:
+            return r
+        log(f"  rate limit: waiting {wait:.0f} s")
+        time.sleep(wait)
+
+
 def make_all(searcher, index, log=print):
     """Answers every example question with the real pipeline and saves it. Returns how many were saved.
     An ERROR (for example the model's daily limit) is not saved: the answer saved before is kept."""
@@ -28,10 +44,13 @@ def make_all(searcher, index, log=print):
         con.execute("DELETE FROM demo_answers WHERE NOT key = ANY(%s)",
                     ([key(q) for q in config.EXAMPLE_QUESTIONS],))
     for q in config.EXAMPLE_QUESTIONS:
-        r = answer(q, searcher, index, settings)
+        r = answer_waiting(q, searcher, index, settings, log)
         log(f"{r['status']:15} {len(r['shown_sentences'])} sentence(s)  {q}")
         if r["status"] == ERROR:
             log(f"  not saved: {r['reason']}")
+            if "per day" in r["reason"]:                   # waiting will not help: stop, the saved answers stay
+                log("  the model's daily limit is used up: run it again tomorrow")
+                break
             continue
         with db.connect() as con:
             con.execute("""INSERT INTO demo_answers (key, question, result, shown) VALUES (%s, %s, %s, %s)

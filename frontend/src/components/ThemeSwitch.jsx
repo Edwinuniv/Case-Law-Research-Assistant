@@ -47,6 +47,7 @@ export default function ThemeSwitch() {
             {option("dark", "Dark", "the default")}
             {option("light", "Light", "every page light")}
           </div>
+          <a className="ts-tour" href="/research?tour=1">Take the tour of the research page</a>
         </div>
       )}
       <button type="button" className="ts-btn" aria-label="Settings" aria-expanded={open} onClick={() => setOpen(!open)}>

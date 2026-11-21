@@ -1,4 +1,4 @@
-# Defence demo: questions and what to show (Edwin, 2026-11-09)
+# Defence demo: questions and what to show (Edwin, 2026-11-09; updated 2026-11-21)
 
 Follows the guide's 15-minute plan (p.82). Each question was chosen from the saved evaluation run
 (`eval/runs/eval_run2_reverified.json`, tau_abstain 0.20), and has a backup. The model does not write the same
@@ -61,6 +61,25 @@ Enterprises v. Raimondo about Chevron deference?"
   verified answer instead, and tell the story from AI_LOG. Do not change the prompt before the defence: the numbers
   in the report come from run 2 with today's prompt.
 
+**New since 2026-11-20 (only if it is live by then; check the day before).**
+- **Fuller answers (answer v2):** if `prompt_version` is "v2" on Railway, an answer gives the holding, the reasons and
+  what a dissent said, every sentence still verified. Measured: 1.79 -> 2.19 kept sentences per answer, 0 false
+  citations (EVALUATION.md, "Quote matching v2").
+- **Quotes with "..." are kept:** say why the answers used to be short. In run 4, 35 of 44 removed sentences quoted
+  two real pieces of the opinion joined by "..."; check 2 only accepted one unbroken quote. Now each piece is checked
+  word for word, in order (EVALUATION.md, "Quote matching v2").
+- **"Summarise the first passage"** after any answer: live it gets a fixed line pointing to the passages (no search, so
+  never an answer about another case: it was answered about Bruesewitz v. Wyeth before, 2026-11-20). If summaries
+  are switched on after run 4 (EVALUATION.md, "Passage summaries"), show "summarize the dissent" after A039 (Bostock):
+  Justice Alito's own words, each line after its label.
+
+## The checker at work: the Glucksberg "701" story (1 min, no model call)
+Open `eval/runs/summaries_run1_report.txt` at S004. A summary quoted Justice Alito's dissent in Obergefell exactly:
+"Washington v. Glucksberg, 521 U.S. 701". The real citation is 521 U.S. 702: CourtListener's own text has the typo.
+Our model copied correctly, and the separate checker still caught it (a citation that does not exist), so summaries
+stayed off. Say: even the source can be wrong; we check every citation shown, whoever wrote it. In run 2 the line was
+removed before it could be shown (rule (a)).
+
 ## 9-12 min: admin
 - Settings: threshold preview. Show what tau_abstain 0.55 (the guide's value) vs 0.20 (chosen) changes.
 - Runs / Compare / the abstention list.
@@ -69,13 +88,17 @@ Enterprises v. Raimondo about Chevron deference?"
   pages on a laptop and say so.
 
 ## 12-15 min: numbers and one AI mistake
-- NFR1: 0 false citations shown, 0 of 23 on TEST, 0 of 56 on TUNE + adversarial (EVALUATION.md, section 4).
-- NFR3: TEST abstention precision 1.0, recall 0.8 (4 of 5 unanswerable; one more miss would give 0.6: say it).
+- NFR1: 0 false citations shown. The current system (answer v2 + quote matching v2): 0 of 30 on TEST, 0 of 67 on
+  TUNE + adversarial (EVALUATION.md, "Quote matching v2"). Run 2 (2026-11-09): 0 of 23 on TEST, 0 of 56 on TUNE.
+- NFR3: TEST abstention precision 0.80, recall 0.80 for the current system (run 2: precision 1.0, recall 0.8). Say it:
+  one answerable TEST question was refused, and with 8 + 5 questions one question moves a figure by 0.1-0.2.
 - Threshold: rule written first, TUNE sweep, 0.20 to 0.36 tie, lowest tau; TEST reported once.
 - The AI mistake (report section 7): the concurrence presented as the Court. "The Court rejected Chevron
   deference" cited only Justice Gorsuch's concurrence; the quote was real, so all five guide checks passed. Found by
   reading the passage labels; fixed with check 6 and tests in both directions. In run 2, check 6 removed 8 such
   sentences.
+- Second story, if asked: a judge model checking summaries kept "Justice Barrett argues for a subjective standard",
+  the reverse of her dissent, so summaries now quote instead of retelling (report section 7).
 
 ## If asked
 - "Why does X009 get an answer?" (a false premise about Obergefell): since the quote matching fix, a sentence from

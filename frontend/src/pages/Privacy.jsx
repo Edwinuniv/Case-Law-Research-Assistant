@@ -7,7 +7,7 @@ import SitePage from "./SitePage.jsx";
 
 export default function Privacy() {
   return (
-    <SitePage kicker="Your data" title="Privacy" accent="policy" updated="19 November 2026">
+    <SitePage kicker="Your data" title="Privacy" accent="policy" updated="20 November 2026">
       <div className="sp-card sp-note">
         <strong>In short:</strong> you do not need an account to use Verdicta. We keep the questions typed on the research
         page and the messages sent through the contact form, but no name, no IP address and no browser information with
@@ -29,7 +29,8 @@ export default function Privacy() {
           It is not linked to your name or your IP address. Without an account it is not linked to you at all; if you are
           logged in to your own account, it is saved with that account so that you see it again under "My questions".</li>
         <li><strong>Contact messages.</strong> If you use the contact form, we save your name, your email address and your
-          message, so that we can answer you.</li>
+          message, so that we can answer you. The message is also emailed to the team's addresses
+          (verdicta.team@gmail.com and our own), so we can answer from our mailbox; you get no automatic email.</li>
         <li><strong>Accounts.</strong> If you sign up, and for the team's administrator accounts, we keep the email address,
           a hashed password (never the password itself) and the failed login attempts, to lock an account after repeated
           failures. Signing up asks for no name. Only your own account can see your list of questions; the team's
@@ -45,6 +46,15 @@ export default function Privacy() {
         <li><strong>Forgot password.</strong> If you ask for a new password, we keep a scrambled copy (a hash) of the
           link we email you, for 30 minutes at most, and delete it once it is used. The page says the same thing whether
           an account exists or not.</li>
+        <li><strong>Email verification.</strong> When you create an account with a password, we email you a 6-digit code
+          to check that the address is yours. We keep only a scrambled copy of the code, for 15 minutes at most, and
+          delete it once it is used. Until the address is verified, the account can ask one question.</li>
+        <li><strong>Feedback on an answer.</strong> If you answer "Was this answer helpful?", we keep your rating, the
+          reason and comment you chose, with that answer (and your account, if you have one). The team reads them to
+          improve Verdicta; they change nothing by themselves.</li>
+        <li><strong>Emails we send.</strong> Only about your account: the code, the password link, a welcome once your
+          address is verified, and a notice when your password, your plan or your account's status changes. No
+          advertising, and never the text of your questions.</li>
       </ul>
 
       <h2>What we do not collect</h2>
@@ -75,15 +85,16 @@ export default function Privacy() {
           kept (no Google password or token).</li>
         <li><strong>Stripe</strong>, only if you choose the paid plan: it receives your email address and what you type on
           its payment page. Stripe's own privacy policy applies to that payment.</li>
-        <li><strong>Resend</strong>, only if you ask for a new password: it delivers that one email, so it receives your
-          email address and the link.</li>
+        <li><strong>Gmail</strong> (Google), which delivers the emails above from verdicta.team@gmail.com: it receives
+          your email address and the email's content. Google's own privacy policy applies to those emails.</li>
       </ul>
       <p>We do not sell or share your questions or messages with anyone else.</p>
 
       <h2>How long we keep them</h2>
       <p>Questions, accounts and contact messages are kept with no fixed deletion date. Questions asked without an account
-        are not linked to you, so we cannot find them by your name. If you want your account (with its questions) or a
-        contact message deleted, write to us from the email address concerned and we will delete it.</p>
+        are not linked to you, so we cannot find them by your name. You can delete your account yourself, with its
+        questions, chats and ratings, on the page "My account"; it is done at once. To have a contact message deleted,
+        write to us from the email address concerned and we will delete it.</p>
 
       <h2>Changes</h2>
       <p>If what we collect changes, we will update this page and its date.</p>

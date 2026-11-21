@@ -720,3 +720,141 @@ another device is not ended by a reset (the session is a signed cookie, kept up 
 React app shows its own "page not found" page (not a jump to the home page) and a "something went wrong" page if a
 page crashes, with no technical detail. Files of others changed, told: app/api.py, app/main.py, app/db.py (one
 table), frontend router and Login.jsx (Joe).
+
+2026-11-20 - Emails from verdicta.team@gmail.com: verification code, forgot password, notifications, contact form
+(Edwin; the team's Gmail account, made by Edwin). Written before the code. Replaces "Resend + our own domain" of
+2026-11-19 (4): no domain is needed. (1) **Sending**: through the Gmail API over HTTPS (Railway blocks SMTP), with
+the account's OAuth refresh token (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN; made once with
+scripts/gmail_token.py); on a laptop, SMTP with a Gmail app password also works (SMTP_USER, SMTP_PASSWORD). Without
+either: printed in the console locally, never online (as before). Sending never blocks or breaks a request: it runs
+after the answer, and a failure is only written to the server's log. (2) **Verification code**: a new account made
+with a password gets a 6-digit code by email; valid 15 minutes, 5 wrong tries then a new code is needed, a new code
+at most once a minute, and at most 5 codes per account in 24 hours, the sign-up's code included (added
+2026-11-20 before the code, after Yasser's review: a new code every minute allowed about 7,200 guesses a day); only an
+HMAC of the code is stored. Until it is verified, the account may ask one question
+(like a visitor) and may not buy the paid plan; everything else works. Google accounts are verified (Google checked
+the address); administrators are verified. Accounts made before this rule are verified. (3) **Notifications**, to
+the account's own address only: welcome (once verified), password changed (after a reset), plan changed (paid or
+free, by Stripe or an administrator), account disabled or enabled by an administrator. No marketing, no question
+content in an email. (4) **Contact form**: each message is still saved (as before) and is also emailed to the
+CONTACT_EMAIL addresses and verdicta.team@gmail.com, with Reply-To the visitor's address; the visitor gets no
+automatic email (otherwise anyone could make us email a stranger). (5) **Design**: one template in the site's look
+(dark header with the logo, white card, gold button, a box for a code, the team's signature, the "not legal advice"
+footer), with a plain-text copy; everything a user typed is escaped. (6) The tests run with verification off
+(tests/conftest.py), except the tests of this rule, so the other tests keep their accounts unchanged.
+Files of others changed, told: app/api.py, app/api_admin.py, app/db.py (a column, a table, the log events), app/config.py,
+app/logs.py, the frontend router, Login.jsx and Chat.jsx.
+
+2026-11-20 - Page previews for administrators (Edwin, on request). Written before the code. An admin page "Previews"
+(/admin/previews) shows the loading screen (and plays it again on a button), the small loader used inside pages, the
+three error pages of the React app (page not found, page crashed, server unreachable), and the server's own 401 and
+403 pages; a button really crashes the page to show the crash page at work. The 401 and 403 pages come from
+GET /admin-preview/401 and /admin-preview/403, which answer an administrator only (others: the real refusal) and change
+nothing. Nothing else changes: the pages shown are the real ones, in the chosen appearance. Files of others changed,
+told: app/main.py (the preview address), the frontend router and the admin menu (Joe).
+2026-11-20 - Feedback on an answer (Edwin; from CedarPay's reviews, 1 of 7 features). Written before the code.
+(1) Under each answer (not an ERROR), "Was this answer helpful?" with yes / no; after "no", an optional reason (wrong
+case or citation, missed the Court's holding, incomplete, it should have answered, other) and an optional comment of
+at most 500 characters. (2) Only the person who got the answer may rate it: an account its own answers, a visitor the
+answers of its browser session (the session remembers its last 20 answer ids; nothing about the visitor is stored).
+Someone else's answer: 404. One rating per answer: rating again changes it. (3) Kept in answer_feedback with the
+answer's id and the account (none for a visitor); an answer deleted deletes its rating. (4) The admin page "Feedback"
+shows the counts (helpful, not helpful, by reason) and the latest ratings with the question, the answer's status and
+the comment, newest first. (5) The ratings are not used by the system itself (no learning, no change of answers): they
+are read by the team, to find answers to look at. Privacy page says so. Files of others changed, told: app/api.py (the
+session remembers a visitor's answers), app/db.py (one table), frontend router and admin menu (Joe).
+
+2026-11-20 - My account (Edwin; from CedarPay's profile, change password and delete account, 2 of 7). Written before
+the code. (1) A page /account for a logged-in 'user' account: its email, verified or not, member since, the plan and the
+questions left today. (2) Change password: the current password and a new one (10 characters at least). A wrong
+current password counts as a failed login (5 lock the account for 15 minutes, SR36), so the page cannot be used to
+guess. On success: a password_changed row in the user log and a notice email. An account made with Google has no
+password it knows: it uses "Forgot password?" to set one. (3) Delete my account: confirmed with the password, or, for
+an account made with Google, by typing its email address. It deletes the account, its questions and their answers,
+its chats, ratings, codes, reset links and its user log; a paid plan's Stripe test subscription is cancelled first;
+a last email confirms it; the session ends. FR28 (every question logged) does not hold for a deleted account's
+questions: the privacy page promises that deleting removes them. (4) Administrators have no /account page: another
+administrator manages their account. Files of others changed, told: app/main.py (the router), app/db.py (the log's
+list of events), app/logs.py, the frontend router and the header (Joe, Yasser).
+
+2026-11-20 - An answer as a PDF (Edwin; from CedarPay's printable receipts, 3 of 7). Written before the code.
+(1) "Download PDF" under an answer gives a one-page (or more) research note: the question, the date, the answer's
+status and what it means, each verified sentence with its citation, then "Sources": for each citation the case, the
+citation, which opinion (majority, concurrence or dissent) and the exact words quoted from it; the coverage line and
+"a research aid, not legal advice". (2) It is made from the answer exactly as it was shown (saved in query_log), never
+asked again: no model call, no new search. (3) Only the person who got the answer may download it (the same rule as
+the feedback: an account its own answers, a visitor its session's last 20); someone else's: 404. An ERROR or a
+greeting has no PDF (400). (4) Nothing is kept: the PDF is made on request. Files of others changed, told: none
+(a new route in Edwin's api_site.py, a new module; the button in Edwin's Answer.jsx).
+
+2026-11-20 - A guided tour of the research page (Edwin; from CedarPay's tutorial, 4 of 7; for NFR9 usability).
+Written before the code. On the first visit of the research page in a browser, a short tour highlights, one at a time:
+the question box, the example questions, "My questions", Settings, and ends with how to read an answer (the status
+badges, the gold citation that opens the exact passage, PDF and feedback). Next / Back / Skip, Escape closes it; a
+step whose part is not on the screen (a phone's closed sidebar) is skipped. Seen once per browser (localStorage); "Take
+the tour" in Settings shows it again. Only on the page: nothing is sent to the server or kept about the visitor.
+Files of others changed, told: the frontend router (Joe).
+
+2026-11-20 - Announcements (Edwin; from CedarPay's announcement system, 5 of 7). Written before the code. (1) On the
+admin page "Announcements" an administrator writes a short message (at most 300 characters, plain text), chooses
+"information" or "warning", and when it ends (and, if not now, when it starts); the end must come after the start and
+at most 30 days ahead. (2) A banner shows the messages that are active now (at most 3, newest first) at the top of
+every page, for everyone; a visitor may close a message, and it stays closed in that browser (localStorage). (3) The
+admin page lists them (active, coming, ended) and deletes one; every change is in the admin log (as every
+/api/admin change). (4) GET /api/announcements is public and gives only the active messages. Files of others changed,
+told: app/db.py (one table), the frontend router and the admin menu (Joe).
+
+2026-11-20 - Saved answers, bookmarks (Edwin; from CedarPay's saved beneficiaries, 6 of 7). Written before the code.
+(1) A logged-in account may save one of its own answers ("Save" under the answer; "Saved" to remove it); at most 200
+saved answers. Visitors cannot (their answers live only in the browser session); someone else's answer: 404.
+(2) The page "Saved answers" (/saved) lists them, newest saved first, and opens each one as it was shown (the saved
+answer: no model call), with its citations and passages. (3) GET /api/answers/{id} gives an account's own saved-or-not
+answer as it was shown (the same rule as the PDF). (4) Saved answers are deleted with the answer or the account.
+Files of others changed, told: app/db.py (one table), Chat.jsx (which answers are saved), the frontend router (Joe).
+
+2026-11-20 - In-app notifications (Edwin; from CedarPay's notifications, 7 of 7). Written before the code. (1) A bell in
+the header for a logged-in account, with the number of unread notices; opening it shows the latest 20 (newest first)
+and marks them all read. (2) A notice is written for the same events as the emails of 2026-11-20: welcome (email
+verified), password changed (reset or account page), plan changed (Stripe or an administrator), account disabled or
+enabled by an administrator; each with a short text and, when useful, a link inside the site. (3) Only the account's
+own notices; a visitor has none (401). At most 50 kept per account (the oldest go first); deleted with the account.
+(4) The page asks for new notices when it opens and every minute while it is in front. Files of others changed,
+told: app/db.py (one table), app/api.py, app/api_admin.py (the events), the header in main.jsx (Joe).
+
+2026-11-21 - Passage summaries (Edwin; after "summurize the first passage" was answered about another case on the live
+site). Written before the code; the measurement rule is in EVALUATION.md ("Passage summaries"). (1) In a chat, a
+message about the passages of the last answer ("summarize the first passage", "explain passage 3", "summarise all the
+passages") is answered from those passages only: no new search, the same verifier, citations only to the requested
+passages. (2) With no earlier answer, or a passage the last answer did not have, a fixed text of ours explains how to
+ask (no search, no model call, not counted as a question). (3) Off until the measurement holds (setting
+passage_summaries); while off, a passage request gets the fixed text pointing to the passages under the answer.
+Files of others changed, told: app/api.py (the chat's last answer is given to the pipeline; Joe).
+
+2026-11-21 - Citation-map rows of skipped copies (Yasser; after Edwin found 2,011 of our 3,639 opinions with no
+citation-map row, e.g. the Shelby County majority). Written before the code. CourtListener often stores one opinion
+twice (e.g. Harvard XML and HTML with citations); step 1.8 keeps one copy and skips the others, but its citation
+finder mostly ran on the HTML copy, so the map rows hang on the copy we skipped (947 citing opinions of the map are
+not in our table, 940 of them belong to one of our decisions; Shelby: our 9515886 has none, its skipped copy 931614
+has them). Rule: (1) the rows of a skipped copy are given to OUR opinion of the same decision with the same text
+(the loader's own test: 5-word sequences, Jaccard >= 0.6; the closest if several); (2) if the copy is a combined text
+(majority + separate opinions), to each of our opinions it contains (80% of their 5-word sequences); (3) if the copy
+is one part of a combined text we kept, to that text; (4) otherwise to nobody, and it is counted in the report: no
+guess. Only citation_map changes (rows added, none removed, a row already there is not added twice); no re-index.
+Dry run by default (counts per rule, Shelby shown), --apply to write; the report is saved (ingestion_reports).
+Result (2026-11-21, Yasser's database, --apply after the dry run gave the same numbers): 947 skipped copies in the
+map; 483 given to 1 opinion, 457 combined copies given to each opinion they contain, 7 copies of decisions we do not
+have (counted, given to nobody); 54,852 rows added; our opinions without any row 2,011 -> 495; the Shelby County
+majority 0 -> 51 rows. Rule 2 is at the decision level: a citation made in a combined copy's dissent is also given to
+the majority it contains (for the checker: "cited by this decision"), never to another decision.
+
+2026-11-21 - Case names ending in "Revisions: <date>" (Yasser; Edwin's note, seen in the answer PDFs: "SEC v.
+Jarkesy Revisions: 6/27/24"). Written before the code. Read-only check on Yasser's database: 7 of 2,415 names end
+with " Revisions: M/D/YY" (2024 slip opinions: NRA v. Vullo, Garland v. Cargill, Chiaverini, Rahimi, Jarkesy, Ohio
+v. EPA, Purdue Pharma); "School District No. 92" and the long official names are real and stay. Rule: (1) a case
+name loses a trailing "Revisions: <date>" (or "Revision:"), and nothing else; (2) the loader cleans names when it
+loads them; (3) scripts/fix_case_names repairs a loaded database: dry run lists each change, --apply writes it,
+in decisions.case_name only. No re-index: the page and the model read the name from decisions at each question;
+only the 7 decisions' stored embeddings were computed with the old name (until the next re-index). The site is
+restarted after --apply (the citation index keeps the names in memory).
+Result (2026-11-21, Yasser's database): the dry run listed exactly the 7 names, each losing only its "Revisions:
+<date>"; --apply changed those 7 of 2,415 (report saved in ingestion_reports, kind case_names).

@@ -10,7 +10,7 @@ import os
 
 import stripe
 
-from app import config, db, logs  # noqa: F401  (config loads .env before the keys below are read)
+from app import config, db, emails, logs, notices  # noqa: F401  (config loads .env before the keys below are read)
 
 SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()       # sk_test_ or rk_test_ only (a live key: payments off)
 PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "").strip()           # the monthly price made in the Stripe dashboard
@@ -68,7 +68,18 @@ def switch(user_id, plan, customer=None, subscription=None):
             con.execute("UPDATE users SET stripe_subscription_id = NULL WHERE id = %s", (user_id,))
     if old != plan:
         logs.log_user(user_id, "plan_change", {"from": old, "to": plan, "by": "stripe"})
+        notify_plan(user_id, plan)
     return old, None
+
+
+def notify_plan(user_id, plan):
+    """Emails the account its new plan and daily limit (SPEC 11, 2026-11-20), by Stripe or an administrator."""
+    from app import api                        # here, not at the top: app/api.py is loaded first
+    with db.connect() as con:
+        email = con.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()["email"]
+    emails.plan_changed(email, plan, api.daily_limit(plan))
+    notices.add(user_id, "plan_changed", f"Your plan is now {'Paid' if plan == 'paid' else 'Free'}: "
+                f"{api.daily_limit(plan)} questions a day.", "/pricing")
 
 
 def is_paid(session):

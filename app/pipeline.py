@@ -1,8 +1,9 @@
 """The journey of one question: check input -> search -> gate -> model -> verify -> support score -> status."""
+import re
 import time
 from app import config, llm
 from app.citations import find_case_names
-from app.verify import verify, count_fabrications
+from app.verify import verify, count_fabrications, groundedness, norm, quote_found
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
 WELCOME = "WELCOME"
@@ -18,11 +19,19 @@ HELP_PHRASES = {"", "help", "what can you do", "what do you do", "who are you", 
                 "thanks", "thank you"}
 
 
+def squeeze(word):
+    """A letter repeated in a row counts once: "hii", "heyyy", "hellooo" -> "hi", "hey", "helo" (2026-11-20)."""
+    return "".join(c for i, c in enumerate(word) if i == 0 or c != word[i - 1])
+
+
+SQUEEZED_GREETINGS = {squeeze(w) for w in GREETING_WORDS}
+
+
 def is_greeting(question):
     words = "".join(c if c.isalpha() else " " for c in (question or "").lower()).split()
     if not words:
         return False
-    while words and words[0] in GREETING_WORDS:
+    while words and squeeze(words[0]) in SQUEEZED_GREETINGS:   # "hii" got "Not supported" live (2026-11-20)
         words.pop(0)
     return " ".join(words) in HELP_PHRASES
 
@@ -40,6 +49,184 @@ def is_thanks(question):
 
 OFF_TOPIC_TEXT = ("Verdicta is a case-law research assistant: it answers questions about U.S. Supreme Court decisions "
                   "from the text of the decisions, and it does not give opinions or answer questions outside the law.")
+
+
+# Passage summaries (EVALUATION.md "Passage summaries", 2026-11-21): "summarize the first passage" is about the passages
+# of the last answer. Live, it was searched alone and answered about another case. Now: those passages only, no search.
+ORDINALS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5, "sixth": 6, "seventh": 7, "eighth": 8,
+            "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th": 6, "7th": 7, "8th": 8, "last": "last"}
+ORDINAL = r"\b(?:" + "|".join(ORDINALS) + r")\b"
+JOINED = r"(?:\s*(?:,|and|&)\s*)?"
+NO_PASSAGES_TEXT = ("I can summarise the passages of an answer in the same chat. Ask a question first, then for example "
+                    "\"summarise the first passage\" or \"summarise all the passages\". To ask about a case, name it.")
+PASSAGES_OFF_TEXT = ("The passages of the answer are under it: open \"Show the retrieved passages\" to read each one in "
+                     "full. To ask about a case, name it in your question.")
+
+
+SUMMARISE = re.compile(r"\bsu[mn]+[aeiou]?r[iy]?[sz]|\bsummary\b|\bsum\s+(?:it\s+)?up\b|\brecap\b|\bexplain|"
+                       r"\btl;?dr\b|\bbreak\s+down\b|\bwhat\s+(?:does|did|do)\b.*\bsay")
+OPINIONS = [("dissent", r"\bdissent(?:ing)?\b"), ("concurrence", r"\bconcurr(?:ence|ing)\b"),
+            ("syllabus", r"\bsyllabus\b"), ("majority", r"\bmajority\b|\bopinion of the court\b|\bcourt'?s opinion\b")]
+
+
+def speaker(p):
+    """Who a passage is: the syllabus, a dissent, a concurrence or the majority (its label, as the verifier reads it)."""
+    text = f"{p.get('opinion_label') or ''} {p.get('section') or ''}".lower()
+    if p.get("is_syllabus") or "syllabus" in text:
+        return "syllabus"
+    return "dissent" if "dissent" in text else "concurrence" if "concurr" in text else "majority"
+
+
+def cited_decision(previous, have):
+    """The decision the last answer cited most (its shown sentences), else the decision of its first passage."""
+    counts = {}
+    for sentence in previous.get("sentences") or []:
+        for pid in sentence.get("sources") or []:
+            if pid in have:
+                counts[have[pid]["decision_id"]] = counts.get(have[pid]["decision_id"], 0) + 1
+    return max(counts, key=counts.get) if counts else have[min(have, key=lambda pid: int(pid[1:]))]["decision_id"]
+
+
+def passage_request(question):
+    """The passages a message asks about: ["P1", "P3"], ["last"] or ["all"]; None if it is not about the passages.
+    "passage" must come with a number, an ordinal, "last" or "all" ("the passage of the Affordable Care Act" is a
+    question about the law); a label "P2" counts alone. The verb does not matter ("summurize" was the live message)."""
+    t = (question or "").lower()
+    found = [f"P{n}" for n in re.findall(r"\bp\s?(\d{1,2})\b", t)]                          # "explain P3"
+    for numbers in re.findall(r"\bpassages?\s+((?:\d{1,2}" + JOINED + r")+)", t):           # "passages 1 and 3"
+        found += [f"P{n}" for n in re.findall(r"\d{1,2}", numbers)]
+    for words in re.findall(r"((?:" + ORDINAL + JOINED + r")+)\s*passages?\b", t):          # "the second and third passages"
+        found += [ORDINALS[w] if ORDINALS[w] == "last" else f"P{ORDINALS[w]}" for w in re.findall(ORDINAL, words)]
+    if found:
+        return sorted(set(found), key=lambda x: (x == "last", int(x[1:]) if x != "last" else 0))
+    if re.search(r"\b(?:all|these|those|each|every|both|the)\s+(?:of\s+)?(?:the\s+)?passages\b(?!\s+of\b)", t) \
+            or re.search(r"\b(?:each|every)\s+passage\b", t):
+        return ["all"]
+    # widened (2026-11-21): citations, opinions, the case - only with a summarising verb and no case named
+    if not SUMMARISE.search(t) or find_case_names(question):
+        return None
+    cites = [f"C{n}" for n in re.findall(r"\bcitation\s+(\d)\b", t)]
+    cites += [f"C{ORDINALS[w]}" for w in re.findall("(" + ORDINAL + r")\s+citation\b", t) if w != "last"]
+    if cites:
+        return sorted(set(cites))
+    if re.search(r"\b(?:the|all|these|those|each|every)\s+(?:the\s+)?citations\b", t):
+        return ["citations"]
+    for kind, words in OPINIONS:
+        if re.search(words, t):
+            return [f"opinion:{kind}"]
+    if re.search(r"\b(?:the|this|that)\s+(?:case|decision|opinion|ruling)\b|\bthe\s+cited\s+case\b", t):
+        return ["case"]
+    return None
+
+
+def resolve_request(request, previous, have, labels, searcher, settings):
+    """The passages a request means -> ({label: passage}, None), or ({}, our fixed text) when there is nothing to send.
+    Passages and citations come from the last answer only. An opinion it did not have, and the case, are searched
+    INSIDE the decision it cited (never another decision); new passages are labelled after its last label."""
+    kind = request[0]
+    if kind == "all":
+        return {pid: have[pid] for pid in labels}, None
+    if kind.startswith("P") or kind == "last":
+        wanted = sorted({labels[-1] if x == "last" else x for x in request}, key=lambda pid: int(pid[1:]))
+        if any(pid not in have for pid in wanted):
+            return {}, (f"The last answer had {len(labels)} passages ({labels[0]}-{labels[-1]}). Ask about one of them, "
+                        f"for example \"summarise {labels[0]}\".")
+        return {pid: have[pid] for pid in wanted}, None
+    cited = list(dict.fromkeys(pid for s in previous.get("sentences") or [] for pid in s.get("sources") or []
+                               if pid in have))
+    if kind.startswith("C") or kind == "citations":
+        wanted = cited if kind == "citations" else [cited[int(x[1:]) - 1] for x in request if int(x[1:]) <= len(cited)]
+        if not wanted or (kind != "citations" and len(wanted) < len(request)):
+            return {}, (f"The last answer showed {len(cited)} citation{'s' if len(cited) != 1 else ''}. Ask about one "
+                        f"of them, or about a passage (\"summarise P1\").")
+        return {pid: have[pid] for pid in wanted}, None
+    decision = cited_decision(previous, have)
+    mine = {pid: p for pid, p in have.items() if p["decision_id"] == decision}
+    want = kind.split(":")[1] if kind.startswith("opinion:") else None
+    chosen = {pid: p for pid, p in mine.items() if want is None or speaker(p) == want}
+    if want is None or not chosen:                     # the case, or an opinion the answer did not have: search inside
+        query = f"{previous.get('question', '')} {want or ''}".strip()
+        found = searcher.search(query, k=int(settings["retrieve_k"]), decision_ids=[decision])
+        sent = {p["chunk_id"] for p in have.values()}
+        new = [p for p in found if p["chunk_id"] not in sent and (want is None or speaker(p) == want)]
+        if want is None:
+            new.sort(key=lambda p: speaker(p) != "syllabus")          # the case: its syllabus first
+        last = int(labels[-1][1:])
+        chosen.update({f"P{last + i + 1}": p for i, p in enumerate(new[:4])})
+    if not chosen:
+        return {}, (f"The passages we have of {next(iter(mine.values()), {}).get('case_name', 'this case')} include no "
+                    f"{want}. Ask about a passage of the answer (\"summarise P1\") or about another opinion.")
+    return chosen, None
+
+
+def answer_passages(question, request, previous, searcher, index, settings):
+    """A passage request: the model gets ONLY the requested passages of the last answer (their labels kept), no search;
+    every sentence goes through the same verifier against those passages, so citing another one fails check 1.
+    Switched off, with no earlier answer, or a label the answer did not have: our fixed text (no model call)."""
+    t0 = time.perf_counter()
+    r = {"question": question.strip(), "status": None, "reason": "", "sentences": [], "removed": [], "passages": [],
+         "top_score": 0.0, "support_score": 0.0, "fabrications_caught": 0, "retrieved_decisions": [], "model_said": None,
+         "ms_search": 0, "ms_model": 0, "ms_total": 0, "off_topic": False, "passage_request": request}
+    if not settings.get("passage_summaries", False):            # off until the measurement holds
+        return finish(r, WELCOME, PASSAGES_OFF_TEXT, t0)
+    have = dict((previous or {}).get("passages") or [])
+    if not have:
+        return finish(r, WELCOME, NO_PASSAGES_TEXT, t0)
+    labels = sorted(have, key=lambda pid: int(pid[1:]))
+    t = time.perf_counter()
+    passages, missing = resolve_request(request, previous, have, labels, searcher, settings)
+    r["ms_search"] = ms(t)
+    if missing:
+        return finish(r, WELCOME, missing, t0)
+    r["passages"], r["retrieved_decisions"] = list(passages.items()), sorted({p["decision_id"] for p in passages.values()})
+    r["top_score"] = max(p.get("score", 0.0) for p in passages.values())
+    t = time.perf_counter()
+    try:
+        draft = llm.pick_sentences(r["question"], passages)
+    except llm.ModelError as e:
+        r["ms_model"] = ms(t)
+        return finish(r, ERROR, f"language model failed: {e}", t0)
+    r["ms_model"], r["tokens"], r["model_said"] = ms(t), dict(llm.LAST_USAGE), "PICKS"
+    kept, removed = checked_picks(draft, passages)
+    r["sentences"], r["removed"] = kept, removed
+    r["support_score"] = support_score(kept, removed, passages, settings)
+    status = decide(r["support_score"], len(kept), settings)
+    return finish(r, status, {NOT_SUPPORTED: "no sentence picked word for word from the passages" if not kept else
+                              "support score below the abstention threshold",
+                              LOW_CONFIDENCE: "support score between the two thresholds", ANSWERED: ""}[status], t0)
+
+
+def label_of(p):
+    """Who is speaking, from the passage's own label (never the model): "Barrett, J., dissenting", "Syllabus"."""
+    return p.get("section") or p.get("opinion_label") or "Passage"
+
+
+def checked_picks(draft, passages, per_passage=3, total=8):
+    """The model's picks -> (shown, removed). A pick is shown only if it comes from a requested passage (check 1) and is
+    found word for word in it (check 2, at least 5 words); the line is ours: the label, then the passage's own words in
+    quotation marks. In the order of the passages, at most 3 per passage and 8 in all (EVALUATION.md, option A)."""
+    kept, removed = [], []
+    for pick in (draft.get("picks") or []) if isinstance(draft, dict) else []:
+        pid, words = pick.get("passage"), (pick.get("sentence") or "").strip()
+        if pid not in passages:
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["cites a passage that was not sent to the model"]})
+            continue
+        text = norm(passages[pid]["text"])
+        if len(words.split()) < 5 or not quote_found(words, text):
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["quote not found in the cited passage"]})
+            continue
+        kept.append({"text": f"{label_of(passages[pid])}: \u201c{words}\u201d", "sources": [pid], "quote": words,
+                     "groundedness": round(groundedness(words, text), 3)})
+    kept.sort(key=lambda x: int(x["sources"][0][1:]))             # stable: the model's order inside a passage
+    shown, per = [], {}
+    for sentence in kept:
+        pid = sentence["sources"][0]
+        if per.get(pid, 0) < per_passage and len(shown) < total:
+            per[pid] = per.get(pid, 0) + 1
+            shown.append(sentence)
+    return shown, removed
 
 
 def follow_up_passages(found, context, settings, last_label=None):
@@ -97,11 +284,17 @@ def named_decisions(question, index):
     return sorted({d for name in find_case_names(question) for d in index.decisions_named(name)})
 
 
-def answer(question, searcher, index, settings, skip_gate=False, history=None):
+def answer(question, searcher, index, settings, skip_gate=False, history=None, previous=None):
     """skip_gate=True is used by the evaluation: the model is always called, so any threshold
     can be tested later without calling the model again.
     history (answer v2, a follow-up): the earlier turns of the chat, oldest first, each {question, passages,
-    sentences (verified only)}. With no history, everything below runs exactly as in the evaluated system."""
+    sentences (verified only)}. With no history, everything below runs exactly as in the evaluated system.
+    previous: the chat's last answer (a turn), for a passage request ("summarize the first passage")."""
+    request = passage_request(question)
+    if request is not None and (settings.get("passage_summaries", False) or not history):   # no eval-v1 question
+        # is a request (test); off, a follow-up keeps it in the chat's case instead (EVALUATION.md, 2026-11-21)
+        return answer_passages(question, request, previous or (history[-1] if history else None), searcher, index,
+                               settings)
     if history:
         return answer_follow_up(question, searcher, index, settings, history)
     t0 = time.perf_counter()
@@ -205,8 +398,8 @@ def turn_of(r):
     """What a chat keeps of an answer for the next follow-up: the question, every passage the model had, and only
     the sentences shown (none when NOT_SUPPORTED), so a removed sentence is never sent back to the model.
     A greeting or an error is not a turn (None): nothing was searched or answered."""
-    if r["status"] in (WELCOME, ERROR):
-        return None
+    if r["status"] in (WELCOME, ERROR) or r.get("passage_request"):   # a summary is not a turn: "now passage 2"
+        return None                                                    # still means the same answer
     return {"question": r["question"], "passages": r["passages"], "sentences": r["shown_sentences"]}
 
 

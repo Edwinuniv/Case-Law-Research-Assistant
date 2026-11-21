@@ -7,6 +7,8 @@
 // - Forgot password (Edwin, SPEC 11, 2026-11-19): POST /api/password/forgot emails a link to /reset; the page
 //   shows the same message for every email, so nobody learns who has an account. Administrators are still
 //   reset by another administrator (Accounts page, FR12).
+// - Verify (/verify, Edwin, SPEC 11, 2026-11-20): the 6-digit code emailed at sign-up; "send a new code" waits a
+//   minute; "later" goes to the chat (an unverified account may ask one question).
 // - Reset (/reset?token=...): the token is taken out of the address bar at once and no Referer is sent;
 //   POST /api/password/reset sets the new password.
 import { useEffect, useState } from "react";
@@ -83,8 +85,8 @@ function SignupForm({ onLogin }) {
     setBusy(true); setError("");
     try {
       const data = await api("/signup", { email, password });   // makes the account and logs it in
-      onLogin(data.user);
-      navigate("/research");
+      onLogin(data.user, data.verify);                          // the page then opens /verify (a code was emailed)
+      navigate(data.verify ? "/verify" : "/research");          // (SPEC 11, 2026-11-20)
     } catch (err) {
       setError(err.message);            // a used email, a short password, or too many accounts from this address
       setPassword("");
@@ -211,14 +213,74 @@ function ResetForm() {
   );
 }
 
+function VerifyForm({ email, onVerified }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [wait, setWait] = useState(60);                       // the code was just sent at sign-up
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = setTimeout(() => setWait(wait - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true); setError(""); setNote("");
+    try {
+      await api("/verify/check", { code });
+      await onVerified();                                      // the page learns the account is verified
+      navigate("/research");
+    } catch (err) {
+      setError(err.message);                                   // wrong (tries left), expired, or too many tries
+      setCode("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resend() {
+    setError(""); setNote("");
+    try {
+      await api("/verify/send", {});
+      setNote("A new code is on its way. The old one no longer works.");
+      setWait(60);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="au-form">
+      <p className="au-muted">We sent a 6-digit code to <b>{email}</b>. Check your spam folder too.</p>
+      <label htmlFor="vcode">Code</label>
+      <input id="vcode" className="au-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}"
+             maxLength={6} required value={code} placeholder="000000" autoFocus
+             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
+      {error && <p className="au-error" role="alert">{error}</p>}
+      {note && <p className="au-note" role="status">{note}</p>}
+      <button className="au-submit" disabled={busy || code.length !== 6}>
+        {busy ? <span className="au-spin" aria-label="Checking" /> : "Verify my email"}</button>
+      <p className="au-switch">
+        {wait > 0 ? <>New code in {wait} s</> : <button type="button" className="au-linkbtn" onClick={resend}>Send a new code</button>}
+        {" · "}<Link to="/research">Later</Link>
+      </p>
+    </form>
+  );
+}
+
 const TEXT = {
   login: { title: "Welcome back", sub: "Log in to your Verdicta account." },
   signup: { title: "Create your account", sub: "Keep your questions and their answers, and find them again." },
   forgot: { title: "Forgot your password?", sub: "Give your email and we send you a link to choose a new one." },
   reset: { title: "Choose a new password", sub: "Then log in with it. The link works once, for 30 minutes." },
+  verify: { title: "Check your email", sub: "One last step: confirm that this address is yours." },
 };
 
-export default function Login({ mode = "login", onLogin }) {
+export default function Login({ mode = "login", onLogin, email, onVerified }) {
   const t = TEXT[mode];
   return (
     <div className="au">
@@ -255,6 +317,7 @@ export default function Login({ mode = "login", onLogin }) {
           {mode === "signup" && <SignupForm onLogin={onLogin} />}
           {mode === "forgot" && <ForgotForm />}
           {mode === "reset" && <ResetForm />}
+          {mode === "verify" && <VerifyForm email={email} onVerified={onVerified} />}
         </div>
         <p className="au-legal">This is a research aid, not legal advice.</p>
         <nav className="au-links" aria-label="Site information">
