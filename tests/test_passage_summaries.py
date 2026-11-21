@@ -352,3 +352,40 @@ def test_a_pick_with_a_real_citation_is_kept(monkeypatch):
 ])
 def test_the_label_says_who_is_speaking(section, opinion_label, shown):
     assert pipeline.label_of({"section": section, "opinion_label": opinion_label}) == shown
+
+
+# ---------- before run 3 (EVALUATION.md: S003 showed Riley's docket line and facts, S014 showed "*803") ----------
+RILEY = {**MAJORITY, "section": "Syllabus", "opinion_label": "Syllabus", "is_syllabus": True,
+         "text": "No. 13-132. Argued April 29, 2014-Decided June 25, 2014 In No. 13-132, petitioner Riley was stopped for a "
+                 "traffic violation. Held: The police generally may not, without a warrant, search digital information on "
+                 "a cell phone seized from an individual who has been arrested. The *803 Act's restrictions are wildly "
+                 "underinclusive when judged against its asserted justification."}
+TURN_RILEY = json.loads(json.dumps({"question": "q", "sentences": [], "passages": [["P1", RILEY]]}))
+
+
+@pytest.mark.parametrize("docket", [
+    "No. 13-132. Argued April 29, 2014-Decided June 25, 2014 In No. 13-132, petitioner Riley was stopped",
+    "Argued April 29, 2014-Decided June 25, 2014 In No. 13-132",
+])
+def test_a_docket_or_argument_line_is_removed(monkeypatch, docket):
+    picks(monkeypatch, ("P1", docket))
+    r = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)
+    assert not r["shown_sentences"] and r["removed"][0]["problems"] == ["a docket or argument line, not the passage's point"]
+
+
+def test_the_holding_is_kept(monkeypatch):
+    picks(monkeypatch, ("P1", "Held: The police generally may not, without a warrant, search digital information"))
+    assert pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)["shown_sentences"]
+
+
+def test_page_markers_are_left_out_of_the_shown_words(monkeypatch):
+    picks(monkeypatch, ("P1", "The *803 Act's restrictions are wildly underinclusive"))
+    (shown,) = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)["shown_sentences"]
+    assert "*803" not in shown["text"] and "The Act's restrictions are wildly underinclusive" in shown["text"]
+
+
+def test_the_picker_prefers_the_holding_over_facts_and_procedure(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append(system) or {"picks": []})
+    llm.pick_sentences("explain the first passage", {"P1": RILEY})
+    assert "Held:" in calls[0] and "procedural history" in calls[0] and "docket" in calls[0]
