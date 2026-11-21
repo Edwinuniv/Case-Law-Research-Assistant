@@ -162,3 +162,98 @@ def test_a_summary_is_not_a_turn_so_the_next_request_still_means_the_same_answer
     """After "summarize passage 1", "now passage 2" must still find the 8 passages of the answer, not the 1 summarised."""
     r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
     assert pipeline.turn_of(r) is None
+
+
+# ---------- widened (EVALUATION.md, 2026-11-21): citations, opinions, the case ----------
+SYLLABUS = {**PASSAGE, "chunk_id": "1-1", "opinion_label": "Syllabus", "section": "Syllabus", "is_syllabus": True,
+            "text": "Held: The President enjoys absolute immunity for actions within his conclusive and preclusive "
+                    "constitutional authority."}
+CONCURRENCE = {**PASSAGE, "chunk_id": "1-7", "opinion_label": "Concurrence", "section": "Barrett, J., concurring in part",
+               "text": "I agree that the Constitution prohibits Congress from criminalizing the President's conduct."}
+OTHER_CASE = {**PASSAGE, "chunk_id": "2-0", "decision_id": 222, "case_name": "Nixon v. Fitzgerald",
+              "section": "Opinion of the Court (Powell)", "opinion_label": "Majority opinion"}
+# the last answer cited P1 (majority) then P3 (majority); P2 is a dissent it did not cite
+CITED = json.loads(json.dumps({**TURN, "sentences": [
+    {"text": "a", "sources": ["P3"], "quote": QUOTE}, {"text": "b", "sources": ["P1", "P3"], "quote": QUOTE}]}))
+
+
+class InsideSearch:
+    """Records each search; returns passages of the decision asked for (and one of another decision when not limited)."""
+    def __init__(self, found=(SYLLABUS, CONCURRENCE)):
+        self.found, self.calls = list(found), []
+
+    def search(self, q, k, decision_ids=None):
+        self.calls.append(decision_ids)
+        return [{**p, "score": 0.7} for p in self.found if decision_ids is None or p["decision_id"] in decision_ids] + \
+            ([] if decision_ids else [{**OTHER_CASE, "score": 0.9}])
+
+    def choose(self, q, found, top_k, use_reranker):
+        return found[:top_k]
+
+
+@pytest.mark.parametrize("text, which", [
+    ("summarize the first citation", ["C1"]),
+    ("explain the second citation", ["C2"]),
+    ("summarize the citations", ["citations"]),
+    ("summarize the dissent", ["opinion:dissent"]),
+    ("what does the dissenting opinion say?", ["opinion:dissent"]),
+    ("sum up the concurrence", ["opinion:concurrence"]),
+    ("summarize the majority opinion", ["opinion:majority"]),
+    ("summarise the syllabus", ["opinion:syllabus"]),
+    ("summarize the case", ["case"]),
+    ("can you explain this decision", ["case"]),
+    ("summurize this case", ["case"]),
+])
+def test_citations_opinions_and_the_case_are_recognised(text, which):
+    assert pipeline.passage_request(text) == which
+
+
+@pytest.mark.parametrize("text", [
+    "What did the dissent in Bostock v. Clayton County argue?",   # names a case: a normal question (eval-v1 A039)
+    "Did the dissent say the case was wrongly decided?",          # no summarising verb: a question about the law
+    "Summarize the dissent in Shelby County v. Holder",           # names a case
+])
+def test_a_question_naming_a_case_or_without_a_summarising_verb_is_not_a_request(text):
+    assert pipeline.passage_request(text) is None
+
+
+def test_a_citation_means_the_passages_the_answer_cited_in_order(model):
+    pipeline.answer("summarize the first citation", NoSearch(), INDEX, ON, previous=CITED)
+    pipeline.answer("summarize the second citation", NoSearch(), INDEX, ON, previous=CITED)
+    pipeline.answer("summarize the citations", NoSearch(), INDEX, ON, previous=CITED)
+    assert model == [["P3"], ["P1"], ["P1", "P3"]]
+
+
+def test_a_citation_the_answer_did_not_show_gets_the_fixed_text(no_model):
+    r = pipeline.answer("summarize the third citation", NoSearch(), INDEX, ON, previous=CITED)
+    assert r["status"] == "WELCOME"
+
+
+def test_an_opinion_in_the_last_answer_is_summarised_without_a_search(model):
+    pipeline.answer("summarize the dissent", NoSearch(), INDEX, ON, previous=CITED)
+    assert model == [["P2"]]
+
+
+def test_an_opinion_not_in_the_last_answer_is_searched_only_inside_the_cited_decision(model):
+    search = InsideSearch()
+    r = pipeline.answer("sum up the concurrence", search, INDEX, ON, previous=CITED)
+    assert search.calls == [[9987186]]                                 # the decision the answer cited, nothing else
+    assert model == [["P4"]] and dict(r["passages"])["P4"]["chunk_id"] == "1-7"   # labelled after P3
+
+
+def test_no_such_opinion_in_the_decision_gets_the_fixed_text(no_model):
+    r = pipeline.answer("summarize the concurrence", InsideSearch(found=[SYLLABUS]), INDEX, ON, previous=CITED)
+    assert r["status"] == "WELCOME" and "concurrence" in r["reason"].lower()
+
+
+def test_the_case_is_the_cited_decisions_passages_plus_its_syllabus(model):
+    search = InsideSearch()
+    r = pipeline.answer("summarize the case", search, INDEX, ON, previous=CITED)
+    sent = model[0]
+    assert search.calls == [[9987186]] and {"P1", "P3"} <= set(sent)
+    assert any(p["chunk_id"] == "1-1" for _, p in r["passages"])       # the syllabus was added
+    assert all(p["decision_id"] == 9987186 for _, p in r["passages"])  # never another case
+
+
+def test_with_no_earlier_answer_a_case_request_gets_the_fixed_text(no_model):
+    assert pipeline.answer("summarize the case", NoSearch(), INDEX, ON)["status"] == "WELCOME"
