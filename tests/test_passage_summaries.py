@@ -263,3 +263,8 @@ def test_the_cases_syllabus_is_kept_even_when_the_search_finds_it_last(model):  
     many = [{**MAJORITY, "chunk_id": f"1-{n}"} for n in range(20, 25)] + [SYLLABUS]
     r = pipeline.answer("summarize the case", InsideSearch(found=many), INDEX, ON, previous=CITED)
     assert any(p["chunk_id"] == "1-1" for _, p in r["passages"])
+
+
+def test_switched_on_a_request_in_a_follow_up_chat_is_a_summary_of_the_last_answer(model):
+    r = pipeline.answer("summarize the dissent", NoSearch(), INDEX, ON, history=[CITED])
+    assert model == [["P2"]] and r.get("passage_request") == ["opinion:dissent"]
