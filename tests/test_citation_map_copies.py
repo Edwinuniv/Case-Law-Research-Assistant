@@ -42,3 +42,32 @@ def test_an_unrelated_copy_goes_to_nobody():
 
 def test_a_decision_with_no_opinion_of_ours_gives_nobody():
     assert copy_targets(shingles(MAJORITY), {}) == []
+
+
+# ---- rows_to_add: "rows added, none removed, a row already there is not added twice" (SPEC 11) ----
+from app.ingest import rows_to_add
+
+
+def row(citing, cited, cluster=None):
+    return {"citing_opinion_id": citing, "cited_opinion_id": cited, "cited_cluster_id": cluster or cited, "depth": 1}
+
+
+def test_a_row_our_opinion_already_has_is_not_added():
+    new = rows_to_add({11: [1]}, {11: [row(11, 500), row(11, 501)]}, have={(1, 501)})
+    assert new == [(1, 500, 500, 1)]
+
+
+def test_two_copies_giving_the_same_row_add_it_once():
+    new = rows_to_add({11: [1], 12: [1]}, {11: [row(11, 500)], 12: [row(12, 500)]}, have=set())
+    assert new == [(1, 500, 500, 1)]
+
+
+def test_running_again_adds_nothing():
+    targets, rows = {11: [1, 2]}, {11: [row(11, 500), row(11, 502)]}
+    first = rows_to_add(targets, rows, have=set())
+    assert rows_to_add(targets, rows, have={(t, c) for t, c, _, _ in first}) == []
+
+
+def test_a_combined_copy_gives_its_rows_to_each_target():
+    new = rows_to_add({12: [1, 2]}, {12: [row(12, 500)]}, have=set())
+    assert sorted(new) == [(1, 500, 500, 1), (2, 500, 500, 1)]
