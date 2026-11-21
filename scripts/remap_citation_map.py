@@ -11,7 +11,7 @@ from collections import Counter, defaultdict
 import numpy as np
 from app import config, db
 from app.chunking import pick_text
-from app.ingest import copy_targets, shingles
+from app.ingest import copy_targets, rows_to_add, shingles
 
 SHELBY = 9515886
 apply = "--apply" in sys.argv
@@ -57,17 +57,12 @@ with db.connect() as con:                                     # the exact rows t
     rows = defaultdict(list)
     for r in con.execute("SELECT * FROM citation_map WHERE citing_opinion_id = ANY(%s)", (list(targets),)):
         rows[r["citing_opinion_id"]].append(r)
-    new = {}
-    for c, ts in targets.items():
-        for t in ts:
-            for r in rows[c]:
-                if (t, r["cited_opinion_id"]) not in have:          # a row already there is not added twice
-                    new[(t, r["cited_opinion_id"])] = (t, r["cited_opinion_id"], r["cited_cluster_id"], r["depth"])
+    new = rows_to_add(targets, rows, have)
     if apply:
         with con.cursor() as cur:
             cur.executemany("INSERT INTO citation_map (citing_opinion_id, cited_opinion_id, cited_cluster_id, depth) "
-                            "VALUES (%s, %s, %s, %s)", list(new.values()))
-    gaining = {t for t, _ in new}
+                            "VALUES (%s, %s, %s, %s)", new)
+    gaining = {t for t, _, _, _ in new}
     still_empty = con.execute("""SELECT count(*) AS n FROM opinions o WHERE NOT EXISTS
                                  (SELECT 1 FROM citation_map m WHERE m.citing_opinion_id = o.opinion_id)
                                  AND NOT o.opinion_id = ANY(%s)""", (sorted(gaining),)).fetchone()["n"]
