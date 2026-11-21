@@ -82,6 +82,7 @@ def test_a_request_about_the_passages_is_recognised(text, which):
     "What does the First Amendment say about true threats?",
     "Summarize Obergefell v. Hodges",                            # a case, not a passage: the normal pipeline
     "Is passage of time relevant to laches?",
+    "What did the Court say about the passages of the Voting Rights Act it struck down?",   # a planted bug got through
 ])
 def test_a_legal_question_is_not_a_passage_request(text):
     assert pipeline.passage_request(text) is None
@@ -155,3 +156,9 @@ def test_a_normal_question_with_an_earlier_answer_goes_through_the_pipeline(mode
     search = OneSearch()
     r = pipeline.answer("Is the President immune from prosecution?", search, INDEX, ON, previous=TURN)
     assert search.calls == 1 and r["status"] in ("ANSWERED", "LOW_CONFIDENCE")
+
+
+def test_a_summary_is_not_a_turn_so_the_next_request_still_means_the_same_answer(model):
+    """After "summarize passage 1", "now passage 2" must still find the 8 passages of the answer, not the 1 summarised."""
+    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
+    assert pipeline.turn_of(r) is None
