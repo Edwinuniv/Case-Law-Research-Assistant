@@ -15,6 +15,10 @@ export const PenIcon = () => (
     <path d="M14 20h6" /></svg>
 );
 
+export const PinIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 4 3v2H6v-2l4-3-1-6z" /><path d="M12 15v6" /></svg>
+);
+
 export function CopyButton({ text, label = "Copy" }) {
   const [done, setDone] = useState(false);
   async function copy() {

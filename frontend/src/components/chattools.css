@@ -43,3 +43,20 @@
 :root[data-theme="light"] .ct-nav button:hover{background:rgba(20,20,24,.45)}
 :root[data-theme="light"] .ct-nav button.on{background:#d97706}
 :root[data-theme="light"] .ct-bottom{background:#fff;color:#2b2b31;border-color:rgba(20,20,24,.12);box-shadow:0 8px 24px rgba(20,20,24,.15)}
+
+/* Pinned chats in "My chats" (Edwin, SPEC 11, 2026-11-21): the pin shows on hover, always when pinned or on touch */
+.rs-chat-row{position:relative;display:flex;align-items:flex-start}
+.rs-chat-row > button:first-child{flex:1;min-width:0;padding-right:34px}
+.rs-list .rs-chat-row .rs-pin{position:absolute;right:4px;top:5px;width:28px;height:28px;padding:0;display:grid;place-items:center;
+  border-radius:8px;background:none;color:#8a837d;opacity:0;transition:opacity .15s}
+.rs-chat-row:hover .rs-pin,.rs-chat-row .rs-pin:focus-visible,.rs-chat-row.pinned .rs-pin{opacity:1}
+.rs-list .rs-chat-row.pinned .rs-pin{color:#fbbf24}
+.rs-list .rs-chat-row .rs-pin:hover{background:rgba(255,255,255,.08);color:#fff}
+.rs-pin svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rs-chat-row.pinned .rs-pin svg{fill:currentColor}
+@media (hover:none){.rs-chat-row .rs-pin{opacity:1}}
+.rs-list-head{margin:10px 6px 4px;font:600 11px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6b6560}
+:root[data-theme="light"] .rs-list .rs-chat-row .rs-pin{color:#78716c}
+:root[data-theme="light"] .rs-list .rs-chat-row.pinned .rs-pin{color:#d97706}
+:root[data-theme="light"] .rs-list .rs-chat-row .rs-pin:hover{background:#f0ede6;color:#121216}
+:root[data-theme="light"] .rs-list-head{color:#8a837d}
