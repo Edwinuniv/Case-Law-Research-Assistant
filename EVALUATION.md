@@ -698,3 +698,11 @@ removes a pick that is a docket or argument line ("No. 13-132", "Argued ... Deci
 are left out of the shown words, as norm() already leaves them out when matching (the words shown stay the passage's
 own). Run 3: the same 14 requests, the same conditions, condition (4) read by Edwin if he can, otherwise again by the
 AI, said so. Saved as eval/runs/summaries_run3.json.
+
+## Known limitations (kept, not fixed; Edwin, 2026-11-21)
+- **Two case names joined by "and".** Check 4 reads "citing Virginia v. Black and Chaplinsky" as ONE case name,
+  "Virginia v. Black and Chaplinsky", which is not in the passage, so a true sentence is removed. Seen once, in a
+  retold summary of a dissent (2026-11-21), which no longer exists (summaries quote). In every saved evaluation run:
+  0 removals of this kind (all eval/runs/eval_run*.json counted). Cutting names at "and" would need care for real names
+  that contain it ("President and Fellows of Harvard College"). It only removes (never shows a wrong name), so the
+  guarantee holds; not changed without a rule and a measurement.
