@@ -672,3 +672,16 @@ least 12 of the 14 shown (80%). Data: Yasser's #119 chunks (72,505 passages, lab
 chunks_119.dump. Prompt v2, the one going live (prompt_version on Railway); tau_abstain 0.20. Saved as
 eval/runs/summaries_run1.json (every first answer, request, pick, removed pick and passage label) and a report
 eval/runs/summaries_run1_report.txt, by scripts/run_summaries.py.
+**Run 1 result (2026-11-21; eval/runs/summaries_run1.json, _report.txt).** 14 of 14 requests run, 0 paused.
+(1) **1 false citation shown of 48: fails.** S004 ("what does P3 say?", Obergefell): Justice Alito's words quoted
+exactly, "Washington v. Glucksberg, 521 U.S. 701", and CourtListener's text of the dissent itself says 701 (the real
+citation is 521 U.S. 702); the separate checker found it. (2) 100% of 61 lines cite only a passage sent. (3) 13 of 14
+shown (S003: its first answer was an ERROR, so the request got the fixed text). (4) not needed: (1) fails, so
+**passage summaries stay off**. Read anyway: labels that are only a section heading ("Part C", "Part II") do not say who
+speaks: S007's "Part II" is Justice Scalia's dissent in Rasul, S006's "Part C" is the majority in Shelby County.
+**Two gaps of the option A rule, fixed before run 2 (written 2026-11-21, before any code):** (a) check 3 applies to
+picks: a pick containing a citation that is not in the citation table is removed, even when it is the source's own
+words (a quote can carry the source's errors); (b) when the section heading does not name the speaker, the label
+starts with the opinion's own label: "Dissenting opinion (Scalia) - Part II". Run 2: the same 14 requests (TUNE), the
+same conditions, a fresh run (the passages' search scores were not saved in run 1, so it cannot be rechecked; run 2
+saves them). Saved as eval/runs/summaries_run2.json and _report.txt.
