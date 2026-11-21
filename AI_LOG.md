@@ -1022,3 +1022,12 @@ majority, so "Blodgett v. Holden, 275 U.S. 142", which it really cites, could no
 2. **The first dry run counted too many rows.** It counted each copy's rows separately, so a row given by two copies
    to the same opinion was counted twice while --apply adds it once (5 vs 4 on a made-up decision in a test
    database). Caught by running both on that decision; the rows are now worked out once for both.
+
+## 2026-11-21 — Case names ending in "Revisions: <date>" (Yasser)
+Edwin saw "SEC v. Jarkesy Revisions: 6/27/24" in the answer PDFs. A read-only check found 7 such names of 2,415 (2024
+slip opinions); "School District No. 92" and the long official names are real. Yasser asked Claude for the rule,
+tests and a repair script (SPEC 11 first). What was wrong:
+1. **The first tests were too weak.** Written from the real names only, they passed two planted bugs: a pattern not
+   tied to the end of the name, and one removing anything after "Revisions:" instead of a date. Two tests were added
+   from the rule's words ("trailing", "a date"): a revisions date in the middle and "Revisions: pending" stay.
+   All 4 planted bugs are now caught.

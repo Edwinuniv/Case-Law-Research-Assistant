@@ -846,3 +846,15 @@ map; 483 given to 1 opinion, 457 combined copies given to each opinion they cont
 have (counted, given to nobody); 54,852 rows added; our opinions without any row 2,011 -> 495; the Shelby County
 majority 0 -> 51 rows. Rule 2 is at the decision level: a citation made in a combined copy's dissent is also given to
 the majority it contains (for the checker: "cited by this decision"), never to another decision.
+
+2026-11-21 - Case names ending in "Revisions: <date>" (Yasser; Edwin's note, seen in the answer PDFs: "SEC v.
+Jarkesy Revisions: 6/27/24"). Written before the code. Read-only check on Yasser's database: 7 of 2,415 names end
+with " Revisions: M/D/YY" (2024 slip opinions: NRA v. Vullo, Garland v. Cargill, Chiaverini, Rahimi, Jarkesy, Ohio
+v. EPA, Purdue Pharma); "School District No. 92" and the long official names are real and stay. Rule: (1) a case
+name loses a trailing "Revisions: <date>" (or "Revision:"), and nothing else; (2) the loader cleans names when it
+loads them; (3) scripts/fix_case_names repairs a loaded database: dry run lists each change, --apply writes it,
+in decisions.case_name only. No re-index: the page and the model read the name from decisions at each question;
+only the 7 decisions' stored embeddings were computed with the old name (until the next re-index). The site is
+restarted after --apply (the citation index keeps the names in memory).
+Result (2026-11-21, Yasser's database): the dry run listed exactly the 7 names, each losing only its "Revisions:
+<date>"; --apply changed those 7 of 2,415 (report saved in ingestion_reports, kind case_names).
