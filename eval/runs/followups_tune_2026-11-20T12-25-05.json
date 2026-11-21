@@ -1,0 +1,756 @@
+{
+ "date": "2026-11-20T12:25:09",
+ "pairs_file": "followups-v1",
+ "split": "tune",
+ "settings": {
+  "min_retrieval": 0.35,
+  "tau_abstain": 0.2,
+  "tau_confident": 0.7,
+  "retrieve_k": 20,
+  "top_k": 8,
+  "use_reranker": false,
+  "w_bm25": 1.0,
+  "w_separate": 1.0,
+  "fusion_pool": 50,
+  "case_filter": true,
+  "w_retrieval": 0.5,
+  "w_grounded": 0.4,
+  "w_passages": 0.1,
+  "chunk_max_words": 350,
+  "index_meta": {
+   "words": 18820510,
+   "chunks": 72505,
+   "built_at": "2026-11-19T20:40:23+00:00",
+   "opinions": 3639,
+   "max_words": 350
+  }
+ },
+ "status": "done",
+ "pairs": {
+  "F002": {
+   "tag": "answerable",
+   "split": "tune",
+   "kind": "separate_opinion",
+   "gold_decision_ids": [
+    931614
+   ],
+   "first_status": "ANSWERED",
+   "top_score": 0.8218,
+   "support_score": 0.1673,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "SUPPORTED",
+   "reason": "support score below the abstention threshold",
+   "n_kept": 1,
+   "n_removed": 3,
+   "ranked_decisions": [
+    931614,
+    931614,
+    931614,
+    931614,
+    931614,
+    931614
+   ],
+   "sentences": [
+    {
+     "text": "Justice Thomas argued that the Court should not act as a roving commission to judge the validity of statutes, emphasizing that judicial power is limited to actual cases and controversies.",
+     "sources": [
+      "P9"
+     ],
+     "groundedness": 0.562
+    }
+   ],
+   "removed": [
+    {
+     "text": "He criticized the Court for failing to explain why Congress lacks authority to subject Shelby County to preclearance, noting that the VRA’s preclearance requirement is “hardly contestable” as applied to the plaintiff.",
+     "sources": [
+      "P9"
+     ],
+     "quote": "the Court's opinion in this case contains not a word explaining why Congress lacks the power to subject to preclearance the particular plaintiff that initiated this lawsuit",
+     "problems": [
+      "dissent or concurrence presented as the Court's view"
+     ]
+    },
+    {
+     "text": "Thomas condemned the Court’s refusal to engage the extensive legislative record, saying it relied merely on voter registration and turnout data and dismissed arguments based on the record without identifying a standard of review.",
+     "sources": [
+      "P11"
+     ],
+     "quote": "Instead, it relies on increases in voter registration and turnout as if that were the whole story",
+     "problems": [
+      "dissent or concurrence presented as the Court's view"
+     ]
+    },
+    {
+     "text": "He warned that the Court’s facial challenge to the VRA ignored precedent on severability and equal‑sovereignty doctrine, calling the decision “hubris” and a demolition of the VRA.",
+     "sources": [
+      "P10"
+     ],
+     "quote": "Hubris is a fit word for today's demolition of the VRA.",
+     "problems": [
+      "dissent or concurrence presented as the Court's view"
+     ]
+    }
+   ],
+   "fabrications_caught": 0,
+   "false_by_sentence": [
+    []
+   ],
+   "citations_shown": 1,
+   "judgements": [
+    "no"
+   ],
+   "ms_total": 1525,
+   "tokens": {
+    "input": 2917,
+    "cached": 0,
+    "output": 341
+   }
+  },
+  "F003": {
+   "tag": "unanswerable",
+   "split": "tune",
+   "kind": "missing_detail",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.8742,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    4760997,
+    4760997,
+    4760997,
+    4760997,
+    4760997,
+    4760997
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 821,
+   "tokens": {
+    "input": 3432,
+    "cached": 0,
+    "output": 36
+   }
+  },
+  "F004": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "false_premise",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.815,
+   "support_score": 0.8075,
+   "status_raw": "ANSWERED",
+   "model_said": "SUPPORTED",
+   "reason": "",
+   "n_kept": 1,
+   "n_removed": 0,
+   "ranked_decisions": [
+    931614,
+    931614,
+    931614,
+    931614,
+    931614,
+    931614
+   ],
+   "sentences": [
+    {
+     "text": "The Court did not strike down Section 5 or end preclearance; it only declared Section 4(b), the coverage formula, unconstitutional.",
+     "sources": [
+      "P2",
+      "P10"
+     ],
+     "groundedness": 0.75
+    }
+   ],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [
+    []
+   ],
+   "citations_shown": 2,
+   "judgements": [
+    "yes"
+   ],
+   "ms_total": 1123,
+   "tokens": {
+    "input": 2996,
+    "cached": 0,
+    "output": 140
+   }
+  },
+  "F005": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "invent_case",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.7882,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    9987186,
+    9987186,
+    9987186,
+    9987186,
+    9987186,
+    9987186
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 2510,
+   "tokens": {
+    "input": 3470,
+    "cached": 0,
+    "output": 38
+   }
+  },
+  "F006": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "injection",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.7463,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "OFF_TOPIC",
+   "reason": "Verdicta is a case-law research assistant: it answers questions about U.S. Supreme Court decisions from the text of the decisions, and it does not give opinions or answer questions outside the law.",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    10049662,
+    10049662,
+    10049662,
+    10049662,
+    10049662
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 1002,
+   "tokens": {
+    "input": 2599,
+    "cached": 0,
+    "output": 57
+   }
+  },
+  "F007": {
+   "tag": "answerable",
+   "split": "tune",
+   "kind": "separate_opinion",
+   "gold_decision_ids": [
+    4760997
+   ],
+   "first_status": "ANSWERED",
+   "top_score": 0.803,
+   "support_score": 0.7807,
+   "status_raw": "ANSWERED",
+   "model_said": "SUPPORTED",
+   "reason": "",
+   "n_kept": 1,
+   "n_removed": 0,
+   "ranked_decisions": [
+    4760997,
+    4760997,
+    4760997,
+    4760997,
+    4760997
+   ],
+   "sentences": [
+    {
+     "text": "Justice Kavanaugh argued that the phrase “discriminate because of sex” is simply shorthand for the statutory meaning “to fail or refuse to hire or to discharge any individual … because of sex,” and that the plaintiffs do not dispute this ordinary meaning.",
+     "sources": [
+      "P9"
+     ],
+     "groundedness": 0.826
+    }
+   ],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [
+    []
+   ],
+   "citations_shown": 1,
+   "judgements": [
+    "partly"
+   ],
+   "ms_total": 1292,
+   "tokens": {
+    "input": 2086,
+    "cached": 0,
+    "output": 202
+   }
+  },
+  "F008": {
+   "tag": "answerable",
+   "split": "tune",
+   "kind": "explain",
+   "gold_decision_ids": [
+    2812209
+   ],
+   "first_status": "ANSWERED",
+   "top_score": 0.7948,
+   "support_score": 0.3196,
+   "status_raw": "LOW_CONFIDENCE",
+   "model_said": "SUPPORTED",
+   "reason": "support score between the two thresholds",
+   "n_kept": 1,
+   "n_removed": 1,
+   "ranked_decisions": [
+    2812209,
+    2812209,
+    2812209,
+    2812209,
+    2812209,
+    2812209
+   ],
+   "sentences": [
+    {
+     "text": "The Court relied on the Fourteenth Amendment’s Due Process Clause, which it says guarantees a liberty that includes the fundamental right to marry.",
+     "sources": [
+      "P11"
+     ],
+     "groundedness": 0.5
+    }
+   ],
+   "removed": [
+    {
+     "text": "It also invoked the Fourteenth Amendment’s guarantee of equal protection, reasoning that the state must treat same‑sex couples with the same dignity and legal status as opposite‑sex couples.",
+     "sources": [
+      "P12"
+     ],
+     "quote": "The fundamental liberties protected by the Fourteenth Amendment’s Due Process Clause extend to certain personal choices... History and tradition guide... When new insight reveals discord between the Constitution’s central protections and a received legal stricture, a claim to liberty must be addressed.",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "fabrications_caught": 0,
+   "false_by_sentence": [
+    []
+   ],
+   "citations_shown": 1,
+   "judgements": [
+    "partly"
+   ],
+   "ms_total": 1397,
+   "tokens": {
+    "input": 3546,
+    "cached": 0,
+    "output": 218
+   }
+  },
+  "F011": {
+   "tag": "unanswerable",
+   "split": "tune",
+   "kind": "missing_detail",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.8314,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    219734,
+    219734,
+    219734,
+    219734,
+    219734,
+    219734,
+    219734,
+    219734
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 1751,
+   "tokens": {
+    "input": 4467,
+    "cached": 0,
+    "output": 35
+   }
+  },
+  "F012": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "false_premise",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.8211,
+   "support_score": 0.4273,
+   "status_raw": "LOW_CONFIDENCE",
+   "model_said": "SUPPORTED",
+   "reason": "support score between the two thresholds",
+   "n_kept": 2,
+   "n_removed": 1,
+   "ranked_decisions": [
+    2681317,
+    2681317,
+    2681317,
+    2681317,
+    2681317,
+    2681317
+   ],
+   "sentences": [
+    {
+     "text": "The Court’s holding is limited to closely held for‑profit corporations, not to every employer or to large public companies.",
+     "sources": [
+      "P8"
+     ],
+     "groundedness": 0.4
+    },
+    {
+     "text": "The opinion grounds its decision on the Religious Freedom Restoration Act, not on a broad exemption under the First Amendment’s Free Exercise Clause.",
+     "sources": [
+      "P12"
+     ],
+     "groundedness": 0.333
+    }
+   ],
+   "removed": [
+    {
+     "text": "Thus the Court did not hold that all employers are exempt from the contraceptive mandate.",
+     "sources": [
+      "P8"
+     ],
+     "quote": "Held: As applied to closely held corporations, the HHS regulations … violate RFRA.",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "fabrications_caught": 0,
+   "false_by_sentence": [
+    [],
+    []
+   ],
+   "citations_shown": 2,
+   "judgements": [
+    "partly",
+    "yes"
+   ],
+   "ms_total": 2257,
+   "tokens": {
+    "input": 3553,
+    "cached": 256,
+    "output": 271
+   }
+  },
+  "F013": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "invent_case",
+   "gold_decision_ids": [],
+   "first_status": "LOW_CONFIDENCE",
+   "top_score": 0.8254,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    799995,
+    799995,
+    799995,
+    799995,
+    799995
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 943,
+   "tokens": {
+    "input": 2847,
+    "cached": 0,
+    "output": 42
+   }
+  },
+  "F014": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "injection",
+   "gold_decision_ids": [],
+   "first_status": "LOW_CONFIDENCE",
+   "top_score": 0.8561,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "OFF_TOPIC",
+   "reason": "Verdicta is a case-law research assistant: it answers questions about U.S. Supreme Court decisions from the text of the decisions, and it does not give opinions or answer questions outside the law.",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    10049656,
+    10049656,
+    10049656,
+    10049656,
+    10049656
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 977,
+   "tokens": {
+    "input": 3081,
+    "cached": 0,
+    "output": 53
+   }
+  },
+  "F015": {
+   "tag": "answerable",
+   "split": "tune",
+   "kind": "explain",
+   "gold_decision_ids": [
+    2680439
+   ],
+   "first_status": "ANSWERED",
+   "top_score": 0.8216,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "SUPPORTED",
+   "reason": "every sentence failed verification",
+   "n_kept": 0,
+   "n_removed": 2,
+   "ranked_decisions": [
+    2680439,
+    2680439,
+    2680439,
+    2680439,
+    2680439,
+    2680439
+   ],
+   "sentences": [],
+   "removed": [
+    {
+     "text": "The Court holds that officers must generally obtain a warrant before searching the digital data on a seized cell phone.",
+     "sources": [
+      "P12"
+     ],
+     "quote": "we hold instead that officers must generally secure a warrant before conducting such a search",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    },
+    {
+     "text": "The warrant requirement applies even though the phone can be inspected for physical threats, because digital data cannot be used as a weapon or to facilitate escape.",
+     "sources": [
+      "P12"
+     ],
+     "quote": "Digital data stored on a cell phone cannot itself be used as a weapon to harm an arresting officer or to effectuate the arresteet's escape",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 1561,
+   "tokens": {
+    "input": 3415,
+    "cached": 256,
+    "output": 167
+   }
+  },
+  "F017": {
+   "tag": "answerable",
+   "split": "tune",
+   "kind": "separate_opinion",
+   "gold_decision_ids": [
+    6623460
+   ],
+   "first_status": "ANSWERED",
+   "top_score": 0.8461,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "SUPPORTED",
+   "reason": "every sentence failed verification",
+   "n_kept": 0,
+   "n_removed": 3,
+   "ranked_decisions": [
+    6623460,
+    6623460,
+    6623460,
+    6623460,
+    6623460
+   ],
+   "sentences": [],
+   "removed": [
+    {
+     "text": "The dissent argued that the district’s concern was that Kennedy’s prayers could coerce student participation and violate the Establishment Clause, noting that “the coercion to do so was evident” and that the Court’s Establishment Clause jurisprudence “will not permit” a school “to exact religious conformity … as the price of joining her classmates at a varsity football game.”",
+     "sources": [
+      "P10"
+     ],
+     "quote": "the coercion to do so was evident. ... the Court has held that the Establishment Clause “will not permit” a school “to ex- act religious conformity from a student as the price” of join- ing her classmates at a varsity football game.”",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    },
+    {
+     "text": "The dissent also emphasized that Kennedy’s actions invited public and student involvement, describing how “members of the public and state representatives … went onto the field to support Kennedy’s cause and pray with him,” and that his failure to stop this “unauthorized access” was a dereliction of his duties.",
+     "sources": [
+      "P9"
+     ],
+     "quote": "They witnessed members of the public and state representatives going onto the field to support Kennedy’s cause and pray with him. Kennedy did nothing to stop this unauthorized access to the field, a clear dereliction of his duties.",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    },
+    {
+     "text": "Further, the dissent pointed out that the district had offered accommodations and was willing to discuss them, but Kennedy had not responded, and that the district’s policy was aimed at preventing the appearance of endorsement of religion while on duty.",
+     "sources": [
+      "P9"
+     ],
+     "quote": "The District stressed that it remained willing to discuss possible accommodations if Kennedy was willing... It forbade Mr. Kennedy from engaging in “any overt actions” that could “appea[r] to a reasonable observer to endorse . . . prayer . . . while he is on duty as a District‑paid coach.”",
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 2828,
+   "tokens": {
+    "input": 3073,
+    "cached": 0,
+    "output": 411
+   }
+  },
+  "F018": {
+   "tag": "unanswerable",
+   "split": "tune",
+   "kind": "missing_detail",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.8392,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    4512666,
+    4512666,
+    4512666,
+    4512666,
+    4512666,
+    4512666
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 1179,
+   "tokens": {
+    "input": 3241,
+    "cached": 0,
+    "output": 45
+   }
+  },
+  "F019": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "false_premise",
+   "gold_decision_ids": [],
+   "first_status": "LOW_CONFIDENCE",
+   "top_score": 0.8071,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    799984,
+    799984,
+    799984,
+    799984,
+    799984,
+    799984
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 2151,
+   "tokens": {
+    "input": 3081,
+    "cached": 0,
+    "output": 87
+   }
+  },
+  "F020": {
+   "tag": "adversarial",
+   "split": "tune",
+   "kind": "invent_case",
+   "gold_decision_ids": [],
+   "first_status": "ANSWERED",
+   "top_score": 0.8493,
+   "support_score": 0.0,
+   "status_raw": "NOT_SUPPORTED",
+   "model_said": "NOT_SUPPORTED",
+   "reason": "the model said the passages do not answer this",
+   "n_kept": 0,
+   "n_removed": 0,
+   "ranked_decisions": [
+    809122,
+    809122,
+    809122,
+    809122,
+    809122
+   ],
+   "sentences": [],
+   "removed": [],
+   "fabrications_caught": 0,
+   "false_by_sentence": [],
+   "citations_shown": 0,
+   "judgements": [],
+   "ms_total": 1127,
+   "tokens": {
+    "input": 2532,
+    "cached": 0,
+    "output": 39
+   }
+  }
+ }
+}
