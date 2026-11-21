@@ -183,6 +183,8 @@ ALTER TABLE users DROP CONSTRAINT IF EXISTS users_plan_check;
 ALTER TABLE users ADD CONSTRAINT users_plan_check CHECK (plan IN ('free', 'paid'));
 -- 2026-11-15 (Edwin, Stripe test mode): only Stripe's ids, to cancel later; never card data or amounts
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+-- 2026-11-21 (Edwin, SPEC section 11): pinned chats come first in "My chats"
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 -- 2026-11-14 (Joe, SPEC section 11): each question of a saved chat; a deleted chat keeps its questions (FR28)
 ALTER TABLE query_log ADD COLUMN IF NOT EXISTS chat_id INT REFERENCES chats(id) ON DELETE SET NULL;
@@ -363,7 +365,10 @@ def user_is_active_admin(user_id):
 
 
 # ---------------- query log ----------------
-def log_query(r, user_id=None, shown=None, chat_id=None, turn=None):
+NO_PARENT = object()           # a question sent without a parent (a page from before 2026-11-21): read in order
+
+
+def log_query(r, user_id=None, shown=None, chat_id=None, turn=None, parent=NO_PARENT):
     """Saves one question and its result (FR28, SR41). Returns the new row's id.
     user_id: the account that asked (empty for a visitor without an account; SPEC 11, 2026-11-12).
     shown: the answer exactly as it was shown on the page.
@@ -375,6 +380,8 @@ def log_query(r, user_id=None, shown=None, chat_id=None, turn=None):
         details["shown"] = shown
     if turn is not None:
         details["turn"] = turn
+    if parent is not NO_PARENT:                      # the answer this question followed (Edwin, SPEC 11, 2026-11-21)
+        details["parent"] = parent
     with connect() as con:
         row = con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
             n_sentences, n_removed, removed_citations, fabrications_caught, ms_search, ms_model,
@@ -412,12 +419,41 @@ def chat_history(chat_id, limit=10):
     return [r["turn"] for r in reversed(rows)]
 
 
+def chat_question(chat_id, query_id):
+    """A question of this chat (its id and what a follow-up needs of its answer), or None: a parent must be in the same
+    chat (Edwin, SPEC 11, 2026-11-21)."""
+    with connect() as con:
+        return con.execute("SELECT id, details->'turn' AS turn FROM query_log WHERE id = %s AND chat_id = %s",
+                           (query_id, chat_id)).fetchone()
+
+
 def list_chats(user_id):
     """The account's own chats, newest first, with their number of questions."""
     with connect() as con:
-        return con.execute("""SELECT c.id, c.title, c.created_at, c.updated_at, count(q.id) AS questions
+        return con.execute("""SELECT c.id, c.title, c.created_at, c.updated_at, c.pinned_at, count(q.id) AS questions
                               FROM chats c LEFT JOIN query_log q ON q.chat_id = c.id WHERE c.user_id = %s
-                              GROUP BY c.id ORDER BY c.updated_at DESC, c.id DESC""", (user_id,)).fetchall()
+                              GROUP BY c.id ORDER BY c.pinned_at DESC NULLS LAST, c.updated_at DESC, c.id DESC""",
+                           (user_id,)).fetchall()       # pinned first, the newest pin on top (SPEC 11, 2026-11-21)
+
+
+MAX_PINNED = 10
+
+
+def pin_chat(user_id, chat_id, pinned):
+    """Pins or unpins one of the account's own chats. Returns "ok", "not found" or "too many" (an 11th pin)."""
+    with connect() as con:
+        chat = con.execute("SELECT pinned_at FROM chats WHERE id = %s AND user_id = %s", (chat_id, user_id)).fetchone()
+        if chat is None:
+            return "not found"
+        if pinned and chat["pinned_at"] is None:
+            n = con.execute("SELECT count(*) AS n FROM chats WHERE user_id = %s AND pinned_at IS NOT NULL",
+                            (user_id,)).fetchone()["n"]
+            if n >= MAX_PINNED:
+                return "too many"
+            con.execute("UPDATE chats SET pinned_at = now() WHERE id = %s", (chat_id,))
+        elif not pinned:
+            con.execute("UPDATE chats SET pinned_at = NULL WHERE id = %s", (chat_id,))
+    return "ok"
 
 
 def chat_turns(user_id, chat_id):
@@ -427,7 +463,8 @@ def chat_turns(user_id, chat_id):
                            (chat_id, user_id)).fetchone()
         if not chat:
             return None
-        chat["turns"] = con.execute("SELECT id, question, status, created_at, details->'shown' AS shown "
+        chat["turns"] = con.execute("SELECT id, question, status, created_at, details->'shown' AS shown, "
+                                    "details ? 'parent' AS linked, (details->>'parent')::int AS parent "   # versions
                                     "FROM query_log WHERE chat_id = %s ORDER BY id", (chat_id,)).fetchall()
     return chat
 

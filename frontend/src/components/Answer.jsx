@@ -6,6 +6,16 @@
 import { useState } from "react";
 import { api } from "../api.js";
 import "./answer.css";
+import { CopyButton } from "./ChatTools.jsx";
+
+// Copy (Edwin, SPEC 11, 2026-11-21): the sentences shown, each with its citations, as plain text; else the message shown.
+export function answerText(a, title, text) {
+  if (!a.sentences?.length) return `${title}. ${a.status === "WELCOME" ? a.reason : text}`;
+  return a.sentences.map((s) => {
+    const cites = [...new Set(s.citations.map((c) => c.label))];
+    return cites.length ? `${s.text} (${cites.join("; ")})` : s.text;
+  }).join("\n\n");
+}
 
 const STATUS = {
   ANSWERED: ["✓", "Verified answer", "Every statement below was checked against the passage it cites."],
@@ -121,6 +131,7 @@ export default function Answer({ a, onOpen, save }) {   // save: {saved, toggle}
       )}
 
       <div className="an-meta">
+        <CopyButton text={answerText(a, title, text)} label="Copy the answer" />
         <span className="an-support" title="How well the kept sentences are supported (0 to 1)">
           <SupportRing value={a.support_score} />Support <b>{a.support_score.toFixed(2)}</b></span>
         <span title="Similarity of the best passage found">Best passage <b>{a.top_score.toFixed(2)}</b></span>

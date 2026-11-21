@@ -284,6 +284,7 @@ def seconds_to_wait(ip):
 class Question(BaseModel):
     question: str
     chat_id: int | None = None          # an account's saved chat to continue (SPEC 11, 2026-11-14); none: a new chat
+    parent_id: int | None = None        # the answer this question follows; an edit has the edited one's (Edwin, 2026-11-21)
 
 
 def decision_info(decision_ids):
@@ -338,10 +339,20 @@ def ask(request: Request, body: Question):
             raise HTTPException(401, "Log in to keep a chat.")
         if not db.own_chat(asker, body.chat_id):
             raise HTTPException(404, "Chat not found.")
+    linked = "parent_id" in body.model_fields_set                # sent, even as null: this page keeps versions
+    parent = None
+    if body.parent_id is not None:                              # before the model: only a question of this chat
+        if body.chat_id is None:
+            raise HTTPException(400, "A question can follow an earlier one only in a chat.")
+        parent = db.chat_question(body.chat_id, body.parent_id)
+        if parent is None:
+            raise HTTPException(404, "That message is not in this chat.")
+    keep = {"parent": body.parent_id} if linked and asker else {}   # an account's chat (made by record if new);
+                                                                     # a visitor's versions live in the page only
     saved = demo.saved_answer(body.question)                    # an example question (Edwin, 2026-11-13): the
     if saved:                                                   # answer saved once, no model call, not counted
         return answers.remember(request, record(asker, body.chat_id, demo.saved_result(body.question), saved,
-                                                {"demo": True}))
+                                                {"demo": True}, **keep))
     if free_questions_left(request, asker) == 0:              # before the search and the model; not saved
         raise HTTPException(403, VISITOR_REFUSED)
     if asker and needs_verification(asker) and db.questions_ever(asker) >= 1:   # SPEC 11, 2026-11-20
@@ -370,17 +381,21 @@ def ask(request: Request, body: Question):
         history = db.chat_history(body.chat_id)                 # the chat's earlier turns, oldest first
         r = answer(body.question, STATE["searcher"], STATE["index"], settings, history=history or None)
     elif body.chat_id is not None and passage_request(body.question):    # "summarize the first passage" (Edwin,
-        last = db.chat_history(body.chat_id, limit=1)                   # 2026-11-21): the chat's last answer
-        r = answer(body.question, STATE["searcher"], STATE["index"], settings, previous=last[-1] if last else None)
+        if linked:                                                      # 2026-11-21): the answer on screen
+            previous = parent["turn"] if parent else None
+        else:                                                           # an older page: the chat's last answer
+            last = db.chat_history(body.chat_id, limit=1)
+            previous = last[-1] if last else None
+        r = answer(body.question, STATE["searcher"], STATE["index"], settings, previous=previous)
     else:                                                       # exactly as before: the question on its own
         r = answer(body.question, STATE["searcher"], STATE["index"], settings)
-    shown = answers.remember(request, record(asker, body.chat_id, r, public_answer(r)))   # SPEC 11, 2026-11-20
+    shown = answers.remember(request, record(asker, body.chat_id, r, public_answer(r), **keep))   # SPEC 11, 2026-11-20
     if not asker and r["status"] not in (WELCOME, ERROR):       # only a real answer uses the free question
         request.session["visitor_asked"] = request.session.get("visitor_asked", 0) + 1
     return shown
 
 
-def record(asker, chat_id, r, shown, extra=None):
+def record(asker, chat_id, r, shown, extra=None, **parent):
     """Saves an answer (FR28, SR41) and, for an account, in its chat: a new chat when chat_id is None.
     Keeps what a follow-up needs (turn_of: verified sentences only). Writes the user log: question for the first
     question of a chat, follow_up for the next ones (SPEC 11, 2026-11-14)."""
@@ -388,7 +403,9 @@ def record(asker, chat_id, r, shown, extra=None):
     if new_chat:
         chat_id = db.create_chat(asker, r["question"])
     shown["chat_id"] = chat_id if asker else None
-    shown["id"] = db.log_query(r, user_id=asker, shown=shown, chat_id=shown["chat_id"], turn=turn_of(r))
+    shown["id"] = db.log_query(r, user_id=asker, shown=shown, chat_id=shown["chat_id"], turn=turn_of(r), **parent)
+    if parent:
+        shown["parent"] = parent["parent"]                   # the page places the answer in its tree (SPEC 11, 2026-11-21)
     if asker and db.active_role(asker) == "user":
         logs.log_user(asker, "question" if new_chat else "follow_up",
                       {"status": shown["status"], "chat_id": chat_id, **(extra or {})}, query_id=shown["id"])
@@ -404,6 +421,21 @@ def iso(row):
 def chats(user=Depends(require_user)):
     """Only the account's own chats, newest first. Not logged in: 401."""
     return [iso(c) for c in db.list_chats(user["id"])]
+
+
+class Pin(BaseModel):
+    pinned: bool
+
+
+@router.post("/chats/{chat_id}/pin")
+def chat_pin(chat_id: int, body: Pin, user=Depends(require_user)):
+    """Pins or unpins one of the account's own chats (Edwin, SPEC 11, 2026-11-21): someone else's 404, an 11th 409."""
+    result = db.pin_chat(user["id"], chat_id, body.pinned)
+    if result == "not found":
+        raise HTTPException(404, "Chat not found.")
+    if result == "too many":
+        raise HTTPException(409, f"At most {db.MAX_PINNED} pinned chats: unpin one first.")
+    return {"ok": True, "pinned": body.pinned}
 
 
 @router.get("/chats/{chat_id}")

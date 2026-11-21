@@ -1,0 +1,62 @@
+/* Copy, edit, versions and the navigator of the chat (components/ChatTools.jsx, Chat.jsx). Dark first, light below. */
+.ct-row{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:6px;color:#8a837d}
+.ct-icon{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:8px;background:none;
+  color:inherit;cursor:pointer}
+.ct-icon:hover{background:rgba(255,255,255,.08);color:#e7e5e4}
+.ct-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ct-versions{display:inline-flex;align-items:center;gap:2px;margin-left:6px;font:500 13.5px system-ui,sans-serif;color:#a8a29e}
+.ct-versions button{width:24px;height:26px;padding:0;border:0;border-radius:6px;background:none;color:inherit;font-size:18px;
+  line-height:1;cursor:pointer}
+.ct-versions button:hover:not(:disabled){background:rgba(255,255,255,.08);color:#fff}
+.ct-versions button:disabled{opacity:.3;cursor:default}
+
+.ct-edit{align-self:stretch;display:flex;flex-direction:column;gap:8px;margin-left:auto;width:min(620px,100%)}
+.ct-edit textarea{box-sizing:border-box;width:100%;min-height:76px;padding:12px 14px;border-radius:14px;resize:vertical;
+  border:1px solid rgba(251,191,36,.5);background:rgba(255,255,255,.05);color:#fff;font:15px/1.5 system-ui,sans-serif}
+.ct-edit textarea:focus{outline:2px solid rgba(251,191,36,.35);outline-offset:1px}
+.ct-edit-bar{display:flex;justify-content:flex-end;gap:8px}
+.ct-edit-bar button{padding:8px 16px;border-radius:999px;font:600 13.5px system-ui,sans-serif;cursor:pointer;
+  border:1px solid rgba(255,255,255,.18);background:none;color:#e7e5e4}
+.ct-edit-bar button.main{border-color:#f59e0b;background:#fbbf24;color:#141418}
+.ct-edit-bar button:disabled{opacity:.5;cursor:default}
+.ct-edit-note{margin:0;font-size:12.5px;color:#8a837d;text-align:right}
+
+.ct-nav{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;gap:9px;
+  max-height:60vh;overflow:hidden;padding:8px 4px}
+.ct-nav button{width:16px;height:3px;padding:0;border:0;border-radius:2px;background:rgba(255,255,255,.25);cursor:pointer;
+  transition:width .15s,background .15s}
+.ct-nav button:hover{width:22px;background:rgba(255,255,255,.55)}
+.ct-nav button.on{width:22px;background:#fbbf24}
+.ct-bottom{position:fixed;right:28px;bottom:128px;z-index:4;display:grid;place-items:center;width:38px;height:38px;padding:0;
+  border-radius:50%;border:1px solid rgba(255,255,255,.18);background:#1b1b21;color:#e7e5e4;cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.ct-bottom svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:700px){.ct-nav{display:none}.ct-bottom{right:16px;bottom:118px}}
+
+:root[data-theme="light"] .ct-row{color:#78716c}
+:root[data-theme="light"] .ct-icon:hover,:root[data-theme="light"] .ct-versions button:hover:not(:disabled){background:#f0ede6;color:#121216}
+:root[data-theme="light"] .ct-versions{color:#57534e}
+:root[data-theme="light"] .ct-edit textarea{background:#fff;color:#121216;border-color:#f59e0b}
+:root[data-theme="light"] .ct-edit-bar button{border-color:rgba(20,20,24,.15);color:#2b2b31}
+:root[data-theme="light"] .ct-edit-bar button.main{color:#141418}
+:root[data-theme="light"] .ct-nav button{background:rgba(20,20,24,.2)}
+:root[data-theme="light"] .ct-nav button:hover{background:rgba(20,20,24,.45)}
+:root[data-theme="light"] .ct-nav button.on{background:#d97706}
+:root[data-theme="light"] .ct-bottom{background:#fff;color:#2b2b31;border-color:rgba(20,20,24,.12);box-shadow:0 8px 24px rgba(20,20,24,.15)}
+
+/* Pinned chats in "My chats" (Edwin, SPEC 11, 2026-11-21): the pin shows on hover, always when pinned or on touch */
+.rs-chat-row{position:relative;display:flex;align-items:flex-start}
+.rs-chat-row > button:first-child{flex:1;min-width:0;padding-right:34px}
+.rs-list .rs-chat-row .rs-pin{position:absolute;right:4px;top:5px;width:28px;height:28px;padding:0;display:grid;place-items:center;
+  border-radius:8px;background:none;color:#8a837d;opacity:0;transition:opacity .15s}
+.rs-chat-row:hover .rs-pin,.rs-chat-row .rs-pin:focus-visible,.rs-chat-row.pinned .rs-pin{opacity:1}
+.rs-list .rs-chat-row.pinned .rs-pin{color:#fbbf24}
+.rs-list .rs-chat-row .rs-pin:hover{background:rgba(255,255,255,.08);color:#fff}
+.rs-pin svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rs-chat-row.pinned .rs-pin svg{fill:currentColor}
+@media (hover:none){.rs-chat-row .rs-pin{opacity:1}}
+.rs-list-head{margin:10px 6px 4px;font:600 11px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6b6560}
+:root[data-theme="light"] .rs-list .rs-chat-row .rs-pin{color:#78716c}
+:root[data-theme="light"] .rs-list .rs-chat-row.pinned .rs-pin{color:#d97706}
+:root[data-theme="light"] .rs-list .rs-chat-row .rs-pin:hover{background:#f0ede6;color:#121216}
+:root[data-theme="light"] .rs-list-head{color:#8a837d}
