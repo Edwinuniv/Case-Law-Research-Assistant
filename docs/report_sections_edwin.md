@@ -80,7 +80,8 @@ takes the lowest. Answers with a support score between 0.20 and 0.70 are shown a
 
 Each TEST figure was computed once, for the system it describes, after the decision on TUNE
 (eval/runs/test_split_run2_reverified_2026-11-09.txt, test_split_run_v2_reverified_2026-11-20.txt). The current
-system answers one answerable TEST question less than run 2 did; with 8 answerable questions that is the 0.2.
+system abstained 5 times on TEST and 4 were right (precision 4/5 = 0.80): one answerable question was refused, which
+run 2 had answered; 4 of the 5 unanswerable questions abstained in both (recall 0.80).
 
 **Adversarial set.** 21 questions written to make the system invent or misattribute a citation (invented
 cases, mixed names, wrong years, dissents presented as holdings, a prompt injection). 15 of 21 were
