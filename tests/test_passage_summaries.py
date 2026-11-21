@@ -323,3 +323,32 @@ def test_the_picker_is_told_to_copy_sentences_word_for_word(monkeypatch):
     llm.pick_sentences("summarize the dissent", {"P2": {**DISSENT, "date_filed": "2024-07-01"}})   # as every real passage
     system, user = calls[0]
     assert "word for word" in system and "[P2]" in user and DISSENT["text"] in user and "summarize the dissent" in user
+
+
+# ---------- before run 2 (EVALUATION.md: run 1 showed "Glucksberg, 521 U.S. 701" from the source, and "Part II") ----------
+WITH_CITES = {**MAJORITY, "text": "As the Court said in Fake v. Case, 999 U.S. 9999 (2001), the power is limited. "
+                                  "See Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984) for the old rule of deference."}
+TURN_CITES = json.loads(json.dumps({"question": "q", "sentences": [], "passages": [["P1", WITH_CITES]]}))
+
+
+def test_a_pick_with_a_citation_that_is_not_in_the_table_is_removed_even_if_the_source_says_it(monkeypatch):
+    picks(monkeypatch, ("P1", "As the Court said in Fake v. Case, 999 U.S. 9999 (2001), the power is limited."))
+    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)
+    assert not r["shown_sentences"] and "citation" in r["removed"][0]["problems"][0]
+
+
+def test_a_pick_with_a_real_citation_is_kept(monkeypatch):
+    picks(monkeypatch, ("P1", "See Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984) for the old rule of deference."))
+    assert pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)["shown_sentences"]
+
+
+@pytest.mark.parametrize("section, opinion_label, shown", [
+    ("Part II", "Dissenting opinion (Scalia)", "Dissenting opinion (Scalia) - Part II"),     # Rasul, run 1
+    ("Part C", "Majority opinion (Roberts)", "Majority opinion (Roberts) - Part C"),         # Shelby County, run 1
+    ("Ginsburg, J., dissenting - Part IV", "Concurring opinion (Thomas)", "Ginsburg, J., dissenting - Part IV"),
+    ("Opinion of the Court (Kagan)", "Majority opinion", "Opinion of the Court (Kagan)"),
+    ("Syllabus", "Syllabus", "Syllabus"),
+    ("", "Dissenting opinion (Alito)", "Dissenting opinion (Alito)"),
+])
+def test_the_label_says_who_is_speaking(section, opinion_label, shown):
+    assert pipeline.label_of({"section": section, "opinion_label": opinion_label}) == shown

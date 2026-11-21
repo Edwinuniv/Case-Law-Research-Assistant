@@ -93,3 +93,12 @@ def test_the_daily_limit_pauses_the_run_and_keeps_what_is_done(monkeypatch, tmp_
 
 def test_the_run_uses_the_rules_settings():
     assert S["passage_summaries"] is True and S["prompt_version"] == "v2" and S["tau_abstain"] == 0.20
+
+
+def test_the_passages_search_scores_are_saved_so_a_run_can_be_rechecked(models):
+    row = run.run_one(ITEM, OneSearch(), INDEX, S, checker=no_citations, log=lambda m: None)
+    assert row["sent"][0]["score"] == 0.9                           # run 1 could not be rechecked without them
+
+
+def test_run_2_is_a_new_file():
+    assert run.RUN.name == "summaries_run2.json"
