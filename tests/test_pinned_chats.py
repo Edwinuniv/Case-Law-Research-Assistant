@@ -51,8 +51,9 @@ def test_only_the_accounts_own_chat_and_only_logged_in(c, reader, other):
     assert pin(c, theirs).status_code == 401
 
 
-def test_at_most_ten_pinned(c, reader):
-    chats = [new_chat(c, f"Question number {n}") for n in range(11)]
+def test_at_most_ten_pinned(c, reader, clean_db):
+    # made in the database: 11 questions would pass a free account's 10 a day and the 10 a minute per address
+    chats = [clean_db.create_chat(reader, f"Question number {n}") for n in range(11)]
     assert all(pin(c, x).status_code == 200 for x in chats[:10])
     assert pin(c, chats[10]).status_code == 409
     assert pin(c, chats[0]).status_code == 200              # pinning one already pinned is not an 11th
