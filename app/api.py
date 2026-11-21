@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from google.auth.exceptions import GoogleAuthError
 from app import answers, config, db, demo, google_auth, logs, verification
 from app.citations import best_citation       # shared with Edwin's citation checker: page and checker agree
-from app.pipeline import ERROR, WELCOME, answer, check_input, turn_of
+from app.pipeline import ERROR, WELCOME, answer, check_input, passage_request, turn_of
 
 # The search index and the citation index, loaded by app/main.py when the site starts.
 STATE = {"searcher": None, "index": None}
@@ -369,6 +369,9 @@ def ask(request: Request, body: Question):
     if body.chat_id is not None and settings.get("follow_ups", False):   # off until Edwin's rule is met
         history = db.chat_history(body.chat_id)                 # the chat's earlier turns, oldest first
         r = answer(body.question, STATE["searcher"], STATE["index"], settings, history=history or None)
+    elif body.chat_id is not None and passage_request(body.question):    # "summarize the first passage" (Edwin,
+        last = db.chat_history(body.chat_id, limit=1)                   # 2026-11-21): the chat's last answer
+        r = answer(body.question, STATE["searcher"], STATE["index"], settings, previous=last[-1] if last else None)
     else:                                                       # exactly as before: the question on its own
         r = answer(body.question, STATE["searcher"], STATE["index"], settings)
     shown = answers.remember(request, record(asker, body.chat_id, r, public_answer(r)))   # SPEC 11, 2026-11-20
