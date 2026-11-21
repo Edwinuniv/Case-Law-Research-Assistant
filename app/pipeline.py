@@ -183,7 +183,9 @@ def answer_passages(question, request, previous, searcher, index, settings):
     wanted = list(passages)
     asked = (f"{r['question']}\n(Summarise only passage{'s' if len(wanted) > 1 else ''} {', '.join(wanted)}: what "
              f"{'they say' if len(wanted) > 1 else 'it says'}, who is speaking (the Court, a concurrence, a dissent or the "
-             f"syllabus, as the passage's label says) and why.)")
+             f"syllabus, as the passage's label says) and why. A dissent or concurrence often states the majority's or a "
+             f"party's view before answering it: say whose view each point is. Name each Justice; do not use a pronoun "
+             f"for a Justice.)")
     t = time.perf_counter()
     try:
         version = settings.get("prompt_version", "v1")
@@ -192,7 +194,7 @@ def answer_passages(question, request, previous, searcher, index, settings):
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
-    return check_draft(r, draft, passages, index, settings, t, t0)
+    return check_draft(r, draft, passages, index, settings, t, t0, judge=True)
 
 
 def follow_up_passages(found, context, settings, last_label=None):
@@ -299,8 +301,26 @@ def answer(question, searcher, index, settings, skip_gate=False, history=None, p
     return check_draft(r, draft, passages, index, settings, t, t0)
 
 
-def check_draft(r, draft, passages, index, settings, t, t0):
-    """Steps 4 and 5, the same for a first question and a follow-up: verify every sentence, score, decide."""
+NOT_SUPPORTED_BY_JUDGE = "the judge says the cited passage does not support it"
+
+
+def judged(kept, removed, passages):
+    """The meaning check of a summary (EVALUATION.md, 2026-11-21): only sentences the judge fully supports ("yes") stay;
+    "partly", "no" or a failed judge removes the sentence (fails closed)."""
+    still = []
+    for sentence in kept:
+        try:
+            verdict = llm.judge_summary(sentence["text"], " ".join(passages[p]["text"] for p in sentence["sources"]))
+        except llm.ModelError:
+            verdict = "error"
+        (still if verdict == "yes" else removed).append(
+            sentence if verdict == "yes" else {**sentence, "problems": [NOT_SUPPORTED_BY_JUDGE]})
+    return still, removed
+
+
+def check_draft(r, draft, passages, index, settings, t, t0, judge=False):
+    """Steps 4 and 5, the same for a first question and a follow-up: verify every sentence, score, decide.
+    judge=True (passage summaries only): the meaning check after the six checks."""
     r["ms_model"] = ms(t)
     r["tokens"] = dict(llm.LAST_USAGE)                            # input, cached, output (answer v2 rule: measured)
     r["model_said"] = draft.get("status") if isinstance(draft, dict) else None
@@ -311,6 +331,8 @@ def check_draft(r, draft, passages, index, settings, t, t0):
         return finish(r, NOT_SUPPORTED, "the model said the passages do not answer this", t0)
 
     kept, removed = verify(draft, passages, index)               # 4. VERIFY EVERY SENTENCE
+    if judge:                                                     # 4b. summaries: does it MEAN what the passage says
+        kept, removed = judged(kept, removed, passages)
     r["removed"], r["fabrications_caught"] = removed, count_fabrications(removed)
     r["sentences"] = kept
     r["support_score"] = support_score(kept, removed, passages, settings)     # 5. SCORE + DECIDE
