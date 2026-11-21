@@ -839,3 +839,5 @@ loads them; (3) scripts/fix_case_names repairs a loaded database: dry run lists 
 in decisions.case_name only. No re-index: the page and the model read the name from decisions at each question;
 only the 7 decisions' stored embeddings were computed with the old name (until the next re-index). The site is
 restarted after --apply (the citation index keeps the names in memory).
+Result (2026-11-21, Yasser's database): the dry run listed exactly the 7 names, each losing only its "Revisions:
+<date>"; --apply changed those 7 of 2,415 (report saved in ingestion_reports, kind case_names).
