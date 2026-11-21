@@ -320,6 +320,6 @@ def test_switched_on_a_request_in_a_follow_up_chat_is_a_summary_of_the_last_answ
 def test_the_picker_is_told_to_copy_sentences_word_for_word(monkeypatch):
     calls = []
     monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append((system, user)) or {"picks": []})
-    llm.pick_sentences("summarize the dissent", {"P2": DISSENT})
+    llm.pick_sentences("summarize the dissent", {"P2": {**DISSENT, "date_filed": "2024-07-01"}})   # as every real passage
     system, user = calls[0]
     assert "word for word" in system and "[P2]" in user and DISSENT["text"] in user and "summarize the dissent" in user
