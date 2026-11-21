@@ -651,3 +651,7 @@ is kept, as for any answer. (b) The summary instruction tells the model that a s
 side's view before answering it, to say whose view each point is, and to name Justices instead of using pronouns.
 The evaluation's judge, eval-v1 and the questions answered by the normal pipeline are unchanged. The four conditions
 above apply unchanged; the judge's calls are counted per request (tokens) and reported.
+**Clarified before the measurement (2026-11-21).** A try on the Counterman chat (A035, which is also S001: noted, the
+set is not changed) showed the judge keeping "Justice Barrett argues the Court should require speakers to intend or
+know..." while it saw only the passage's words, not whose opinion it is. The judge now gets each cited passage with its
+label first ("Barrett, J., dissenting"), as the summarising model does. Nothing else changes.
