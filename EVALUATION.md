@@ -655,3 +655,15 @@ above apply unchanged; the judge's calls are counted per request (tokens) and re
 set is not changed) showed the judge keeping "Justice Barrett argues the Court should require speakers to intend or
 know..." while it saw only the passage's words, not whose opinion it is. The judge now gets each cited passage with its
 label first ("Barrett, J., dissenting"), as the summarising model does. Nothing else changes.
+**Changed before the measurement: summaries that quote (2026-11-21, Edwin chose option A).** The judge kept a reversed
+sentence ("Justice Barrett argues ... subjective standard") even with each passage's label, and removed every sentence
+of a correct case summary; the writer and the judge are the same model. So a summary no longer retells: (a) the model
+only PICKS sentences of the requested passages (at most 3 per passage, 8 in all) and copies each word for word; (b) the
+page shows each pick as ITS OWN WORDS, in quotation marks, after the passage's label written by our code ("Barrett,
+J., dissenting:", "Opinion of the Court (Kagan):", "Syllabus:"), in the order of the passages; the model writes no
+sentence of its own. (c) Checks: a pick must come from a requested passage (check 1) and be found word for word in it
+(check 2, quote matching v2, at least 5 words); checks 3-6 and the judge are not used, because the shown words are the
+passage's own (a citation or a number inside them is the Court's, and the speaker is the label). The judge and the
+"whose view" instruction above are removed. A wrong label in the data (Counterman before #119) is still shown as stored:
+Yasser's re-index fixes the labels. Conditions: (1), (2), (3) unchanged; (4) becomes: read by Edwin, the picks of each
+shown summary give the passage's main point (not only a citation, a page heading or "Page Proof Pending Publication").
