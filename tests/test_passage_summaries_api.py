@@ -9,12 +9,6 @@ from tests.test_chats import ask, reader                   # noqa: F401  (reader
 REQUEST = "summurize the first passage"                    # the live message
 
 
-@pytest.fixture(autouse=True)
-def judge_says_yes(monkeypatch):
-    """No test calls the real judge (Groq): it says "yes" unless a test sets another verdict (meaning check, 2026-11-21)."""
-    monkeypatch.setattr(llm, "judge_summary", lambda statement, passage_text: "yes", raising=False)
-
-
 @pytest.fixture
 def model(monkeypatch):
     """The fake model of the website tests, recording the passages it received."""
@@ -23,7 +17,12 @@ def model(monkeypatch):
     def fake(question, passages, *a, **k):
         got.append(sorted(passages))
         return good_model(question, passages)
+
+    def pick(question, passages, *a, **k):              # summaries pick the passage's own words (option A)
+        got.append(sorted(passages))
+        return {"picks": [{"passage": pid, "sentence": " ".join(p["text"].split()[:8])} for pid, p in passages.items()]}
     monkeypatch.setattr(llm, "ask_model", fake)
+    monkeypatch.setattr(llm, "pick_sentences", pick, raising=False)
     return got
 
 

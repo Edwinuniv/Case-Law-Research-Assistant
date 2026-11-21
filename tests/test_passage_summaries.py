@@ -8,7 +8,6 @@ from app.config import DEFAULT_SETTINGS
 from tests.test_citations import INDEX
 from tests.test_verify import PASSAGE, QUOTE
 
-REAL_JUDGE = getattr(llm, "judge_summary", None)        # kept before the fake judge replaces it in every test
 ON = dict(DEFAULT_SETTINGS, passage_summaries=True)
 OFF = dict(DEFAULT_SETTINGS, passage_summaries=False)
 
@@ -41,29 +40,41 @@ class OneSearch:
         return found[:top_k]
 
 
-@pytest.fixture(autouse=True)
-def judge_says_yes(monkeypatch):
-    """No test calls the real judge (Groq): it says "yes" unless a test sets another verdict (meaning check, 2026-11-21)."""
-    monkeypatch.setattr(llm, "judge_summary", lambda statement, passage_text: "yes", raising=False)
+def first_words(passage, n=8):
+    return " ".join(passage["text"].split()[:n])
 
 
 @pytest.fixture
 def model(monkeypatch):
-    """A fake model that summarises P1 correctly and records the passages it received."""
+    """Fake models that record the passages they received: the picker (summaries, option A, 2026-11-21) picks the first
+    8 words of each passage, word for word; the normal model answers a normal question correctly."""
     got = []
 
-    def fake(question, passages, *a, **k):
+    def pick(question, passages, *a, **k):
+        got.append(sorted(passages))
+        return {"picks": [{"passage": pid, "sentence": first_words(p)} for pid, p in passages.items()]}
+
+    def write(question, passages, *a, **k):
         got.append(sorted(passages))
         return {"status": "SUPPORTED", "sentences": [
             {"text": "The Court held that the President has absolute immunity for conclusive and preclusive actions.",
              "sources": ["P1"], "quote": QUOTE}]}
-    monkeypatch.setattr(llm, "ask_model", fake)
+    monkeypatch.setattr(llm, "pick_sentences", pick, raising=False)
+    monkeypatch.setattr(llm, "ask_model", write)
     return got
+
+
+def picks(monkeypatch, *chosen):
+    """The picker returns exactly these (passage, sentence) picks."""
+    monkeypatch.setattr(llm, "pick_sentences", lambda *a, **k: {"picks": [{"passage": p, "sentence": t} for p, t in chosen]},
+                        raising=False)
 
 
 @pytest.fixture
 def no_model(monkeypatch):
-    monkeypatch.setattr(llm, "ask_model", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no model call")))
+    never = lambda *a, **k: (_ for _ in ()).throw(AssertionError("no model call"))   # noqa: E731
+    monkeypatch.setattr(llm, "ask_model", never)
+    monkeypatch.setattr(llm, "pick_sentences", never, raising=False)
 
 
 # ---------- which messages are passage requests ----------
@@ -115,27 +126,55 @@ def test_all_and_last_mean_the_last_answers_passages(model):
     assert model == [["P1", "P2", "P3"], ["P3"]]
 
 
-def test_a_sentence_citing_a_passage_that_was_not_requested_is_removed(monkeypatch):
-    monkeypatch.setattr(llm, "ask_model", lambda *a, **k: {"status": "SUPPORTED", "sentences": [
-        {"text": "The dissent said the President is now a king above the law.", "sources": ["P2"],
-         "quote": "The President is now a king above the law"}]})
+def test_a_pick_from_a_passage_that_was_not_requested_is_removed(monkeypatch):
+    picks(monkeypatch, ("P2", "The President is now a king above the law"))
     r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
     assert r["status"] == "NOT_SUPPORTED" and not r["shown_sentences"]
     assert "cites a passage that was not sent to the model" in r["removed"][0]["problems"]
 
 
-def test_a_dissent_summarised_as_the_court_is_removed(monkeypatch):           # check 6 still applies
-    monkeypatch.setattr(llm, "ask_model", lambda *a, **k: {"status": "SUPPORTED", "sentences": [
-        {"text": "The Court held that the President is now a king above the law.", "sources": ["P2"],
-         "quote": "The President is now a king above the law"}]})
+def test_the_page_shows_the_passages_own_words_after_its_label_never_the_models_words(monkeypatch):
+    monkeypatch.setattr(llm, "pick_sentences", lambda *a, **k: {"picks": [
+        {"passage": "P2", "sentence": "The President is now a king above the law",
+         "text": "The Court held that the President is a king."}]}, raising=False)        # a retelling is ignored
     r = pipeline.answer("explain passage 2", NoSearch(), INDEX, ON, previous=TURN)
-    assert not r["shown_sentences"]
+    (shown,) = r["shown_sentences"]
+    assert shown["text"] == "Sotomayor, J., dissenting: \u201cThe President is now a king above the law\u201d"
+    assert shown["sources"] == ["P2"] and shown["quote"] == "The President is now a king above the law"
+
+
+def test_a_pick_that_is_not_word_for_word_is_removed(monkeypatch):            # the Barrett case: a retold view
+    picks(monkeypatch, ("P2", "The President is a king and above every law"))
+    r = pipeline.answer("explain passage 2", NoSearch(), INDEX, ON, previous=TURN)
+    assert not r["shown_sentences"] and r["removed"][0]["problems"] == ["quote not found in the cited passage"]
+
+
+def test_a_pick_under_five_words_is_removed(monkeypatch):
+    picks(monkeypatch, ("P2", "I dissent"))
+    assert not pipeline.answer("explain passage 2", NoSearch(), INDEX, ON, previous=TURN)["shown_sentences"]
+
+
+def test_at_most_three_picks_per_passage_and_eight_in_all_in_passage_order(monkeypatch):
+    many = {f"P{n}": {**MAJORITY, "chunk_id": f"1-{n}"} for n in range(1, 6)}
+    turn = json.loads(json.dumps({"question": "q", "sentences": [], "passages": list(many.items())}))
+    words = MAJORITY["text"].split()
+    chosen = [(f"P{n}", " ".join(words[i:i + 6])) for n in (5, 4, 3, 2, 1) for i in (0, 3, 6, 9)]   # 4 each, reversed
+    picks(monkeypatch, *chosen)
+    r = pipeline.answer("summarize all the passages", NoSearch(), INDEX, ON, previous=turn)
+    order = [s["sources"][0] for s in r["shown_sentences"]]
+    assert len(order) == 8 and order == ["P1"] * 3 + ["P2"] * 3 + ["P3"] * 2
+
+
+def test_no_valid_pick_is_not_supported(monkeypatch):
+    picks(monkeypatch)
+    r = pipeline.answer("explain passage 2", NoSearch(), INDEX, ON, previous=TURN)
+    assert r["status"] == "NOT_SUPPORTED" and not r["shown_sentences"]
 
 
 def test_a_model_error_is_an_error(monkeypatch):
     def broken(*a, **k):
         raise llm.ModelError("rate limit reached, retry after 8 s")
-    monkeypatch.setattr(llm, "ask_model", broken)
+    monkeypatch.setattr(llm, "pick_sentences", broken, raising=False)
     assert pipeline.answer("summarize passage 1", NoSearch(), INDEX, ON, previous=TURN)["status"] == "ERROR"
 
 
@@ -277,70 +316,10 @@ def test_switched_on_a_request_in_a_follow_up_chat_is_a_summary_of_the_last_answ
     assert model == [["P2"]] and r.get("passage_request") == ["opinion:dissent"]
 
 
-# ---------- meaning check and instructions (EVALUATION.md, 2026-11-21: "Barrett argues ... subjective standard") ----------
-@pytest.fixture
-def judge(monkeypatch):
-    """A fake judge: answers from `verdicts` (default "yes") and records what it was shown."""
-    seen, verdicts = [], {}
 
-    def fake(statement, passage_text):
-        seen.append((statement, passage_text))
-        v = verdicts.get("next", "yes")
-        if v == "fail":
-            raise llm.ModelError("rate limit reached, retry after 8 s")
-        return v
-    monkeypatch.setattr(llm, "judge_summary", fake)
-    return seen, verdicts
-
-
-def test_a_sentence_the_judge_says_yes_to_is_kept_and_it_saw_the_cited_passage(model, judge):
-    seen, _ = judge
-    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
-    assert r["shown_sentences"] and len(seen) == 1 and MAJORITY["text"] in seen[0][1]
-
-
-def test_the_judge_sees_whose_opinion_each_passage_is(monkeypatch, judge):     # Barrett's dissent (2026-11-21)
-    monkeypatch.setattr(llm, "ask_model", lambda *a, **k: {"status": "SUPPORTED", "sentences": [
-        {"text": "Justice Sotomayor, dissenting, says the President is now a king above the law.", "sources": ["P2"],
-         "quote": "The President is now a king above the law"}]})
-    pipeline.answer("summarize the dissent", NoSearch(), INDEX, ON, previous=CITED)
-    shown_to_judge = judge[0][0][1]
-    assert "Sotomayor, J., dissenting" in shown_to_judge and DISSENT["text"] in shown_to_judge
-
-
-@pytest.mark.parametrize("verdict", ["no", "partly", "fail"])
-def test_a_sentence_the_judge_does_not_fully_support_is_removed(model, judge, verdict):
-    judge[1]["next"] = verdict
-    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
-    assert not r["shown_sentences"] and r["status"] == "NOT_SUPPORTED"
-    assert r["removed"][0]["problems"] == ["the judge says the cited passage does not support it"]
-
-
-def test_a_sentence_that_failed_the_six_checks_is_not_sent_to_the_judge(monkeypatch, judge):
-    monkeypatch.setattr(llm, "ask_model", lambda *a, **k: {"status": "SUPPORTED", "sentences": [
-        {"text": "The Court said so.", "sources": ["P1"], "quote": "words that are not in the passage at all"}]})
-    pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)
-    assert judge[0] == []
-
-
-def test_a_normal_question_is_never_judged(model, monkeypatch):
-    monkeypatch.setattr(llm, "judge_summary", lambda *a: (_ for _ in ()).throw(AssertionError("no judge")))
-    r = pipeline.answer("Is the President immune from prosecution?", OneSearch(), INDEX, ON, previous=TURN)
-    assert r["shown_sentences"]
-
-
-def test_the_model_is_told_whose_view_each_point_is_and_to_name_justices(monkeypatch, judge):
-    asked = []
-    monkeypatch.setattr(llm, "ask_model", lambda q, *a, **k: asked.append(q) or {"status": "NOT_SUPPORTED", "sentences": []})
-    pipeline.answer("summarize the dissent", NoSearch(), INDEX, ON, previous=CITED)
-    assert "whose view" in asked[0] and "pronoun" in asked[0]
-
-
-def test_the_summary_judge_is_told_a_described_view_is_not_the_authors(monkeypatch):
+def test_the_picker_is_told_to_copy_sentences_word_for_word(monkeypatch):
     calls = []
-    monkeypatch.setattr(llm, "judge_summary", REAL_JUDGE)            # the real one, with a fake model call
-    monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append((system, user)) or {"verdict": "no"})
-    assert llm.judge_summary("Justice Barrett argues for a subjective standard.", "The Court adopts a subjective standard.") == "no"
+    monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append((system, user)) or {"picks": []})
+    llm.pick_sentences("summarize the dissent", {"P2": DISSENT})
     system, user = calls[0]
-    assert system.startswith(llm.JUDGE_PROMPT.split("\n")[0]) and "someone else's view" in system
-    assert "Justice Barrett argues" in user and "The Court adopts" in user
+    assert "word for word" in system and "[P2]" in user and DISSENT["text"] in user and "summarize the dissent" in user
