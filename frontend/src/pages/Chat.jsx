@@ -18,7 +18,7 @@ import Answer from "../components/Answer.jsx";
 import PassagePanel from "../components/PassagePanel.jsx";
 import PlansDialog from "../components/PlansDialog.jsx";   // the plans panel (Edwin, 2026-11-16)
 import Working from "../components/Working.jsx";
-import { CopyButton, Navigator, PenIcon, Versions } from "../components/ChatTools.jsx";   // Edwin, SPEC 11, 2026-11-21
+import { CopyButton, Navigator, PenIcon, PinIcon, Versions } from "../components/ChatTools.jsx";   // Edwin, SPEC 11, 2026-11-21
 import "./research.css";
 
 const MAX = 1000;                                    // the longest question the server accepts (SR3)
@@ -168,6 +168,27 @@ export default function Chat({ info }) {
     } catch (err) { setError(err.message); }
   }
 
+  async function togglePin(c) {                     // pinned chats first (Edwin, SPEC 11, 2026-11-21)
+    try {
+      await api(`/chats/${c.id}/pin`, { pinned: !c.pinned_at });
+      loadChats();
+    } catch (err) { setError(err.message); }      // e.g. the 11th pin: "unpin one first"
+  }
+
+  function chatRow(h) {
+    return (
+      <div key={h.id} className={`rs-chat-row ${h.pinned_at ? "pinned" : ""}`}>
+        <button onClick={() => showEarlier(h)} title={`${h.questions} question(s)`} className={h.id === chatId ? "on" : ""}>
+          <i className="rs-dot" /><span>{h.title}</span>
+        </button>
+        <button type="button" className="rs-pin" onClick={() => togglePin(h)} aria-pressed={!!h.pinned_at}
+                aria-label={h.pinned_at ? `Unpin "${h.title}"` : `Pin "${h.title}"`} title={h.pinned_at ? "Unpin" : "Pin"}>
+          <PinIcon />
+        </button>
+      </div>
+    );
+  }
+
   function newQuestion() {                          // a clean page (an account: a new chat); the list stays
     setNodes([]); setPick({}); setEditing(null); setError(""); setQuestion(""); setPanel(false); setChatId(null);
     setTimeout(() => box.current?.focus(), 0);
@@ -197,12 +218,12 @@ export default function Chat({ info }) {
         </p>
         <div className="rs-list">
           {history.length === 0 && <p className="rs-empty">{account ? "Your chats" : "Your questions"} will appear here.</p>}
-          {history.map((h) => account ? (
-            <button key={h.id} onClick={() => showEarlier(h)} title={`${h.questions} question(s)`}
-                    className={h.id === chatId ? "on" : ""}>
-              <i className="rs-dot" /><span>{h.title}</span>
-            </button>
-          ) : (
+          {account && history.some((h) => h.pinned_at) && <>
+            <p className="rs-list-head">Pinned</p>
+            {history.filter((h) => h.pinned_at).map(chatRow)}
+            <p className="rs-list-head">Chats</p>
+          </>}
+          {history.map((h) => account ? (!h.pinned_at && chatRow(h)) : (
             <button key={h.id} onClick={() => showEarlier(h)} title={h.status}>
               <i className={`rs-dot st-${h.status}`} /><span>{h.question}</span>
             </button>
