@@ -388,7 +388,9 @@ TURN_RILEY = json.loads(json.dumps({"question": "q", "sentences": [], "passages"
 
 
 @pytest.mark.parametrize("docket", [
-    "No. 13-132. Argued April 29, 2014-Decided June 25, 2014 In No. 13-132, petitioner Riley was stopped",
+    # run 3 also removed "No. 13-132. Argued ... In No. 13-132, petitioner Riley was stopped": rule (h), written before
+    # run 5, keeps its fact once the docket line is cut (test_a_docket_line_glued_to_a_fact_is_cut_off_and_the_fact_kept)
+    "No. 13-132. Argued April 29, 2014-Decided June 25, 2014",
     "Argued April 29, 2014-Decided June 25, 2014 In No. 13-132",
 ])
 def test_a_docket_or_argument_line_is_removed(monkeypatch, docket):
