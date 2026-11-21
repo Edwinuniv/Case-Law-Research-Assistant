@@ -721,3 +721,17 @@ citation map of the passage's opinion); otherwise the pick is removed ("citation
 citation map"). Said plainly: for picks, condition (1) then checks that this filter works, it is no longer an
 independent test of them (it still is for every model-written sentence). Run 4: the same 14 requests and conditions,
 eval/runs/summaries_run4.json.
+**Run 4 result (2026-11-21; eval/runs/summaries_run4.json, _report.txt).** 14 of 14 (Groq's daily limit, resumed).
+(1) 0 false citations shown of 37 (S011's Blodgett pick removed by (f)); (2) 100% of 51 lines; (3) 12 of 14 shown
+(S011 nothing left after (f); S014 a Groq API error): holds, at the minimum. (4) read by the AI, as in run 2 (said so):
+10 of the 12 shown summaries give their passages' point; **S007 fails**: "the second and third passages" showed only
+Justice Scalia's passage, because every pick of P3 (Justice Kennedy, Boumediene) was removed as "quote not found",
+although each is in P3 word for word: the model wrapped the sentences in quotation marks and check 2 compared the
+marks too. **S003 is weak**: one procedural line, because the model glued the docket line to the first fact ("No.
+13-132. Argued ... In No. 13-132, petitioner Riley was stopped ...") and (d) removed the whole pick. (4) fails:
+**passage summaries stay off.**
+**Before run 5 (written 2026-11-21, before any code):** (g) quotation marks around a whole pick are not part of it
+(removed before the checks; the shown words stay the passage's own); (h) a docket or argument line at the START of a
+pick is cut off and the rest is checked as a pick (5 words or more), instead of removing the whole pick; a pick that
+is only a docket line is still removed. Run 5: the same 14 requests and conditions, on the data as it will be live
+(Yasser's #142 citation map and #143 names, loaded after run 4), said in the report; eval/runs/summaries_run5.json.
