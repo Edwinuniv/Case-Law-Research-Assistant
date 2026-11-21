@@ -413,3 +413,29 @@ def test_the_picker_prefers_the_holding_over_facts_and_procedure(monkeypatch):
     monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append(system) or {"picks": []})
     llm.pick_sentences("explain the first passage", {"P1": RILEY})
     assert "Held:" in calls[0] and "procedural history" in calls[0] and "docket" in calls[0]
+
+
+# ---------- before run 5 (EVALUATION.md: run 4, S007 picks in quotation marks, S003 docket glued to a fact) ----------
+@pytest.mark.parametrize("wrapped", [
+    "“The President enjoys absolute immunity for actions within his conclusive”",
+    '"The President enjoys absolute immunity for actions within his conclusive"',
+    "'The President enjoys absolute immunity for actions within his conclusive'",
+])
+def test_quotation_marks_around_a_whole_pick_are_not_part_of_it(monkeypatch, wrapped):
+    picks(monkeypatch, ("P1", wrapped))
+    (shown,) = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)["shown_sentences"]
+    assert shown["text"] == ("Opinion of the Court (Roberts): “The President enjoys absolute immunity for actions "
+                             "within his conclusive”")
+
+
+def test_a_docket_line_glued_to_a_fact_is_cut_off_and_the_fact_kept(monkeypatch):
+    picks(monkeypatch, ("P1", "No. 13-132. Argued April 29, 2014-Decided June 25, 2014 In No. 13-132, petitioner Riley "
+                              "was stopped for a traffic violation."))
+    (shown,) = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)["shown_sentences"]
+    assert shown["text"].endswith("“In No. 13-132, petitioner Riley was stopped for a traffic violation.”")
+
+
+def test_a_pick_that_is_only_a_docket_line_is_still_removed(monkeypatch):
+    picks(monkeypatch, ("P1", "No. 13-132. Argued April 29, 2014-Decided June 25, 2014"))
+    r = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)
+    assert not r["shown_sentences"] and r["removed"][0]["problems"] == ["a docket or argument line, not the passage's point"]
