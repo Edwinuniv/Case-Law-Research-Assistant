@@ -744,3 +744,12 @@ gravest and most delicate duty...", while the passage states the holding ("decla
 fails: **passage summaries stay off.** Also: **S014 ("summarize the case") ended in a Groq API error in runs 3, 4 and
 5**: a pattern, not chance; a whole-case request sends up to 12 passages, probably more than one free-tier request
 accepts. To be checked before any run 6.
+**S014 checked (no model call):** in runs 3-5 it sent 12 passages, about 6,800 input tokens; with the answer, more than
+one request of the free tier accepts (8,000 tokens a minute), so Groq refused it every time. S008 ("all the
+passages", 8) sent about 4,000 and worked. So "summarize the case" could never work live as built.
+**Before run 6 (written 2026-11-21, before any code):** (i) a summary sends at most 8 passages (for "the case": the
+syllabus first, then the last answer's passages of that decision, then the ones found inside it), and passages are
+dropped from the end until the request is estimated under 4,500 input tokens (llm.estimate_tokens); (j) the picker is
+told to pick 2 or 3 sentences per passage (fewer only if the passage is short), and always the sentence that states
+what the Court decides or holds when the passage has one (run 2 and run 5: S011 showed one line and missed "declare
+§ 4(b) unconstitutional"). Run 6: the same 14 requests and conditions, the same data; eval/runs/summaries_run6.json.
