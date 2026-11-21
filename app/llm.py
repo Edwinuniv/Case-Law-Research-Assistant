@@ -149,13 +149,16 @@ def judge_support(statement, passage_text):
     return _ask_json(JUDGE_PROMPT, f"PASSAGE:\n{passage_text}\n\nSTATEMENT:\n{statement}").get("verdict", "no")
 
 
-# Summaries only (EVALUATION.md, 2026-11-21): "Justice Barrett argues ... a subjective standard" passed the six checks;
-# her dissent described that view to reject it. The evaluation's judge above is unchanged.
-SUMMARY_JUDGE_PROMPT = JUDGE_PROMPT + """
-A passage that describes someone else's view (a dissent or concurrence describing the majority's or a party's position,
-or the Court describing a party's argument) does NOT support a statement presenting that view as the author's own."""
+# Summaries quote instead of retelling (EVALUATION.md, 2026-11-21, option A): a retold summary reversed Justice Barrett's
+# dissent and the judge did not catch it. The model now only picks sentences; the page shows the passage's own words.
+PICK_PROMPT = """You pick the sentences of court-opinion passages that best answer a request about those passages.
+Use ONLY the passages given. Copy each sentence word for word, exactly as it is written in the passage: the same words
+in the same order. You may leave out the beginning or the end of a long sentence, but never change, add or reorder words.
+Pick at most 3 sentences per passage: the ones that state its main point (what is decided, the rule, the reasoning, what
+this opinion argues). Do not pick a citation alone, a page heading or "Page Proof Pending Publication".
+Reply with JSON only: {"picks": [{"passage": "P1", "sentence": "..."}]}"""
 
 
-def judge_summary(statement, passage_text):
-    """The meaning check of a summary sentence: "yes", "partly" or "no"; raises ModelError if the model fails."""
-    return _ask_json(SUMMARY_JUDGE_PROMPT, f"PASSAGE:\n{passage_text}\n\nSTATEMENT:\n{statement}").get("verdict", "no")
+def pick_sentences(request, passages):
+    """The sentences that answer a request about these passages, copied word for word (checked by the pipeline)."""
+    return _ask_json(PICK_PROMPT, f"PASSAGES:\n\n{format_passages(passages)}\n\nREQUEST: {request}")
