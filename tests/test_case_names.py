@@ -30,3 +30,15 @@ def test_only_the_end_of_the_name_counts():
     """A name that merely contains the word (not a trailing date) is left alone."""
     name = "Revisions Corp. v. Smith"
     assert clean_case_name(name) == name
+
+
+def test_a_revisions_date_in_the_middle_is_left_alone():
+    """Rule 1 says TRAILING: text after the date means it is not CourtListener's revision tag."""
+    name = "Doe v. Roe Revisions: 6/27/24 and Others"
+    assert clean_case_name(name) == name
+
+
+def test_revisions_without_a_date_is_left_alone():
+    """Only a date is removed: 'Revisions:' followed by words is not the tag we saw."""
+    name = "Doe v. Roe Revisions: pending"
+    assert clean_case_name(name) == name
