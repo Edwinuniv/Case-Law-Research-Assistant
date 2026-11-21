@@ -830,6 +830,23 @@ ask (no search, no model call, not counted as a question). (3) Off until the mea
 passage_summaries); while off, a passage request gets the fixed text pointing to the passages under the answer.
 Files of others changed, told: app/api.py (the chat's last answer is given to the pipeline; Joe).
 
+2026-11-21 - Citation-map rows of skipped copies (Yasser; after Edwin found 2,011 of our 3,639 opinions with no
+citation-map row, e.g. the Shelby County majority). Written before the code. CourtListener often stores one opinion
+twice (e.g. Harvard XML and HTML with citations); step 1.8 keeps one copy and skips the others, but its citation
+finder mostly ran on the HTML copy, so the map rows hang on the copy we skipped (947 citing opinions of the map are
+not in our table, 940 of them belong to one of our decisions; Shelby: our 9515886 has none, its skipped copy 931614
+has them). Rule: (1) the rows of a skipped copy are given to OUR opinion of the same decision with the same text
+(the loader's own test: 5-word sequences, Jaccard >= 0.6; the closest if several); (2) if the copy is a combined text
+(majority + separate opinions), to each of our opinions it contains (80% of their 5-word sequences); (3) if the copy
+is one part of a combined text we kept, to that text; (4) otherwise to nobody, and it is counted in the report: no
+guess. Only citation_map changes (rows added, none removed, a row already there is not added twice); no re-index.
+Dry run by default (counts per rule, Shelby shown), --apply to write; the report is saved (ingestion_reports).
+Result (2026-11-21, Yasser's database, --apply after the dry run gave the same numbers): 947 skipped copies in the
+map; 483 given to 1 opinion, 457 combined copies given to each opinion they contain, 7 copies of decisions we do not
+have (counted, given to nobody); 54,852 rows added; our opinions without any row 2,011 -> 495; the Shelby County
+majority 0 -> 51 rows. Rule 2 is at the decision level: a citation made in a combined copy's dissent is also given to
+the majority it contains (for the checker: "cited by this decision"), never to another decision.
+
 2026-11-21 - Case names ending in "Revisions: <date>" (Yasser; Edwin's note, seen in the answer PDFs: "SEC v.
 Jarkesy Revisions: 6/27/24"). Written before the code. Read-only check on Yasser's database: 7 of 2,415 names end
 with " Revisions: M/D/YY" (2024 slip opinions: NRA v. Vullo, Garland v. Cargill, Chiaverini, Rahimi, Jarkesy, Ohio
