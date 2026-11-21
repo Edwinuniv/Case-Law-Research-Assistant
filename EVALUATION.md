@@ -624,3 +624,14 @@ cite only requested passages; (3) at least 8 of the 10 requests shown (ANSWERED 
 retries); (4) read by Edwin, each shown summary names the speaker correctly (majority, concurrence, dissent, syllabus)
 as the passage's own label says; a wrong speaker is a failure. Otherwise (a) stays off and a passage request gets the
 fixed text of (b) pointing to the passages under the answer; the numbers are reported either way.
+**Widened before any measurement (2026-11-21, Edwin: "it should work for all passages, citations and opinions").**
+Besides passages, a request may name, without naming a case (a message that names a case is a normal question, as
+"What did the dissent in Bostock argue?" in eval-v1): (c) a citation of the last answer: "the first citation", "the
+citations" = the passages cited by the shown sentences, in the order they first appear; (d) an opinion: "the dissent",
+"the concurrence", "the majority (opinion)", "the syllabus" = the last answer's passages with that label; if it has
+none, up to 4 passages of that opinion are searched inside the decision the last answer cited (no other decision);
+(e) the case: "the case", "this case", "this decision", "this opinion" = the cited decision's passages of the last
+answer, plus up to 4 found inside that decision for the earlier question (the syllabus first). For (c)-(e) a
+summarising verb is needed (summarise in any spelling, sum up, recap, explain, "what does ... say"). Nothing found
+(no dissent in the decision, no citation shown): our fixed text. Same verifier, same conditions; the set becomes 14
+requests: the 10 above plus one each for (c), (d) dissent, (d) majority and (e).
