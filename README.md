@@ -108,6 +108,27 @@ The `Dockerfile` builds the website (it downloads the embedding model and the re
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
 (plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
 
+### Replacing the passages (a re-index, e.g. Yasser's chunks dump)
+Replace only the `chunks` table, then **restart the web service**: the keyword search (BM25) is built when the site
+starts and is cached while the number of passages and the index settings stay the same, so without a restart the
+site keeps searching the old passages. Locally, also delete `data/work/bm25.*` (rebuilt at the next start, about 20 s).
+
+    psql "$DATABASE_URL" -c "TRUNCATE chunks;"
+    pg_restore -d "$DATABASE_URL" --data-only --single-transaction chunks_119.dump
+
+After a change of case names (`python -m scripts.fix_case_names --apply`) restart too: the citation index keeps the
+names in memory. Saved demo answers point to passages: make them again afterwards (`scripts.make_demo_answers`).
+
+### Settings switched from the command line
+Two features are switched on by a setting, only after their measurement passed (EVALUATION.md). Online:
+`railway run python -c "..."`; the site reads the settings at each question, no restart needed.
+
+    python -c "from app import db; db.set_setting('prompt_version', 'v2')"        # fuller answers (answer v2; 'v1' undoes)
+    python -c "from app import db; db.set_setting('passage_summaries', True)"     # "summarise the first passage" (False undoes)
+
+While `passage_summaries` is off, such a request gets a fixed line pointing to the passages under the answer (never
+an answer about another case).
+
 ### Sign in with Google (optional)
 1. Google Cloud console > APIs & Services > OAuth consent screen: app name Verdicta, user type External, your email.
 2. Credentials > Create credentials > OAuth client ID > Web application. Authorised JavaScript origins:
