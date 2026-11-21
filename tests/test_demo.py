@@ -77,11 +77,13 @@ DAY = "language model failed: rate limit reached per day, retry after 2400 s"
 def made(c, monkeypatch):
     """make_all with a pipeline that answers from a script of statuses, and a sleep that only records."""
     from app import api, config, demo
-    monkeypatch.setattr(config, "EXAMPLE_QUESTIONS", [EXAMPLE, "Was Chevron overruled?"])
+    questions = [EXAMPLE, "Was Chevron overruled?"]
+    monkeypatch.setattr(config, "EXAMPLE_QUESTIONS", questions)
     real, slept = demo.answer, []
     monkeypatch.setattr(demo.time, "sleep", slept.append)
 
-    def run(script):
+    def run(script, more=()):
+        questions.extend(more)
         calls = iter(script)
 
         def fake(q, *a, **k):
@@ -100,7 +102,7 @@ def test_the_minute_limit_is_waited_for_and_the_same_question_asked_again(made):
 
 
 def test_the_daily_limit_stops_at_once_without_waiting(made):
-    saved, slept = made([None, DAY])
+    saved, slept = made([None, DAY], more=["Is flag burning protected speech?"])   # the 3rd question is not asked
     assert saved == 1 and slept == []                               # the first answer is kept, no 40-minute sleep
 
 
