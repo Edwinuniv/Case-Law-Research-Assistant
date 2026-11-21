@@ -638,3 +638,16 @@ requests: the 10 above plus one each for (c), (d) dissent, (d) majority and (e).
 **Clarified before any measurement (2026-11-21).** While passage_summaries is off and the chat has follow-ups on, a
 request ("and what did the dissent say?") is left to the follow-up, which already stays in the chat's case (a test of
 the follow-up rule caught it); the fixed text is only for a request with nothing else to keep it in the same case.
+**Meaning check and instructions for summaries (written 2026-11-21, before any measurement; Edwin).** A real try on the
+Counterman chat showed sentences that pass the six checks but misread the passage: "Justice Barrett argues that the
+Court should apply a subjective standard" (her dissent describes that view and rejects it), and "he" for Justice
+Barrett. The checks prove the quote is real and from the cited passage, not that the sentence means what the passage
+means. So, for passage requests only: (a) after the six checks, each kept sentence goes to the judge model (the one
+of the groundedness score, FR15) with its cited passages, with one more instruction: a passage that describes someone
+else's view (a dissent describing the majority's or a party's position) does not support presenting that view as the
+author's own. Only "yes" is kept; "partly", "no" or a judge that fails (Groq's limit, timeout) removes the sentence
+("the judge says the cited passage does not support it"). The support score and the status are then computed on what
+is kept, as for any answer. (b) The summary instruction tells the model that a separate opinion often states the other
+side's view before answering it, to say whose view each point is, and to name Justices instead of using pronouns.
+The evaluation's judge, eval-v1 and the questions answered by the normal pipeline are unchanged. The four conditions
+above apply unchanged; the judge's calls are counted per request (tokens) and reported.
