@@ -363,7 +363,10 @@ def user_is_active_admin(user_id):
 
 
 # ---------------- query log ----------------
-def log_query(r, user_id=None, shown=None, chat_id=None, turn=None):
+NO_PARENT = object()           # a question sent without a parent (a page from before 2026-11-21): read in order
+
+
+def log_query(r, user_id=None, shown=None, chat_id=None, turn=None, parent=NO_PARENT):
     """Saves one question and its result (FR28, SR41). Returns the new row's id.
     user_id: the account that asked (empty for a visitor without an account; SPEC 11, 2026-11-12).
     shown: the answer exactly as it was shown on the page.
@@ -375,6 +378,8 @@ def log_query(r, user_id=None, shown=None, chat_id=None, turn=None):
         details["shown"] = shown
     if turn is not None:
         details["turn"] = turn
+    if parent is not NO_PARENT:                      # the answer this question followed (Edwin, SPEC 11, 2026-11-21)
+        details["parent"] = parent
     with connect() as con:
         row = con.execute("""INSERT INTO query_log (question, status, reason, support_score, top_score,
             n_sentences, n_removed, removed_citations, fabrications_caught, ms_search, ms_model,
@@ -412,6 +417,14 @@ def chat_history(chat_id, limit=10):
     return [r["turn"] for r in reversed(rows)]
 
 
+def chat_question(chat_id, query_id):
+    """A question of this chat (its id and what a follow-up needs of its answer), or None: a parent must be in the same
+    chat (Edwin, SPEC 11, 2026-11-21)."""
+    with connect() as con:
+        return con.execute("SELECT id, details->'turn' AS turn FROM query_log WHERE id = %s AND chat_id = %s",
+                           (query_id, chat_id)).fetchone()
+
+
 def list_chats(user_id):
     """The account's own chats, newest first, with their number of questions."""
     with connect() as con:
@@ -427,7 +440,8 @@ def chat_turns(user_id, chat_id):
                            (chat_id, user_id)).fetchone()
         if not chat:
             return None
-        chat["turns"] = con.execute("SELECT id, question, status, created_at, details->'shown' AS shown "
+        chat["turns"] = con.execute("SELECT id, question, status, created_at, details->'shown' AS shown, "
+                                    "details ? 'parent' AS linked, (details->>'parent')::int AS parent "   # versions
                                     "FROM query_log WHERE chat_id = %s ORDER BY id", (chat_id,)).fetchall()
     return chat
 
