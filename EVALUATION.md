@@ -753,3 +753,13 @@ dropped from the end until the request is estimated under 4,500 input tokens (ll
 told to pick 2 or 3 sentences per passage (fewer only if the passage is short), and always the sentence that states
 what the Court decides or holds when the passage has one (run 2 and run 5: S011 showed one line and missed "declare
 § 4(b) unconstitutional"). Run 6: the same 14 requests and conditions, the same data; eval/runs/summaries_run6.json.
+**Run 6 result (2026-11-22; eval/runs/summaries_run6.json, _report.txt), same data as run 5.** (1) 0 false citations
+shown of 49; (2) 100% of 60 lines; (3) 14 of 14 shown: (i) fixed S014's refusals. (4) read by Edwin: **fails on two**.
+**S011 fails a third time**: one line, the Blodgett quote, while the passage says "declare § 4(b) unconstitutional".
+**S014 ("summarize the case", Brown v. Entertainment Merchants)**: 7 passages sent, one line shown, "We consider whether
+a California law ... comports with the First Amendment": the question, not what the Court decided. S003 shows Riley's
+facts only, but its syllabus passage has no holding: not counted as a failure. (4) fails: **passage summaries stay
+off.** Checked after the run (no new run): the picker is sent the user's own words; for S011 it receives one passage
+and "summarize the first citation", and replies with one pick, the sentence that contains a legal citation (the same
+reply when asked again): it reads "citation" as a citation inside the passage, not as the passage cited. (j)'s "2 or 3
+per passage" did not change that.
