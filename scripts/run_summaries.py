@@ -5,7 +5,7 @@ checker as eval-v1 (evaluate.check_shown_citations). Saved after every request; 
 and continues with --resume.
 Conditions read automatically: (1) 0 false citations shown, (2) every shown line cites only a passage sent, (3) at
 least 12 of the 14 requests shown. Condition (4) is Edwin's reading of the report (the picks give each passage's point).
-Usage: python -m scripts.run_summaries                  -> eval/runs/summaries_run6.json + _report.txt (runs 1-5: summaries_run1-5.*)
+Usage: python -m scripts.run_summaries                  -> eval/runs/summaries_run7.json + _report.txt (runs 1-6: summaries_run1-6.*)
        python -m scripts.run_summaries --resume         -> continue the same file after the daily limit
        python -m scripts.run_summaries --report         -> the report again"""
 import json
@@ -15,7 +15,7 @@ from app import config, db, evaluate
 from app.pipeline import ANSWERED, ERROR, LOW_CONFIDENCE, answer, label_of, turn_of
 
 SET = config.ROOT / "eval" / "summaries.jsonl"
-RUN = config.ROOT / "eval" / "runs" / "summaries_run6.json"   # runs 1, 3 failed (1), runs 2, 4, 5 failed (4); EVALUATION.md
+RUN = config.ROOT / "eval" / "runs" / "summaries_run7.json"   # runs 1, 3 failed (1), runs 2, 4-6 failed (4); EVALUATION.md
 SETTINGS_FOR_RUN = {"passage_summaries": True, "prompt_version": "v2", "tau_abstain": 0.20}   # the rule's settings
 RETRIES = 6
 
