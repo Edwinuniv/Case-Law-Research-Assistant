@@ -102,3 +102,11 @@ def test_the_passages_search_scores_are_saved_so_a_run_can_be_rechecked(models):
 
 def test_run_7_is_a_new_file():
     assert run.RUN.name == "summaries_run7.json"
+
+
+def test_why_the_first_answer_failed_is_saved(monkeypatch):            # run 7: S011's first answer was an ERROR
+    def broken(*a, **k):                                                # and the file did not say why
+        raise llm.ModelError("invalid JSON twice")
+    monkeypatch.setattr(llm, "ask_model", broken)
+    row = run.run_one(ITEM, OneSearch(), INDEX, S, checker=no_citations, log=lambda m: None)
+    assert row["first_status"] == "ERROR" and "invalid JSON twice" in row["first_reason"]
