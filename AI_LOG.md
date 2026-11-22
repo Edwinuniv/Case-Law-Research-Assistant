@@ -1024,3 +1024,8 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    tests. Checking the real database found 2,011 of 3,639 opinions with no citation-map rows (1,919 from the Harvard
    text): told Yasser (step 1.6).
 
+5. **A fix proposed without checking its cause.** After run 5 the AI proposed rule (j) for S011 (tell the picker "2 or
+   3 sentences per passage, always the holding"), guessing that the model picked too few. Run 6 showed one pick again.
+   Asking again and reading the model's raw reply showed the real cause: the picker is sent the user's words, "summarize
+   the first citation", with one passage, and picks the sentence that contains a legal citation. Caught by run 6 and
+   the raw reply; the next rule is written from the reply, not from a guess.
