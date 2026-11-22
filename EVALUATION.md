@@ -728,6 +728,11 @@ own). Run 3: the same 14 requests, the same conditions, condition (4) read by Ed
 AI, said so. Saved as eval/runs/summaries_run3.json.
 
 ## Known limitations (kept, not fixed; Edwin, 2026-11-21)
+- **A case summary is only as good as the passages found** (run 7, S014). "Summarize the case" sends the cited
+  decision's passages, its syllabus first; when the decision has no syllabus in our data and the search inside it does
+  not find the passage with the holding, the summary gives both sides' arguments but not the outcome. Every line is
+  still the passage's own words, checked; nothing false is shown. A fix (e.g. always adding the majority's opening and
+  closing passages) needs a rule and a run.
 - **Two case names joined by "and".** Check 4 reads "citing Virginia v. Black and Chaplinsky" as ONE case name,
   "Virginia v. Black and Chaplinsky", which is not in the passage, so a true sentence is removed. Seen once, in a
   retold summary of a dissent (2026-11-21), which no longer exists (summaries quote). In every saved evaluation run:
@@ -800,3 +805,15 @@ passages come from: first what the Court decided and why, then what the separate
 checks and rules (a)-(j) do not change. Run 7: the same 14 requests and conditions, the same data;
 eval/runs/summaries_run7.json. S014 varies between calls, so one good S014 in run 7 is reported as one call, not as
 fixed.
+**Run 7 result (2026-11-22; eval/runs/summaries_run7.json, _report.txt), same data as runs 5-6.** (1) 0 false citations
+shown of 52; (2) 100% of 66 lines; (3) 13 of 14 shown: S011's first question (Shelby County) ended in an ERROR after
+two per-minute waits, so there was no answer to summarise and S011 got the fixed text (the file did not keep the first
+answer's reason; run_summaries now saves it as first_reason). (4) read by Edwin: **holds**. 12 of the 13 shown give
+their passages' point (S013 now gives Jarkesy's question and holding; S003 Riley's facts, its passage has no holding).
+S014 (Brown) shows 8 lines from every side (the question, the Act, the concurrence, the majority's rating-system
+argument, both dissents) but no line that the Court struck the law down: none of its 7 passages states it and Brown has
+no syllabus in our data (a search limit, below). **S011 checked separately after the run (one call, not a run row):**
+with rule (k) the picker shows "Its failure to act leaves us today with no choice but to declare § 4(b)
+unconstitutional.", "We issue no holding on § 5 itself, only on the coverage formula." and "The judgment of the Court
+of Appeals is reversed." (before: the Blodgett quote alone, runs 2, 5, 6). **All four conditions hold: passage
+summaries are kept** (setting passage_summaries on; it stays a setting, off by default in config).
