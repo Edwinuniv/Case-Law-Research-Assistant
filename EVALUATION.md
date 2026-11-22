@@ -762,4 +762,13 @@ facts only, but its syllabus passage has no holding: not counted as a failure. (
 off.** Checked after the run (no new run): the picker is sent the user's own words; for S011 it receives one passage
 and "summarize the first citation", and replies with one pick, the sentence that contains a legal citation (the same
 reply when asked again): it reads "citation" as a citation inside the passage, not as the passage cited. (j)'s "2 or 3
-per passage" did not change that.
+per passage" did not change that. S014 asked again (2026-11-22): 12 picks, 8 shown, the case's sides; run 6's one
+line did not come back: the picker's reply varies between calls (it thinks 1,600 to 3,000 tokens first), not a fixed
+cause.
+**Before run 7 (written 2026-11-22, before any code):** (k) the picker never gets the user's words. Our code has
+already chosen the passages from them (passage_request, resolve_request), so the picker gets our own request: "Summarize
+each passage below: give its point." for passages, citations and opinions; for the case, "Summarize the case these
+passages come from: first what the Court decided and why, then what the separate opinions argue." The passages, the
+checks and rules (a)-(j) do not change. Run 7: the same 14 requests and conditions, the same data;
+eval/runs/summaries_run7.json. S014 varies between calls, so one good S014 in run 7 is reported as one call, not as
+fixed.
