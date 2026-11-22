@@ -100,5 +100,5 @@ def test_the_passages_search_scores_are_saved_so_a_run_can_be_rechecked(models):
     assert row["sent"][0]["score"] == 0.9                           # run 1 could not be rechecked without them
 
 
-def test_run_6_is_a_new_file():
-    assert run.RUN.name == "summaries_run6.json"
+def test_run_7_is_a_new_file():
+    assert run.RUN.name == "summaries_run7.json"
