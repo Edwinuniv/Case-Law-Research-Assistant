@@ -484,3 +484,27 @@ def test_the_picker_picks_two_or_three_and_the_holding(monkeypatch):
     monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append(system) or {"picks": []})
     llm.pick_sentences("summarize the first citation", {"P1": MAJORITY})
     assert "2 or 3 sentences" in calls[0] and "decides or holds" in calls[0]
+
+
+# ---------- before run 7, rule (k) (EVALUATION.md: S011 read "the first citation" as a citation inside the passage) ----------
+def picker_requests(monkeypatch):
+    got = []
+    monkeypatch.setattr(llm, "pick_sentences", lambda request, passages, *a, **k: got.append(request) or {"picks": []},
+                        raising=False)
+    return got
+
+
+@pytest.mark.parametrize("message, previous", [
+    ("summarize the first citation", CITED), ("summurize passage 1", CITED), ("summarize the dissent", CITED),
+    ("explain the first passage", TURN_RILEY), ("can you summarize these passages", CITED)])
+def test_the_picker_gets_our_request_for_passages_never_the_users_words(monkeypatch, message, previous):
+    got = picker_requests(monkeypatch)
+    pipeline.answer(message, InsideSearch(), INDEX, ON, previous=previous)
+    assert got == ["Summarize each passage below: give its point."]
+
+
+def test_for_the_case_the_picker_is_asked_first_what_the_court_decided(monkeypatch):
+    got = picker_requests(monkeypatch)
+    pipeline.answer("summarize the case", InsideSearch(), INDEX, ON, previous=CITED)
+    assert got == ["Summarize the case these passages come from: first what the Court decided and why, then what the "
+                   "separate opinions argue."]
