@@ -108,6 +108,33 @@ The `Dockerfile` builds the website (it downloads the embedding model and the re
 building). On Railway: a pgvector database + this repo as a service, with the `.env` variables
 (plus `HTTPS_ONLY=1`; with it the site refuses to start if `SESSION_SECRET` is still the default), then `DATABASE_URL="postgresql://...public url..." python -m scripts.seed --all` from a laptop.
 
+### Replacing the passages (a re-index, e.g. Yasser's chunks dump)
+Replace only the `chunks` table, then **restart the web service**: the keyword search (BM25) is built when the site
+starts and is cached while the number of passages and the index settings stay the same, so without a restart the
+site keeps searching the old passages. Locally, also delete `data/work/bm25.*` (rebuilt at the next start, about 20 s).
+
+    psql "$DATABASE_URL" -c "TRUNCATE chunks;"
+    pg_restore -d "$DATABASE_URL" --data-only --single-transaction chunks_119.dump
+
+After a change of case names (`python -m scripts.fix_case_names --apply`) restart too: the citation index keeps the
+names in memory. Saved demo answers point to passages: make them again afterwards (`scripts.make_demo_answers`).
+
+### In the chat (Edwin, 2026-11-21)
+Under each question: copy, and edit (the new wording is sent as a new question; "< 1 / 2 >" switches between the
+versions, each with its own answer). Under each answer: copy (the sentences with their citations). On the right of a
+long chat, one mark per question (click to go there) and a button back to the bottom. In "My chats", pin a chat to
+keep it at the top (at most 10).
+
+### Settings switched from the command line
+Two features are switched on by a setting, only after their measurement passed (EVALUATION.md). Online:
+`railway run python -c "..."`; the site reads the settings at each question, no restart needed.
+
+    python -c "from app import db; db.set_setting('prompt_version', 'v2')"        # fuller answers (answer v2; 'v1' undoes)
+    python -c "from app import db; db.set_setting('passage_summaries', True)"     # "summarise the first passage" (False undoes)
+
+While `passage_summaries` is off, such a request gets a fixed line pointing to the passages under the answer (never
+an answer about another case).
+
 ### Sign in with Google (optional)
 1. Google Cloud console > APIs & Services > OAuth consent screen: app name Verdicta, user type External, your email.
 2. Credentials > Create credentials > OAuth client ID > Web application. Authorised JavaScript origins:
@@ -142,6 +169,7 @@ locally (to test) and never online. `EMAIL_VERIFICATION=0` turns the verificatio
     python -m scripts.filter_citations
     python -m scripts.filter_citation_map
     python -m scripts.seed --all               # loads everything into DATABASE_URL
+    python -m scripts.remap_citation_map       # map rows of skipped opinion copies -> our opinions (dry run; --apply)
 
 ## Useful commands
     python -m scripts.check_citation "603 U.S. 593"
@@ -151,6 +179,7 @@ locally (to test) and never online. `EMAIL_VERIFICATION=0` turns the verificatio
     python -m scripts.fix_line_breaks          # words broken at a line end, page markers *490 (dry run; --apply)
     python -m scripts.check_scope              # decisions that may not be SCOTUS 2000-2024 (read-only)
     python -m scripts.remove_out_of_scope      # remove the ones listed in app/scope.py (dry run; --apply)
+    python -m scripts.fix_case_names           # names ending in 'Revisions: 6/27/24' (dry run; --apply), then restart
     python -m scripts.find_quote "Bruen" "historical tradition"   # exact sentences for a gold_quote
     python -m scripts.check_questions eval/questions_yasser.jsonl # check a questions file before committing
     python -m scripts.check_followups          # check eval/followups.jsonl (follow-up pairs, eval/FOLLOWUPS.md)

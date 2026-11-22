@@ -24,7 +24,7 @@ def a_user_account(user):
 @router.get("")
 def info():
     """For the pricing page: are payments on, the price, the two daily limits (from the settings)."""
-    return {"enabled": billing.enabled(), "price_label": billing.PRICE_LABEL,
+    return {"enabled": billing.enabled(), "price_label": billing.price_label(),
             "free_daily": api.daily_limit("free"), "paid_daily": api.daily_limit("paid")}
 
 

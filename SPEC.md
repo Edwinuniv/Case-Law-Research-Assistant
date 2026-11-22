@@ -829,3 +829,54 @@ passages. (2) With no earlier answer, or a passage the last answer did not have,
 ask (no search, no model call, not counted as a question). (3) Off until the measurement holds (setting
 passage_summaries); while off, a passage request gets the fixed text pointing to the passages under the answer.
 Files of others changed, told: app/api.py (the chat's last answer is given to the pipeline; Joe).
+
+2026-11-21 - Citation-map rows of skipped copies (Yasser; after Edwin found 2,011 of our 3,639 opinions with no
+citation-map row, e.g. the Shelby County majority). Written before the code. CourtListener often stores one opinion
+twice (e.g. Harvard XML and HTML with citations); step 1.8 keeps one copy and skips the others, but its citation
+finder mostly ran on the HTML copy, so the map rows hang on the copy we skipped (947 citing opinions of the map are
+not in our table, 940 of them belong to one of our decisions; Shelby: our 9515886 has none, its skipped copy 931614
+has them). Rule: (1) the rows of a skipped copy are given to OUR opinion of the same decision with the same text
+(the loader's own test: 5-word sequences, Jaccard >= 0.6; the closest if several); (2) if the copy is a combined text
+(majority + separate opinions), to each of our opinions it contains (80% of their 5-word sequences); (3) if the copy
+is one part of a combined text we kept, to that text; (4) otherwise to nobody, and it is counted in the report: no
+guess. Only citation_map changes (rows added, none removed, a row already there is not added twice); no re-index.
+Dry run by default (counts per rule, Shelby shown), --apply to write; the report is saved (ingestion_reports).
+Result (2026-11-21, Yasser's database, --apply after the dry run gave the same numbers): 947 skipped copies in the
+map; 483 given to 1 opinion, 457 combined copies given to each opinion they contain, 7 copies of decisions we do not
+have (counted, given to nobody); 54,852 rows added; our opinions without any row 2,011 -> 495; the Shelby County
+majority 0 -> 51 rows. Rule 2 is at the decision level: a citation made in a combined copy's dissent is also given to
+the majority it contains (for the checker: "cited by this decision"), never to another decision.
+
+2026-11-21 - Case names ending in "Revisions: <date>" (Yasser; Edwin's note, seen in the answer PDFs: "SEC v.
+Jarkesy Revisions: 6/27/24"). Written before the code. Read-only check on Yasser's database: 7 of 2,415 names end
+with " Revisions: M/D/YY" (2024 slip opinions: NRA v. Vullo, Garland v. Cargill, Chiaverini, Rahimi, Jarkesy, Ohio
+v. EPA, Purdue Pharma); "School District No. 92" and the long official names are real and stay. Rule: (1) a case
+name loses a trailing "Revisions: <date>" (or "Revision:"), and nothing else; (2) the loader cleans names when it
+loads them; (3) scripts/fix_case_names repairs a loaded database: dry run lists each change, --apply writes it,
+in decisions.case_name only. No re-index: the page and the model read the name from decisions at each question;
+only the 7 decisions' stored embeddings were computed with the old name (until the next re-index). The site is
+restarted after --apply (the citation index keeps the names in memory).
+Result (2026-11-21, Yasser's database): the dry run listed exactly the 7 names, each losing only its "Revisions:
+<date>"; --apply changed those 7 of 2,415 (report saved in ingestion_reports, kind case_names).
+
+2026-11-21 - Edit, versions, copy and a navigator in the chat (Edwin, on request, like the screenshots he sent).
+Written before the code. (1) Under each question the user wrote: copy, and edit. Editing sends the new wording as a
+NEW question, answered by the pipeline like any other (it counts toward the limits; nothing earlier is changed or
+deleted, FR28 keeps every row). The old and new wordings are versions of the same place in the chat: "< 1 / 2 >"
+switches between them, and each version shows its own answer and the questions asked after it (a tree: every
+question has a parent, the answer it followed; versions share a parent). (2) For an account, the parent is saved
+with the question (query_log details), only a question of the same chat may be a parent (404 otherwise, before the
+model), and reopening a chat shows every version; a chat saved before this has no parents and reads as one line. A
+visitor's versions live only in the page, like the rest of a visitor's questions. (3) A passage request ("summarise
+the first passage") uses the parent's answer, the one on screen, not the chat's newest row. Follow-ups (off) still
+read the chat in order: noted, to change when they are switched on. (4) Under each answer: copy (the shown sentences
+and their citations as plain text). (5) On the right of the conversation, one mark per question on screen, the one in
+view highlighted, click to go there; a round button to go back to the bottom when the page is scrolled up. Files of
+others changed, told: app/api.py and app/db.py (the parent), pages/Chat.jsx and research.css (Joe).
+
+2026-11-21 - Pinned chats (Edwin, on request). Written before the code. (1) In "My chats", an account can pin a chat:
+pinned chats come first, under "Pinned", the most recently pinned on top; the others follow as before (most recent
+activity first). Unpinning puts the chat back among the others. (2) Asking in a pinned chat keeps it pinned and in its
+place. (3) Only the account's own chats (404 otherwise), at most 10 pinned at once (409 for an 11th: unpin one first).
+(4) The time of pinning is kept with the chat (chats.pinned_at, added at start-up like the other new columns), and a
+deleted account's chats go with it. Files of others changed, told: app/db.py, app/api.py, pages/Chat.jsx (Joe).

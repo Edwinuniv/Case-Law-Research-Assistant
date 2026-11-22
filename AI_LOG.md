@@ -1008,6 +1008,43 @@ order). SPEC 11 rule, tests, then code for each. What was wrong, and how it was 
    did not apply (the file has the quote marks as \u201c escapes), so "all passed" meant nothing; replanted with the
    exact text, caught.
 
+
+## 2026-11-21 — Citation-map rows lost with the skipped opinion copies (Yasser)
+Edwin, measuring passage summaries, found 2,011 of our 3,639 opinions with no citation-map row (e.g. the Shelby County
+majority, so "Blodgett v. Holden, 275 U.S. 142", which it really cites, could not be confirmed). What was wrong:
+1. **Step 1.8 dropped the rows with the copies.** The loader written with Claude (group_opinions) keeps one copy of
+   an opinion stored twice by CourtListener and skips the others; nobody checked where the citation map pointed.
+   CourtListener's citation finder mostly ran on the HTML copy, so the rows hung on the copy we skipped. Checked on
+   Yasser's database: data/work/citation_map.csv and the table both have 2,575 citing opinions (nothing lost in
+   loading), but only 1,628 are ours; 940 of the other 947 belong to one of our decisions (Shelby: 9515886 kept,
+   its copy 931614 has the rows). Fix (SPEC 11 rule first, tests from the rule, 5 planted bugs caught):
+   scripts/remap_citation_map gives a copy's rows to our opinion with the same text.
+2. **The first dry run counted too many rows.** It counted each copy's rows separately, so a row given by two copies
+   to the same opinion was counted twice while --apply adds it once (5 vs 4 on a made-up decision in a test
+   database). Caught by running both on that decision; the rows are now worked out once for both.
+
+## 2026-11-21 — Case names ending in "Revisions: <date>" (Yasser)
+Edwin saw "SEC v. Jarkesy Revisions: 6/27/24" in the answer PDFs. A read-only check found 7 such names of 2,415 (2024
+slip opinions); "School District No. 92" and the long official names are real. Yasser asked Claude for the rule,
+tests and a repair script (SPEC 11 first). What was wrong:
+1. **The first tests were too weak.** Written from the real names only, they passed two planted bugs: a pattern not
+   tied to the end of the name, and one removing anything after "Revisions:" instead of a date. Two tests were added
+   from the rule's words ("trailing", "a date"): a revisions date in the middle and "Revisions: pending" stay.
+   All 4 planted bugs are now caught.
+
+## 2026-11-21 — Edit, versions, copy, navigator and pinned chats (branch feature/chat-edit-copy)
+
+1. **A syntax error in api.py**: `record(..., saved, **keep, {"demo": True})` (a positional argument after `**`);
+   caught at once by the tests (collection error), fixed by putting `**keep` last.
+2. **The first question of a new chat was saved without its place in the tree**: the condition was "has a chat id",
+   but a new chat gets its id only when the answer is saved. Caught by the test written from the rule; the condition
+   is now "an account".
+3. **The navigator was drawn in the wrong place**: `position: fixed` inside a parent with a CSS transform sits
+   relative to that parent, not the screen (marks at x = 415 instead of the right edge). Caught on the screenshot of
+   the browser check; drawn in <body> with a portal, measured again in both themes.
+4. **A test that could not pass**: the 10-pin limit test asked 11 questions, past a free account's 10 a day and the
+   10 a minute per address; the chats are now made in the database. 9 planted bugs (3 for each part) all caught.
+
 ## 2026-11-21 — Measuring the passage summaries (branch step/summaries-set)
 
 1. **The option A rule had a gap: quotes can carry the source's errors.** Run 1 showed Justice Alito's words with
