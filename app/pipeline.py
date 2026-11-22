@@ -160,6 +160,11 @@ def resolve_request(request, previous, have, labels, searcher, settings):
 
 
 MAX_SUMMARY_PASSAGES, MAX_SUMMARY_TOKENS = 8, 4500    # rule (i): 12 passages (~6,800 tokens) were refused every time
+# Rule (k), run 6: given "summarize the first citation", the picker chose a sentence with a legal citation in it. Our
+# code has already chosen the passages from the user's words, so the picker gets our own request instead.
+PICK_PASSAGES = "Summarize each passage below: give its point."
+PICK_CASE = ("Summarize the case these passages come from: first what the Court decided and why, then what the "
+             "separate opinions argue.")
 
 
 def fit(passages, request, syllabus_first=False):
@@ -196,12 +201,13 @@ def answer_passages(question, request, previous, searcher, index, settings):
     r["ms_search"] = ms(t)
     if missing:
         return finish(r, WELCOME, missing, t0)
-    passages = fit(passages, r["question"], syllabus_first=request == ["case"])
+    pick_request = PICK_CASE if request == ["case"] else PICK_PASSAGES
+    passages = fit(passages, pick_request, syllabus_first=request == ["case"])
     r["passages"], r["retrieved_decisions"] = list(passages.items()), sorted({p["decision_id"] for p in passages.values()})
     r["top_score"] = max(p.get("score", 0.0) for p in passages.values())
     t = time.perf_counter()
     try:
-        draft = llm.pick_sentences(r["question"], passages)
+        draft = llm.pick_sentences(pick_request, passages)
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
