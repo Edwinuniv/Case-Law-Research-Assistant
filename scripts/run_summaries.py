@@ -43,7 +43,7 @@ def run_one(item, searcher, index, settings, checker=evaluate.check_shown_citati
     r = with_retry(lambda: answer(item["request"], searcher, index, settings, previous=turn), log)
     false_by_line, n_cites = checker({"passages": r["passages"], "sentences": r["shown_sentences"]},
                                      {"must_not_appear": []}, index)
-    return {"id": item["id"], "kind": item["kind"], "first": item["first"], "first_status": first["status"],
+    return {"id": item["id"], "kind": item["kind"], "first": item["first"], "first_status": first["status"], "first_reason": first["reason"],
             "request": item["request"], "status": r["status"], "reason": r["reason"],
             "sent": [{"pid": pid, "chunk_id": p["chunk_id"], "decision_id": p["decision_id"], "case": p["case_name"],
                       "label": label_of(p), "score": p.get("score")} for pid, p in r["passages"]],
