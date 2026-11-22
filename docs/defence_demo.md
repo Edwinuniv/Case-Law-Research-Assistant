@@ -69,9 +69,10 @@ Enterprises v. Raimondo about Chevron deference?"
   two real pieces of the opinion joined by "..."; check 2 only accepted one unbroken quote. Now each piece is checked
   word for word, in order (EVALUATION.md, "Quote matching v2").
 - **"Summarise the first passage"** after any answer: live it gets a fixed line pointing to the passages (no search, so
-  never an answer about another case: it was answered about Bruesewitz v. Wyeth before, 2026-11-20). If summaries
-  are switched on after run 4 (EVALUATION.md, "Passage summaries"), show "summarize the dissent" after A039 (Bostock):
-  Justice Alito's own words, each line after its label.
+  never an answer about another case: it was answered about Bruesewitz v. Wyeth before, 2026-11-20). Run 7 passed
+  (EVALUATION.md, "Passage summaries"): once the setting is on, show "summarize the dissent" after A039 (Bostock):
+  Justice Alito's own words, each line after its label. Backup: "summarize the first citation" after the Shelby County
+  question shows the holding ("declare § 4(b) unconstitutional"), the request that took seven runs.
 
 ## The checker at work: the Glucksberg "701" story (1 min, no model call)
 Open `eval/runs/summaries_run1_report.txt` at S004. A summary quoted Justice Alito's dissent in Obergefell exactly:

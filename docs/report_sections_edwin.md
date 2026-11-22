@@ -144,8 +144,16 @@ summary now quotes: the model only picks sentences, our code checks each word fo
 run 1 showed 1 false citation (S004: Justice Alito's dissent as CourtListener prints it, "Washington v. Glucksberg,
 521 U.S. 701"; the real citation is 702); run 2 passed the three automatic conditions (0 of 50, 100% of 64 lines from
 the passages asked about, 14 of 14 shown) but one summary missed its passage's holding (S011); run 3 quoted a real
-citation outside the citation map (Blodgett v. Holden, 1927). Summaries stay off until all four hold.
-[Run 4: to fill in from eval/runs/summaries_run4_report.txt and EVALUATION.md when it is done.]
+citation outside the citation map (Blodgett v. Holden, 1927); run 4 lost good picks the model had wrapped in
+quotation marks, and one glued to a docket line; runs 5 and 6 missed S011's holding again, and run 6's whole-case
+summary (S014) showed one line. Reading the model's raw reply found S011's cause: the picker was sent the user's words,
+"summarize the first citation", and picked the sentence containing a legal citation. Since rule (k) it gets our own
+request ("Summarize each passage below"; for the case, "first what the Court decided and why"). Run 7 (rule (k)): 0 false
+citations of 52, 100% of 66 lines from the passages asked about, 13 of 14 shown, and each summary gives its passages'
+point (read by Edwin). S011's first answer ended in an ERROR in run 7; checked separately, it now shows the holding
+("declare § 4(b) unconstitutional"). All four conditions hold after seven runs and eleven rules (a)-(k), each written
+before its run: summaries are kept. Limit: a whole-case summary is only as good as the passages found (Brown v.
+Entertainment Merchants: both sides' arguments, not the outcome).
 
 ---
 

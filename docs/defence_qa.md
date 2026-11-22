@@ -60,11 +60,14 @@ them. It still is for every sentence the model writes. We did it because a quote
 521 U.S. 701". The real citation is 702. The model copied correctly, the separate checker caught it, and summaries
 stayed off. Even the source can be wrong; every citation shown is checked, whoever wrote it.
 
-**Why are summaries still off?** Four conditions were written before measuring: 0 false citations, every line from a
-passage asked about, at least 12 of 14 shown, and each summary giving its passage's main point. Run 1 failed (1)
-(Glucksberg), run 2 failed (4) (S011 missed the holding of its passage), run 3 failed (1) (Blodgett v. Holden, real
-but outside the citation map). Each failure was fixed with a rule written first; summaries are switched on only when
-a run passes all four. Off, a request gets a fixed line pointing to the passages: never an answer about another case.
+**Why did summaries take seven runs?** Four conditions were written before measuring: 0 false citations, every line
+from a passage asked about, at least 12 of 14 shown, and each summary giving its passage's main point. Run 1 failed (1)
+(Glucksberg), run 3 failed (1) (Blodgett v. Holden, real but outside the citation map), runs 2, 4, 5 and 6 failed (4).
+Each failure got a rule written before the next run, (a) to (k). The longest one was S011: rule (j) ("pick 2 or 3, always
+the holding") was a guess and run 6 showed it changed nothing; reading the model's raw reply showed the picker was sent
+the user's words "summarize the first citation" and picked the sentence with a legal citation in it. Rule (k): the
+picker gets our own request. Run 7 passed all four; summaries are kept (a setting; off, a request gets a fixed line,
+never an answer about another case).
 
 **Who read condition (4)?** In run 2, Edwin delegated the reading to the AI, and EVALUATION.md says so. The AI's first
 reading was wrong (it failed S003 without looking at the passage, which has no holding) and was corrected after
