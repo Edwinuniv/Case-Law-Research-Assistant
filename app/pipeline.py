@@ -2,8 +2,8 @@
 import re
 import time
 from app import config, llm
-from app.citations import find_case_names
-from app.verify import verify, count_fabrications, groundedness, norm, quote_found
+from app.citations import find_case_names, find_citations
+from app.verify import PAGE_MARKER, verify, count_fabrications, groundedness, norm, quote_found
 
 ANSWERED, LOW_CONFIDENCE, NOT_SUPPORTED, ERROR = "ANSWERED", "LOW_CONFIDENCE", "NOT_SUPPORTED", "ERROR"
 WELCOME = "WELCOME"
@@ -159,6 +159,29 @@ def resolve_request(request, previous, have, labels, searcher, settings):
     return chosen, None
 
 
+MAX_SUMMARY_PASSAGES, MAX_SUMMARY_TOKENS = 8, 4500    # rule (i): 12 passages (~6,800 tokens) were refused every time
+# Rule (k), run 6: given "summarize the first citation", the picker chose a sentence with a legal citation in it. Our
+# code has already chosen the passages from the user's words, so the picker gets our own request instead.
+PICK_PASSAGES = "Summarize each passage below: give its point."
+PICK_CASE = ("Summarize the case these passages come from: first what the Court decided and why, then what the "
+             "separate opinions argue.")
+
+
+def fit(passages, request, syllabus_first=False):
+    """Rule (i): at most 8 passages (for the case, the syllabus first), then dropped from the end until the picker's
+    request is estimated under 4,500 input tokens: one free-tier request takes 8,000 tokens with the answer."""
+    items = list(passages.items())
+    if syllabus_first:
+        items.sort(key=lambda item: speaker(item[1]) != "syllabus")      # stable: the rest keeps its order
+    items = items[:MAX_SUMMARY_PASSAGES]
+    while len(items) > 1 and llm.estimate_tokens([
+            {"role": "system", "content": llm.PICK_PROMPT},
+            {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages(dict(items))}\n\nREQUEST: {request}"}]) \
+            > MAX_SUMMARY_TOKENS:
+        items.pop()
+    return dict(items)
+
+
 def answer_passages(question, request, previous, searcher, index, settings):
     """A passage request: the model gets ONLY the requested passages of the last answer (their labels kept), no search;
     every sentence goes through the same verifier against those passages, so citing another one fails check 1.
@@ -178,16 +201,18 @@ def answer_passages(question, request, previous, searcher, index, settings):
     r["ms_search"] = ms(t)
     if missing:
         return finish(r, WELCOME, missing, t0)
+    pick_request = PICK_CASE if request == ["case"] else PICK_PASSAGES
+    passages = fit(passages, pick_request, syllabus_first=request == ["case"])
     r["passages"], r["retrieved_decisions"] = list(passages.items()), sorted({p["decision_id"] for p in passages.values()})
     r["top_score"] = max(p.get("score", 0.0) for p in passages.values())
     t = time.perf_counter()
     try:
-        draft = llm.pick_sentences(r["question"], passages)
+        draft = llm.pick_sentences(pick_request, passages)
     except llm.ModelError as e:
         r["ms_model"] = ms(t)
         return finish(r, ERROR, f"language model failed: {e}", t0)
     r["ms_model"], r["tokens"], r["model_said"] = ms(t), dict(llm.LAST_USAGE), "PICKS"
-    kept, removed = checked_picks(draft, passages)
+    kept, removed = checked_picks(draft, passages, index)
     r["sentences"], r["removed"] = kept, removed
     r["support_score"] = support_score(kept, removed, passages, settings)
     status = decide(r["support_score"], len(kept), settings)
@@ -196,28 +221,80 @@ def answer_passages(question, request, previous, searcher, index, settings):
                               LOW_CONFIDENCE: "support score between the two thresholds", ANSWERED: ""}[status], t0)
 
 
+SPEAKER = re.compile(r"\bJ\.,|\bJustice\b|opinion of the court|syllabus|dissent|concurr|per curiam", re.I)
+
+
 def label_of(p):
-    """Who is speaking, from the passage's own label (never the model): "Barrett, J., dissenting", "Syllabus"."""
-    return p.get("section") or p.get("opinion_label") or "Passage"
+    """Who is speaking, from the passage's own labels (never the model): the section when it names the speaker
+    ("Barrett, J., dissenting", "Syllabus"); else the opinion's label first: "Dissenting opinion (Scalia) - Part II"
+    (run 1 showed only "Part II" for Justice Scalia's dissent in Rasul)."""
+    section, opinion = (p.get("section") or "").strip(), (p.get("opinion_label") or "").strip()
+    if section and (SPEAKER.search(section) or not opinion):
+        return section
+    return " - ".join(x for x in (opinion, section) if x) or "Passage"
 
 
-def checked_picks(draft, passages, per_passage=3, total=8):
+def in_citation_map(opinion_ids, cluster_ids):
+    """True if one of these opinions cites one of these clusters in CourtListener's citation map (the separate
+    checker's second test, evaluate.check_shown_citations)."""
+    from app import db
+    with db.connect() as con:
+        return con.execute("SELECT 1 FROM citation_map WHERE citing_opinion_id = ANY(%s) AND cited_cluster_id = ANY(%s) "
+                           "LIMIT 1", (opinion_ids, cluster_ids)).fetchone() is not None
+
+
+QUOTES = "\"'\u201c\u201d\u2018\u2019"                          # run 4, S007: picks wrapped in quotation marks
+DOCKET_START = re.compile(r"^\s*(?:No\.\s*[\d\u2013-]+\.\s*)?Argued\b.{0,40}?\bDecided\s+[A-Z][a-z]+\.?\s+\d{1,2},\s+"
+                          r"\d{4}\*?\s*")                        # run 4, S003: "No. 13-132. Argued ... Decided June 25, 2014*"
+
+
+def unwrap(words):
+    """Rules (g), (h): quotation marks around the whole pick, and a docket line at its start, are not part of it.
+    Returns (the pick, whether a docket line was cut off)."""
+    if len(words) > 1 and words[0] in QUOTES and words[-1] in QUOTES:
+        words = words[1:-1].strip()
+    rest = DOCKET_START.sub("", words, count=1).strip()
+    return rest, rest != words
+
+
+DOCKET = re.compile(r"^\s*No\.\s*\d|\bArgued\b.{0,40}\bDecided\b", re.I)   # run 2, S003: "No. 13-132. Argued ..."
+
+
+def checked_picks(draft, passages, index, per_passage=3, total=8):
     """The model's picks -> (shown, removed). A pick is shown only if it comes from a requested passage (check 1) and is
     found word for word in it (check 2, at least 5 words); the line is ours: the label, then the passage's own words in
     quotation marks. In the order of the passages, at most 3 per passage and 8 in all (EVALUATION.md, option A)."""
     kept, removed = [], []
     for pick in (draft.get("picks") or []) if isinstance(draft, dict) else []:
-        pid, words = pick.get("passage"), (pick.get("sentence") or "").strip()
+        pid, (words, cut) = pick.get("passage"), unwrap((pick.get("sentence") or "").strip())
         if pid not in passages:
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": ["cites a passage that was not sent to the model"]})
             continue
         text = norm(passages[pid]["text"])
+        if DOCKET.search(words) or (cut and len(words.split()) < 5):   # rules (d), (h): not the passage's point
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": ["a docket or argument line, not the passage's point"]})
+            continue
         if len(words.split()) < 5 or not quote_found(words, text):
             removed.append({"text": words, "sources": [pid], "quote": words,
                             "problems": ["quote not found in the cited passage"]})
             continue
-        kept.append({"text": f"{label_of(passages[pid])}: \u201c{words}\u201d", "sources": [pid], "quote": words,
+        unknown = [c for c in find_citations(words) if not index.clusters_for(c)]   # check 3 (run 1: the source's
+        if unknown:                                                                  # own "521 U.S. 701")
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": [f"citation not in the citation table (written in the passage): {unknown[0]}"]})
+            continue
+        sent = {p["decision_id"] for p in passages.values()}       # rule (f), run 3: Blodgett v. Holden
+        outside = [c for c in find_citations(words)
+                   if not {index.decision_for_cluster(k) for k in index.clusters_for(c)} & sent
+                   and not in_citation_map([passages[pid]["opinion_id"]], list(index.clusters_for(c)))]
+        if outside:
+            removed.append({"text": words, "sources": [pid], "quote": words,
+                            "problems": [f"citation not from a passage sent or its citation map: {outside[0]}"]})
+            continue
+        shown = " ".join(PAGE_MARKER.sub(" ", words).split())          # rule (e): "*803" is not a word of the Court
+        kept.append({"text": f"{label_of(passages[pid])}: \u201c{shown}\u201d", "sources": [pid], "quote": words,
                      "groundedness": round(groundedness(words, text), 3)})
     kept.sort(key=lambda x: int(x["sources"][0][1:]))             # stable: the model's order inside a passage
     shown, per = [], {}

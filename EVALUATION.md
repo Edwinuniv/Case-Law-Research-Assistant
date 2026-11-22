@@ -695,3 +695,125 @@ passage's own (a citation or a number inside them is the Court's, and the speake
 "whose view" instruction above are removed. A wrong label in the data (Counterman before #119) is still shown as stored:
 Yasser's re-index fixes the labels. Conditions: (1), (2), (3) unchanged; (4) becomes: read by Edwin, the picks of each
 shown summary give the passage's main point (not only a citation, a page heading or "Page Proof Pending Publication").
+**Before the run (2026-11-21).** The set has 14 requests (summaries-v1, tagged): condition (3) is the same share, at
+least 12 of the 14 shown (80%). Data: Yasser's #119 chunks (72,505 passages, labels fixed), restored locally from
+chunks_119.dump. Prompt v2, the one going live (prompt_version on Railway); tau_abstain 0.20. Saved as
+eval/runs/summaries_run1.json (every first answer, request, pick, removed pick and passage label) and a report
+eval/runs/summaries_run1_report.txt, by scripts/run_summaries.py.
+**Run 1 result (2026-11-21; eval/runs/summaries_run1.json, _report.txt).** 14 of 14 requests run, 0 paused.
+(1) **1 false citation shown of 48: fails.** S004 ("what does P3 say?", Obergefell): Justice Alito's words quoted
+exactly, "Washington v. Glucksberg, 521 U.S. 701", and CourtListener's text of the dissent itself says 701 (the real
+citation is 521 U.S. 702); the separate checker found it. (2) 100% of 61 lines cite only a passage sent. (3) 13 of 14
+shown (S003: its first answer was an ERROR, so the request got the fixed text). (4) not needed: (1) fails, so
+**passage summaries stay off**. Read anyway: labels that are only a section heading ("Part C", "Part II") do not say who
+speaks: S007's "Part II" is Justice Scalia's dissent in Rasul, S006's "Part C" is the majority in Shelby County.
+**Two gaps of the option A rule, fixed before run 2 (written 2026-11-21, before any code):** (a) check 3 applies to
+picks: a pick containing a citation that is not in the citation table is removed, even when it is the source's own
+words (a quote can carry the source's errors); (b) when the section heading does not name the speaker, the label
+starts with the opinion's own label: "Dissenting opinion (Scalia) - Part II". Run 2: the same 14 requests (TUNE), the
+same conditions, a fresh run (the passages' search scores were not saved in run 1, so it cannot be rechecked; run 2
+saves them). Saved as eval/runs/summaries_run2.json and _report.txt.
+**Run 2 result (2026-11-21; eval/runs/summaries_run2.json, _report.txt).** 14 of 14 run (paused twice at Groq's daily
+limit, resumed). (1) 0 false citations shown of 50 (the Glucksberg "521 U.S. 701" pick was removed by (a)); (2) 100% of
+64 lines cite only a passage sent; (3) 14 of 14 shown. (4) Edwin delegated the reading to the AI ("do what you feel is
+best"), so this reading is the AI's, recorded as such: 12 summaries give their passages' main point; **S003 does not**
+(Riley's syllabus: "No. 13-132. Argued April 29, 2014...", the traffic stop, the motion to suppress: docket and facts,
+not the holding); S011 is borderline (one line, "Striking down an Act of Congress is the gravest and most delicate
+duty", true but not the passage's point). The rule says each summary, so **(4) fails and summaries stay off.**
+**Before run 3 (written 2026-11-21, before any code):** (c) the picker is told to prefer what is decided and why (a
+"Held:" line, the holding, the reasoning) over facts of the case, the procedural history and docket lines; (d) our code
+removes a pick that is a docket or argument line ("No. 13-132", "Argued ... Decided ..."); (e) page markers ("*803")
+are left out of the shown words, as norm() already leaves them out when matching (the words shown stay the passage's
+own). Run 3: the same 14 requests, the same conditions, condition (4) read by Edwin if he can, otherwise again by the
+AI, said so. Saved as eval/runs/summaries_run3.json.
+
+## Known limitations (kept, not fixed; Edwin, 2026-11-21)
+- **A case summary is only as good as the passages found** (run 7, S014). "Summarize the case" sends the cited
+  decision's passages, its syllabus first; when the decision has no syllabus in our data and the search inside it does
+  not find the passage with the holding, the summary gives both sides' arguments but not the outcome. Every line is
+  still the passage's own words, checked; nothing false is shown. A fix (e.g. always adding the majority's opening and
+  closing passages) needs a rule and a run.
+- **Two case names joined by "and".** Check 4 reads "citing Virginia v. Black and Chaplinsky" as ONE case name,
+  "Virginia v. Black and Chaplinsky", which is not in the passage, so a true sentence is removed. Seen once, in a
+  retold summary of a dissent (2026-11-21), which no longer exists (summaries quote). In every saved evaluation run:
+  0 removals of this kind (all eval/runs/eval_run*.json counted). Cutting names at "and" would need care for real names
+  that contain it ("President and Fellows of Harvard College"). It only removes (never shows a wrong name), so the
+  guarantee holds; not changed without a rule and a measurement.
+**Run 2 reading corrected (2026-11-21, the AI's mistake, AI_LOG).** S003's passage (Riley syllabus, chunk 2680439-2)
+has no holding: only the facts and the procedural history, so the picks gave its content; S003 passes (4). S011's
+passage (Shelby County, 9515886-28) does state the holding ("declare § 4(b) unconstitutional", "no holding on § 5")
+and run 2 showed only "Striking down an Act of Congress is the gravest and most delicate duty": S011 fails (4). The
+verdict is unchanged: (4) fails, summaries stay off.
+**Run 3 result (2026-11-21; eval/runs/summaries_run3.json, _report.txt).** (1) **1 false citation of 45: fails.** S011
+quoted the same Shelby County sentence with its citation, "Blodgett v. Holden, 275 U.S. 142 ... (1927)": real (in the
+citation table) but neither a retrieved decision nor in the opinion's citation map (CourtListener's map is incomplete),
+so the separate checker counts it. (2) 100% of 56; (3) 13 of 14 (S014 ended in a Groq API error). Summaries stay off.
+**Before run 4 (written 2026-11-21, before any code):** (f) a citation inside a pick is shown only if it passes the two
+tests of the separate checker: in the citation table AND (its decision is one of the passages sent, or it is in the
+citation map of the passage's opinion); otherwise the pick is removed ("citation not from a passage sent or its
+citation map"). Said plainly: for picks, condition (1) then checks that this filter works, it is no longer an
+independent test of them (it still is for every model-written sentence). Run 4: the same 14 requests and conditions,
+eval/runs/summaries_run4.json.
+**Run 4 result (2026-11-21; eval/runs/summaries_run4.json, _report.txt).** 14 of 14 (Groq's daily limit, resumed).
+(1) 0 false citations shown of 37 (S011's Blodgett pick removed by (f)); (2) 100% of 51 lines; (3) 12 of 14 shown
+(S011 nothing left after (f); S014 a Groq API error): holds, at the minimum. (4) read by the AI, as in run 2 (said so):
+10 of the 12 shown summaries give their passages' point; **S007 fails**: "the second and third passages" showed only
+Justice Scalia's passage, because every pick of P3 (Justice Kennedy, Boumediene) was removed as "quote not found",
+although each is in P3 word for word: the model wrapped the sentences in quotation marks and check 2 compared the
+marks too. **S003 is weak**: one procedural line, because the model glued the docket line to the first fact ("No.
+13-132. Argued ... In No. 13-132, petitioner Riley was stopped ...") and (d) removed the whole pick. (4) fails:
+**passage summaries stay off.**
+**Before run 5 (written 2026-11-21, before any code):** (g) quotation marks around a whole pick are not part of it
+(removed before the checks; the shown words stay the passage's own); (h) a docket or argument line at the START of a
+pick is cut off and the rest is checked as a pick (5 words or more), instead of removing the whole pick; a pick that
+is only a docket line is still removed. Run 5: the same 14 requests and conditions, on the data as it will be live
+(Yasser's #142 citation map and #143 names, loaded after run 4), said in the report; eval/runs/summaries_run5.json.
+**Run 5 result (2026-11-21; eval/runs/summaries_run5.json, _report.txt), on the data as live** (#119 passages, #142
+citation map: 113,810 rows, #143 names). (1) 0 false citations shown of 47 (S011's Blodgett pick is now confirmed by
+the map and shown); (2) 100% of 58 lines; (3) 13 of 14 shown. (g) and (h) fixed run 4's failures: S007 shows both
+passages (Justice Scalia's and Justice Kennedy's), S003 shows Riley's facts. (4) read by the AI (said so): 12 of 13
+give their passages' point; **S011 fails again** (as in run 2): one line, "Striking down an Act of Congress is the
+gravest and most delicate duty...", while the passage states the holding ("declare § 4(b) unconstitutional"). (4)
+fails: **passage summaries stay off.** Also: **S014 ("summarize the case") ended in a Groq API error in runs 3, 4 and
+5**: a pattern, not chance; a whole-case request sends up to 12 passages, probably more than one free-tier request
+accepts. To be checked before any run 6.
+**S014 checked (no model call):** in runs 3-5 it sent 12 passages, about 6,800 input tokens; with the answer, more than
+one request of the free tier accepts (8,000 tokens a minute), so Groq refused it every time. S008 ("all the
+passages", 8) sent about 4,000 and worked. So "summarize the case" could never work live as built.
+**Before run 6 (written 2026-11-21, before any code):** (i) a summary sends at most 8 passages (for "the case": the
+syllabus first, then the last answer's passages of that decision, then the ones found inside it), and passages are
+dropped from the end until the request is estimated under 4,500 input tokens (llm.estimate_tokens); (j) the picker is
+told to pick 2 or 3 sentences per passage (fewer only if the passage is short), and always the sentence that states
+what the Court decides or holds when the passage has one (run 2 and run 5: S011 showed one line and missed "declare
+§ 4(b) unconstitutional"). Run 6: the same 14 requests and conditions, the same data; eval/runs/summaries_run6.json.
+**Run 6 result (2026-11-22; eval/runs/summaries_run6.json, _report.txt), same data as run 5.** (1) 0 false citations
+shown of 49; (2) 100% of 60 lines; (3) 14 of 14 shown: (i) fixed S014's refusals. (4) read by Edwin: **fails on two**.
+**S011 fails a third time**: one line, the Blodgett quote, while the passage says "declare § 4(b) unconstitutional".
+**S014 ("summarize the case", Brown v. Entertainment Merchants)**: 7 passages sent, one line shown, "We consider whether
+a California law ... comports with the First Amendment": the question, not what the Court decided. S003 shows Riley's
+facts only, but its syllabus passage has no holding: not counted as a failure. (4) fails: **passage summaries stay
+off.** Checked after the run (no new run): the picker is sent the user's own words; for S011 it receives one passage
+and "summarize the first citation", and replies with one pick, the sentence that contains a legal citation (the same
+reply when asked again): it reads "citation" as a citation inside the passage, not as the passage cited. (j)'s "2 or 3
+per passage" did not change that. S014 asked again (2026-11-22): 12 picks, 8 shown, the case's sides; run 6's one
+line did not come back: the picker's reply varies between calls (it thinks 1,600 to 3,000 tokens first), not a fixed
+cause.
+**Before run 7 (written 2026-11-22, before any code):** (k) the picker never gets the user's words. Our code has
+already chosen the passages from them (passage_request, resolve_request), so the picker gets our own request: "Summarize
+each passage below: give its point." for passages, citations and opinions; for the case, "Summarize the case these
+passages come from: first what the Court decided and why, then what the separate opinions argue." The passages, the
+checks and rules (a)-(j) do not change. Run 7: the same 14 requests and conditions, the same data;
+eval/runs/summaries_run7.json. S014 varies between calls, so one good S014 in run 7 is reported as one call, not as
+fixed.
+**Run 7 result (2026-11-22; eval/runs/summaries_run7.json, _report.txt), same data as runs 5-6.** (1) 0 false citations
+shown of 52; (2) 100% of 66 lines; (3) 13 of 14 shown: S011's first question (Shelby County) ended in an ERROR after
+two per-minute waits, so there was no answer to summarise and S011 got the fixed text (the file did not keep the first
+answer's reason; run_summaries now saves it as first_reason). (4) read by Edwin: **holds**. 12 of the 13 shown give
+their passages' point (S013 now gives Jarkesy's question and holding; S003 Riley's facts, its passage has no holding).
+S014 (Brown) shows 8 lines from every side (the question, the Act, the concurrence, the majority's rating-system
+argument, both dissents) but no line that the Court struck the law down: none of its 7 passages states it and Brown has
+no syllabus in our data (a search limit, below). **S011 checked separately after the run (one call, not a run row):**
+with rule (k) the picker shows "Its failure to act leaves us today with no choice but to declare § 4(b)
+unconstitutional.", "We issue no holding on § 5 itself, only on the coverage formula." and "The judgment of the Court
+of Appeals is reversed." (before: the Blodgett quote alone, runs 2, 5, 6). **All four conditions hold: passage
+summaries are kept** (setting passage_summaries on; it stays a setting, off by default in config).

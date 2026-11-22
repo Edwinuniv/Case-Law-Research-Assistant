@@ -11,7 +11,7 @@ from tests.test_verify import PASSAGE, QUOTE
 ON = dict(DEFAULT_SETTINGS, passage_summaries=True)
 OFF = dict(DEFAULT_SETTINGS, passage_summaries=False)
 
-DISSENT = {**PASSAGE, "chunk_id": "1-9", "opinion_label": "Dissent", "section": "Sotomayor, J., dissenting",
+DISSENT = {**PASSAGE, "chunk_id": "1-9", "date_filed": "2024-07-01", "opinion_label": "Dissent", "section": "Sotomayor, J., dissenting",
            "text": "With fear for our democracy, I dissent. The President is now a king above the law."}
 MAJORITY = {**PASSAGE, "opinion_label": "Majority opinion", "section": "Opinion of the Court (Roberts)",
             "date_filed": "2024-07-01"}
@@ -211,10 +211,10 @@ def test_a_summary_is_not_a_turn_so_the_next_request_still_means_the_same_answer
 
 
 # ---------- widened (EVALUATION.md, 2026-11-21): citations, opinions, the case ----------
-SYLLABUS = {**PASSAGE, "chunk_id": "1-1", "opinion_label": "Syllabus", "section": "Syllabus", "is_syllabus": True,
+SYLLABUS = {**PASSAGE, "chunk_id": "1-1", "date_filed": "2024-07-01", "opinion_label": "Syllabus", "section": "Syllabus", "is_syllabus": True,
             "text": "Held: The President enjoys absolute immunity for actions within his conclusive and preclusive "
                     "constitutional authority."}
-CONCURRENCE = {**PASSAGE, "chunk_id": "1-7", "opinion_label": "Concurrence", "section": "Barrett, J., concurring in part",
+CONCURRENCE = {**PASSAGE, "chunk_id": "1-7", "date_filed": "2024-07-01", "opinion_label": "Concurrence", "section": "Barrett, J., concurring in part",
                "text": "I agree that the Constitution prohibits Congress from criminalizing the President's conduct."}
 OTHER_CASE = {**PASSAGE, "chunk_id": "2-0", "decision_id": 222, "case_name": "Nixon v. Fitzgerald",
               "section": "Opinion of the Court (Powell)", "opinion_label": "Majority opinion"}
@@ -323,3 +323,188 @@ def test_the_picker_is_told_to_copy_sentences_word_for_word(monkeypatch):
     llm.pick_sentences("summarize the dissent", {"P2": {**DISSENT, "date_filed": "2024-07-01"}})   # as every real passage
     system, user = calls[0]
     assert "word for word" in system and "[P2]" in user and DISSENT["text"] in user and "summarize the dissent" in user
+
+
+# ---------- before run 2 (EVALUATION.md: run 1 showed "Glucksberg, 521 U.S. 701" from the source, and "Part II") ----------
+WITH_CITES = {**MAJORITY, "text": "As the Court said in Fake v. Case, 999 U.S. 9999 (2001), the power is limited. "
+                                  "See Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984) for the old rule of deference."}
+TURN_CITES = json.loads(json.dumps({"question": "q", "sentences": [], "passages": [["P1", WITH_CITES]]}))
+
+
+def test_a_pick_with_a_citation_that_is_not_in_the_table_is_removed_even_if_the_source_says_it(monkeypatch):
+    picks(monkeypatch, ("P1", "As the Court said in Fake v. Case, 999 U.S. 9999 (2001), the power is limited."))
+    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)
+    assert not r["shown_sentences"] and "citation" in r["removed"][0]["problems"][0]
+
+
+CHEVRON = "See Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984) for the old rule of deference."
+
+
+def test_a_real_citation_in_the_opinions_citation_map_is_kept(monkeypatch):            # rule (f), before run 4
+    asked = []
+    monkeypatch.setattr(pipeline, "in_citation_map", lambda opinions, clusters: asked.append((opinions, clusters)) or True,
+                        raising=False)
+    picks(monkeypatch, ("P1", CHEVRON))
+    assert pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)["shown_sentences"]
+    assert asked == [([WITH_CITES["opinion_id"]], [111])]       # the passage's opinion, the citation's clusters
+
+
+def test_a_real_citation_outside_the_passages_and_the_citation_map_is_removed(monkeypatch):   # run 3: Blodgett
+    monkeypatch.setattr(pipeline, "in_citation_map", lambda opinions, clusters: False, raising=False)
+    picks(monkeypatch, ("P1", CHEVRON))
+    r = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN_CITES)
+    assert not r["shown_sentences"]
+    assert r["removed"][0]["problems"] == ["citation not from a passage sent or its citation map: 467 U.S. 837"]
+
+
+def test_a_citation_of_a_passage_sent_needs_no_citation_map(monkeypatch):
+    monkeypatch.setattr(pipeline, "in_citation_map", lambda *a: (_ for _ in ()).throw(AssertionError("not needed")),
+                        raising=False)
+    passage = {**MAJORITY, "text": "As the Court held in Trump v. United States, 603 U.S. 593 (2024), the immunity is absolute."}
+    turn = json.loads(json.dumps({"question": "q", "sentences": [], "passages": [["P1", passage]]}))
+    picks(monkeypatch, ("P1", "As the Court held in Trump v. United States, 603 U.S. 593 (2024), the immunity is absolute."))
+    assert pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=turn)["shown_sentences"]
+
+
+@pytest.mark.parametrize("section, opinion_label, shown", [
+    ("Part II", "Dissenting opinion (Scalia)", "Dissenting opinion (Scalia) - Part II"),     # Rasul, run 1
+    ("Part C", "Majority opinion (Roberts)", "Majority opinion (Roberts) - Part C"),         # Shelby County, run 1
+    ("Ginsburg, J., dissenting - Part IV", "Concurring opinion (Thomas)", "Ginsburg, J., dissenting - Part IV"),
+    ("Opinion of the Court (Kagan)", "Majority opinion", "Opinion of the Court (Kagan)"),
+    ("Syllabus", "Syllabus", "Syllabus"),
+    ("", "Dissenting opinion (Alito)", "Dissenting opinion (Alito)"),
+])
+def test_the_label_says_who_is_speaking(section, opinion_label, shown):
+    assert pipeline.label_of({"section": section, "opinion_label": opinion_label}) == shown
+
+
+# ---------- before run 3 (EVALUATION.md: S003 showed Riley's docket line and facts, S014 showed "*803") ----------
+RILEY = {**MAJORITY, "section": "Syllabus", "opinion_label": "Syllabus", "is_syllabus": True,
+         "text": "No. 13-132. Argued April 29, 2014-Decided June 25, 2014 In No. 13-132, petitioner Riley was stopped for a "
+                 "traffic violation. Held: The police generally may not, without a warrant, search digital information on "
+                 "a cell phone seized from an individual who has been arrested. The *803 Act's restrictions are wildly "
+                 "underinclusive when judged against its asserted justification."}
+TURN_RILEY = json.loads(json.dumps({"question": "q", "sentences": [], "passages": [["P1", RILEY]]}))
+
+
+@pytest.mark.parametrize("docket", [
+    # run 3 also removed "No. 13-132. Argued ... In No. 13-132, petitioner Riley was stopped": rule (h), written before
+    # run 5, keeps its fact once the docket line is cut (test_a_docket_line_glued_to_a_fact_is_cut_off_and_the_fact_kept)
+    "No. 13-132. Argued April 29, 2014-Decided June 25, 2014",
+    "Argued April 29, 2014-Decided June 25, 2014 In No. 13-132",
+])
+def test_a_docket_or_argument_line_is_removed(monkeypatch, docket):
+    picks(monkeypatch, ("P1", docket))
+    r = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)
+    assert not r["shown_sentences"] and r["removed"][0]["problems"] == ["a docket or argument line, not the passage's point"]
+
+
+def test_the_holding_is_kept(monkeypatch):
+    picks(monkeypatch, ("P1", "Held: The police generally may not, without a warrant, search digital information"))
+    assert pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)["shown_sentences"]
+
+
+def test_page_markers_are_left_out_of_the_shown_words(monkeypatch):
+    picks(monkeypatch, ("P1", "The *803 Act's restrictions are wildly underinclusive"))
+    (shown,) = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)["shown_sentences"]
+    assert "*803" not in shown["text"] and "The Act's restrictions are wildly underinclusive" in shown["text"]
+
+
+def test_the_picker_prefers_the_holding_over_facts_and_procedure(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append(system) or {"picks": []})
+    llm.pick_sentences("explain the first passage", {"P1": RILEY})
+    assert "Held:" in calls[0] and "procedural history" in calls[0] and "docket" in calls[0]
+
+
+# ---------- before run 5 (EVALUATION.md: run 4, S007 picks in quotation marks, S003 docket glued to a fact) ----------
+@pytest.mark.parametrize("wrapped", [
+    "“The President enjoys absolute immunity for actions within his conclusive”",
+    '"The President enjoys absolute immunity for actions within his conclusive"',
+    "'The President enjoys absolute immunity for actions within his conclusive'",
+])
+def test_quotation_marks_around_a_whole_pick_are_not_part_of_it(monkeypatch, wrapped):
+    picks(monkeypatch, ("P1", wrapped))
+    (shown,) = pipeline.answer("summarize the first passage", NoSearch(), INDEX, ON, previous=TURN)["shown_sentences"]
+    assert shown["text"] == ("Opinion of the Court (Roberts): “The President enjoys absolute immunity for actions "
+                             "within his conclusive”")
+
+
+def test_a_docket_line_glued_to_a_fact_is_cut_off_and_the_fact_kept(monkeypatch):
+    picks(monkeypatch, ("P1", "No. 13-132. Argued April 29, 2014-Decided June 25, 2014 In No. 13-132, petitioner Riley "
+                              "was stopped for a traffic violation."))
+    (shown,) = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)["shown_sentences"]
+    assert shown["text"].endswith("“In No. 13-132, petitioner Riley was stopped for a traffic violation.”")
+
+
+def test_a_pick_that_is_only_a_docket_line_is_still_removed(monkeypatch):
+    picks(monkeypatch, ("P1", "No. 13-132. Argued April 29, 2014-Decided June 25, 2014"))
+    r = pipeline.answer("explain the first passage", NoSearch(), INDEX, ON, previous=TURN_RILEY)
+    assert not r["shown_sentences"] and r["removed"][0]["problems"] == ["a docket or argument line, not the passage's point"]
+
+
+# ---------- before run 6 (EVALUATION.md: S014 sent 12 passages, too big for one free-tier request; S011 one line) ----------
+def sent_size(passages, request):
+    """The picker's request size, as the code estimates it."""
+    return llm.estimate_tokens([{"role": "system", "content": llm.PICK_PROMPT},
+                                {"role": "user", "content": f"PASSAGES:\n\n{llm.format_passages(passages)}\n\nREQUEST: {request}"}])
+
+
+def big(n, words):
+    return {**MAJORITY, "chunk_id": f"1-{100 + n}", "date_filed": "2024-07-01",
+            "text": " ".join(f"word{n}x{i}" for i in range(words))}
+
+
+def test_a_case_summary_sends_at_most_8_passages_with_the_syllabus_first(monkeypatch):
+    got = []
+    monkeypatch.setattr(llm, "pick_sentences", lambda q, passages, *a, **k: got.append(passages) or {"picks": []},
+                        raising=False)
+    answer_turn = json.loads(json.dumps({"question": "q", "sentences": [{"text": "a", "sources": ["P1"], "quote": "x"}],
+                                         "passages": [[f"P{n}", big(n, 60)] for n in range(1, 9)]}))
+    found = [{**SYLLABUS, "date_filed": "2024-07-01"}] + [big(n, 60) for n in range(20, 24)]
+    pipeline.answer("summarize the case", InsideSearch(found=found), INDEX, ON, previous=answer_turn)
+    (sent,) = got
+    assert len(sent) <= 8 and next(iter(sent.values()))["chunk_id"] == "1-1"           # the syllabus first
+
+
+def test_a_summary_request_stays_under_4500_estimated_tokens(monkeypatch):
+    got = []
+    monkeypatch.setattr(llm, "pick_sentences", lambda q, passages, *a, **k: got.append(passages) or {"picks": []},
+                        raising=False)
+    long_turn = json.loads(json.dumps({"question": "q", "sentences": [],
+                                       "passages": [[f"P{n}", big(n, 700)] for n in range(1, 9)]}))   # ~8 x 1,300
+    pipeline.answer("summarize all the passages", NoSearch(), INDEX, ON, previous=long_turn)
+    (sent,) = got
+    assert 1 <= len(sent) < 8 and sent_size(sent, "summarize all the passages") <= 4500
+    assert list(sent) == [f"P{n}" for n in range(1, len(sent) + 1)]                     # dropped from the end
+
+
+def test_the_picker_picks_two_or_three_and_the_holding(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, "_ask_json", lambda system, user, *a, **k: calls.append(system) or {"picks": []})
+    llm.pick_sentences("summarize the first citation", {"P1": MAJORITY})
+    assert "2 or 3 sentences" in calls[0] and "decides or holds" in calls[0]
+
+
+# ---------- before run 7, rule (k) (EVALUATION.md: S011 read "the first citation" as a citation inside the passage) ----------
+def picker_requests(monkeypatch):
+    got = []
+    monkeypatch.setattr(llm, "pick_sentences", lambda request, passages, *a, **k: got.append(request) or {"picks": []},
+                        raising=False)
+    return got
+
+
+@pytest.mark.parametrize("message, previous", [
+    ("summarize the first citation", CITED), ("summurize passage 1", CITED), ("summarize the dissent", CITED),
+    ("explain the first passage", TURN_RILEY), ("can you summarize these passages", CITED)])
+def test_the_picker_gets_our_request_for_passages_never_the_users_words(monkeypatch, message, previous):
+    got = picker_requests(monkeypatch)
+    pipeline.answer(message, InsideSearch(), INDEX, ON, previous=previous)
+    assert got == ["Summarize each passage below: give its point."]
+
+
+def test_for_the_case_the_picker_is_asked_first_what_the_court_decided(monkeypatch):
+    got = picker_requests(monkeypatch)
+    pipeline.answer("summarize the case", InsideSearch(), INDEX, ON, previous=CITED)
+    assert got == ["Summarize the case these passages come from: first what the Court decided and why, then what the "
+                   "separate opinions argue."]

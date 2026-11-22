@@ -204,6 +204,8 @@ locally (to test) and never online. `EMAIL_VERIFICATION=0` turns the verificatio
     python -m scripts.run_followups            # the follow-up pairs (followups-v1), TUNE: metrics + the rule's verdict
     python -m scripts.run_followups --resume eval/runs/followups_tune_<date>.json   # after Groq's daily limit
     python -m scripts.run_followups --test     # the TEST pairs, once, after the decision on TUNE
+    python -m scripts.run_summaries            # passage summaries (summaries-v1, 14 requests): the 4 conditions (EVALUATION.md)
+    python -m scripts.run_summaries --resume   # continue after Groq's daily limit (it says how long to wait)
     python -m scripts.show_citations RUN_ID    # step 8.3: every citation shown or removed in a run (TUNE; --test once)
     python -m scripts.export_run RUN_ID NAME "which dump"   # save a run in eval/runs (after each resume: a restore erases runs)
     python -m scripts.compare_runs eval/runs/RUN.json RUN_ID   # two runs (file or database) on the TUNE questions both answered

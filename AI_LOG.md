@@ -1045,3 +1045,24 @@ tests and a repair script (SPEC 11 first). What was wrong:
 4. **A test that could not pass**: the 10-pin limit test asked 11 questions, past a free account's 10 a day and the
    10 a minute per address; the chats are now made in the database. 9 planted bugs (3 for each part) all caught.
 
+## 2026-11-21 — Measuring the passage summaries (branch step/summaries-set)
+
+1. **The option A rule had a gap: quotes can carry the source's errors.** Run 1 showed Justice Alito's words with
+   "Washington v. Glucksberg, 521 U.S. 701": CourtListener's text itself says 701 (the real citation is 702). The rule
+   had skipped check 3 for quotes ("the Court's own words"). Caught by the separate checker; rule (a) added.
+2. **Labels without the speaker.** label_of showed only the section heading ("Part II" for Justice Scalia's dissent in
+   Rasul); found by reading run 1; rule (b): the opinion's own label first.
+3. **The AI misread a summary when Edwin delegated condition (4).** In run 2 it failed S003 (Riley: facts, no holding)
+   without checking the passage: the passage has no holding, so the facts were its point. It passed S011, whose passage
+   does state the holding that the summary missed. Found by reading both passages after run 3; corrected in
+   EVALUATION.md (same verdict, right reason).
+4. **A real citation outside the citation map** (run 3: "Blodgett v. Holden, 275 U.S. 142", quoted from the Shelby
+   County majority) counts as false for the separate checker. Rule (f): a pick's citation must pass the checker's two
+   tests. Checking the real database found 2,011 of 3,639 opinions with no citation-map rows (1,919 from the Harvard
+   text): told Yasser (step 1.6).
+
+5. **A fix proposed without checking its cause.** After run 5 the AI proposed rule (j) for S011 (tell the picker "2 or
+   3 sentences per passage, always the holding"), guessing that the model picked too few. Run 6 showed one pick again.
+   Asking again and reading the model's raw reply showed the real cause: the picker is sent the user's words, "summarize
+   the first citation", with one passage, and picks the sentence that contains a legal citation. Caught by run 6 and
+   the raw reply; the next rule is written from the reply, not from a guess.

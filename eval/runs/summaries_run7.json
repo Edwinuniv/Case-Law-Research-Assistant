@@ -1,0 +1,1109 @@
+{
+ "settings": {
+  "min_retrieval": 0.35,
+  "tau_abstain": 0.2,
+  "tau_confident": 0.7,
+  "retrieve_k": 20,
+  "top_k": 8,
+  "use_reranker": false,
+  "w_bm25": 1.0,
+  "w_separate": 1.0,
+  "fusion_pool": 50,
+  "case_filter": true,
+  "w_retrieval": 0.5,
+  "w_grounded": 0.4,
+  "w_passages": 0.1,
+  "chunk_max_words": 350,
+  "index_meta": {
+   "words": 18852079,
+   "chunks": 72502,
+   "built_at": "2026-11-06T21:15:53+00:00",
+   "opinions": 3647,
+   "max_words": 350
+  },
+  "reasoning_effort": "low",
+  "passage_summaries": true,
+  "prompt_version": "v2"
+ },
+ "rows": [
+  {
+   "id": "S001",
+   "kind": "passage",
+   "first": "What mental state must the State prove in a true-threats prosecution?",
+   "first_status": "LOW_CONFIDENCE",
+   "request": "summurize the first passage",
+   "status": "LOW_CONFIDENCE",
+   "reason": "support score between the two thresholds",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "10516262-2",
+     "decision_id": 10049662,
+     "case": "Counterman v. Colorado",
+     "label": "Syllabus",
+     "score": 0.7901
+    }
+   ],
+   "shown": [
+    {
+     "text": "Syllabus: \u201cTrue threats are \u201cserious expression[s]\u201d conveying that a speaker means to \u201ccommit an act of unlawful violence.\u201d Virginia v. Black, 538 U. S. 343, 359.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Syllabus: \u201cBut a subjective standard is still required for true threats, lest prosecu- tions chill too much protected, non\u2011threatening expression.\u201d",
+     "sources": [
+      "P1"
+     ]
+    }
+   ],
+   "removed": [
+    {
+     "text": "The existence of a threat depends not on \u201cthe mental state of the author,\u201d but on \u201cwhat the statement conveys\u201d to the person on the receiving end. Elonis v. United States, 575 U. S. 723, 733.",
+     "sources": [
+      "P1"
+     ],
+     "problems": [
+      "citation not in the citation table (written in the passage): 575 U.S. 723"
+     ]
+    }
+   ],
+   "false_citations": 0,
+   "citations_shown": 3,
+   "tokens": {
+    "input": 846,
+    "cached": 0,
+    "output": 903
+   }
+  },
+  {
+   "id": "S002",
+   "kind": "passage",
+   "first": "What did the dissent in Trump v. United States argue?",
+   "first_status": "LOW_CONFIDENCE",
+   "request": "summarize passage 2",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P2",
+     "chunk_id": "10453795-109",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Jackson, J., dissenting",
+     "score": 0.7959
+    }
+   ],
+   "shown": [
+    {
+     "text": "Jackson, J., dissenting: \u201cI write separately to explain, as succinctly as I can, the theoretical nuts and bolts of what, exactly, the majority has done today to alter the paradigm of accountability for Presidents of the United States.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Jackson, J., dissenting: \u201cTo fully appreciate the profound change the majority has wrought, one must first acknowledge what it means to have immunity from criminal prosecution.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Jackson, J., dissenting: \u201cIn its purest form, the concept of immunity boils down to a maxim\u2014 \u201c \u2018[t]he King can do no wrong\u2019 \u201d\u2014a notion that was firmly \u201crejected at the birth of [our] Republic.\u201d\u201d",
+     "sources": [
+      "P2"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 0,
+   "tokens": {
+    "input": 687,
+    "cached": 0,
+    "output": 1177
+   }
+  },
+  {
+   "id": "S003",
+   "kind": "passage",
+   "first": "In Riley v. California, can police search the digital data on a cell phone seized from an arrested person without a warrant?",
+   "first_status": "NOT_SUPPORTED",
+   "request": "explain the first passage",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "2680439-2",
+     "decision_id": 2680439,
+     "case": "Riley v. Cal. United States",
+     "label": "Syllabus",
+     "score": 0.7994
+    }
+   ],
+   "shown": [
+    {
+     "text": "Syllabus: \u201cRiley moved to suppress all evidence that the police had obtained from his cell phone.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Syllabus: \u201cFirst Circuit reversed the denial of the motion to suppress and vacated the relevant convictions.\u201d",
+     "sources": [
+      "P1"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 2,
+   "tokens": {
+    "input": 790,
+    "cached": 0,
+    "output": 341
+   }
+  },
+  {
+   "id": "S004",
+   "kind": "passage",
+   "first": "Does the Constitution require states to license and recognize marriages between two people of the same sex?",
+   "first_status": "ANSWERED",
+   "request": "what does P3 say?",
+   "status": "LOW_CONFIDENCE",
+   "reason": "support score between the two thresholds",
+   "sent": [
+    {
+     "pid": "P3",
+     "chunk_id": "2812209-100",
+     "decision_id": 2812209,
+     "case": "Obergefell v. Hodges",
+     "label": "Alito, J., dissenting",
+     "score": 0.7688
+    }
+   ],
+   "shown": [
+    {
+     "text": "Alito, J., dissenting: \u201cThe Constitution says nothing about a right to same-sex marriage, but the Court holds that the term \u201cliberty\u201d in the Due Process Clause of the Fourteenth Amendment encompasses this right.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Alito, J., dissenting: \u201cIndeed: \u201cIn this country, no State permitted same-sex marriage until the Massachusetts Supreme Judicial Court held in 2003 that limiting marriage to opposite-sex couples violated the State Constitution.\u201d",
+     "sources": [
+      "P3"
+     ]
+    }
+   ],
+   "removed": [
+    {
+     "text": "To prevent five unelected Justices from imposing their personal vision of liberty upon the American people, the Court has held that \u201cliberty\u201d under the Due Process Clause should be understood to protect only those rights that are \u201c \u2018deeply rooted in this Nation\u2019s history and tradition.\u2019 \u201d Washington v. Glucksberg, 521 U.S. 701, 720\u2013721 (1997).",
+     "sources": [
+      "P3"
+     ],
+     "problems": [
+      "citation not in the citation table (written in the passage): 521 U.S. 701"
+     ]
+    }
+   ],
+   "false_citations": 0,
+   "citations_shown": 2,
+   "tokens": {
+    "input": 814,
+    "cached": 0,
+    "output": 1053
+   }
+  },
+  {
+   "id": "S005",
+   "kind": "passage",
+   "first": "What did the dissent in Bostock v. Clayton County argue?",
+   "first_status": "LOW_CONFIDENCE",
+   "request": "summarize the last passage",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P8",
+     "chunk_id": "4541344-85",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Alito, J., dissenting",
+     "score": 0.8496
+    }
+   ],
+   "shown": [
+    {
+     "text": "Alito, J., dissenting: \u201cThe Court observes that \u201c[t]he people are entitled to rely on the law as written, without fearing that courts might disregard its plain terms,\u201d ante, at 24, but it has no qualms about disregarding over 50 years of uniform judicial interpretation of Title VII\u2019s plain text.\u201d",
+     "sources": [
+      "P8"
+     ]
+    },
+    {
+     "text": "Alito, J., dissenting: \u201cIV What the Court has done today\u2013\u2013interpreting discrimination because of \u201csex\u201d to encompass discrimination because of sexual orientation or gender identity\u2013\u2013is virtually certain to have far\u2011reaching consequences.\u201d",
+     "sources": [
+      "P8"
+     ]
+    },
+    {
+     "text": "Alito, J., dissenting: \u201cThe Court\u2019s brusque refusal to consider the consequences of its reasoning is irresponsible.\u201d",
+     "sources": [
+      "P8"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 3,
+   "tokens": {
+    "input": 858,
+    "cached": 0,
+    "output": 892
+   }
+  },
+  {
+   "id": "S006",
+   "kind": "two passages",
+   "first": "What did the dissent in Shelby County v. Holder argue?",
+   "first_status": "ANSWERED",
+   "request": "summarize passages 1 and 2",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "9515886-25",
+     "decision_id": 931614,
+     "case": "Shelby County v. Holder",
+     "label": "Majority opinion (Roberts) - Part C",
+     "score": 0.8213
+    },
+    {
+     "pid": "P2",
+     "chunk_id": "9515887-29",
+     "decision_id": 931614,
+     "case": "Shelby County v. Holder",
+     "label": "Ginsburg, J., dissenting - Part IV",
+     "score": 0.8103
+    }
+   ],
+   "shown": [
+    {
+     "text": "Majority opinion (Roberts) - Part C: \u201cShelby County's claim is that the coverage formula here is unconstitutional in all its applications, because of how it selects the jurisdictions subjected to preclearance.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Majority opinion (Roberts) - Part C: \u201cBut that is like saying that a driver pulled over pursuant to a policy of stopping all redheads cannot complain about that policy, if it turns out his license has expired.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Ginsburg, J., dissenting - Part IV: \u201cInstead, the \"judicial Power\" is limited to deciding particular \"Cases\" and \"Controversies.\"\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Ginsburg, J., dissenting - Part IV: \u201cEmbedded in the traditional rules governing constitutional adjudication is the principle that a person to whom a statute may constitutionally be applied will not be heard to challenge that statute on the ground that it may conceivably be applied unconstitutionally to others, in other situations not before the Court.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Ginsburg, J., dissenting - Part IV: \u201cYet the Court's opinion in this case contains not a word explaining why Congress lacks the power to subject to preclearance the particular plaintiff that initiated this lawsuit\u2011Shelby County, Alabama.\u201d",
+     "sources": [
+      "P2"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 5,
+   "tokens": {
+    "input": 924,
+    "cached": 0,
+    "output": 478
+   }
+  },
+  {
+   "id": "S007",
+   "kind": "two passages",
+   "first": "Do foreign prisoners held at Guantanamo Bay have the constitutional right to habeas corpus?",
+   "first_status": "ANSWERED",
+   "request": "summarize the second and third passages",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P2",
+     "chunk_id": "9434677-15",
+     "decision_id": 137000,
+     "case": "Rasul v. Bush",
+     "label": "Dissenting opinion (Scalia) - Part II",
+     "score": 0.7801
+    },
+    {
+     "pid": "P3",
+     "chunk_id": "145795-50",
+     "decision_id": 145795,
+     "case": "Boumediene v. Bush",
+     "label": "Opinion of the Court (Kennedy) - Part C",
+     "score": 0.7866
+    }
+   ],
+   "shown": [
+    {
+     "text": "Dissenting opinion (Scalia) - Part II: \u201cThe second and last reason the Court gives for the proposition that domestic law applies to Guantanamo Bay is the Solicitor General\u2019s concession that there would be habeas jurisdiction over a United States citizen in Guantanamo Bay.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Dissenting opinion (Scalia) - Part II: \u201cBut the reason the Solicitor General conceded there would be jurisdiction over a detainee who was a United States citizen had nothing to do with the special status of Guantanamo Bay: \u201cOur answer to that ques tion, Justice Souter, is that citizens of the United States, because of their constitutional circumstances, may have greater rights with respect to the scope and reach of the Habeas Statute as the Court has or would interpret it.\u201d\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Dissenting opinion (Scalia) - Part II: \u201cQuite obviously, the Court\u2019s second reason has no force whatever.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Kennedy) - Part C: \u201cThere is no indication, furthermore, that adjudicating a habeas corpus petition would cause friction with the host government.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Kennedy) - Part C: \u201cWhile obligated to abide by the terms of the lease, the United States is, for all practical purposes, answerable to no other sovereign for its acts on the base.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Kennedy) - Part C: \u201cUnder the facts presented here, however, there are few practical barriers to the running of the writ.\u201d",
+     "sources": [
+      "P3"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 6,
+   "tokens": {
+    "input": 1029,
+    "cached": 0,
+    "output": 940
+   }
+  },
+  {
+   "id": "S008",
+   "kind": "all passages",
+   "first": "Is a former President immune from criminal prosecution for his official acts?",
+   "first_status": "LOW_CONFIDENCE",
+   "request": "summarize all the passages",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "10453795-114",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Jackson, J., dissenting",
+     "score": 0.8318
+    },
+    {
+     "pid": "P2",
+     "chunk_id": "10453795-17",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Opinion of the Court (Roberts)",
+     "score": 0.8124
+    },
+    {
+     "pid": "P3",
+     "chunk_id": "10453795-18",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Opinion of the Court (Roberts)",
+     "score": 0.7882
+    },
+    {
+     "pid": "P4",
+     "chunk_id": "10453795-5",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Syllabus",
+     "score": 0.7682
+    },
+    {
+     "pid": "P5",
+     "chunk_id": "10453795-87",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Sotomayor, J., dissenting",
+     "score": 0.7548
+    },
+    {
+     "pid": "P6",
+     "chunk_id": "10453795-103",
+     "decision_id": 9987186,
+     "case": "Trump v. United States",
+     "label": "Sotomayor, J., dissenting",
+     "score": 0.7725
+    }
+   ],
+   "shown": [
+    {
+     "text": "Jackson, J., dissenting: \u201cIt holds that a former President may or may not be immune from criminal prosecution for conduct undertaken while in office, to be determined on a case-by-case basis.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Jackson, J., dissenting: \u201cThus, it would have been enough for the Court simply to reject petitioner\u2019s categorical claim and leave it at that.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cWe granted certiorari to consider the following question: \u201cWhether and if so to what extent does a former President enjoy presidential immunity from criminal prosecution for conduct alleged to involve official acts during his tenure in office.\u201d\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cThe parties before us do not dispute that a former President can be subject to criminal prosecution for unofficial acts committed while in office.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cThey also agree that some of the conduct described in the indictment includes actions taken by Trump in his unofficial capacity.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cWe conclude that under our constitutional structure of separated powers, the nature of Presidential power requires that a former President have some immunity from criminal prosecution for official acts during his tenure in office.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cAt least with respect to the President\u2019s exercise of his core constitutional powers, this immunity must be absolute.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cAs for his remaining official actions, he is also entitled to immunity.\u201d",
+     "sources": [
+      "P3"
+     ]
+    }
+   ],
+   "removed": [
+    {
+     "text": "The majority\u2019s holding goes further\u2014much further\u2014than necessary to resolve this case.",
+     "sources": [
+      "P1"
+     ],
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "false_citations": 0,
+   "citations_shown": 0,
+   "tokens": {
+    "input": 3054,
+    "cached": 256,
+    "output": 2944
+   }
+  },
+  {
+   "id": "S009",
+   "kind": "all passages",
+   "first": "Does Title VII protect gay and transgender employees from being fired?",
+   "first_status": "ANSWERED",
+   "request": "can you summarize these passages",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "4541344-17",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Opinion of the Court (Gorsuch)",
+     "score": 0.8038
+    },
+    {
+     "pid": "P2",
+     "chunk_id": "4541344-5",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Syllabus",
+     "score": 0.7962
+    },
+    {
+     "pid": "P3",
+     "chunk_id": "4541344-22",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Opinion of the Court (Gorsuch)",
+     "score": 0.7883
+    },
+    {
+     "pid": "P4",
+     "chunk_id": "4541344-2",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Syllabus",
+     "score": 0.7726
+    },
+    {
+     "pid": "P5",
+     "chunk_id": "4541344-54",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Alito, J., dissenting",
+     "score": 0.8066
+    },
+    {
+     "pid": "P6",
+     "chunk_id": "4541344-16",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Opinion of the Court (Gorsuch)",
+     "score": 0.7828
+    },
+    {
+     "pid": "P7",
+     "chunk_id": "4541344-15",
+     "decision_id": 4760997,
+     "case": "Bostock v. Clayton County",
+     "label": "Opinion of the Court (Gorsuch)",
+     "score": 0.7863
+    }
+   ],
+   "shown": [
+    {
+     "text": "Opinion of the Court (Gorsuch): \u201cIf an employer would not have discharged an employee but for that individual\u2019s sex, the statute\u2019s causation standard is met, and liability may attach.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Gorsuch): \u201cNo less, intentional discrimination based on sex violates Title VII, even if it is intended only as a means to achieving the employer\u2019s ultimate goal of discriminating against homosexual or transgender employees.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Syllabus: \u201cAn employer who intentionally fires an individual homosexual or transgender employee in part because of that individual\u2019s sex violates the law even if the employer is willing to subject all male and female homosexual or transgender employees to the same rule.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Syllabus: \u201cBut conversational conventions do not control Title VII\u2019s legal analysis, which asks simply whether sex is a but\u2011for cause.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Gorsuch): \u201cBut none of these contentions about what the employers think the law was meant to do, or should do, allow us to ignore the law as it is.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Gorsuch): \u201cBut these conversational conventions do not control Title VII\u2019s legal analysis, which asks simply whether sex was a but\u2011for cause.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Syllabus: \u201cHeld: An employer who fires an individual merely for being gay or transgender violates Title VII.\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Alito, J., dissenting: \u201cTitle VII prohibits discrimination based on five specified grounds, and neither sexual orientation nor gender identity is on the list.\u201d",
+     "sources": [
+      "P5"
+     ]
+    }
+   ],
+   "removed": [
+    {
+     "text": "Title VII makes it \u201cunlawful . . . for an employer to ... discriminate against any individual . . . because of such individual\u2019s ... sex ...\u201d",
+     "sources": [
+      "P4"
+     ],
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "false_citations": 0,
+   "citations_shown": 8,
+   "tokens": {
+    "input": 3384,
+    "cached": 0,
+    "output": 1215
+   }
+  },
+  {
+   "id": "S010",
+   "kind": "all passages",
+   "first": "Can a city take private homes through eminent domain to give the land to private developers as part of an economic development plan?",
+   "first_status": "ANSWERED",
+   "request": "summarise each passage",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "9500016-13",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Majority opinion (Stevens) - Part IV",
+     "score": 0.7718
+    },
+    {
+     "pid": "P2",
+     "chunk_id": "9500016-23",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Majority opinion (Stevens) - Part IV",
+     "score": 0.7634
+    },
+    {
+     "pid": "P3",
+     "chunk_id": "9500016-11",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Majority opinion (Stevens) - Part IV",
+     "score": 0.7663
+    },
+    {
+     "pid": "P4",
+     "chunk_id": "9500016-17",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Majority opinion (Stevens) - Part IV",
+     "score": 0.7409
+    },
+    {
+     "pid": "P5",
+     "chunk_id": "9500016-15",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Majority opinion (Stevens) - Part IV",
+     "score": 0.7155
+    },
+    {
+     "pid": "P6",
+     "chunk_id": "9500018-2",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Dissenting opinion (O'Connor) - Part I",
+     "score": 0.7125
+    },
+    {
+     "pid": "P7",
+     "chunk_id": "4699488-39",
+     "decision_id": 4895709,
+     "case": "PennEast Pipeline Co. v. New Jersey",
+     "label": "Barrett, J., dissenting",
+     "score": 0.6953
+    },
+    {
+     "pid": "P8",
+     "chunk_id": "9500016-0",
+     "decision_id": 799984,
+     "case": "Kelo v. City of New London",
+     "label": "Majority opinion (Stevens) - Opening",
+     "score": 0.6987
+    }
+   ],
+   "shown": [
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cWe cannot say that public ownership is the sole method of promoting the public purposes of community redevelopment projects.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cThey do not warrant the crafting of an artificial restriction on the concept of public use.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cUnder California law, for instance, a city may only take land for economic development purposes in blighted areas.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cFor example, some argue that the need for eminent domain has been greatly exaggerated because private developers can use numerous techniques, including secret negotiations or precommitment strategies, to overcome holdout problems and assemble lands for genuinely profitable projects.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cBecause that plan unquestionably serves a public purpose, the takings challenged here satisfy the public use requirement of the Fifth Amendment.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cGiven the comprehensive character of the plan, the thorough deliberation that preceded its adoption, and the limited scope of our review, it is appropriate for us, as it was in Berman, to resolve the challenges of the individual owners, not on a piecemeal basis, but rather in light of the entire plan.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cIt is, of course, difficult to accuse the government of having taken A\u2019s property to benefit the private interests of B when the identity of B was unknown.\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Majority opinion (Stevens) - Part IV: \u201cThis Court\u2019s authority, however, extends only to determining whether the City\u2019s proposed condemnations are for a \u201cpublic use\u201d within the meaning of the Fifth Amendment to the Federal Constitution.\u201d",
+     "sources": [
+      "P5"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 8,
+   "tokens": {
+    "input": 3138,
+    "cached": 0,
+    "output": 2999
+   }
+  },
+  {
+   "id": "S011",
+   "kind": "citation",
+   "first": "What part of the Voting Rights Act did the Court strike down in Shelby County v. Holder?",
+   "first_status": "ERROR",
+   "request": "summarize the first citation",
+   "status": "WELCOME",
+   "reason": "I can summarise the passages of an answer in the same chat. Ask a question first, then for example \"summarise the first passage\" or \"summarise all the passages\". To ask about a case, name it.",
+   "sent": [],
+   "shown": [],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 0,
+   "tokens": null
+  },
+  {
+   "id": "S012",
+   "kind": "opinion: dissent",
+   "first": "Did the Supreme Court hold that race-conscious admissions at Harvard and the University of North Carolina violate the Equal Protection Clause?",
+   "first_status": "ANSWERED",
+   "request": "summarize the dissent",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P4",
+     "chunk_id": "10516257-213",
+     "decision_id": 10049657,
+     "case": "Students for Fair Admissions, Inc. v. President and Fellows of Harvard College",
+     "label": "Sotomayor, J., dissenting",
+     "score": 0.7823
+    },
+    {
+     "pid": "P5",
+     "chunk_id": "10516257-165",
+     "decision_id": 10049657,
+     "case": "Students for Fair Admissions, Inc. v. President and Fellows of Harvard College",
+     "label": "Sotomayor, J., dissenting",
+     "score": 0.7854
+    }
+   ],
+   "shown": [
+    {
+     "text": "Sotomayor, J., dissenting: \u201cOverruling decades of precedent, today's newly constituted Court singles out the limited use of race in holistic college admissions.\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Sotomayor, J., dissenting: \u201cAt bottom, without any new factual or legal justification, the Court overrides its longstanding holding that diversity in higher education is of compelling value.\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Sotomayor, J., dissenting: \u201cNone of this Court's precedents, however, requires that a compelling interest meet some threshold level.\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Sotomayor, J., dissenting: \u201cToday, this Court stands in the way and rolls back decades of precedent and momentous progress.\u201d",
+     "sources": [
+      "P5"
+     ]
+    },
+    {
+     "text": "Sotomayor, J., dissenting: \u201cIt holds that race can no longer be used in a limited way in college admissions to achieve such critical benefits.\u201d",
+     "sources": [
+      "P5"
+     ]
+    },
+    {
+     "text": "Sotomayor, J., dissenting: \u201cThe Court subverts the constitutional guarantee of equal protection by further entrenching racial inequality in education, the very foundation of our democratic government.\u201d",
+     "sources": [
+      "P5"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 6,
+   "tokens": {
+    "input": 1310,
+    "cached": 0,
+    "output": 549
+   }
+  },
+  {
+   "id": "S013",
+   "kind": "opinion: majority",
+   "first": "What did the dissent in SEC v. Jarkesy argue?",
+   "first_status": "LOW_CONFIDENCE",
+   "request": "summarize the majority opinion",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P2",
+     "chunk_id": "10438503-10",
+     "decision_id": 9971894,
+     "case": "SEC v. Jarkesy",
+     "label": "Opinion of the Court (Roberts)",
+     "score": 0.7983
+    },
+    {
+     "pid": "P7",
+     "chunk_id": "10438503-39",
+     "decision_id": 9971894,
+     "case": "SEC v. Jarkesy",
+     "label": "Opinion of the Court (Roberts)",
+     "score": 0.7933
+    },
+    {
+     "pid": "P8",
+     "chunk_id": "10438503-14",
+     "decision_id": 9971894,
+     "case": "SEC v. Jarkesy",
+     "label": "Opinion of the Court (Roberts)",
+     "score": 0.7697
+    }
+   ],
+   "shown": [
+    {
+     "text": "Opinion of the Court (Roberts): \u201cWe consider whether the Seventh Amendment permits the SEC to compel respondents to defend themselves before the agency rather than before a jury in federal court.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cJarkesy and Patriot28 are entitled to a jury trial in an Article III court.\u201d",
+     "sources": [
+      "P7"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cThe judgment of the Court of Appeals for the Fifth Circuit is affirmed, and the case is remanded for further proceedings consistent with this opinion.\u201d",
+     "sources": [
+      "P7"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cApplying a two-part test from Granfinanciera, S. A. v. Nordberg, 492 U. S. 33 (1989), the panel held that the agency\u2019s decision to adjudicate the matter in-house violated Jarkesy\u2019s and Patriot28\u2019s Seventh Amendment right to a jury trial.\u201d",
+     "sources": [
+      "P8"
+     ]
+    },
+    {
+     "text": "Opinion of the Court (Roberts): \u201cFirst, the panel determined that because these SEC antifraud claims were \u201cakin to [a] traditional action[ ] in debt,\u201d a jury trial would be required if this case were brought in an Article III court.\u201d",
+     "sources": [
+      "P8"
+     ]
+    }
+   ],
+   "removed": [],
+   "false_citations": 0,
+   "citations_shown": 1,
+   "tokens": {
+    "input": 1554,
+    "cached": 0,
+    "output": 720
+   }
+  },
+  {
+   "id": "S014",
+   "kind": "case",
+   "first": "Can California ban the sale of violent video games to minors?",
+   "first_status": "LOW_CONFIDENCE",
+   "request": "summarize the case",
+   "status": "ANSWERED",
+   "reason": "",
+   "sent": [
+    {
+     "pid": "P1",
+     "chunk_id": "9441864-0",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Majority opinion (Scalia) - Opening",
+     "score": 0.8417
+    },
+    {
+     "pid": "P2",
+     "chunk_id": "9441865-10",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Concurring opinion (Auto) - Part A",
+     "score": 0.8096
+    },
+    {
+     "pid": "P3",
+     "chunk_id": "9441864-13",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Majority opinion (Scalia) - Part II",
+     "score": 0.8314
+    },
+    {
+     "pid": "P4",
+     "chunk_id": "9441867-19",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Dissenting opinion (Breyer) - Part C",
+     "score": 0.7972
+    },
+    {
+     "pid": "P5",
+     "chunk_id": "9441866-21",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Dissenting opinion (Thomas) - Part A",
+     "score": 0.7806
+    },
+    {
+     "pid": "P6",
+     "chunk_id": "9441864-14",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Majority opinion (Scalia) - Part II",
+     "score": 0.8101
+    },
+    {
+     "pid": "P7",
+     "chunk_id": "9441864-12",
+     "decision_id": 219734,
+     "case": "Brown v. Entertainment Merchants Assn.",
+     "label": "Majority opinion (Scalia) - Part II",
+     "score": 0.8029
+    }
+   ],
+   "shown": [
+    {
+     "text": "Majority opinion (Scalia) - Opening: \u201cWe consider whether a California law imposing restrictions on violent video games comports with the First Amendment.\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Majority opinion (Scalia) - Opening: \u201cThe Act covers games \u201cin which the range of options available to a player includes killing, maiming, dismembering, or sexually assaulting an image of a human being, if those acts are depicted\u201d in a manner that \u201c[a] reasonable person, considering the game as a whole, would find appeals to a deviant or morbid interest of minors,\u201d that is \u201cpatently offensive to prevailing standards in the community as to what is suitable for minors,\u201d and that \u201ccauses the game, as a whole, to lack serious literary, artistic, political, or scientific value for minors.\u201d\u201d",
+     "sources": [
+      "P1"
+     ]
+    },
+    {
+     "text": "Concurring opinion (Auto) - Part A: \u201cSecond, Stevens does not support the proposition that a law like the one at issue must satisfy strict scrutiny.\u201d",
+     "sources": [
+      "P2"
+     ]
+    },
+    {
+     "text": "Majority opinion (Scalia) - Part II: \u201cThis system does much to ensure that minors cannot purchase seriously violent games on their own, and that parents who care about the matter can readily evaluate the games their children bring home.\u201d",
+     "sources": [
+      "P3"
+     ]
+    },
+    {
+     "text": "Dissenting opinion (Breyer) - Part C: \u201cThe upshot is that California\u2019s statute, as applied to its heartland of applications (i. e., buyers under 17; extremely violent, realistic video games), imposes a restriction on speech that is modest at most.\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Dissenting opinion (Breyer) - Part C: \u201cThat restriction is justified by a compelling interest (supplementing parents\u2019 efforts to prevent their children from purchasing potentially harmful violent, interactive material).\u201d",
+     "sources": [
+      "P4"
+     ]
+    },
+    {
+     "text": "Dissenting opinion (Thomas) - Part A: \u201cUnder any of this Court\u2019s standards for a facial First Amendment challenge, this one must fail.\u201d",
+     "sources": [
+      "P5"
+     ]
+    },
+    {
+     "text": "Dissenting opinion (Thomas) - Part A: \u201cEven assuming that video games are speech, in most applications the California law does not implicate the First Amendment.\u201d",
+     "sources": [
+      "P5"
+     ]
+    }
+   ],
+   "removed": [
+    {
+     "text": "The Court is wrong in saying that the holding in United States v. Stevens, 559 U. S. 460 (2010), \u201ccontrols this case.\u201d",
+     "sources": [
+      "P2"
+     ],
+     "problems": [
+      "citation not from a passage sent or its citation map: 559 U.S. 460"
+     ]
+    },
+    {
+     "text": "*803 But leaving that aside, California cannot show that the Act\u2019s restrictions meet a substantial need of parents who wish to restrict their children\u2019s access to violent video games...",
+     "sources": [
+      "P3"
+     ],
+     "problems": [
+      "quote not found in the cited passage"
+     ]
+    }
+   ],
+   "false_citations": 0,
+   "citations_shown": 8,
+   "tokens": {
+    "input": 3329,
+    "cached": 0,
+    "output": 2203
+   }
+  }
+ ]
+}
